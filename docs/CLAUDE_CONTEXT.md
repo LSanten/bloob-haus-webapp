@@ -6,6 +6,44 @@
 
 ---
 
+## Documentation Workflow
+
+This project uses a three-document system:
+
+### 1. Implementation Plan (`docs/bloob-haus-implementation-plan-phase1-v2.md`)
+- **Purpose:** Detailed technical specification & blueprint
+- **Contains:** Full task breakdown with subtasks, pseudocode, examples, time estimates
+- **When to read:** At start of each major task section (before Task 2, 3, etc.)
+- **Updates:** Rarely - only if requirements change significantly
+- **Lifecycle:** Phase-specific
+
+### 2. TODO (`docs/TODO.md`)
+- **Purpose:** Active progress tracking & session log
+- **Contains:** Checklist of all tasks, completion status, session notes
+- **When to update:** After completing each subtask, at end of each session
+- **Updates:** Constantly - mark complete, add session logs
+- **Lifecycle:** Ongoing throughout the phase
+
+### 3. CLAUDE_CONTEXT (`docs/CLAUDE_CONTEXT.md` - this file)
+- **Purpose:** Quick reference & orientation for new sessions
+- **Contains:** High-level overview, current task pointer, key decisions, code conventions
+- **When to read:** At the start of EVERY session
+- **Updates:** When current task changes, when key decisions are made
+- **Lifecycle:** Living document
+
+### Session Workflow
+
+```
+1. Read CLAUDE_CONTEXT.md (orientation)
+2. Check TODO.md (what's done, what's next)
+3. If starting new major task → Read relevant section of implementation plan
+4. Work on tasks
+5. Update TODO.md (mark complete, add notes)
+6. Update CLAUDE_CONTEXT.md "Current Task" section if needed
+```
+
+---
+
 ## What This Project Is
 
 Bloob Haus transforms Obsidian markdown vaults into hosted static websites using Hugo.
@@ -33,16 +71,19 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 bloob-haus/
 ├── package.json                 
 ├── vercel.json                  
-├── .env.example                 
-├── CLAUDE_CONTEXT.md            ← This file
-├── TODO.md                      
+├── .env.example
+│
+├── docs/
+│   ├── CLAUDE_CONTEXT.md        ← This file
+│   ├── TODO.md                  ← Progress tracking
+│   └── bloob-haus-implementation-plan-phase1-v2.md
 │
 ├── scripts/
 │   ├── build-site.js            ← Main orchestration
 │   ├── clone-content.js         ← Git clone from GitHub
 │   ├── preprocess-content.js    ← Runs all processors
-│   ├── read-obsidian-config.js  ← Parse .obsidian/app.json
-│   └── processors/
+│   └── utils/
+│       ├── config-reader.js     ← Parse .obsidian/app.json
 │       ├── publish-filter.js    ← Only include files with publish: true
 │       ├── wiki-link-resolver.js
 │       ├── markdown-link-resolver.js
@@ -139,22 +180,29 @@ export function resolveWikiLinks(content, fileIndex) {
 
 ## Current Task
 
-**[UPDATE THIS BEFORE EACH SESSION]**
+**Task 1: Project Setup - COMPLETE**
 
-Example: "Implement wiki-link resolver in scripts/processors/wiki-link-resolver.js"
+**Next Task:** Task 2 - Content Clone Script (scripts/clone-content.js)
+
+See `docs/TODO.md` for detailed progress and `docs/bloob-haus-implementation-plan-phase1-v2.md` for full task specifications.
 
 ---
 
 ## Important Files to Reference
 
-When working on preprocessing:
-- `scripts/preprocess-content.js` — orchestration
-- `scripts/processors/*.js` — individual processors
+**Documentation:**
+- `docs/CLAUDE_CONTEXT.md` — This file, session orientation
+- `docs/TODO.md` — Progress tracking and session logs
+- `docs/bloob-haus-implementation-plan-phase1-v2.md` — Detailed task specs
 
-When working on templates:
-- `hugo/layouts/_default/single.html` — page template
-- `hugo/layouts/partials/head.html` — meta tags, OG tags
-- `hugo/assets/css/main.css` — styling
+**Preprocessing:**
+- `scripts/preprocess-content.js` — Orchestration
+- `scripts/utils/*.js` — Individual processors
+
+**Hugo Templates:**
+- `hugo/layouts/_default/single.html` — Page template
+- `hugo/layouts/partials/head.html` — Meta tags, OG tags
+- `hugo/assets/css/main.css` — Styling
 
 ---
 
@@ -208,8 +256,14 @@ npm run dev          # Hugo dev server (after content exists)
 
 ## Notes for This Session
 
-**[Add any specific notes, blockers, or context for the current task]**
+**Session 1 (Jan 29, 2026):**
+- Completed Task 1 (Project Setup)
+- npm project initialized with all dependencies
+- Hugo v0.152.2 installed and verified
+- All files committed and pushed to GitHub
+
+**Next session:** Start Task 2 (Content Clone Script)
 
 ---
 
-*Remember to update TODO.md with progress after each session.*
+*Follow the session workflow: Read this file → Check TODO.md → Reference implementation plan as needed*

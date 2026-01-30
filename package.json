@@ -1,0 +1,29 @@
+{
+  "name": "bloob-haus",
+  "version": "1.0.0",
+  "description": "Transform Obsidian markdown vaults into hosted static websites using Hugo",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-site.js",
+    "dev": "hugo server --source hugo --buildDrafts --buildFuture"
+  },
+  "keywords": [
+    "obsidian",
+    "hugo",
+    "static-site",
+    "markdown"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "hugo-bin": "latest",
+    "gray-matter": "^4.0.3",
+    "glob": "^10.0.0",
+    "fs-extra": "^11.0.0",
+    "execa": "^8.0.0",
+    "unified": "^11.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "@flowershow/remark-wiki-link": "^3.3.1"
+  }
+}

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env.local
+.env
+
+# Content (cloned at build time)
+content/
+
+# Hugo output
+public/
+.hugo_build.lock
+
+# Next.js (for future phases)
+.next/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

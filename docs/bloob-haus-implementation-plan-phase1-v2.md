@@ -1,8 +1,8 @@
 # Bloob Haus Implementation Plan: Phase 1
 
-**Version:** 2.0  
-**Date:** January 29, 2026  
-**Status:** Ready for development  
+**Version:** 2.1  
+**Date:** January 30, 2026  
+**Status:** Tasks 1-10 COMPLETE, Tasks 11-18 pending  
 **Goal:** Get `buffbaby.bloob.haus` live with Leon's recipes
 
 ---
@@ -49,8 +49,10 @@ A pipeline that:
 | Markdown processing | unified + remark ecosystem | Composable, well-documented |
 | Hosting | Vercel | Easy deployment, free tier sufficient for Phase 1 |
 | Content source | Private GitHub repo + PAT | Clean separation, mirrors future multi-user |
-| Publishing model | Opt-in (`publish: true` required) | Consent-first, prevents accidental exposure |
+| Publishing model | Configurable (allowlist OR blocklist) | Flexible: consent-first OR public-by-default |
 | Attachment handling | Generic resolver (images + other files) | Extensible pattern |
+| URL slugs | Based on FILENAME (not title) | Stable URLs even if titles change |
+| Folder structure | Preserved in URLs (/recipes/*, /resources/*) | Clean organization |
 
 ---
 
@@ -109,7 +111,22 @@ bloob-haus/
 GITHUB_TOKEN=ghp_xxxxxxxxxxxx        # Personal Access Token with repo scope
 CONTENT_REPO=LSanten/buffbaby        # GitHub repo to clone
 SITE_URL=https://buffbaby.bloob.haus # Base URL for the site
+
+# Publishing Mode Configuration
+PUBLISH_MODE=blocklist               # "allowlist" or "blocklist"
+BLOCKLIST_TAG=not-for-public         # Tag that prevents publishing (blocklist mode)
+ALLOWLIST_KEY=publish                # Frontmatter key to check (allowlist mode)
+ALLOWLIST_VALUE=true                 # Value that enables publishing (allowlist mode)
 ```
+
+### Publishing Modes Explained
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| **allowlist** | Only publish files with `publish: true` in frontmatter | Private-first vaults, selective sharing |
+| **blocklist** | Publish ALL files EXCEPT those with specified tag | Public-first vaults, Leon's recipe workflow |
+
+**Default for buffbaby:** `blocklist` mode with `#not-for-public` tag
 
 ---
 
@@ -185,23 +202,37 @@ SITE_URL=https://buffbaby.bloob.haus # Base URL for the site
 
 ### 4. Publish Filter
 
-**Estimated time:** 1 hour
+**Estimated time:** 1.5 hours
 
 - [ ] **4.1** Create `scripts/utils/publish-filter.js`
-- [ ] **4.2** Scan all `.md` files in content directory
-- [ ] **4.3** For each file, parse frontmatter with gray-matter
-- [ ] **4.4** Check for `publish: true` in frontmatter
-- [ ] **4.5** Files WITHOUT `publish: true` are excluded (moved to temp or deleted)
-- [ ] **4.6** Log which files are excluded (for debugging)
+- [ ] **4.2** Read publish mode from environment (`PUBLISH_MODE`)
+- [ ] **4.3** Scan all `.md` files in content directory
+- [ ] **4.4** For each file, parse frontmatter AND content with gray-matter
+- [ ] **4.5** Implement dual-mode filtering logic:
+  - **Allowlist mode:** Include only if frontmatter has `ALLOWLIST_KEY: ALLOWLIST_VALUE`
+  - **Blocklist mode:** Include all EXCEPT files containing `#BLOCKLIST_TAG` in content or tags
+- [ ] **4.6** Files that don't pass filter are excluded (moved to temp or deleted)
+- [ ] **4.7** Log which files are excluded and why (for debugging)
 
 **Logic:**
 ```javascript
-function shouldPublish(frontmatter) {
-  return frontmatter.publish === true;
+function shouldPublish(frontmatter, content, config) {
+  if (config.publishMode === 'allowlist') {
+    // Only publish if explicitly marked
+    return frontmatter[config.allowlistKey] === config.allowlistValue;
+  } else {
+    // Blocklist mode: publish unless tagged private
+    const hasBlocklistTag = 
+      content.includes(`#${config.blocklistTag}`) ||
+      (frontmatter.tags && frontmatter.tags.includes(config.blocklistTag));
+    return !hasBlocklistTag;
+  }
 }
 ```
 
-**Success criteria:** Only files with `publish: true` remain in content directory after filtering.
+**Success criteria:** 
+- In allowlist mode: Only files with `publish: true` remain
+- In blocklist mode: All files EXCEPT those with `#not-for-public` remain
 
 ---
 
@@ -517,7 +548,32 @@ function shouldPublish(frontmatter) {
 
 ## Content Requirements (for buffbaby repo)
 
-For recipes to publish, they need this frontmatter:
+### Blocklist Mode (Leon's Setup)
+
+All recipes publish by default. To keep a recipe private, add the tag anywhere in the file:
+
+```markdown
+---
+title: "Secret Family Recipe"
+image: secret.jpg  # Optional, for OG tags
+---
+
+#not-for-public
+
+This recipe won't be published...
+```
+
+Or include it in frontmatter tags:
+```yaml
+---
+title: "Secret Family Recipe"
+tags: [not-for-public, desserts]
+---
+```
+
+### Allowlist Mode (Alternative)
+
+For users who prefer consent-first publishing:
 
 ```yaml
 ---

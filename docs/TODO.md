@@ -2,19 +2,23 @@
 
 **Phase:** 1 (Recipe Site)  
 **Goal:** buffbaby.bloob.haus live  
-**Started:** January 29, 2026
+**Status:** COMPLETE ✅  
+**Started:** January 29, 2026  
+**Completed:** January 30, 2026
 
 ---
 
-## Current Focus
+## Current Status
 
-**Task:** 11. Hugo Configuration  
-**Status:** Ready to start  
-**Notes:** Tasks 1-10 complete. Preprocessing pipeline fully functional.
+🎉 **buffbaby.bloob.haus is LIVE!**
+
+**Live URL:** https://buffbaby.bloob.haus  
+**Recipes Published:** 59  
+**Recipes Private:** 21 (tagged #not-for-public)
 
 ---
 
-## Phase 1 Progress
+## Phase 1 Progress - ALL TASKS COMPLETE
 
 ### 1. Project Setup (COMPLETE ✓)
 - [x] 1.1 Create bloob-haus GitHub repository
@@ -53,10 +57,11 @@
 ### 5. File Index Builder (COMPLETE ✓)
 - [x] 5.1 Create scripts/utils/file-index-builder.js
 - [x] 5.2 Build lookup maps (title → slug, filename → slug)
-- [x] 5.3 Extract titles from frontmatter OR first # heading
+- [x] 5.3 Extract titles from frontmatter OR first # heading (h1, h2, h3)
 - [x] 5.4 Generate slugs from FILENAME (not title) for stable URLs
 - [x] 5.5 Support folder-based URLs (e.g., /recipes/challah/)
 - [x] 5.6 Index attachments
+- [x] 5.7 Strip bold/italic from titles (implemented then reverted - kept formatting)
 
 ### 6. Wiki-Link Resolver (COMPLETE ✓)
 - [x] 6.1 Create scripts/utils/wiki-link-resolver.js
@@ -91,61 +96,66 @@
 - [x] 10.3 Add comprehensive logging
 - [x] 10.4 Output processed files to hugo/content/
 - [x] 10.5 Copy attachments to hugo/static/media/
+- [x] 10.6 Add comment stripping (Obsidian %% %% and HTML <!-- -->)
+- [x] 10.7 Add git date extraction for sorting
 
-### 11. Hugo Configuration
-- [ ] 11.1 Create hugo/config.yaml
-- [ ] 11.2 Create baseof.html
-- [ ] 11.3 Create single.html
-- [ ] 11.4 Create list.html
-- [ ] 11.5 Create partials/head.html with OG tags
-- [ ] 11.6 Create partials/nav.html
-- [ ] 11.7 Create partials/footer.html
+### 11. Hugo Configuration (COMPLETE ✓)
+- [x] 11.1 Create hugo/config.yaml
+- [x] 11.2 Create baseof.html
+- [x] 11.3 Create single.html (simplified - no duplicate title)
+- [x] 11.4 Create list.html (clickable cards)
+- [x] 11.5 Create partials/head.html with OG tags
+- [x] 11.6 Create partials/nav.html (auto-detects all sections)
+- [x] 11.7 Create partials/footer.html
+- [x] 11.8 Create index.html (homepage)
 
-### 12. CSS Styling
-- [ ] 12.1 Create hugo/assets/css/main.css
-- [ ] 12.2 Implement warm color theme
-- [ ] 12.3 Add Google Fonts
-- [ ] 12.4 Style links, headings, images
-- [ ] 12.5 Style broken links
-- [ ] 12.6 Style transclusion placeholders
-- [ ] 12.7 Responsive design
+### 12. CSS Styling (COMPLETE ✓)
+- [x] 12.1 Create hugo/assets/css/main.css
+- [x] 12.2 Implement warm color theme
+- [x] 12.3 Add Google Fonts (Crimson Pro, Inter)
+- [x] 12.4 Style links, headings, images
+- [x] 12.5 Style broken links
+- [x] 12.6 Style transclusion placeholders
+- [x] 12.7 Responsive design
+- [x] 12.8 Clickable recipe cards
+- [x] 12.9 Underlined first heading on recipe pages (h1, h2, h3)
 
-### 13. Build Script
-- [ ] 13.1 Create scripts/build-site.js
-- [ ] 13.2 Orchestrate full build (clone → preprocess → hugo)
-- [ ] 13.3 Add npm build script
-- [ ] 13.4 Test locally
+### 13. Build Script (COMPLETE ✓)
+- [x] 13.1 Create scripts/build-site.js
+- [x] 13.2 Orchestrate full build (clone → preprocess → hugo)
+- [x] 13.3 Add npm build script
+- [x] 13.4 Test locally
 
-### 14. Local Testing
-- [ ] 14.1 Add dev server npm script
-- [ ] 14.2 Verify all functionality
-- [ ] 14.3 Test responsive design
-- [ ] 14.4 Fix issues
+### 14. Local Testing (COMPLETE ✓)
+- [x] 14.1 Add dev server npm script
+- [x] 14.2 Verify all functionality
+- [x] 14.3 Test responsive design
+- [x] 14.4 Fix issues (duplicate titles, comment stripping)
 
-### 15. Vercel Deployment
-- [ ] 15.1 Create vercel.json
-- [ ] 15.2 Connect repo to Vercel
-- [ ] 15.3 Add environment variables
-- [ ] 15.4 Deploy to default URL
-- [ ] 15.5 Test deployed site
+### 15. Vercel Deployment (COMPLETE ✓)
+- [x] 15.1 Create vercel.json
+- [x] 15.2 Connect repo to Vercel
+- [x] 15.3 Add environment variables
+- [x] 15.4 Deploy to default URL
+- [x] 15.5 Test deployed site
 
-### 16. Custom Domain Setup
-- [ ] 16.1 Add custom domain in Vercel
-- [ ] 16.2 Configure DNS CNAME
-- [ ] 16.3 Wait for propagation
-- [ ] 16.4 Verify HTTPS
-- [ ] 16.5 Test at custom domain
+### 16. Custom Domain Setup (COMPLETE ✓)
+- [x] 16.1 Add custom domain in Vercel
+- [x] 16.2 Configure DNS CNAME (buffbaby.bloob.haus)
+- [x] 16.3 Wait for propagation
+- [x] 16.4 Verify HTTPS
+- [x] 16.5 Test at custom domain
 
-### 17. Auto-Rebuild Webhook
-- [ ] 17.1 Create Deploy Hook in Vercel
-- [ ] 17.2 Copy webhook URL
-- [ ] 17.3 Add webhook to buffbaby repo
-- [ ] 17.4 Test push triggers rebuild
-- [ ] 17.5 Verify changes appear
+### 17. Auto-Rebuild Webhook (COMPLETE ✓)
+- [x] 17.1 Create Deploy Hook in Vercel
+- [x] 17.2 Copy webhook URL
+- [x] 17.3 Add webhook to buffbaby repo
+- [x] 17.4 Test push triggers rebuild
+- [x] 17.5 Verify changes appear
 
-### 18. Documentation & Cleanup
+### 18. Documentation & Cleanup (IN PROGRESS)
 - [ ] 18.1 Update README.md
-- [ ] 18.2 Document publish modes
+- [ ] 18.2 Update all /docs files
 - [ ] 18.3 Clean up debug logging
 - [ ] 18.4 Final commit
 
@@ -161,8 +171,9 @@
 - Hugo v0.152.2 verified working
 
 ### Session 2 - January 30, 2026
-**Worked on:** Tasks 2-10 (Full preprocessing pipeline)  
-**Completed:**
+**Worked on:** Tasks 2-17 (Full implementation and deployment)  
+
+**Preprocessing Pipeline (Tasks 2-10):**
 - Content clone script with GitHub PAT authentication
 - Obsidian config reader (attachment folder detection)
 - Dual-mode publish filter (allowlist/blocklist)
@@ -171,34 +182,79 @@
 - Markdown link resolver ([text](file.md))
 - Attachment resolver (images copied to /media/)
 - Transclusion placeholder handler
+- Comment stripper (Obsidian %% %% and HTML <!-- -->)
+- Git date extractor (last modified dates for sorting)
 - Full preprocessing orchestration
 
-**Key decisions:**
-- URL slugs based on FILENAME (stable URLs)
-- Page titles from first # heading (display titles)
-- Blocklist mode for Leon's recipes (#not-for-public tag)
-- Folder structure preserved in URLs (/recipes/*, /resources/*)
+**Hugo Site (Tasks 11-12):**
+- Complete template system (baseof, single, list, index)
+- Warm color theme with Google Fonts
+- Responsive design
+- Clickable recipe cards showing full content
+- Auto-detected navigation for all sections
+- First heading underlined on recipe pages
+- Open Graph meta tags for social sharing
 
-**Test results:**
-- 59 files processed
-- 21 files excluded (private)
-- 12 links resolved
-- 0 broken links
-- 21 attachments copied
+**Build & Deploy (Tasks 13-17):**
+- Full build script orchestration
+- Local testing with dev server
+- Vercel deployment with environment variables
+- Custom domain setup (buffbaby.bloob.haus)
+- Auto-rebuild webhook on content changes
 
-**Next:** Hugo templates and CSS (Tasks 11-12)
+**Key Features Added Beyond Original Plan:**
+- Comment stripping for privacy (`%% notes %%` removed)
+- Git-based date extraction for "Recent Recipes" sorting
+- Clickable recipe cards (whole card is link, not just title)
+- Auto-detection of all top-level sections in nav
+- Support for h1, h2, AND h3 first headings
+- Bold/italic formatting preserved in titles
+- YouTube embed support (HTML passthrough)
+
+**Test Results:**
+- 59 recipes published
+- 21 recipes kept private (#not-for-public tag)
+- All links resolved correctly
+- All images working
+- Comments stripped successfully
+- Auto-deployment working
 
 ---
 
-## Blockers / Questions
+## Key Technical Decisions
 
-None currently.
+- **URL slugs:** Based on FILENAME for stability (not title)
+- **Page titles:** Extracted from first heading (# or ## or ###)
+- **Publish mode:** Blocklist (#not-for-public tag)
+- **Folder structure:** Preserved in URLs (/recipes/*, /resources/*)
+- **Comments:** Stripped during preprocessing for privacy
+- **Dates:** Extracted from git history for sorting
+- **Navigation:** Auto-generated from all sections
+- **Recipe cards:** Full content preview, entirely clickable
 
 ---
 
-## Notes
+## Deployment Info
 
-- Preprocessing pipeline fully functional
-- Content flows: clone → filter → index → resolve links → copy to hugo/
-- Dual publish modes: allowlist (`publish: true`) or blocklist (`#not-for-public`)
-- URLs: /recipes/recipe-name/, /resources/resource-name/
+**Production URL:** https://buffbaby.bloob.haus  
+**Vercel Project:** bloob-haus-webapp  
+**Content Repo:** LSanten/buffbaby (private)  
+**Code Repo:** LSanten/bloob-haus-webapp (public)
+
+**Auto-Deploy Triggers:**
+- Push to bloob-haus-webapp → Rebuilds site code
+- Push to buffbaby → Rebuilds content via webhook
+
+---
+
+## What's Next (Future Phases)
+
+Phase 2 and beyond features are documented in:
+- `docs/bloob-haus-future-features-roadmap.md`
+
+Potential next steps:
+- Backlinks and graph visualization
+- Multi-user support
+- Quick Mode (paste markdown directly)
+- Interactive visualizers
+- Search functionality

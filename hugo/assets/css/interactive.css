@@ -20,7 +20,8 @@ ul > li:has(> input[type="checkbox"]) {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 0.4rem 0;
+    padding: 0.15rem 0;
+    margin-bottom: 0;
 }
 
 /* Style the checkbox itself */
@@ -35,7 +36,9 @@ ul > li > input[type="checkbox"] {
     cursor: pointer;
     margin-top: 0.2rem;
     position: relative;
-    transition: background-color 0.15s, border-color 0.15s;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s;
 }
 
 /* Checked state */
@@ -90,7 +93,9 @@ ul > li:has(> input[type="checkbox"]:checked) {
     font-weight: 500;
     color: var(--text-color, #333);
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s;
 }
 
 .recipe-reset-btn:hover {

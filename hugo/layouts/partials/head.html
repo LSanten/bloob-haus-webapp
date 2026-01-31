@@ -1,39 +1,67 @@
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    <title>
+        {{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title
+        }}{{ end }}
+    </title>
 
-  <!-- Meta description -->
-  <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+    <!-- Meta description -->
+    <meta
+        name="description"
+        content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}"
+    />
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
-  <meta property="og:url" content="{{ .Permalink }}">
-  <meta property="og:title" content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}">
-  <meta property="og:description" content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}">
-  {{ with .Params.image }}
-  <meta property="og:image" content="{{ . | absURL }}">
-  {{ end }}
+    <!-- Open Graph / Facebook -->
+    <meta
+        property="og:type"
+        content="{{ if .IsPage }}article{{ else }}website{{ end }}"
+    />
+    <meta property="og:url" content="{{ .Permalink }}" />
+    <meta
+        property="og:title"
+        content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}"
+    />
+    <meta
+        property="og:description"
+        content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}"
+    />
+    {{ with .Params.image }}
+    <meta property="og:image" content="{{ . | absURL }}" />
+    {{ end }}
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="{{ .Permalink }}">
-  <meta name="twitter:title" content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}">
-  <meta name="twitter:description" content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}">
-  {{ with .Params.image }}
-  <meta name="twitter:image" content="{{ . | absURL }}">
-  {{ end }}
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="{{ .Permalink }}" />
+    <meta
+        name="twitter:title"
+        content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}"
+    />
+    <meta
+        name="twitter:description"
+        content="{{ if .Description }}{{ .Description }}{{ else if .Summary }}{{ .Summary | truncate 160 }}{{ else }}{{ .Site.Params.description }}{{ end }}"
+    />
+    {{ with .Params.image }}
+    <meta name="twitter:image" content="{{ . | absURL }}" />
+    {{ end }}
 
-  <!-- Favicon (optional, will 404 gracefully if not present) -->
-  <link rel="icon" type="image/png" href="/favicon.png">
+    <!-- Favicon (optional, will 404 gracefully if not present) -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    />
 
-  <!-- Stylesheet -->
-  {{ $css := resources.Get "css/main.css" }}
-  <link rel="stylesheet" href="{{ $css.RelPermalink }}">
+    <!-- Stylesheets -->
+    {{ $css := resources.Get "css/main.css" }}
+    <link rel="stylesheet" href="{{ $css.RelPermalink }}" />
+
+    <!-- Interactive features (survives template changes) -->
+    {{ $interactiveCss := resources.Get "css/interactive.css" }}
+    <link rel="stylesheet" href="{{ $interactiveCss.RelPermalink }}" />
 </head>

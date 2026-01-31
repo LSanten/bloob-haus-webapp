@@ -25,6 +25,7 @@ import {
 } from "./utils/attachment-resolver.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
+import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -132,6 +133,9 @@ export async function preprocessContent({
         )
       ];
 
+    // Get last modified date from git history
+    const gitDate = getLastModifiedDate(file.path, contentDir);
+
     const outputFrontmatter = {
       ...frontmatter,
       title:
@@ -140,6 +144,11 @@ export async function preprocessContent({
         path.basename(file.relativePath, ".md"),
       slug: pageInfo?.slug,
     };
+
+    // Add date if we got it from git and it's not already set
+    if (gitDate && !frontmatter.date) {
+      outputFrontmatter.date = gitDate;
+    }
 
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);

@@ -1,12 +1,11 @@
 <nav class="site-nav">
-  <div class="nav-container">
-    <a href="/" class="site-title">{{ .Site.Title }}</a>
+    <div class="nav-container">
+        <a href="/" class="site-title">{{ .Site.Title }}</a>
 
-    <div class="nav-links">
-      <a href="/recipes/">Recipes</a>
-      {{ if fileExists "content/resources" }}
-      <a href="/resources/">Resources</a>
-      {{ end }}
+        <div class="nav-links">
+            {{ range .Site.Sections }}
+            <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+            {{ end }}
+        </div>
     </div>
-  </div>
 </nav>

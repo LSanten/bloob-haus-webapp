@@ -6,7 +6,9 @@ node_modules/
 .env
 
 # Content (cloned at build time)
-content/
+content-source/
+hugo/content/
+hugo/static/
 
 # Hugo output
 public/

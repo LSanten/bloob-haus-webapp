@@ -25,8 +25,11 @@ function extractTitle(frontmatter, content, filename) {
   // 2. First heading (# or ##) in content
   const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
   if (headingMatch) {
+    let title = headingMatch[1];
     // Strip heading ID syntax like {#anchor-id}
-    return headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim();
+    title = title.replace(/\s*\{#[^}]+\}\s*$/, "");
+    // Keep bold/italic formatting in titles
+    return title.trim();
   }
 
   // 3. Filename as fallback

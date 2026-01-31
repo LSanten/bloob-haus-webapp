@@ -1,0 +1,33 @@
+{{ define "main" }}
+<div class="list-page">
+    <header class="page-header">
+        <h1>{{ .Title }}</h1>
+        {{ with .Content }}
+        <div class="page-intro">{{ . }}</div>
+        {{ end }}
+    </header>
+
+    {{ if .Pages }}
+    <div class="recipe-list">
+        {{ range .Pages }}
+        <a href="{{ .RelPermalink }}" class="recipe-card-link">
+            <article class="recipe-card">
+                {{ if .Summary }}
+                <div class="recipe-summary">{{ .Summary }}</div>
+                {{ end }} {{ if .Params.tags }}
+                <div class="recipe-tags">
+                    {{ range first 3 .Params.tags }} {{ if not (hasPrefix . "#")
+                    }}
+                    <span class="tag">{{ . }}</span>
+                    {{ end }} {{ end }}
+                </div>
+                {{ end }}
+            </article>
+        </a>
+        {{ end }}
+    </div>
+    {{ else }}
+    <p class="no-content">No recipes found.</p>
+    {{ end }}
+</div>
+{{ end }}

@@ -1,0 +1,38 @@
+{{ define "main" }}
+<article class="recipe-page">
+    <div class="recipe-content">{{ .Content }}</div>
+
+    {{ if or .Params.tags .Params.prep_time .Params.cook_time .Params.servings
+    }}
+    <div class="recipe-meta-section">
+        {{ if .Params.tags }}
+        <div class="recipe-tags">
+            {{ range .Params.tags }} {{ if not (hasPrefix . "#") }}
+            <span class="tag">{{ . }}</span>
+            {{ end }} {{ end }}
+        </div>
+        {{ end }} {{ if or .Params.prep_time .Params.cook_time .Params.servings
+        }}
+        <div class="recipe-meta">
+            {{ with .Params.prep_time }}<span class="meta-item"
+                >Prep: {{ . }}</span
+            >{{ end }} {{ with .Params.cook_time }}<span class="meta-item"
+                >Cook: {{ . }}</span
+            >{{ end }} {{ with .Params.servings }}<span class="meta-item"
+                >Servings: {{ . }}</span
+            >{{ end }}
+        </div>
+        {{ end }}
+    </div>
+    {{ end }} {{ if .Params.source }}
+    <footer class="recipe-footer">
+        <div class="recipe-source">
+            <strong>Source:</strong>
+            {{ range .Params.source }}
+            <span>{{ . }}</span>
+            {{ end }}
+        </div>
+    </footer>
+    {{ end }}
+</article>
+{{ end }}

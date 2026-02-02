@@ -379,7 +379,7 @@ function shouldPublish(frontmatter, content, config) {
   ```yaml
   baseURL: "https://buffbaby.bloob.haus/"
   languageCode: "en-us"
-  title: "Buff Baby Bakery"
+  title: "Buff Baby Kitchen"
   
   contentDir: "../content"
   publishDir: "../public"

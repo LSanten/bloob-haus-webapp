@@ -1,6 +1,6 @@
 baseURL: "https://buffbaby.bloob.haus/"
 languageCode: "en-us"
-title: "Buff Baby Bakery"
+title: "Buff Baby Kitchen"
 
 # Content and output directories (relative to hugo/ folder)
 contentDir: "content"

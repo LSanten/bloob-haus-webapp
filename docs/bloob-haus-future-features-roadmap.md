@@ -22,25 +22,64 @@
 
 **Goal:** Add backlinks, graph data, and prepare for webapp features.
 
-### 2.1 Links.json Generation
-Generate a `links.json` file during build containing all link relationships:
+### 2.1 JSON Generation (Two Files)
+
+Generate two separate JSON files during build for different purposes:
+
+#### `links.json` - Bidirectional Links (for backlinks & graph)
 
 ```json
 {
   "vegan-masala-chai": {
-    "title": "Vegan Masala Chai",
     "outgoing": ["/mochi-muffins/", "/spice-guide/"],
     "incoming": ["/breakfast-ideas/", "/tea-recipes/"]
   }
 }
 ```
 
-**Privacy consideration:** Only scan published files (those with `publish: true`), never expose links to/from private files.
-
 **Use cases:**
 - Display backlinks section on each page
 - Power graph visualization
 - Detect broken links before deploy
+
+#### `search-index.json` - Search & Display Data
+
+```json
+{
+  "vegan-masala-chai": {
+    "title": "Vegan Masala Chai",
+    "subtitle": "A warming spiced tea",
+    "excerpt": "This traditional Indian tea combines black tea with aromatic spices...",
+    "url": "/recipes/vegan-masala-chai/",
+    "tags": ["drinks", "vegan"],
+    "section": "recipes",
+    "image": "/media/chai-photo.jpg"
+  }
+}
+```
+
+**Field sources:**
+| Field | Source | Notes |
+|-------|--------|-------|
+| `title` | First `#` or `##` heading | Primary search target |
+| `subtitle` | Heading immediately after title (if exists) | Optional context |
+| `excerpt` | First paragraph, truncated ~200 chars | Preview in results |
+| `url` | Generated from filename | Link to page |
+| `tags` | Frontmatter | For filtering |
+| `section` | Folder (recipes, notes, etc.) | For filtering |
+| `image` | 1) Frontmatter `image:`, 2) First image in content, 3) null | For result cards |
+
+**Why two files:**
+- Search needs to be fast - don't load link data users don't need
+- Different use cases: search on every page, backlinks only on specific pages
+- Excerpt text can be large - keep separate from link graph
+
+**Privacy consideration:** Only scan published files, never expose links to/from private files.
+
+**Use cases:**
+- Client-side search bar with rich result previews
+- Filter by tags or section
+- Show image thumbnails in search results
 
 ### 2.2 Backlinks Display
 Show "Pages that link here" section at bottom of each page.

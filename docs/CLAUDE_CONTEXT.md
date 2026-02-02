@@ -1,8 +1,8 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.  
-**Last Updated:** January 30, 2026  
-**Current Phase:** Phase 1 - Recipe Site (buffbaby.bloob.haus)
+**Last Updated:** February 2, 2026  
+**Current Phase:** Phase 1 Complete, Phase 2 Planning
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Milestone | Status |
 |-----------|--------|
-| Tasks 1-10: Preprocessing Pipeline | ✅ COMPLETE |
-| Tasks 11-12: Hugo Templates & CSS | ✅ COMPLETE |
-| Tasks 13-18: Build & Deploy | ✅ COMPLETE |
+| Phase 1: Recipe Site | ✅ COMPLETE |
+| Phase 1 Enhancements: Interactive checkboxes | ✅ COMPLETE |
+| Phase 2: Enhanced Linking & API | 📋 PLANNING |
 
-**🎉 LIVE SITE:** https://buffbaby.bloob.haus
+**🎉 LIVE SITE:** https://buffbaby.bloob.haus (Buff Baby Kitchen)
 
 ---
 
@@ -77,11 +77,18 @@ bloob-haus-webapp/
 │   │   │   ├── single.html      ✅ Recipe pages
 │   │   │   └── list.html        ✅ Recipe listings
 │   │   └── partials/
-│   │       ├── head.html        ✅ Meta tags
+│   │       ├── head.html        ✅ Meta tags + visualizer CSS
 │   │       ├── nav.html         ✅ Auto-generated nav
-│   │       └── footer.html      ✅ Footer
-│   └── assets/css/
-│       └── main.css             ✅ Warm color theme
+│   │       ├── footer.html      ✅ Footer
+│   │       └── scripts.html     ✅ Visualizer JS loader
+│   └── assets/
+│       ├── css/
+│       │   ├── main.css             ✅ Template styling
+│       │   └── visualizers/
+│       │       └── checkbox-tracker.css  ✅ Checkbox visualizer
+│       └── js/
+│           └── visualizers/
+│               └── checkbox-tracker.js   ✅ Checkbox visualizer
 │
 ├── content-source/              ← Cloned from GitHub (gitignored)
 ├── public/                      ← Hugo output (gitignored)
@@ -119,6 +126,8 @@ bloob-haus-webapp/
 - **Auto-Generated Nav** - Detects all top-level sections automatically
 - **First Heading Underline** - Visual separation on individual pages
 - **Warm Color Theme** - Cozy design with Crimson Pro and Inter fonts
+- **Interactive Checkboxes** - Clickable checkmarks with localStorage persistence
+- **Floating Reset Button** - Appears when boxes checked, 60-sec undo window
 
 ---
 
@@ -201,6 +210,8 @@ npx hugo -s hugo
 6. **Dual Publishing Modes** - Flexible allowlist or blocklist configuration
 7. **Folder-Based URLs** - Preserves content organization in URL structure
 8. **YouTube Embed Support** - Videos render correctly
+9. **Checkbox Tracker Visualizer** - Interactive checkmarks with persistence and undo
+10. **Modular Visualizer Structure** - `hugo/assets/js/visualizers/` and `css/visualizers/`
 
 ---
 
@@ -219,19 +230,38 @@ npx hugo -s hugo
 |---------|------|-----------|
 | 1 | Jan 29, 2026 | Task 1: Project setup |
 | 2 | Jan 30, 2026 | Tasks 2-18: Full implementation & deployment |
+| 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename, Phase 2 planning |
 
 ---
 
 ## What to Do Next
 
-Phase 1 is **COMPLETE**! 🎉
+Phase 1 is **COMPLETE**! Phase 2 is being planned.
 
-For future work, see the **Future Features Roadmap** for:
-- Backlinks and graph visualization
-- Multiple sites / users
+**Phase 2 Focus:** Enhanced Linking & API Foundation
+- JSON generation (`links.json`, `search-index.json`)
+- Backlinks display
+- Pre-build validation
+- RSS feed
+
+See `docs/bloob-haus-future-features-roadmap.md` for full roadmap including:
+- Visualizer architecture (documented)
 - Quick Mode (no GitHub needed)
-- Interactive visualizers
-- Search functionality
+- Multi-user support
+
+---
+
+## Reference Documents
+
+| Document | Purpose |
+|----------|---------|
+| `CLAUDE_CONTEXT.md` | This file - quick orientation |
+| `TODO.md` | Progress tracking, session logs |
+| `bloob-haus-implementation-plan-phase1-v2.md` | Phase 1 spec (historical/archive) |
+| `bloob-haus-future-features-roadmap.md` | Phase 2+ planning & visualizer architecture |
+| `bloob-haus-implementation-plan-phase2.md` | Phase 2 detailed tasks (when created) |
+
+**External reference:** The Obsidian vault `bloobhaus-obsidian` contains the original vision docs including the Vicki engineering report.
 
 ---
 

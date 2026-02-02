@@ -153,11 +153,11 @@
 - [x] 17.4 Test push triggers rebuild
 - [x] 17.5 Verify changes appear
 
-### 18. Documentation & Cleanup (IN PROGRESS)
-- [ ] 18.1 Update README.md
-- [ ] 18.2 Update all /docs files
-- [ ] 18.3 Clean up debug logging
-- [ ] 18.4 Final commit
+### 18. Documentation & Cleanup (COMPLETE ✓)
+- [x] 18.1 Update README.md
+- [x] 18.2 Update all /docs files
+- [x] 18.3 Clean up debug logging
+- [x] 18.4 Final commit
 
 ---
 
@@ -218,6 +218,29 @@
 - All images working
 - Comments stripped successfully
 - Auto-deployment working
+
+### Session 3 - February 2, 2026
+**Worked on:** Interactive checkboxes, visualizer architecture, documentation
+
+**Checkbox Tracker Visualizer:**
+- Created modular visualizer folder structure (`hugo/assets/js/visualizers/`, `css/visualizers/`)
+- Implemented checkbox-tracker.js with localStorage persistence
+- Floating reset button appears only when boxes are checked
+- 60-second undo window after reset ("Undo clearing")
+- Checkbox states persist across page reloads and visits
+
+**Documentation & Planning:**
+- Documented visualizer architecture in future-features-roadmap.md
+- Defined build-time vs runtime visualizers
+- Defined activation methods (frontmatter, folder config, auto-detect, global)
+- Chose Approach A (build-time resolution) over Approach B (runtime resolution)
+- Updated CLAUDE_CONTEXT.md and TODO.md
+- Created Phase 2 implementation plan skeleton
+
+**Other Changes:**
+- Renamed site from "Buff Baby Bakery" to "Buff Baby Kitchen"
+- Reduced checkbox spacing
+- Updated search-index.json spec (added image field)
 
 ---
 

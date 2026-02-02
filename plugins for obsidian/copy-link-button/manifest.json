@@ -1,0 +1,10 @@
+{
+  "id": "copy-link-button",
+  "name": "Copy Link Button",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Adds a button to copy a web link based on the current note's filename",
+  "author": "Leon Santen",
+  "authorUrl": "https://leonsanten.info",
+  "isDesktopOnly": false
+}

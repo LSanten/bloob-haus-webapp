@@ -1,12 +1,12 @@
 /* ================================
-   Interactive Features CSS
+   Checkbox Tracker Visualizer
    ================================
-   This file contains FUNCTIONAL CSS for interactive elements.
-   It should survive template changes - only main.css needs replacing.
+   Functional CSS for interactive checkboxes.
+   Survives template changes - only main.css needs replacing.
    ================================ */
 
 /* ================================
-   Task List Checkboxes (Recipe Ingredients/Steps)
+   Task List Checkboxes
    ================================ */
 
 /* Remove bullet points from task lists */
@@ -71,39 +71,56 @@ ul > li:has(> input[type="checkbox"]:checked) {
 }
 
 /* ================================
-   Reset Button
+   Floating Reset Button
    ================================ */
 
-.recipe-reset-container {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color, #e8dcc4);
-}
+.checkbox-reset-btn {
+    /* Positioning: fixed to bottom-right corner */
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
 
-.recipe-reset-btn {
+    /* Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition:
+        opacity 0.2s,
+        visibility 0.2s,
+        transform 0.2s;
+
+    /* Styling */
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.2rem;
-    background: var(--footer-bg, #f5ebe0);
+    padding: 0.6rem 1rem;
+    background: var(--card-bg, #ffffff);
     border: 1px solid var(--border-color, #e8dcc4);
-    border-radius: 6px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     font-family: var(--font-heading, sans-serif);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color, #333);
     cursor: pointer;
-    transition:
-        background-color 0.15s,
-        border-color 0.15s;
 }
 
-.recipe-reset-btn:hover {
-    background: var(--border-color, #e8dcc4);
+/* Visible state */
+.checkbox-reset-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Hover effect */
+.checkbox-reset-btn:hover {
+    background: var(--footer-bg, #f5ebe0);
     border-color: var(--accent-color, #d2691e);
 }
 
-.recipe-reset-btn::before {
+/* Icon before text */
+.checkbox-reset-btn::before {
     content: "↺";
-    font-size: 1.1rem;
+    font-size: 1rem;
 }

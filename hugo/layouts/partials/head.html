@@ -61,7 +61,8 @@
     {{ $css := resources.Get "css/main.css" }}
     <link rel="stylesheet" href="{{ $css.RelPermalink }}" />
 
-    <!-- Interactive features (survives template changes) -->
-    {{ $interactiveCss := resources.Get "css/interactive.css" }}
-    <link rel="stylesheet" href="{{ $interactiveCss.RelPermalink }}" />
+    <!-- Visualizers (survives template changes) -->
+    {{ $checkboxTracker := resources.Get "css/visualizers/checkbox-tracker.css"
+    }}
+    <link rel="stylesheet" href="{{ $checkboxTracker.RelPermalink }}" />
 </head>

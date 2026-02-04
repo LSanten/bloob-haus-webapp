@@ -200,7 +200,7 @@ rssLimit: 20
 **Estimated time:** 1 hour
 
 - [ ] **7.1** Update `CLAUDE_CONTEXT.md` with new features
-- [ ] **7.2** Update `TODO.md` with session log
+- [ ] **7.2** Update `CHANGELOG.md` with session log
 - [ ] **7.3** Document JSON formats in roadmap
 - [ ] **7.4** Add Phase 2 to completion summary
 

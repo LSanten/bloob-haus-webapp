@@ -1,214 +1,33 @@
-# Recipe Scaling System & Magic Machines Architecture
+# Magic Machines Architecture
 
 **Status:** Planning  
-**Created:** 2026-02-03  
-**Related:** [bloob-haus-future-features-roadmap.md](bloob-haus-future-features-roadmap.md)  
-**Location:** `docs/implementation-plans/`
+**Location:** `docs/architecture/`
+
+Magic Machines are modular AI-powered tools that transform content. They are the "write" counterpart to Visualizers (which are "read" tools).
 
 ---
 
-## Overview
-
-This document covers two related but independent systems:
-
-1. **Recipe Scaling Visualizer** - A visualizer that parses Cooklang-style syntax and enables ingredient scaling in the UI
-2. **Magic Machines** - A new architectural concept for AI-powered content transformation tools
-
-Both follow the modular, pluggable philosophy established in the Visualizer Architecture.
-
----
-
-## Part 1: Recipe Scaling System
-
-### The Problem
-
-Recipes currently have quantities scattered in two places:
-- Ingredient lists: `- [ ] 2 cups rice`
-- Instructions: `Add (2 cups) rice to the pot`
-
-Users want to:
-1. Scale recipes up/down (2 servings → 4 servings)
-2. Have both locations update automatically
-3. Not lose the natural writing flow when authoring
-
-### Proposed Syntax: Cooklang-Inspired
-
-Adopt a syntax inspired by [Cooklang](https://cooklang.org/) but adapted for our Markdown/checkbox context.
-
-#### Ingredient Syntax
-
-```markdown
-## Ingredients
-
-- [ ] @rice{2%cups}
-- [ ] @ghee{2%tbsp}
-- [ ] @turmeric{1/2%tsp}
-- [ ] @salt{=%tsp} to taste      ← Fixed quantity (doesn't scale)
-```
-
-**Pattern:** `@ingredient{quantity%unit}`
-
-- `@` marks an ingredient (parseable)
-- `{quantity%unit}` contains the amount
-- `{=quantity%unit}` marks as fixed (won't scale)
-- Fractions like `1/2` are supported
-
-#### Instruction Syntax (Inline References)
-
-```markdown
-## Instructions
-
-- [ ] Warm the @ghee{2%tbsp}, then add @turmeric{1/2%tsp}
-- [ ] Add @rice{2%cups} and stir for ~{1%minute}
-- [ ] Add {8%cups} water and bring to boil
-```
-
-**Patterns:**
-- `@ingredient{qty%unit}` - Named ingredient reference
-- `{qty%unit}` - Anonymous quantity (just a number that scales)
-- `~{time%unit}` - Timer (optional, for future timer visualizer)
-
-#### Servings Metadata
-
-```yaml
----
-title: Khichdi
-servings: 4
-tags:
-  - "#soups"
----
-```
-
-The `servings` frontmatter declares the base serving size for scaling calculations.
-
-### Display Rendering
-
-The build-time parser transforms:
-
-**Input:**
-```markdown
-- [ ] @ghee{2%tbsp}
-```
-
-**Output HTML:**
-```html
-<li class="ingredient" data-ingredient="ghee" data-qty="2" data-unit="tbsp">
-  <input type="checkbox">
-  <span class="ingredient-name">ghee</span>
-  <span class="quantity" data-base="2">2</span>
-  <span class="unit">tbsp</span>
-</li>
-```
-
-The runtime visualizer reads `data-base` and recalculates when servings change.
-
-### Architecture Components
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    RECIPE SCALING SYSTEM                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────┐    ┌─────────────────┐                │
-│  │  BUILD-TIME     │    │  RUNTIME        │                │
-│  │  (parser.js)    │    │  (scaler.js)    │                │
-│  │                 │    │                 │                │
-│  │  • Parse @{}    │    │  • Scaling UI   │                │
-│  │  • Extract qty  │    │  • Recalculate  │                │
-│  │  • Generate     │    │  • Update DOM   │                │
-│  │    data attrs   │    │  • Persist      │                │
-│  └────────┬────────┘    └────────┬────────┘                │
-│           │                      │                          │
-│           ▼                      ▼                          │
-│  ┌─────────────────────────────────────────┐               │
-│  │              HTML OUTPUT                 │               │
-│  │  <span data-base="2" data-unit="cups">  │               │
-│  └─────────────────────────────────────────┘               │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Folder Structure
-
-```
-scripts/visualizers/recipe-scaler/
-├── manifest.json
-├── parser.js           ← Build-time: parse Cooklang syntax
-├── README.md
-└── tests/
-    └── parser.test.js
-
-hugo/assets/
-├── js/visualizers/
-│   └── recipe-scaler.js    ← Runtime: scaling UI + calculations
-└── css/visualizers/
-    └── recipe-scaler.css   ← Styling for quantities, scaling widget
-```
-
-### Manifest
-
-```json
-{
-  "name": "recipe-scaler",
-  "type": "hybrid",
-  "version": "1.0.0",
-  "description": "Parses Cooklang-style ingredient syntax and enables recipe scaling",
-  "activation": {
-    "method": "frontmatter",
-    "key": "servings"
-  },
-  "files": {
-    "parser": "parser.js",
-    "js": "recipe-scaler.js",
-    "css": "recipe-scaler.css"
-  },
-  "settings": {
-    "showScalingWidget": {
-      "type": "boolean",
-      "default": true,
-      "description": "Show the serving size adjuster widget"
-    },
-    "fractionDisplay": {
-      "type": "string",
-      "default": "fraction",
-      "options": ["fraction", "decimal"],
-      "description": "How to display quantities (1/2 vs 0.5)"
-    }
-  }
-}
-```
-
-### Implementation Phases
-
-| Phase | Milestone | Notes |
-|-------|-----------|-------|
-| 1 | Design syntax spec | This document |
-| 2 | Build parser.js | Extract ingredients, quantities, units |
-| 3 | Build runtime scaler.js | UI widget, DOM updates |
-| 4 | Migrate existing recipes | Via Magic Machine (see Part 2) |
-| 5 | Obsidian preview plugin | Far future |
-
----
-
-## Part 2: Magic Machines Architecture
-
-### Concept
-
-**Magic Machines** are modular AI-powered tools that transform content. They are the "write" counterpart to Visualizers (which are "read" tools).
+## Core Concepts
 
 | Concept | Direction | Purpose |
 |---------|-----------|---------|
 | **Visualizer** | Content → Display | Transform content into visual/interactive experience |
 | **Magic Machine** | Content → Content | Transform content using AI or algorithms |
 
-### Core Principles
+---
+
+## Key Principles
 
 1. **Modular & Pluggable** - Like visualizers, magic machines are self-contained units
 2. **Declarative** - Defined in JSON manifests with prompts, settings, I/O formats
-3. **Idempotent-ish** - Running twice should produce same result (or be skipped)
-4. **Auditable** - Track which files have been processed
+3. **Idempotent** - Running twice should produce same result (or be skipped)
+4. **Auditable** - Track which files have been processed via frontmatter
 
-### Magic Machine Manifest Format
+---
+
+## Magic Machine Manifest Format
+
+Each magic machine is defined by a JSON manifest:
 
 ```json
 {
@@ -250,7 +69,11 @@ hugo/assets/
 }
 ```
 
-### Prompt File Format
+---
+
+## Prompt File Format
+
+Prompts are stored as markdown files with structured sections:
 
 ```markdown
 <!-- prompts/recipe-unit-extractor.md -->
@@ -277,25 +100,17 @@ The same file with quantities converted to `@ingredient{qty%unit}` syntax.
 ## Examples
 
 ### Input
-```
 - [ ] 2 tablespoons ghee
 - [ ] 1/2 teaspoon turmeric
 
-## Instructions
-- [ ] Warm the (2 tbsp) ghee, then add (1/2 tsp) turmeric
-```
-
 ### Output
-```
 - [ ] @ghee{2%tbsp}
 - [ ] @turmeric{1/2%tsp}
-
-## Instructions
-- [ ] Warm the @ghee{2%tbsp}, then add @turmeric{1/2%tsp}
-```
 ```
 
-### Processing Flow
+---
+
+## Processing Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -335,13 +150,15 @@ The same file with quantities converted to `@ingredient{qty%unit}` syntax.
 │                              ▼                              │
 │   ┌─────────────────────────────────────────┐              │
 │   │  UPDATE STATUS in frontmatter           │              │
-│   │  magic_machine_status: completed        │              │
+│   │  mm_unit_extractor: 2026-02-03          │              │
 │   └─────────────────────────────────────────┘              │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Status Tracking
+---
+
+## Status Tracking
 
 To prevent re-processing and enable auditing, magic machines track status in frontmatter.
 
@@ -358,7 +175,14 @@ mm_tag_suggester: 2026-02-03
 
 **Naming convention:** `mm_<machine-name>` with ISO date value.
 
-**Alternative formats considered:**
+### Why Flat Structure
+
+- Obsidian Properties GUI displays flat keys cleanly
+- Easy to query with Dataview: `WHERE mm_unit_extractor`
+- Simple to parse programmatically
+- Presence of key = processed; absence = not processed
+
+### Alternative Formats Considered
 
 ```yaml
 # Option A: Simple date (chosen - most Obsidian-friendly)
@@ -372,19 +196,9 @@ magic_machine_status:
   recipe-unit-extractor: "completed:2026-02-03"
 ```
 
-**Why flat structure:**
-- Obsidian Properties GUI displays flat keys cleanly
-- Easy to query with Dataview: `WHERE mm_unit_extractor`
-- Simple to parse programmatically
-- Presence of key = processed; absence = not processed
+---
 
-This allows:
-- Skipping already-processed files
-- Knowing when/which machine processed a file
-- Re-running specific machines if needed
-- Clean display in Obsidian's Properties panel
-
-### Folder Structure
+## Folder Structure
 
 ```
 scripts/magic-machines/
@@ -402,7 +216,9 @@ scripts/magic-machines/
     └── prompt.md
 ```
 
-### Runner Interface
+---
+
+## Runner Interface
 
 ```bash
 # Run a specific magic machine
@@ -418,7 +234,21 @@ node scripts/magic-machines/runner.js recipe-unit-extractor --force
 node scripts/magic-machines/runner.js recipe-unit-extractor --file recipes/khichdi.md
 ```
 
-### Future: Remote Execution
+---
+
+## Example Magic Machines
+
+| Machine | Purpose | Input | Output |
+|---------|---------|-------|--------|
+| `recipe-unit-extractor` | Convert quantities to Cooklang | Recipe markdown | Modified markdown |
+| `tag-suggester` | Suggest tags based on content | Any markdown | Tags added to frontmatter |
+| `excerpt-generator` | Generate search excerpts | Any markdown | `excerpt:` in frontmatter |
+| `link-suggester` | Suggest related content links | Any markdown | Suggested links (review mode) |
+| `grammar-checker` | Fix grammar/typos | Any markdown | Modified markdown |
+
+---
+
+## Future: Remote Execution
 
 When content lives on GitHub (not local), magic machines need a different flow:
 
@@ -458,60 +288,19 @@ When content lives on GitHub (not local), magic machines need a different flow:
 - Obsidian plugin could trigger pull after magic machine completes
 - Alternative: Obsidian plugin calls API directly without GitHub intermediary
 
-### Example Magic Machines
+---
 
-| Machine | Purpose | Input | Output |
-|---------|---------|-------|--------|
-| `recipe-unit-extractor` | Convert quantities to Cooklang | Recipe markdown | Modified markdown |
-| `tag-suggester` | Suggest tags based on content | Any markdown | Tags added to frontmatter |
-| `excerpt-generator` | Generate search excerpts | Any markdown | `excerpt:` in frontmatter |
-| `link-suggester` | Suggest related content links | Any markdown | Suggested links (review mode) |
-| `grammar-checker` | Fix grammar/typos | Any markdown | Modified markdown |
+## Implementation Phases
+
+| Phase | Milestone |
+|-------|-----------|
+| Phase 4 | Local magic machine runner, recipe-unit-extractor |
+| Phase 5 | Webapp integration, GitHub OAuth for remote execution |
+| Phase 5+ | Obsidian plugin for seamless sync |
 
 ---
 
-## Part 3: Migration Plan
+## Related Documents
 
-### Phase 1: Local Development (Current)
-
-1. Build recipe-scaler parser and visualizer
-2. Build magic machine runner
-3. Create recipe-unit-extractor machine
-4. Test on buffbaby vault locally
-
-### Phase 2: Production Use
-
-1. Run magic machine on all recipes (one-time migration)
-2. Deploy recipe-scaler visualizer to site
-3. Update recipe formatting guide
-
-### Phase 3: Webapp Integration
-
-1. Add magic machines to webapp (power user feature)
-2. GitHub OAuth for remote file manipulation
-3. Obsidian plugin for seamless sync (far future)
-
----
-
-## Open Questions
-
-1. **Syntax bikeshedding:** Is `@ingredient{qty%unit}` the right syntax? Alternatives:
-   - `[2 cups]rice` - More compact
-   - `{{2 cups: rice}}` - Double braces
-   - `<qty:2:cups:rice>` - XML-ish
-
-2. **Ingredient linking:** Should `@rice` link to an ingredient database or note?
-
-3. **Timer integration:** Should `~{5%minutes}` become a clickable timer?
-
-4. **Magic machine approval flow:** Should there be a review/diff step before writing?
-
-5. **Obsidian preview:** How much effort to build Obsidian plugin that renders Cooklang syntax?
-
----
-
-## References
-
-- [Cooklang Specification](https://cooklang.org/docs/spec/)
-- [Cooklang GitHub](https://github.com/cooklang/spec)
-- [Visualizer Architecture](../bloob-haus-future-features-roadmap.md#visualizer-architecture-core-system)
+- [Visualizers Architecture](visualizers.md) - The "read" counterpart to magic machines
+- [Recipe Scaling Plan](../implementation-plans/phases/2026-02-03_recipe-scaling.md) - First magic machine implementation

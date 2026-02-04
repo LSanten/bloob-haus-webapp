@@ -36,6 +36,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 ✅ Comment stripping for privacy  
 ✅ Clickable recipe cards  
 ✅ Auto-generated navigation  
+✅ Interactive checkboxes with persistence  
 
 **Build pipeline:**
 ```bash
@@ -71,24 +72,10 @@ bloob-haus-webapp/
 │   ├── content/                 ← Generated from preprocessing
 │   ├── static/media/            ← Generated (images)
 │   ├── config.yaml              ✅ Hugo configuration
-│   ├── layouts/
-│   │   ├── _default/
-│   │   │   ├── baseof.html      ✅ Base template
-│   │   │   ├── single.html      ✅ Recipe pages
-│   │   │   └── list.html        ✅ Recipe listings
-│   │   └── partials/
-│   │       ├── head.html        ✅ Meta tags + visualizer CSS
-│   │       ├── nav.html         ✅ Auto-generated nav
-│   │       ├── footer.html      ✅ Footer
-│   │       └── scripts.html     ✅ Visualizer JS loader
+│   ├── layouts/                 ✅ Hugo templates
 │   └── assets/
-│       ├── css/
-│       │   ├── main.css             ✅ Template styling
-│       │   └── visualizers/
-│       │       └── checkbox-tracker.css  ✅ Checkbox visualizer
-│       └── js/
-│           └── visualizers/
-│               └── checkbox-tracker.js   ✅ Checkbox visualizer
+│       ├── css/visualizers/     ✅ Visualizer styles
+│       └── js/visualizers/      ✅ Visualizer scripts
 │
 ├── content-source/              ← Cloned from GitHub (gitignored)
 ├── public/                      ← Hugo output (gitignored)
@@ -120,14 +107,6 @@ bloob-haus-webapp/
 - **Comment Stripping** - Removes Obsidian `%% %%` and HTML `<!-- -->` comments
 - **Git Date Tracking** - Extracts last modified dates for sorting
 - **Tag Filtering** - Excludes files with `#not-for-public` tag
-
-### UI Features
-- **Clickable Recipe Cards** - Entire card is clickable, not just title
-- **Auto-Generated Nav** - Detects all top-level sections automatically
-- **First Heading Underline** - Visual separation on individual pages
-- **Warm Color Theme** - Cozy design with Crimson Pro and Inter fonts
-- **Interactive Checkboxes** - Clickable checkmarks with localStorage persistence
-- **Floating Reset Button** - Appears when boxes checked, 60-sec undo window
 
 ---
 
@@ -170,19 +149,6 @@ buffbaby.bloob.haus ✅ LIVE
 
 ---
 
-## Deployment
-
-### Auto-Rebuild Triggers
-1. **Content updates:** Push to `buffbaby` repo → webhook → Vercel rebuild
-2. **Code updates:** Push to `bloob-haus-webapp` repo → Vercel redeploy
-
-### DNS Configuration
-- Domain: `buffbaby.bloob.haus`
-- CNAME: `cname.vercel-dns.com` (configured in Porkbun)
-- HTTPS: Automatic via Vercel
-
----
-
 ## Commands
 
 ```bash
@@ -200,40 +166,6 @@ npx hugo -s hugo
 
 ---
 
-## Features Added Beyond Original Plan
-
-1. **Comment Stripping** - Privacy protection for `%%comments%%` and `<!--HTML comments-->`
-2. **Git Date Extraction** - Last modified dates from git history for sorting
-3. **Clickable Recipe Cards** - Entire card is a link, improved UX
-4. **Auto-Generated Navigation** - Detects all top-level sections dynamically
-5. **First Heading Underline** - Visual styling on individual recipe pages
-6. **Dual Publishing Modes** - Flexible allowlist or blocklist configuration
-7. **Folder-Based URLs** - Preserves content organization in URL structure
-8. **YouTube Embed Support** - Videos render correctly
-9. **Checkbox Tracker Visualizer** - Interactive checkmarks with persistence and undo
-10. **Modular Visualizer Structure** - `hugo/assets/js/visualizers/` and `css/visualizers/`
-
----
-
-## Documentation
-
-- `docs/TODO.md` — Detailed progress tracking with session logs
-- `docs/CLAUDE_CONTEXT.md` — This file (quick orientation)
-- `docs/implementation-plans/` — All implementation plans and roadmaps (see Reference Documents section)
-
----
-
-## Session History
-
-| Session | Date | Completed |
-|---------|------|-----------|
-| 1 | Jan 29, 2026 | Task 1: Project setup |
-| 2 | Jan 30, 2026 | Tasks 2-18: Full implementation & deployment |
-| 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename, Phase 2 planning |
-| 4 | Feb 3, 2026 | Recipe cleanup (buffbaby vault), Magic Machines architecture, Cooklang-style recipe scaling plan |
-
----
-
 ## What to Do Next
 
 Phase 1 is **COMPLETE**! Phase 2 is being planned.
@@ -244,58 +176,38 @@ Phase 1 is **COMPLETE**! Phase 2 is being planned.
 - Pre-build validation
 - RSS feed
 
-See `docs/implementation-plans/bloob-haus-future-features-roadmap.md` for full roadmap including:
-- Visualizer architecture (documented)
-- Quick Mode (no GitHub needed)
-- Multi-user support
+See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
 
 ---
 
-## Reference Documents
+## Documentation Map
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| `CLAUDE_CONTEXT.md` | `docs/` | This file - quick orientation |
-| `TODO.md` | `docs/` | Progress tracking, session logs |
+```
+docs/
+├── CLAUDE_CONTEXT.md           ← This file (quick orientation)
+├── CHANGELOG.md                ← Session history & milestones
+│
+├── architecture/               ← How systems work
+│   ├── visualizers.md          ← Read/display components
+│   └── magic-machines.md       ← Write/transform AI tools
+│
+└── implementation-plans/
+    ├── ROADMAP.md              ← Phase overview & priorities
+    ├── DECISIONS.md            ← Architectural decision log
+    ├── IDEAS.md                ← Future ideas parking lot
+    │
+    ├── _completed/             ← Finished plans (historical)
+    │   └── phase-1-implementation-plan.md
+    │
+    └── phases/                 ← Active implementation plans
+        ├── phase-2-linking-api.md
+        └── 2026-02-03_recipe-scaling.md
+```
+
+**Naming conventions for new plans:**
+- `YYYY-MM-DD_descriptive-name.md` for feature-specific plans
 
 **External reference:** The Obsidian vault `bloobhaus-obsidian` contains the original vision docs including the Vicki engineering report.
-
----
-
-## Documentation Conventions
-
-### Implementation Plans
-
-All implementation plans and roadmaps live in `docs/implementation-plans/`:
-
-```
-docs/implementation-plans/
-├── bloob-haus-future-features-roadmap.md      ← Master roadmap & architecture
-├── bloob-haus-implementation-plan-phase1-v2.md ← Phase 1 (historical/complete)
-├── bloob-haus-implementation-plan-phase2.md    ← Phase 2 tasks
-├── 2026-02-03_recipe-scaling-and-magic-machines.md ← Feature-specific plan
-└── YYYY-MM-DD_feature-name.md                  ← Future feature plans
-```
-
-**Naming conventions:**
-- **Roadmap/phase plans:** `bloob-haus-*.md` (no date prefix)
-- **Feature-specific plans:** `YYYY-MM-DD_descriptive-name.md` (date prefix for chronological sorting)
-
-### Key Documents
-
-| Document | Purpose |
-|----------|---------|
-| `bloob-haus-future-features-roadmap.md` | Master roadmap, visualizer & magic machine architecture |
-| `bloob-haus-implementation-plan-phase1-v2.md` | Phase 1 spec (complete, historical) |
-| `bloob-haus-implementation-plan-phase2.md` | Phase 2 detailed tasks |
-| `2026-02-03_recipe-scaling-and-magic-machines.md` | Cooklang syntax & Magic Machines |
-
-### Core Architecture Documentation
-
-| Concept | Location |
-|---------|----------|
-| Visualizers (read/display) | `implementation-plans/bloob-haus-future-features-roadmap.md` → Visualizer Architecture |
-| Magic Machines (write/transform) | `implementation-plans/bloob-haus-future-features-roadmap.md` → Magic Machines Architecture |
 
 ---
 

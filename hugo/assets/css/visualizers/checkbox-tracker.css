@@ -21,8 +21,6 @@ ul.task-list {
 /* Style each task list item */
 li.task-list-item {
     list-style: none;
-    padding: 0.15rem 0;
-    margin-bottom: 0;
 }
 
 /* For tight lists: li contains checkbox directly - use flexbox on li */
@@ -30,9 +28,16 @@ li.task-list-item:has(> input[type="checkbox"]) {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
+    padding: 0.3rem 0;
+    margin-bottom: 0;
 }
 
 /* For loose lists: li contains p which contains checkbox - use flexbox on p */
+/* Preserve spacing from blank lines in markdown (margin on li) */
+li.task-list-item:has(> p) {
+    margin-bottom: 0.75rem;
+}
+
 li.task-list-item > p {
     display: flex;
     align-items: flex-start;

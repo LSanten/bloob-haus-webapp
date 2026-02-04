@@ -244,7 +244,7 @@ Phase 1 is **COMPLETE**! Phase 2 is being planned.
 - Pre-build validation
 - RSS feed
 
-See `docs/bloob-haus-future-features-roadmap.md` for full roadmap including:
+See `docs/implementation-plans/bloob-haus-future-features-roadmap.md` for full roadmap including:
 - Visualizer architecture (documented)
 - Quick Mode (no GitHub needed)
 - Multi-user support

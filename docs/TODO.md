@@ -242,6 +242,39 @@
 - Reduced checkbox spacing
 - Updated search-index.json spec (added image field)
 
+### Session 4 - February 3, 2026
+**Worked on:** Recipe cleanup (buffbaby vault), Magic Machines architecture, documentation reorganization
+
+**Recipe Cleanup (buffbaby vault):**
+- Added missing `# titles` to 2 files (gf pancakes, Tuna Rools)
+- Converted `**bold**` section headers to `##` headers (4 files)
+- Deleted emoji section markers (👉🏻)
+- Converted 74 files from bullets/numbered lists to checkboxes (`- [ ]`)
+- Fixed YAML frontmatter that was accidentally converted
+- Standardized recipe formatting across ~80 recipe files
+
+**Magic Machines Architecture:**
+- Introduced "Magic Machines" concept - AI-powered content transformation tools
+- Designed as "write" counterpart to Visualizers ("read" tools)
+- Created modular manifest format (JSON with prompts, settings, I/O)
+- Designed flat YAML frontmatter for status tracking (`mm_<machine-name>: date`)
+- Flat structure chosen for Obsidian Properties compatibility
+
+**Recipe Scaling System Plan:**
+- Researched Cooklang markup language for recipes
+- Designed Cooklang-inspired syntax: `@ingredient{qty%unit}`
+- Planned hybrid visualizer (build-time parser + runtime scaler)
+- Documented scaling UI and servings metadata approach
+
+**Documentation Reorganization:**
+- Created `docs/implementation-plans/` folder
+- Moved all implementation plans and roadmaps to new location
+- Established naming conventions:
+  - `bloob-haus-*.md` for roadmaps/phase plans
+  - `YYYY-MM-DD_*.md` for feature-specific plans
+- Updated CLAUDE_CONTEXT.md with new conventions
+- Created `2026-02-03_recipe-scaling-and-magic-machines.md`
+
 ---
 
 ## Key Technical Decisions
@@ -273,7 +306,7 @@
 ## What's Next (Future Phases)
 
 Phase 2 and beyond features are documented in:
-- `docs/bloob-haus-future-features-roadmap.md`
+- `docs/implementation-plans/bloob-haus-future-features-roadmap.md`
 
 Potential next steps:
 - Backlinks and graph visualization
@@ -281,3 +314,5 @@ Potential next steps:
 - Quick Mode (paste markdown directly)
 - Interactive visualizers
 - Search functionality
+- Recipe scaling with Cooklang-style syntax
+- Magic Machines (AI-powered content transformation)

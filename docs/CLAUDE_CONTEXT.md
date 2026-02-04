@@ -211,4 +211,20 @@ docs/
 
 ---
 
+## Keeping Docs Updated
+
+When making changes, update the relevant docs:
+
+| Change Type | Update |
+|-------------|--------|
+| New folder structure in codebase | Update "Project Structure" in this file |
+| New/changed architecture (visualizers, magic machines, etc.) | Update `architecture/` docs |
+| Implementation work on a phase | Update the plan in `phases/` |
+| Completed a session | Add to `CHANGELOG.md` |
+| Significant technical decision | Add to `DECISIONS.md` |
+| New feature idea | Add to `IDEAS.md` |
+| Phase-level roadmap changes | Update `ROADMAP.md` |
+
+---
+
 *buffbaby.bloob.haus is LIVE and auto-updating!*

@@ -1,7 +1,7 @@
 # Bloob Haus: Future Features Roadmap
 
 **Purpose:** Document features planned for Phase 2 and beyond. This is a "parking lot" to capture ideas without letting them creep into Phase 1.  
-**Last Updated:** February 2, 2026  
+**Last Updated:** February 3, 2026  
 **Status:** Planning document - features require approval before implementation
 
 ---
@@ -13,8 +13,12 @@
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | In Development |
 | Phase 2 | Enhanced linking + API foundation | Planning |
 | Phase 3 | Quick Mode + Multi-user | Planning |
-| Phase 4 | Interactive visualizers | Planning |
+| Phase 4 | Interactive visualizers + Magic Machines | Planning |
 | Phase 5+ | Advanced features | Ideas |
+
+**Core Architecture Systems:**
+- [Visualizer Architecture](#visualizer-architecture-core-system) - "Read" tools that display content
+- [Magic Machines Architecture](#magic-machines-architecture-core-system) - "Write" tools that transform content
 
 ---
 
@@ -375,6 +379,112 @@ hugo/assets/
 
 ---
 
+## Magic Machines Architecture (Core System)
+
+**Status:** Planning  
+**See:** [Full Implementation Plan](2026-02-03_recipe-scaling-and-magic-machines.md)
+
+Magic Machines are the "write" counterpart to Visualizers. While visualizers transform content into visual experiences (read), magic machines transform content into different content (write).
+
+### Core Concepts
+
+| Concept | Direction | Purpose |
+|---------|-----------|---------|
+| **Visualizer** | Content → Display | Transform content into visual/interactive experience |
+| **Magic Machine** | Content → Content | Transform content using AI or algorithms |
+
+### Key Principles
+
+1. **Modular & Pluggable** - Self-contained units with JSON manifests
+2. **Declarative** - Defined via manifest with prompts, settings, I/O formats
+3. **Idempotent** - Track processing status to avoid re-running
+4. **Auditable** - Frontmatter tracking of which machines processed a file
+
+### Magic Machine Manifest Format
+
+```json
+{
+  "name": "recipe-unit-extractor",
+  "version": "1.0.0",
+  "description": "Converts natural language quantities to Cooklang syntax",
+  "type": "ai",
+  "model": {
+    "provider": "anthropic",
+    "model": "claude-3-haiku"
+  },
+  "input": {
+    "type": "markdown",
+    "selector": "files matching tags: #recipe OR folder: recipes/"
+  },
+  "output": {
+    "type": "markdown",
+    "mode": "in-place"
+  },
+  "prompt": "prompts/recipe-unit-extractor.md",
+  "statusTracking": {
+    "method": "frontmatter",
+    "key": "magic_machine_status"
+  }
+}
+```
+
+### Status Tracking
+
+Magic machines track processing status in frontmatter to enable skip/re-run logic.
+
+**Uses flat YAML keys** for Obsidian Properties compatibility:
+
+```yaml
+---
+title: Khichdi
+mm_unit_extractor: 2026-02-03
+mm_tag_suggester: 2026-02-03
+---
+```
+
+**Convention:** `mm_<machine-name>` with ISO date value. Presence = processed.
+
+### Example Magic Machines
+
+| Machine | Purpose |
+|---------|---------|
+| `recipe-unit-extractor` | Convert quantities to Cooklang syntax |
+| `tag-suggester` | Suggest tags based on content |
+| `excerpt-generator` | Generate search excerpts |
+| `link-suggester` | Suggest related content links |
+
+### Folder Structure
+
+```
+scripts/magic-machines/
+├── registry.json
+├── runner.js
+├── recipe-unit-extractor/
+│   ├── manifest.json
+│   ├── prompt.md
+│   └── README.md
+└── tag-suggester/
+    ├── manifest.json
+    └── prompt.md
+```
+
+### Future: Remote Execution
+
+When content lives on GitHub (not local), magic machines will need:
+- Bloob Haus API with GitHub OAuth
+- Commit changes back to user's repo
+- Obsidian plugin for sync (or manual pull)
+
+### Implementation Phases
+
+| Phase | Milestone |
+|-------|-----------|
+| Phase 4 | Local magic machine runner, recipe-unit-extractor |
+| Phase 5 | Webapp integration, GitHub OAuth for remote execution |
+| Phase 5+ | Obsidian plugin for seamless sync |
+
+---
+
 ## Phase 4: Interactive Visualizers
 
 **Goal:** Go beyond static pages to dynamic, interactive visualizations.
@@ -413,12 +523,16 @@ visualizer: timeline
 | 2024 | Expanded menu |
 ```
 
-### 4.5 Recipe Card Visualizer
-Special layout for recipe content:
-- Ingredients sidebar
-- Step-by-step with images
-- Scaling calculator
+### 4.5 Recipe Scaling Visualizer
+Special layout for recipe content with Cooklang-style syntax support:
+- Ingredients sidebar with `@ingredient{qty%unit}` parsing
+- Inline quantity references in instructions
+- Interactive scaling calculator (adjust servings)
 - Print-friendly version
+
+**Syntax:** Cooklang-inspired markup for scalable quantities.
+
+**See:** [Recipe Scaling & Magic Machines Plan](2026-02-03_recipe-scaling-and-magic-machines.md)
 
 ### 4.6 Thesis Visualizations (from Master's Thesis)
 Interactive visualizations for:
@@ -540,6 +654,10 @@ Features that came up but aren't prioritized yet:
 - [ ] Version history / revision tracking
 - [ ] Scheduled publishing
 - [ ] A/B testing for content
+- [ ] Obsidian plugin for Bloob Haus sync (push/pull with GitHub)
+- [ ] Obsidian plugin for Cooklang syntax preview
+- [ ] Ingredient database / linking (`@rice` → ingredient page)
+- [ ] Timer visualizer (`~{5%minutes}` becomes clickable timer)
 
 ---
 
@@ -557,6 +675,9 @@ Track major decisions and their rationale:
 | 2026-02-02 | Visualizer build-time resolution (Approach A) | Smaller payloads, fail-fast, audit trail. Runtime resolution (Approach B) doesn't scale with many visualizers |
 | 2026-02-02 | Separate search-index.json and links.json | Different use cases, search needs speed, link data is larger |
 | 2026-02-02 | Modular visualizer folder structure | Future-proofs for many visualizers, clear separation of concerns |
+| 2026-02-03 | Cooklang-inspired syntax for recipes | Established spec, good ecosystem, human-readable, supports scaling |
+| 2026-02-03 | Magic Machines as separate concept from Visualizers | Clear separation: visualizers=read/display, machines=write/transform |
+| 2026-02-03 | Magic machine status tracking in frontmatter | Enables idempotent runs, auditing, and selective re-processing |
 
 ---
 

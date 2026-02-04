@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.  
-**Last Updated:** February 2, 2026  
+**Last Updated:** February 3, 2026  
 **Current Phase:** Phase 1 Complete, Phase 2 Planning
 
 ---
@@ -219,8 +219,7 @@ npx hugo -s hugo
 
 - `docs/TODO.md` — Detailed progress tracking with session logs
 - `docs/CLAUDE_CONTEXT.md` — This file (quick orientation)
-- `docs/bloob-haus-implementation-plan-phase1-v2.md` — Original specs
-- `docs/bloob-haus-future-features-roadmap.md` — Phase 2+ planning
+- `docs/implementation-plans/` — All implementation plans and roadmaps (see Reference Documents section)
 
 ---
 
@@ -231,6 +230,7 @@ npx hugo -s hugo
 | 1 | Jan 29, 2026 | Task 1: Project setup |
 | 2 | Jan 30, 2026 | Tasks 2-18: Full implementation & deployment |
 | 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename, Phase 2 planning |
+| 4 | Feb 3, 2026 | Recipe cleanup (buffbaby vault), Magic Machines architecture, Cooklang-style recipe scaling plan |
 
 ---
 
@@ -253,15 +253,49 @@ See `docs/bloob-haus-future-features-roadmap.md` for full roadmap including:
 
 ## Reference Documents
 
-| Document | Purpose |
-|----------|---------|
-| `CLAUDE_CONTEXT.md` | This file - quick orientation |
-| `TODO.md` | Progress tracking, session logs |
-| `bloob-haus-implementation-plan-phase1-v2.md` | Phase 1 spec (historical/archive) |
-| `bloob-haus-future-features-roadmap.md` | Phase 2+ planning & visualizer architecture |
-| `bloob-haus-implementation-plan-phase2.md` | Phase 2 detailed tasks (when created) |
+| Document | Location | Purpose |
+|----------|----------|---------|
+| `CLAUDE_CONTEXT.md` | `docs/` | This file - quick orientation |
+| `TODO.md` | `docs/` | Progress tracking, session logs |
 
 **External reference:** The Obsidian vault `bloobhaus-obsidian` contains the original vision docs including the Vicki engineering report.
+
+---
+
+## Documentation Conventions
+
+### Implementation Plans
+
+All implementation plans and roadmaps live in `docs/implementation-plans/`:
+
+```
+docs/implementation-plans/
+├── bloob-haus-future-features-roadmap.md      ← Master roadmap & architecture
+├── bloob-haus-implementation-plan-phase1-v2.md ← Phase 1 (historical/complete)
+├── bloob-haus-implementation-plan-phase2.md    ← Phase 2 tasks
+├── 2026-02-03_recipe-scaling-and-magic-machines.md ← Feature-specific plan
+└── YYYY-MM-DD_feature-name.md                  ← Future feature plans
+```
+
+**Naming conventions:**
+- **Roadmap/phase plans:** `bloob-haus-*.md` (no date prefix)
+- **Feature-specific plans:** `YYYY-MM-DD_descriptive-name.md` (date prefix for chronological sorting)
+
+### Key Documents
+
+| Document | Purpose |
+|----------|---------|
+| `bloob-haus-future-features-roadmap.md` | Master roadmap, visualizer & magic machine architecture |
+| `bloob-haus-implementation-plan-phase1-v2.md` | Phase 1 spec (complete, historical) |
+| `bloob-haus-implementation-plan-phase2.md` | Phase 2 detailed tasks |
+| `2026-02-03_recipe-scaling-and-magic-machines.md` | Cooklang syntax & Magic Machines |
+
+### Core Architecture Documentation
+
+| Concept | Location |
+|---------|----------|
+| Visualizers (read/display) | `implementation-plans/bloob-haus-future-features-roadmap.md` → Visualizer Architecture |
+| Magic Machines (write/transform) | `implementation-plans/bloob-haus-future-features-roadmap.md` → Magic Machines Architecture |
 
 ---
 

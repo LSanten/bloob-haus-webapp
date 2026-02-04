@@ -46,11 +46,24 @@
 
   // Initialize checkboxes
   function initCheckboxes() {
+    // Select checkboxes in both tight lists (li > input) and loose lists (li > p > input)
     const checkboxes = document.querySelectorAll(
-      'ul > li > input[type="checkbox"]',
+      'ul > li > input[type="checkbox"], ul > li > p > input[type="checkbox"]',
     );
 
     if (checkboxes.length === 0) return;
+
+    // Add class to parent ul elements for CSS styling (more reliable than :has())
+    checkboxes.forEach((checkbox) => {
+      const ul = checkbox.closest("ul");
+      if (ul) {
+        ul.classList.add("task-list");
+      }
+      const li = checkbox.closest("li");
+      if (li) {
+        li.classList.add("task-list-item");
+      }
+    });
 
     const savedStates = loadCheckboxStates();
     let previousStates = null; // For undo functionality

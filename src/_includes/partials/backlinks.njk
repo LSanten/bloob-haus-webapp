@@ -1,0 +1,10 @@
+{% if backlinks and backlinks.length > 0 %}
+<aside class="backlinks">
+    <h3>Pages that link here</h3>
+    <ul>
+        {% for link in backlinks %}
+        <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+        {% endfor %}
+    </ul>
+</aside>
+{% endif %}

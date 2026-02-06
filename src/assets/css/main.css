@@ -453,3 +453,51 @@ pre code {
         gap: var(--spacing-xs);
     }
 }
+
+/* ================================
+   Backlinks
+   ================================ */
+
+.backlinks {
+    margin-top: var(--spacing-xl, 2rem);
+    padding-top: var(--spacing-md, 1rem);
+    border-top: 1px solid var(--border-color);
+}
+
+.backlinks h3 {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-sm, 0.5rem);
+}
+
+.backlinks ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.backlinks li a {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--footer-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--link-color);
+    text-decoration: none;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s;
+}
+
+.backlinks li a:hover {
+    background: var(--card-bg);
+    border-color: var(--accent-color);
+    color: var(--link-hover);
+}

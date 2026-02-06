@@ -1,4 +1,4 @@
-import { readdirSync, existsSync } from "fs";
+import { readdirSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 // Auto-discover visualizer packages from lib/visualizers/
@@ -133,6 +133,55 @@ export default async function (eleventyConfig) {
     return collectionApi
       .getFilteredByGlob("src/lists of favorites/**/*.md")
       .sort((a, b) => (b.date || 0) - (a.date || 0));
+  });
+
+  // Backlinks: compute which pages link to each other
+  // Uses addCollection to attach backlinks data to each page.
+  // Reads source files from disk (stable API, not Eleventy internals).
+  eleventyConfig.addCollection("withBacklinks", function (collectionApi) {
+    const all = collectionApi.getAll();
+
+    // Extract internal links from markdown source (exclude images)
+    function extractLinks(source) {
+      const links = [];
+      // Markdown links [text](url) — exclude images ![alt](url)
+      const mdLinks = source.matchAll(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g);
+      for (const m of mdLinks) {
+        const url = m[2];
+        // Only internal links (starting with /)
+        if (url.startsWith("/") && !url.startsWith("/media/")) {
+          links.push(url.replace(/\/$/, "")); // normalize trailing slash
+        }
+      }
+      return links;
+    }
+
+    // First pass: build a map of page URL → outgoing links
+    const linkMap = new Map();
+    for (const page of all) {
+      if (!page.inputPath.endsWith(".md")) continue;
+      try {
+        const source = readFileSync(page.inputPath, "utf-8");
+        linkMap.set(page.url.replace(/\/$/, ""), extractLinks(source));
+      } catch {
+        // File may not exist if it's a generated page
+      }
+    }
+
+    // Second pass: for each page, find all pages that link TO it
+    for (const page of all) {
+      const pageUrl = page.url.replace(/\/$/, "");
+      page.data.backlinks = all
+        .filter((other) => {
+          if (other.url === page.url) return false;
+          const otherUrl = other.url.replace(/\/$/, "");
+          const outgoing = linkMap.get(otherUrl);
+          return outgoing?.includes(pageUrl);
+        })
+        .map((p) => ({ url: p.url, title: p.data.title }));
+    }
+
+    return all;
   });
 
   // Visualizer build-time transform

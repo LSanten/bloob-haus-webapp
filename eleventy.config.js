@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
 import taskLists from "markdown-it-task-lists";
+import pluginRss from "@11ty/eleventy-plugin-rss";
+import Image from "@11ty/eleventy-img";
 
 // Auto-discover visualizer packages from lib/visualizers/
 async function loadVisualizers() {
@@ -25,6 +27,9 @@ async function loadVisualizers() {
 export default async function (eleventyConfig) {
   // Load visualizer modules for build-time transforms
   const visualizers = await loadVisualizers();
+  // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
+  eleventyConfig.addPlugin(pluginRss);
+
   // Don't use .gitignore for Eleventy's ignore rules
   // (src/content/ is gitignored since it's generated, but Eleventy must process it)
   eleventyConfig.setUseGitIgnore(false);
@@ -190,6 +195,54 @@ export default async function (eleventyConfig) {
     }
 
     return all;
+  });
+
+  // Image optimization transform
+  // Finds <img src="/media/..."> in rendered HTML, generates WebP + original
+  // at reasonable sizes, replaces with <picture> element.
+  eleventyConfig.addTransform("optimizeImages", async function (content) {
+    if (!this.page.outputPath?.endsWith(".html")) return content;
+
+    const imgRegex = /<img\s+([^>]*?)src="(\/media\/[^"]+)"([^>]*?)>/gi;
+    const matches = [...content.matchAll(imgRegex)];
+    if (matches.length === 0) return content;
+
+    let result = content;
+    for (const match of matches) {
+      const [originalTag, before, src, after] = match;
+      const inputPath = join("src", src);
+      if (!existsSync(inputPath)) continue;
+
+      // Extract alt text if present
+      const altMatch = (before + after).match(/alt="([^"]*)"/);
+      const alt = altMatch ? altMatch[1] : "";
+
+      try {
+        const metadata = await Image(inputPath, {
+          widths: [600, 1200],
+          formats: ["webp", "jpeg"],
+          outputDir: "_site/media/optimized",
+          urlPath: "/media/optimized/",
+          filenameFormat: function (id, src, width, format) {
+            const name = src.split("/").pop().split(".")[0];
+            return `${name}-${width}w.${format}`;
+          },
+        });
+
+        const pictureHtml = Image.generateHTML(metadata, {
+          alt,
+          sizes: "(max-width: 600px) 100vw, 800px",
+          loading: "lazy",
+          decoding: "async",
+        });
+
+        result = result.replace(originalTag, pictureHtml);
+      } catch (e) {
+        // If image processing fails, keep original tag
+        console.warn(`[image] Failed to optimize ${src}: ${e.message}`);
+      }
+    }
+    return result;
   });
 
   // Visualizer build-time transform

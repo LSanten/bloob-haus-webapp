@@ -20,6 +20,10 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-03 | Magic Machines as separate concept from Visualizers | Clear separation: visualizers=read/display, machines=write/transform |
 | 2026-02-03 | Magic machine status tracking in frontmatter | Enables idempotent runs, auditing, and selective re-processing |
 | 2026-02-03 | Flat YAML keys for magic machine status | Obsidian Properties compatibility, easier Dataview queries |
+| 2026-02-05 | Migrate from Hugo to Eleventy | JS throughout enables dual-use visualizers (build + browser + Obsidian), native collections for backlinks |
+| 2026-02-05 | Visualizer parsers run in preprocessor (not addTransform) | Parsers receive raw markdown, enabling code sharing across Eleventy, browser preview, and Obsidian plugins |
+| 2026-02-05 | markdown-it-task-lists for checkbox rendering | Standard markdown parser concern (like Goldmark in Hugo), not a visualizer responsibility |
+| 2026-02-05 | Slugify both folder paths and filenames in URLs | Clean URLs, no spaces; consistent across Eleventy permalinks, preprocessor links, and Obsidian copy-link plugin |
 
 ---
 
@@ -74,3 +78,59 @@ When making a significant technical or architectural decision:
 - Easy to query with Dataview: `WHERE mm_unit_extractor`
 - Simple to parse programmatically
 - Presence of key = processed; absence = not processed
+
+---
+
+### Hugo to Eleventy Migration (2026-02-05)
+
+**Context:** Bloob Haus needed site-wide awareness for features like backlinks and spatial visualization. The core vision is "visualizers that work both in the web app and in Obsidian."
+
+**Decision:** Migrate from Hugo to Eleventy.
+
+**Rationale:**
+1. Code sharing — Hugo uses Go templates; Eleventy uses JS. Same parsing logic for build-time and browser.
+2. Native collections — site-wide data access without JSON file workarounds.
+3. Dual-use visualizers — JS throughout enables build-time + browser + Obsidian plugin.
+4. Standard conventions — recognizable to developers.
+
+**Trade-offs:**
+- Slower builds than Hugo (~seconds vs ~milliseconds for large sites)
+- Migration effort
+
+---
+
+### Visualizer Parsers in Preprocessor, Not addTransform (2026-02-05)
+
+**Context:** Eleventy's `addTransform` runs after markdown is rendered to HTML. This means a transform-based parser would receive HTML, not raw markdown. But the visualizer architecture requires `parser(markdown) → data` so the same parser works in Eleventy, browser preview, and Obsidian plugins.
+
+**Options considered:**
+1. **addTransform (post-render):** Parser receives HTML after markdown-it processing. Simpler Eleventy integration, but parsers must work with HTML, not markdown. Breaks code sharing with Obsidian/browser where input is raw markdown.
+2. **Preprocessor (pre-render):** Parser runs during `preprocess-content.js` before markdown-it. Parser receives raw markdown. Same parser code works everywhere.
+
+**Decision:** Preprocessor-first for build-time visualizers with custom syntax.
+
+**How it works:**
+```
+Raw markdown with ::: timeline
+    ↓ preprocessor runs parser(markdown) → data
+    ↓ preprocessor runs renderer(data) → html
+Modified markdown (custom syntax replaced with HTML)
+    ↓ markdown-it renders remaining markdown
+Final HTML page
+```
+
+**`addTransform` is kept as a secondary hook** for cases where a visualizer needs to modify the final HTML output (e.g., injecting wrapper divs, adding data attributes). But the primary parser integration point is the preprocessor.
+
+**Rationale:**
+- `parser(markdown) → data` stays pure and portable
+- Same parser works in: Eleventy build, browser live preview, Obsidian plugin
+- Preprocessor already handles content transformation (link resolution, frontmatter injection)
+- Aligns with the visualizer architecture principle: parsers are pure functions on markdown
+
+**Separation of concerns:**
+| Layer | What it does | Input |
+|-------|-------------|-------|
+| Preprocessor | Custom syntax parsing (`::: timeline`) | Raw markdown |
+| markdown-it + plugins | Standard markdown (`- [ ]`, `**bold**`) | Markdown |
+| addTransform | Post-render HTML modifications | HTML |
+| browser.js | Interactivity, state, DOM enhancement | Rendered DOM |

@@ -1,7 +1,8 @@
 # Visualizer Architecture
 
-**Status:** Foundation laid in Phase 1 (checkbox-tracker), full system planned for Phase 4+  
-**Location:** `docs/architecture/`
+**Status:** Modular architecture implemented (M4), checkbox-tracker migrated to `lib/visualizers/`  
+**Location:** `docs/architecture/`  
+**Updated:** 2026-02-05 (Eleventy migration)
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
 
@@ -18,71 +19,99 @@ Visualizers are the core of Bloob Haus - "little machines" that transform text i
 
 ---
 
+## Visualizer Design Principle
+
+**All visualizers MUST be pure functions:**
+
+1. `parser(markdown) → data` - No side effects, JSON-serializable output
+2. `renderer(data) → html` - No DOM manipulation, returns string
+
+This enables:
+- Build-time static generation (Eleventy)
+- Instant browser preview (same code, different context)  
+- Obsidian plugin (same parser, platform-specific renderer)
+- Future: server-side rendering, API endpoints, etc.
+
+**Never put DOM operations in parser or renderer.**
+**Never put file system operations in parser or renderer.**
+
+---
+
 ## Two Types of Visualizers
 
 ### Build-time Visualizers
-Run during preprocessing (Node.js). Transform markdown syntax into HTML + data.
+Run during preprocessing (Node.js). Parse custom markdown syntax into data, then render to HTML.
+
+**Key decision:** Build-time parsers run in the **preprocessor** (before markdown-it), not in Eleventy's `addTransform` (after). This ensures parsers receive raw markdown, so the same parser code works in Eleventy, browser preview, and Obsidian plugins. See [DECISIONS.md](../implementation-plans/DECISIONS.md) for full rationale.
 
 ```
-markdown with special syntax
-    ↓ parser.js (during preprocess-content.js)
-transformed HTML + data.json
+raw markdown with ::: timeline
+    ↓ parser.js (during preprocess-content.js) → structured data
+    ↓ renderer.js (data → HTML string)
+modified markdown (custom syntax replaced with HTML)
+    ↓ markdown-it renders remaining standard markdown
+final HTML page
 ```
 
 **Examples:** Timeline, yoga sequence, recipe card layout
 
-**When to use:** When you need to parse custom markdown syntax or generate structured data for the page.
+**When to use:** When you need to parse custom markdown syntax (e.g., `::: timeline`, fenced code blocks) or generate structured data for the page.
 
 ### Runtime Visualizers
-Run in the browser (JS + CSS). Enhance rendered HTML with interactivity.
+Run in the browser (JS + CSS). Enhance already-rendered HTML with interactivity.
 
 ```
-rendered HTML + data.json
-    ↓ visualizer.js (in browser)
+rendered HTML in the DOM
+    ↓ browser.js (DOM events, localStorage, etc.)
 interactive experience
 ```
 
 **Examples:** Checkbox tracker, link previews, graph visualization
 
-**When to use:** When you need client-side interactivity, state persistence, or dynamic behavior.
+**When to use:** When you need client-side interactivity, state persistence, or dynamic behavior. Standard markdown syntax (like `- [ ]` for checkboxes) is handled by markdown-it plugins, not by visualizers.
 
 ### Hybrid Visualizers
-Some need both: build-time generates data, runtime renders it.
+Some need both: build-time generates data, runtime renders it interactively.
 
 **Examples:** 
 - Graph: build-time generates `links.json`, runtime renders D3 visualization
-- Timeline: build-time parses table syntax → JSON, runtime renders interactive timeline
+- Timeline: build-time parses `::: timeline` blocks → JSON, runtime renders interactive timeline
 
 ---
 
 ## Folder Structure
 
 ```
-hugo/assets/
-├── css/
-│   ├── main.css                      ← Template styling (replaceable)
-│   └── visualizers/
-│       ├── checkbox-tracker.css      ← Runtime visualizer styles
-│       ├── link-preview.css
-│       └── graph.css
-└── js/
-    └── visualizers/
-        ├── checkbox-tracker.js       ← Runtime visualizer logic
-        ├── link-preview.js
-        └── graph.js
+lib/visualizers/                        ← Source of truth for all visualizer code
+├── checkbox-tracker/                   ← Each visualizer is a self-contained package
+│   ├── manifest.json                   ← Metadata, activation method, settings schema
+│   ├── index.js                        ← Module entry point (exports type, name, transform)
+│   ├── browser.js                      ← Runtime: DOM events, localStorage (side effects)
+│   └── styles.css                      ← Visualizer-specific CSS
+├── timeline/                           ← (future) Build-time visualizer example
+│   ├── manifest.json
+│   ├── index.js
+│   ├── parser.js                       ← Pure: markdown → structured data
+│   ├── renderer.js                     ← Pure: data → HTML string
+│   ├── browser.js                      ← Runtime interactivity (optional)
+│   └── styles.css
+└── ...
 
 scripts/
-├── preprocess-content.js             ← Orchestrates build-time visualizers
-└── visualizers/
-    ├── registry.json                 ← Lists all available visualizers
-    ├── timeline/
-    │   ├── parser.js                 ← Build-time parser
-    │   ├── manifest.json             ← Visualizer metadata
-    │   └── README.md
-    └── yoga-sequence/
-        ├── parser.js
-        └── manifest.json
+├── preprocess-content.js               ← Orchestrates build-time visualizer parsers
+├── bundle-visualizers.js               ← esbuild: bundles browser.js + copies CSS
+└── utils/
+
+src/assets/                             ← Generated by bundle-visualizers.js
+├── css/visualizers/
+│   └── checkbox-tracker.css            ← Copied from lib/visualizers/
+└── js/visualizers/
+    └── checkbox-tracker.js             ← Bundled from lib/visualizers/ via esbuild
+
+eleventy.config.js                      ← addTransform for post-render HTML modifications
 ```
+
+**Adding a new visualizer = adding a new folder in `lib/visualizers/`.** No changes to `eleventy.config.js` or `bundle-visualizers.js` needed — both auto-discover visualizer folders.
 
 ---
 
@@ -216,18 +245,32 @@ Auto-detection should be careful and explicit. Ideas to explore:
 
 ---
 
-## Current Implementation (Phase 1)
+## Current Implementation (Post-Migration M4)
 
 ```
-hugo/assets/
-├── css/visualizers/checkbox-tracker.css
-└── js/visualizers/checkbox-tracker.js
+lib/visualizers/checkbox-tracker/
+├── manifest.json       ← type: "runtime", activation: auto-detect
+├── index.js            ← exports type, name; no-op transform (runtime-only)
+├── browser.js          ← DOM: enables checkboxes, localStorage persistence, reset button
+└── styles.css          ← Custom checkbox styling, floating reset button
 ```
 
-- Checkbox tracker uses auto-detection (finds checkboxes in DOM)
-- Loaded on all pages (Approach B temporarily, will optimize later)
-- No manifest system yet
-- No folder config yet
+**Build pipeline:**
+1. `scripts/bundle-visualizers.js` — auto-discovers `lib/visualizers/*/`, bundles with esbuild
+2. `eleventy.config.js` — auto-loads visualizer modules, registers `addTransform` for build-time visualizers
+3. `markdown-it-task-lists` plugin — converts `- [ ]` to `<input type="checkbox">` (markdown parser layer)
+4. `browser.js` — runtime enhancement (interactivity, persistence)
+
+**What's working:**
+- Checkbox tracker: styled checkboxes, click persistence, floating reset button with undo
+- Auto-discovery: new visualizer = new folder, no config changes
+- esbuild bundling with sourcemaps in dev
+
+**Not yet implemented:**
+- Per-page visualizer activation (frontmatter `visualizers:` field)
+- Folder config (`.bloob/visualizers.json`)
+- Build-time visualizer integration in preprocessor
+- Manifest-based CSS/JS inclusion (currently all loaded on every page)
 
 ---
 
@@ -235,12 +278,12 @@ hugo/assets/
 
 | Phase | Milestone |
 |-------|-----------|
-| Phase 1 ✓ | Checkbox tracker working, folder structure established |
-| Phase 2 | Add `links.json` generation (build-time for graph visualizer) |
-| Phase 4 | Full visualizer registry, manifest system, folder configs |
-| Phase 4 | Link preview, graph visualization runtime visualizers |
-| Phase 4+ | Timeline, yoga-sequence build-time visualizers |
-| Phase 5+ | Webapp visualizer library, user uploads, UI configuration |
+| Phase 1 ✓ | Checkbox tracker working (Hugo) |
+| M4 ✓ | Modular visualizer architecture, esbuild bundling, auto-discovery (Eleventy) |
+| Next | Build-time visualizer integration in preprocessor (first candidate: timeline or recipe-card) |
+| Next | Per-page visualizer activation via frontmatter |
+| Future | Full manifest system, folder configs, per-page CSS/JS inclusion |
+| Future | Webapp visualizer library, user uploads, UI configuration |
 
 ---
 

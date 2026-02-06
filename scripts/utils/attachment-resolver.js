@@ -3,9 +3,9 @@
  * Resolves image and file references, copies attachments to static folder.
  */
 
-import fs from 'fs-extra';
-import path from 'path';
-import { glob } from 'glob';
+import fs from "fs-extra";
+import path from "path";
+import { glob } from "glob";
 
 /**
  * Resolves image and attachment references in markdown content.
@@ -22,42 +22,50 @@ export function resolveAttachments(content, attachmentIndex) {
   // Pattern 1: Standard markdown images ![alt](path)
   const mdImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
-  let processedContent = content.replace(mdImagePattern, (match, alt, imagePath) => {
-    // Decode URL-encoded characters
-    const decodedPath = decodeURIComponent(imagePath);
-    const filename = path.basename(decodedPath);
+  let processedContent = content.replace(
+    mdImagePattern,
+    (match, alt, imagePath) => {
+      // Decode URL-encoded characters
+      const decodedPath = decodeURIComponent(imagePath);
+      const filename = path.basename(decodedPath);
 
-    // Look up in attachment index
-    const resolvedPath = attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
+      // Look up in attachment index
+      const resolvedPath =
+        attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
 
-    if (resolvedPath) {
-      resolved.push({ original: imagePath, resolved: resolvedPath });
-      return `![${alt}](${resolvedPath})`;
-    } else {
-      broken.push({ original: imagePath });
-      return match; // Keep original if not found
-    }
-  });
+      if (resolvedPath) {
+        resolved.push({ original: imagePath, resolved: resolvedPath });
+        return `![${alt}](${resolvedPath})`;
+      } else {
+        broken.push({ original: imagePath });
+        return match; // Keep original if not found
+      }
+    },
+  );
 
   // Pattern 2: Wiki-style images ![[image.jpg]]
   const wikiImagePattern = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
 
-  processedContent = processedContent.replace(wikiImagePattern, (match, imagePath, altText) => {
-    const decodedPath = decodeURIComponent(imagePath);
-    const filename = path.basename(decodedPath);
-    const alt = altText || '';
+  processedContent = processedContent.replace(
+    wikiImagePattern,
+    (match, imagePath, altText) => {
+      const decodedPath = decodeURIComponent(imagePath);
+      const filename = path.basename(decodedPath);
+      const alt = altText || "";
 
-    // Look up in attachment index
-    const resolvedPath = attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
+      // Look up in attachment index
+      const resolvedPath =
+        attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
 
-    if (resolvedPath) {
-      resolved.push({ original: imagePath, resolved: resolvedPath });
-      return `![${alt}](${resolvedPath})`;
-    } else {
-      broken.push({ original: imagePath });
-      return `![${alt}](${imagePath})`; // Convert to standard markdown anyway
-    }
-  });
+      if (resolvedPath) {
+        resolved.push({ original: imagePath, resolved: resolvedPath });
+        return `![${alt}](${resolvedPath})`;
+      } else {
+        broken.push({ original: imagePath });
+        return `![${alt}](${imagePath})`; // Convert to standard markdown anyway
+      }
+    },
+  );
 
   return { content: processedContent, resolved, broken };
 }
@@ -81,8 +89,19 @@ export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
   await fs.ensureDir(outputDir);
 
   // Find all attachment files
-  const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'html', 'mp4', 'webm'];
-  const pattern = `**/*.{${extensions.join(',')}}`;
+  const extensions = [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp",
+    "svg",
+    "pdf",
+    "html",
+    "mp4",
+    "webm",
+  ];
+  const pattern = `**/*.{${extensions.join(",")}}`;
   const files = await glob(pattern, { cwd: sourceDir, nodir: true });
 
   console.log(`[attachments] Found ${files.length} attachments to copy`);
@@ -127,14 +146,15 @@ And one that doesn't exist:
 `;
 
   const mockAttachmentIndex = {
-    'Pasted image 20250315160236.jpg': '/media/Pasted image 20250315160236.jpg',
-    'pasted image 20250315160236.jpg': '/media/Pasted image 20250315160236.jpg',
-    'cleanshot_2026-01-10-at-22-20-23@2x.png': '/media/cleanshot_2026-01-10-at-22-20-23@2x.png',
+    "Pasted image 20250315160236.jpg": "/media/Pasted image 20250315160236.jpg",
+    "pasted image 20250315160236.jpg": "/media/Pasted image 20250315160236.jpg",
+    "cleanshot_2026-01-10-at-22-20-23@2x.png":
+      "/media/cleanshot_2026-01-10-at-22-20-23@2x.png",
   };
 
   const result = resolveAttachments(testContent, mockAttachmentIndex);
-  console.log('Processed content:');
+  console.log("Processed content:");
   console.log(result.content);
-  console.log('\nResolved:', result.resolved);
-  console.log('Broken:', result.broken);
+  console.log("\nResolved:", result.resolved);
+  console.log("Broken:", result.broken);
 }

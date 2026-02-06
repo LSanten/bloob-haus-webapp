@@ -1,7 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
+  "buildCommand": "npm run build:eleventy",
+  "outputDirectory": "_site",
   "installCommand": "npm install",
-  "framework": null,
-  "devCommand": "npm run dev"
+  "framework": null
 }

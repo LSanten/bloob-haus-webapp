@@ -4,70 +4,67 @@
 
 ---
 
-## M0: Preparation (30 min)
-- [ ] `mkdir -p src/{_data,_includes/layouts,_includes/partials,content,assets/css,assets/js}`
-- [ ] `mkdir -p lib/visualizers/checkbox-tracker`
-- [ ] `npm install @11ty/eleventy esbuild --save-dev`
-- [ ] Update `.gitignore` (add `_site/`, `src/content/`)
-- [ ] Add npm scripts to `package.json`
-- [ ] Verify: `npm run dev:eleventy` starts
+## M0: Preparation ✅ COMPLETE
+- [x] Create `src/` directory structure
+- [x] Create `lib/visualizers/checkbox-tracker/`
+- [x] `npm install @11ty/eleventy esbuild --save-dev`
+- [x] Update `.gitignore` (section dirs, `_site/`, `src/media/`)
+- [x] Add npm scripts to `package.json`
+- [x] Create `.eleventyignore` with `node_modules/`
 
 ---
 
-## M1: Foundation (2-3 hrs)
-- [ ] Create `.eleventy.js` at root
-- [ ] Create `src/_data/site.js` (from hugo/config.yaml)
-- [ ] Create `src/_includes/layouts/base.njk` (from baseof.html)
-- [ ] Create `src/_includes/layouts/page.njk` (from single.html)
-- [ ] Create `src/_includes/partials/head.njk`
-- [ ] Create `src/_includes/partials/nav.njk`
-- [ ] Copy CSS: `cp -r hugo/assets/css/* src/assets/css/`
-- [ ] Create test file `src/content/test.md`
-- [ ] Verify: Test page renders with layout and CSS
+## M1: Foundation ✅ COMPLETE
+- [x] Create `eleventy.config.js` (ESM, Eleventy 3.x)
+- [x] Create `src/_data/site.js`
+- [x] Create `src/_data/eleventyComputed.js` (slugified permalinks)
+- [x] Port templates: `base.njk`, `page.njk`, `list.njk`
+- [x] Port partials: `head.njk`, `nav.njk`, `footer.njk`, `scripts.njk`
+- [x] Copy CSS + JS assets to `src/assets/`
+- [x] Verify test page renders
 
 ---
 
-## M2: Preprocessing (1-2 hrs)
-- [ ] Modify `preprocess-content.js` - add BUILD_TARGET support
-- [ ] Modify `build-site.js` - add --target flag
-- [ ] Add `layout: layouts/page.njk` to frontmatter for Eleventy
-- [ ] Verify: `npm run build:eleventy` outputs to `src/content/`
+## M2: Preprocessing ✅ COMPLETE
+- [x] Modify `preprocess-content.js` — `BUILD_TARGET` support (lazy getter)
+- [x] Modify `build-site.js` — `--target=` flag
+- [x] Add `layout: layouts/page.njk` to frontmatter for Eleventy
+- [x] Verify: 67 pages, 22 media, 0 broken links
 
 ---
 
-## M3: Template Parity (2-3 hrs)
-- [ ] Create `src/_includes/layouts/list.njk`
-- [ ] Set up collections in `.eleventy.js`
-- [ ] Create homepage template
-- [ ] Add date filter
+## M3: Template Parity (~1-2 hrs)
+- [ ] Set up section collections in `eleventy.config.js` (`recipes`, `recipesByDate`, etc.)
+- [ ] Create homepage `src/index.njk`
+- [ ] Create section index pages (`src/recipes/index.njk`, etc.)
 - [ ] Visual comparison: Hugo vs Eleventy side-by-side
 - [ ] Fix any differences
 
 ---
 
-## M4: Visualizer Architecture (2-3 hrs)
-- [ ] Create `lib/visualizers/checkbox-tracker/parser.js` (pure)
-- [ ] Create `lib/visualizers/checkbox-tracker/renderer.js` (pure)
+## M4: Visualizer Architecture (~2-3 hrs)
+- [ ] Create `lib/visualizers/checkbox-tracker/parser.js` (pure, operates on HTML)
+- [ ] Create `lib/visualizers/checkbox-tracker/renderer.js` (pure, returns HTML string)
 - [ ] Create `lib/visualizers/checkbox-tracker/browser.js` (DOM/localStorage)
-- [ ] Create `lib/visualizers/checkbox-tracker/index.js` (exports)
+- [ ] Create `lib/visualizers/checkbox-tracker/index.js` (exports + transform)
 - [ ] Copy styles to `lib/visualizers/checkbox-tracker/styles.css`
-- [ ] Create `scripts/bundle-visualizers.js`
-- [ ] Integrate with Eleventy (filter or transform)
-- [ ] Update package.json build scripts
-- [ ] Verify: Build-time rendering + browser interactivity works
+- [ ] Create `scripts/bundle-visualizers.js` (esbuild, auto-discovers visualizer folders)
+- [ ] Add `addTransform("visualizers", ...)` to `eleventy.config.js`
+- [ ] Update `package.json` build scripts
+- [ ] Verify: checkboxes work (build-time + browser interactivity + persistence)
 
 ---
 
-## M5: Backlinks (1-2 hrs)
-- [ ] Create `src/_data/eleventyComputed.js` OR collection in config
+## M5: Backlinks (~1-2 hrs)
+- [ ] Add `addCollection("withBacklinks", ...)` to `eleventy.config.js`
 - [ ] Create `src/_includes/partials/backlinks.njk`
-- [ ] Add backlinks to page layout
+- [ ] Add backlinks include to `page.njk`
 - [ ] Add backlinks CSS
-- [ ] Verify: Backlinks appear on linked pages
+- [ ] Verify: backlinks appear on linked pages
 
 ---
 
-## M6: Deployment (1-2 hrs)
+## M6: Deployment (~1-2 hrs)
 - [ ] Full test: `npm run build:eleventy && npx serve _site`
 - [ ] Update `vercel.json`
 - [ ] Push to branch, test preview
@@ -78,17 +75,13 @@
 
 ---
 
-## M7: Cleanup (2-3 hrs)
+## M7: Cleanup (~2-3 hrs)
 - [ ] Archive Hugo: `git checkout -b archive/hugo-version && git push`
-- [ ] Remove hugo/ folder
+- [ ] Remove `hugo/` folder
 - [ ] `npm uninstall hugo-bin`
-- [ ] Clean up package.json scripts
+- [ ] Clean up `package.json` scripts
 - [ ] Create `docs/implementation-plans/DECISIONS.md`
 - [ ] Update `docs/CLAUDE_CONTEXT.md`
 - [ ] Update `docs/architecture/visualizers.md`
 - [ ] Update `docs/implementation-plans/ROADMAP.md`
 - [ ] Update README.md
-
----
-
-## Total Estimated Time: ~12-16 hours (2 focused days)

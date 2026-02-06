@@ -78,10 +78,14 @@ export async function buildFileIndex(publishedFiles, contentDir) {
     const hasFolder = folderPath && folderPath !== ".";
 
     // Build URL with folder prefix if in a subfolder
-    const url = hasFolder ? `/${folderPath}/${slug}/` : `/${slug}/`;
+    // Slugify each folder segment for clean URLs
+    const slugifiedFolder = hasFolder
+      ? folderPath.split(path.sep).map(slugify).join("/")
+      : "";
+    const url = hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`;
 
     // Create a unique key that includes folder path to avoid collisions
-    const fullSlug = hasFolder ? `${folderPath}/${slug}` : slug;
+    const fullSlug = hasFolder ? `${slugifiedFolder}/${slug}` : slug;
 
     const pageInfo = {
       title,

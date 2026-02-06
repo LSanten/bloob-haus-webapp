@@ -73,6 +73,7 @@ export default async function (eleventyConfig) {
   });
 
   // Title case filter — matches Hugo's .Title behavior (lowercase small words)
+  // Also converts hyphens to spaces for slugified strings
   eleventyConfig.addFilter("titleCase", function (str) {
     if (!str) return "";
     const small = new Set([
@@ -95,6 +96,7 @@ export default async function (eleventyConfig) {
       "up",
     ]);
     return str
+      .replace(/-/g, " ")
       .split(" ")
       .map((word, i) => {
         if (i > 0 && small.has(word.toLowerCase())) return word.toLowerCase();

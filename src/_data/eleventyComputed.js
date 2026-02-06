@@ -20,9 +20,13 @@ export default {
 
     const shouldSlugify = data.site?.permalinks?.slugify ?? false;
     const pathParts = data.page.filePathStem.split("/").filter(Boolean);
-    const section = pathParts.slice(0, -1).join("/");
+    const sectionParts = pathParts.slice(0, -1);
     const filename = pathParts[pathParts.length - 1];
+
     const slug = shouldSlugify ? slugify(filename) : filename;
+    const section = shouldSlugify
+      ? sectionParts.map(slugify).join("/")
+      : sectionParts.join("/");
 
     if (section) {
       return `/${section}/${slug}/`;

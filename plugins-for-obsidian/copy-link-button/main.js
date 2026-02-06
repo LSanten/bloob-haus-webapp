@@ -83,21 +83,27 @@ module.exports = class CopyLinkButtonPlugin extends Plugin {
     // Get the folder path (e.g., "recipes" from "recipes/Challah.md")
     const folderPath = file.parent?.path || "";
 
-    // Slugify the filename using Hugo's convention:
-    // - lowercase
-    // - remove special characters (keep a-z, 0-9, spaces, hyphens)
-    // - replace spaces with hyphens
-    // - collapse multiple hyphens
-    // - remove leading/trailing hyphens
-    const slug = filename
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
+    // Slugify: lowercase, remove special chars, spaces → hyphens
+    function slugify(str) {
+      return str
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    const slug = slugify(filename);
+
+    // Slugify each folder segment too (e.g., "lists of favorites" → "lists-of-favorites")
+    const slugifiedFolder = folderPath
+      ? folderPath.split("/").map(slugify).join("/")
+      : "";
 
     // Build URL with folder prefix if in a subfolder
-    const urlPath = folderPath ? `/${folderPath}/${slug}/` : `/${slug}/`;
+    const urlPath = slugifiedFolder
+      ? `/${slugifiedFolder}/${slug}/`
+      : `/${slug}/`;
     const url = `https://buffbaby.bloob.haus${urlPath}`;
 
     // Copy to clipboard

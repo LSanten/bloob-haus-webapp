@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-site.js",
-    "dev": "hugo server --source hugo --buildDrafts --buildFuture"
+    "build:hugo": "node scripts/build-site.js --target=hugo",
+    "build:eleventy": "node scripts/build-site.js --target=eleventy",
+    "dev": "hugo server --source hugo --buildDrafts --buildFuture",
+    "dev:eleventy": "npx @11ty/eleventy --serve",
+    "eleventy": "npx @11ty/eleventy"
   },
   "keywords": [
     "obsidian",
@@ -16,14 +20,18 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "hugo-bin": "latest",
-    "gray-matter": "^4.0.3",
-    "glob": "^10.0.0",
-    "fs-extra": "^11.0.0",
+    "@flowershow/remark-wiki-link": "^3.3.1",
     "execa": "^8.0.0",
-    "unified": "^11.0.0",
+    "fs-extra": "^11.0.0",
+    "glob": "^10.0.0",
+    "gray-matter": "^4.0.3",
+    "hugo-bin": "latest",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "@flowershow/remark-wiki-link": "^3.3.1"
+    "unified": "^11.0.0"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "esbuild": "^0.27.3"
   }
 }

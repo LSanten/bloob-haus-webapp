@@ -1,0 +1,36 @@
+---
+layout: layouts/base.njk
+---
+<div class="list-page">
+    <header class="page-header">
+        <h1>{{ title }}</h1>
+        {% if content %}
+        <div class="page-intro">{{ content | safe }}</div>
+        {% endif %}
+    </header>
+
+    {% if collections[section] and collections[section].length %}
+    <div class="recipe-list">
+        {% for item in collections[section] %}
+        <a href="{{ item.url }}" class="recipe-card-link">
+            <article class="recipe-card">
+                {% if item.data.title %}
+                <div class="recipe-summary">{{ item.data.title }}</div>
+                {% endif %}
+                {% if item.data.tags %}
+                <div class="recipe-tags">
+                    {% for tag in item.data.tags | head(3) %}
+                        {% if not tag.startsWith("#") %}
+                        <span class="tag">{{ tag }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </article>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-content">No recipes found.</p>
+    {% endif %}
+</div>

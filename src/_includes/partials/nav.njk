@@ -1,0 +1,11 @@
+<nav class="site-nav">
+    <div class="nav-container">
+        <a href="/" class="site-title">{{ site.title }}</a>
+
+        <div class="nav-links">
+            {% for section in collections.sections %}
+            <a href="/{{ section }}/">{{ section | capitalize }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</nav>

@@ -14,6 +14,17 @@ hugo/static/
 public/
 .hugo_build.lock
 
+# Eleventy output
+_site/
+
+# Eleventy generated content (preprocessor writes sections into src/)
+# Ignore everything in src/ except hand-maintained dirs
+src/recipes/
+src/notes/
+src/resources/
+src/lists of favorites/
+src/media/
+
 # Next.js (for future phases)
 .next/
 

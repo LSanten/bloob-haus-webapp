@@ -1,0 +1,39 @@
+---
+layout: layouts/base.njk
+---
+<article class="recipe-page">
+    <div class="recipe-content">{{ content | safe }}</div>
+
+    {% if tags or prep_time or cook_time or servings %}
+    <div class="recipe-meta-section">
+        {% if tags %}
+        <div class="recipe-tags">
+            {% for tag in tags %}
+                {% if not tag.startsWith("#") %}
+                <span class="tag">{{ tag }}</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if prep_time or cook_time or servings %}
+        <div class="recipe-meta">
+            {% if prep_time %}<span class="meta-item">Prep: {{ prep_time }}</span>{% endif %}
+            {% if cook_time %}<span class="meta-item">Cook: {{ cook_time }}</span>{% endif %}
+            {% if servings %}<span class="meta-item">Servings: {{ servings }}</span>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if source %}
+    <footer class="recipe-footer">
+        <div class="recipe-source">
+            <strong>Source:</strong>
+            {% for src in source %}
+            <span>{{ src }}</span>
+            {% endfor %}
+        </div>
+    </footer>
+    {% endif %}
+</article>

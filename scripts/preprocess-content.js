@@ -30,21 +30,43 @@ import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
 
+// Output directories per target
+const OUTPUT_DIRS = {
+  hugo: {
+    content: path.join(ROOT_DIR, "hugo", "content"),
+    static: path.join(ROOT_DIR, "hugo", "static"),
+  },
+  eleventy: {
+    content: path.join(ROOT_DIR, "src"),
+    static: path.join(ROOT_DIR, "src"),
+  },
+};
+
+/**
+ * Get the current build target (read at call time, not import time)
+ */
+function getBuildTarget() {
+  return process.env.BUILD_TARGET || "hugo";
+}
+
 /**
  * Main preprocessing function.
  * @param {Object} options - Configuration options
  * @param {string} options.contentDir - Path to cloned content directory
- * @param {string} options.outputDir - Path to Hugo content directory
- * @param {string} options.staticDir - Path to Hugo static directory
+ * @param {string} options.outputDir - Path to content output directory
+ * @param {string} options.staticDir - Path to static assets directory
  * @returns {Object} Processing stats
  */
 export async function preprocessContent({
   contentDir = path.join(ROOT_DIR, "content-source"),
-  outputDir = path.join(ROOT_DIR, "hugo", "content"),
-  staticDir = path.join(ROOT_DIR, "hugo", "static"),
+  outputDir,
+  staticDir,
 } = {}) {
+  const BUILD_TARGET = getBuildTarget();
+  outputDir = outputDir || OUTPUT_DIRS[BUILD_TARGET].content;
+  staticDir = staticDir || OUTPUT_DIRS[BUILD_TARGET].static;
   console.log("\n========================================");
-  console.log("  PREPROCESSING CONTENT");
+  console.log(`  PREPROCESSING CONTENT (target: ${BUILD_TARGET})`);
   console.log("========================================\n");
 
   const stats = {
@@ -148,6 +170,11 @@ export async function preprocessContent({
     // Add date if we got it from git and it's not already set
     if (gitDate && !frontmatter.date) {
       outputFrontmatter.date = gitDate;
+    }
+
+    // Add layout for Eleventy
+    if (BUILD_TARGET === "eleventy") {
+      outputFrontmatter.layout = "layouts/page.njk";
     }
 
     // Reconstruct the file with frontmatter

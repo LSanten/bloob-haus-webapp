@@ -7,7 +7,7 @@ Development session history and completed work.
 ## Session Log
 
 ### Session 5 - February 5, 2026
-**Worked on:** Hugo → Eleventy migration (M0-M6), site enhancements (RSS, sitemap, image optimization)
+**Worked on:** Hugo → Eleventy migration (M0-M7), site enhancements (RSS, sitemap, image optimization)
 
 **Migration M0: Preparation**
 - Created `src/` directory structure for Eleventy
@@ -61,6 +61,15 @@ Development session history and completed work.
 - Updated `vercel.json`: `buildCommand` → `npm run build:eleventy`, `outputDirectory` → `_site`
 - Pushed all migration commits (9 total) to origin/main
 - Verified production deployment on buffbaby.bloob.haus
+
+**Migration M7: Cleanup**
+- Archived Hugo version to `archive/hugo-version` branch
+- Removed `hugo/` folder and all Hugo templates, CSS, JS, static media
+- Uninstalled `hugo-bin` dependency
+- Cleaned up `package.json` scripts (removed Hugo-specific scripts, simplified `build` and `dev`)
+- Cleaned up `.gitignore` (removed Hugo paths) and `vercel.json`
+- Updated `docs/CLAUDE_CONTEXT.md` and `docs/implementation-plans/ROADMAP.md`
+- Created `README.md` with project overview, quick start, and docs links
 
 **Site Enhancements (post-migration):**
 - **RSS feed** (`/feed.xml`) — Atom feed with 20 most recent recipes, full content, using `@11ty/eleventy-plugin-rss`
@@ -214,7 +223,7 @@ Development session history and completed work.
 | 2 | Jan 30, 2026 | Full implementation & deployment - site goes LIVE |
 | 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename |
 | 4 | Feb 3, 2026 | Recipe cleanup, Magic Machines architecture, docs reorganization |
-| 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M6), RSS, sitemap, image optimization |
+| 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M7), RSS, sitemap, image optimization |
 
 ---
 
@@ -225,5 +234,5 @@ Development session history and completed work.
 | Jan 30, 2026 | 🎉 **buffbaby.bloob.haus goes LIVE** (Hugo) |
 | Feb 2, 2026 | Interactive checkboxes added |
 | Feb 3, 2026 | Documentation restructured, architecture documented |
-| Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M6) |
+| Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M7) |
 | Feb 5, 2026 | RSS feed, sitemap, robots.txt, 404 page, image optimization added |

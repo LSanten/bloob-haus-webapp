@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
+import taskLists from "markdown-it-task-lists";
 
 // Auto-discover visualizer packages from lib/visualizers/
 async function loadVisualizers() {
@@ -36,6 +37,11 @@ export default async function (eleventyConfig) {
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");
   eleventyConfig.addWatchTarget("lib/");
+
+  // Enable task list checkboxes in markdown (- [ ] and - [x] syntax)
+  eleventyConfig.amendLibrary("md", (mdLib) => {
+    mdLib.use(taskLists, { enabled: false, label: true });
+  });
 
   // Date formatting filter
   eleventyConfig.addFilter("dateFormat", function (date) {

@@ -1,4 +1,29 @@
-export default function (eleventyConfig) {
+import { readdirSync, existsSync } from "fs";
+import { join } from "path";
+
+// Auto-discover visualizer packages from lib/visualizers/
+async function loadVisualizers() {
+  const dir = "lib/visualizers";
+  if (!existsSync(dir)) return [];
+
+  const folders = readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+
+  const visualizers = [];
+  for (const name of folders) {
+    const indexPath = join(dir, name, "index.js");
+    if (existsSync(indexPath)) {
+      const mod = await import(`./${indexPath}`);
+      visualizers.push({ name, ...mod });
+    }
+  }
+  return visualizers;
+}
+
+export default async function (eleventyConfig) {
+  // Load visualizer modules for build-time transforms
+  const visualizers = await loadVisualizers();
   // Don't use .gitignore for Eleventy's ignore rules
   // (src/content/ is gitignored since it's generated, but Eleventy must process it)
   eleventyConfig.setUseGitIgnore(false);
@@ -109,6 +134,26 @@ export default function (eleventyConfig) {
       .getFilteredByGlob("src/lists of favorites/**/*.md")
       .sort((a, b) => (b.date || 0) - (a.date || 0));
   });
+
+  // Visualizer build-time transform
+  // Runs each visualizer's transform() on rendered HTML output.
+  // Runtime-only visualizers (like checkbox-tracker) return content unchanged.
+  // Build-time visualizers (future: timeline, recipe-card) modify HTML here.
+  const buildTimeVisualizers = visualizers.filter(
+    (v) => typeof v.transform === "function" && v.type !== "runtime",
+  );
+
+  if (buildTimeVisualizers.length > 0) {
+    eleventyConfig.addTransform("visualizers", function (content) {
+      if (!this.page.outputPath?.endsWith(".html")) return content;
+
+      let result = content;
+      for (const viz of buildTimeVisualizers) {
+        result = viz.transform(result);
+      }
+      return result;
+    });
+  }
 
   return {
     dir: {

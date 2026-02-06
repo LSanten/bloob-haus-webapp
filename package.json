@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/build-site.js",
     "build:hugo": "node scripts/build-site.js --target=hugo",
-    "build:eleventy": "node scripts/build-site.js --target=eleventy",
+    "build:eleventy": "node scripts/bundle-visualizers.js && node scripts/build-site.js --target=eleventy",
     "dev": "hugo server --source hugo --buildDrafts --buildFuture",
     "dev:eleventy": "npx @11ty/eleventy --serve",
     "eleventy": "npx @11ty/eleventy"

@@ -1,0 +1,21 @@
+{
+  "name": "checkbox-tracker",
+  "type": "runtime",
+  "version": "1.0.0",
+  "description": "Enables clickable checkboxes with persistent state via localStorage",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": "input[type=\"checkbox\"]"
+  },
+  "files": {
+    "browser": "browser.js",
+    "styles": "styles.css"
+  },
+  "settings": {
+    "undoWindowMs": {
+      "type": "number",
+      "default": 60000,
+      "description": "How long the undo window stays open (ms)"
+    }
+  }
+}

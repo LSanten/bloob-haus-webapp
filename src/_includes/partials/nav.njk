@@ -4,7 +4,7 @@
 
         <div class="nav-links">
             {% for section in collections.sections %}
-            <a href="/{{ section }}/">{{ section | capitalize }}</a>
+            <a href="/{{ section }}/">{{ section | titleCase }}</a>
             {% endfor %}
         </div>
     </div>

@@ -17,12 +17,12 @@ public/
 # Eleventy output
 _site/
 
-# Eleventy generated content (preprocessor writes sections into src/)
-# Ignore everything in src/ except hand-maintained dirs
-src/recipes/
-src/notes/
-src/resources/
-src/lists of favorites/
+# Eleventy generated content (preprocessor writes .md into src/ sections)
+# Ignore generated markdown but keep hand-authored .njk index pages
+src/recipes/*.md
+src/notes/*.md
+src/resources/*.md
+src/lists of favorites/*.md
 src/media/
 
 # Next.js (for future phases)

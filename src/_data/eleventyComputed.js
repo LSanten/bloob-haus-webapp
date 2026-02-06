@@ -12,6 +12,9 @@ function slugify(str) {
 
 export default {
   permalink: (data) => {
+    // If the page has an explicit permalink in frontmatter, use it
+    if (data.permalink && data.permalink !== true) return data.permalink;
+
     // Only modify permalinks for pages with a fileSlug (content pages)
     if (!data.page.fileSlug) return data.permalink;
 

@@ -7,8 +7,8 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 ## Unprioritized Ideas
 
 ### Site Features
-- [ ] RSS feed generation
-- [ ] Sitemap generation
+- [x] RSS feed generation (done — Session 5, `/feed.xml`)
+- [x] Sitemap generation (done — Session 5, `/sitemap.xml`)
 - [ ] Search (client-side: Pagefind, Lunr.js)
 - [ ] Multi-language support
 - [ ] Version history / revision tracking

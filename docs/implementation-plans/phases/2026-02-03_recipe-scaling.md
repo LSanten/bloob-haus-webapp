@@ -113,7 +113,7 @@ The runtime visualizer reads `data-base` and recalculates when servings change.
 │                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐                │
 │  │  BUILD-TIME     │    │  RUNTIME        │                │
-│  │  (parser.js)    │    │  (scaler.js)    │                │
+│  │  (index.js)     │    │  (browser.js)   │                │
 │  │                 │    │                 │                │
 │  │  • Parse @{}    │    │  • Scaling UI   │                │
 │  │  • Extract qty  │    │  • Recalculate  │                │
@@ -134,20 +134,19 @@ The runtime visualizer reads `data-base` and recalculates when servings change.
 
 ## Folder Structure
 
+Follows the modular visualizer pattern established by `checkbox-tracker` (see [Visualizer Architecture](../../architecture/visualizers.md)):
+
 ```
-scripts/visualizers/recipe-scaler/
+lib/visualizers/recipe-scaler/
+├── index.js            ← Exports { type, name, transform } — module contract
+├── browser.js          ← Runtime: scaling UI + calculations (bundled by esbuild → IIFE)
+├── styles.css          ← Styling for quantities, scaling widget (copied to src/assets/css/visualizers/)
 ├── manifest.json
-├── parser.js           ← Build-time: parse Cooklang syntax
-├── README.md
 └── tests/
     └── parser.test.js
-
-hugo/assets/
-├── js/visualizers/
-│   └── recipe-scaler.js    ← Runtime: scaling UI + calculations
-└── css/visualizers/
-    └── recipe-scaler.css   ← Styling for quantities, scaling widget
 ```
+
+The `scripts/bundle-visualizers.js` auto-discovers this folder and bundles `browser.js` → `src/assets/js/visualizers/recipe-scaler.js` and copies `styles.css` → `src/assets/css/visualizers/recipe-scaler.css`.
 
 ---
 
@@ -164,9 +163,9 @@ hugo/assets/
     "key": "servings"
   },
   "files": {
-    "parser": "parser.js",
-    "js": "recipe-scaler.js",
-    "css": "recipe-scaler.css"
+    "transform": "index.js",
+    "browser": "browser.js",
+    "css": "styles.css"
   },
   "settings": {
     "showScalingWidget": {

@@ -270,13 +270,13 @@ docs/
     ├── IDEAS.md                ← Future ideas parking lot
     │
     ├── _completed/             ← Finished plans (historical)
-    │   └── phase-1-implementation-plan.md
+    │   ├── phase-1-implementation-plan.md
+    │   ├── 2026-02-05_Migration-Checklist.md
+    │   └── 2026-02-05_Migration-plan-from HUGO to ELEVENTY.md
     │
     └── phases/                 ← Active implementation plans
         ├── phase-2-linking-api.md
-        ├── 2026-02-03_recipe-scaling.md
-        ├── 2026-02-05_Migration-Checklist.md
-        └── 2026-02-05_Migration-plan-from HUGO to ELEVENTY.md
+        └── 2026-02-03_recipe-scaling.md
 ```
 
 **Naming conventions for new plans:**

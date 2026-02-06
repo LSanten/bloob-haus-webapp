@@ -19,7 +19,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 | Phase | Focus | Status | Details |
 |-------|-------|--------|---------|
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
-| Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](phases/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
+| Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](_completed/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
 | Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2-linking-api.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |

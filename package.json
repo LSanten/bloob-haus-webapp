@@ -1,19 +1,16 @@
 {
   "name": "bloob-haus",
   "version": "1.0.0",
-  "description": "Transform Obsidian markdown vaults into hosted static websites using Hugo",
+  "description": "Transform Obsidian markdown vaults into hosted static websites using Eleventy",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-site.js",
-    "build:hugo": "node scripts/build-site.js --target=hugo",
-    "build:eleventy": "node scripts/bundle-visualizers.js && node scripts/build-site.js --target=eleventy",
-    "dev": "hugo server --source hugo --buildDrafts --buildFuture",
-    "dev:eleventy": "npx @11ty/eleventy --serve",
+    "build": "node scripts/bundle-visualizers.js && node scripts/build-site.js --target=eleventy",
+    "dev": "npx @11ty/eleventy --serve",
     "eleventy": "npx @11ty/eleventy"
   },
   "keywords": [
     "obsidian",
-    "hugo",
+    "eleventy",
     "static-site",
     "markdown"
   ],
@@ -25,7 +22,6 @@
     "fs-extra": "^11.0.0",
     "glob": "^10.0.0",
     "gray-matter": "^4.0.3",
-    "hugo-bin": "latest",
     "markdown-it-task-lists": "^2.1.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",

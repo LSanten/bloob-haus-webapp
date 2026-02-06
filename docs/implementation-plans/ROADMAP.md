@@ -1,8 +1,8 @@
 # Bloob Haus Roadmap
 
 **Purpose:** High-level planning document for features and phases.  
-**Last Updated:** February 3, 2026  
-**Status:** Phase 1 Complete, Phase 2 Planning
+**Last Updated:** February 5, 2026  
+**Status:** Phase 1 Complete, Eleventy Migration Complete, Phase 2 Planning
 
 ---
 
@@ -19,6 +19,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 | Phase | Focus | Status | Details |
 |-------|-------|--------|---------|
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
+| Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](phases/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
 | Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2-linking-api.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |
@@ -37,14 +38,19 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 
 ## Phase 2: Enhanced Linking & API Foundation
 
-**Goal:** Add backlinks, graph data, and prepare for webapp features.
+**Goal:** Add graph data, search, and prepare for webapp features.
 
-### Key Deliverables
-- `links.json` - Bidirectional link data for backlinks & graph
+### Already Completed (during migration)
+- ✅ Backlinks display on pages (M5)
+- ✅ RSS feed (`/feed.xml`)
+- ✅ Sitemap (`/sitemap.xml`)
+- ✅ Image optimization (WebP + responsive)
+
+### Remaining Deliverables
+- `links.json` - Bidirectional link data for graph visualization
 - `search-index.json` - Search data with titles, excerpts, tags, images
-- Backlinks display on pages
 - Pre-build validation for broken links
-- RSS feed
+- Client-side search (lunr.js or pagefind)
 
 **Detailed plan:** [phases/phase-2-linking-api.md](phases/phase-2-linking-api.md)
 
@@ -109,7 +115,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 |----------|---------|-------|
 | Microformats2 | Semantic markup | ✅ Phase 1 |
 | Open Graph | Social previews | ✅ Phase 1 |
-| RSS/Atom | Feed subscription | Phase 2 |
+| RSS/Atom | Feed subscription | ✅ Complete |
 | IndieAuth | Domain-based identity | Phase 3 |
 | Webmention | Cross-site notifications | Phase 4 |
 | Micropub | Standard posting API | Phase 5 |
@@ -127,7 +133,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 - [ ] CDN caching strategy
 
 ### Hosting Evolution
-1. **Phase 1 (current):** Single Vercel project
+1. **Current:** Single Vercel project (Eleventy)
 2. **Phase 3:** Vercel for app + Cloudflare Pages for user sites
 3. **Future:** Evaluate based on scale and cost
 

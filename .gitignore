@@ -7,15 +7,10 @@ node_modules/
 
 # Content (cloned at build time)
 content-source/
-hugo/content/
-hugo/static/
 
-# Hugo output
-public/
-.hugo_build.lock
-
-# Eleventy output
+# Build output
 _site/
+public/
 
 # Eleventy generated content (preprocessor writes .md into src/ sections)
 # Ignore generated markdown but keep hand-authored .njk index pages

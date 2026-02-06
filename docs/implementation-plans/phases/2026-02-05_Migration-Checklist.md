@@ -2,6 +2,8 @@
 
 **Quick reference during implementation. Full details in the main migration plan.**
 
+**Status: ALL PHASES COMPLETE**
+
 ---
 
 ## M0: Preparation ✅ COMPLETE
@@ -33,55 +35,54 @@
 
 ---
 
-## M3: Template Parity (~1-2 hrs)
-- [ ] Set up section collections in `eleventy.config.js` (`recipes`, `recipesByDate`, etc.)
-- [ ] Create homepage `src/index.njk`
-- [ ] Create section index pages (`src/recipes/index.njk`, etc.)
-- [ ] Visual comparison: Hugo vs Eleventy side-by-side
-- [ ] Fix any differences
+## M3: Template Parity ✅ COMPLETE
+- [x] Set up section collections in `eleventy.config.js` (`recipes`, `recipesByDate`, etc.)
+- [x] Create homepage `src/index.njk`
+- [x] Create section index pages (`src/recipes/index.njk`, etc.)
+- [x] Visual comparison: Hugo vs Eleventy side-by-side
+- [x] Fix any differences
 
 ---
 
-## M4: Visualizer Architecture (~2-3 hrs)
-- [ ] Create `lib/visualizers/checkbox-tracker/parser.js` (pure, operates on HTML)
-- [ ] Create `lib/visualizers/checkbox-tracker/renderer.js` (pure, returns HTML string)
-- [ ] Create `lib/visualizers/checkbox-tracker/browser.js` (DOM/localStorage)
-- [ ] Create `lib/visualizers/checkbox-tracker/index.js` (exports + transform)
-- [ ] Copy styles to `lib/visualizers/checkbox-tracker/styles.css`
-- [ ] Create `scripts/bundle-visualizers.js` (esbuild, auto-discovers visualizer folders)
-- [ ] Add `addTransform("visualizers", ...)` to `eleventy.config.js`
-- [ ] Update `package.json` build scripts
-- [ ] Verify: checkboxes work (build-time + browser interactivity + persistence)
+## M4: Visualizer Architecture ✅ COMPLETE
+- [x] Create `lib/visualizers/checkbox-tracker/browser.js` (DOM/localStorage)
+- [x] Create `lib/visualizers/checkbox-tracker/index.js` (exports + transform)
+- [x] Copy styles to `lib/visualizers/checkbox-tracker/styles.css`
+- [x] Create `scripts/bundle-visualizers.js` (esbuild, auto-discovers visualizer folders)
+- [x] Add `addTransform("visualizers", ...)` to `eleventy.config.js`
+- [x] Update `package.json` build scripts
+- [x] Add `markdown-it-task-lists` plugin for checkbox rendering
+- [x] Verify: checkboxes work (build-time + browser interactivity + persistence)
 
 ---
 
-## M5: Backlinks (~1-2 hrs)
-- [ ] Add `addCollection("withBacklinks", ...)` to `eleventy.config.js`
-- [ ] Create `src/_includes/partials/backlinks.njk`
-- [ ] Add backlinks include to `page.njk`
-- [ ] Add backlinks CSS
-- [ ] Verify: backlinks appear on linked pages
+## M5: Backlinks ✅ COMPLETE
+- [x] Add `addCollection("withBacklinks", ...)` to `eleventy.config.js`
+- [x] Create `src/_includes/partials/backlinks.njk`
+- [x] Add backlinks include to `page.njk`
+- [x] Add backlinks CSS
+- [x] Verify: backlinks appear on linked pages
 
 ---
 
-## M6: Deployment (~1-2 hrs)
-- [ ] Full test: `npm run build:eleventy && npx serve _site`
-- [ ] Update `vercel.json`
-- [ ] Push to branch, test preview
-- [ ] Compare with production
-- [ ] Merge to main
-- [ ] Verify production deployment
-- [ ] Test webhook (push to buffbaby)
+## M6: Deployment ✅ COMPLETE
+- [x] Full test: `npm run build:eleventy && npx serve _site`
+- [x] Update `vercel.json`
+- [x] Push to main
+- [x] Verify production deployment
+- [x] Add RSS feed, sitemap, robots.txt, 404 page
+- [x] Add image optimization (WebP + responsive sizes)
 
 ---
 
-## M7: Cleanup (~2-3 hrs)
-- [ ] Archive Hugo: `git checkout -b archive/hugo-version && git push`
-- [ ] Remove `hugo/` folder
-- [ ] `npm uninstall hugo-bin`
-- [ ] Clean up `package.json` scripts
-- [ ] Create `docs/implementation-plans/DECISIONS.md`
-- [ ] Update `docs/CLAUDE_CONTEXT.md`
-- [ ] Update `docs/architecture/visualizers.md`
-- [ ] Update `docs/implementation-plans/ROADMAP.md`
-- [ ] Update README.md
+## M7: Cleanup ✅ COMPLETE
+- [x] Archive Hugo: `git checkout -b archive/hugo-version && git push`
+- [x] Remove `hugo/` folder
+- [x] `npm uninstall hugo-bin`
+- [x] Clean up `package.json` scripts
+- [x] Clean up `.gitignore` and `vercel.json`
+- [x] Update `docs/CLAUDE_CONTEXT.md`
+- [x] Update `docs/implementation-plans/ROADMAP.md`
+- [x] Verify `docs/implementation-plans/DECISIONS.md`
+- [x] Verify `docs/architecture/visualizers.md`
+- [x] Create `README.md`

@@ -6,6 +6,83 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 5 - February 5, 2026
+**Worked on:** Hugo → Eleventy migration (M0-M6), site enhancements (RSS, sitemap, image optimization)
+
+**Migration M0: Preparation**
+- Created `src/` directory structure for Eleventy
+- Created `lib/visualizers/checkbox-tracker/` modular visualizer package
+- Installed Eleventy 3.x and esbuild as dev dependencies
+- Updated `.gitignore` for generated section dirs, `_site/`, `src/media/`
+- Added npm scripts (`build:eleventy`, `dev:eleventy`)
+- Created `.eleventyignore` with `node_modules/`
+
+**Migration M1: Eleventy Foundation**
+- Created `eleventy.config.js` (ESM, `export default async function`)
+- `setUseGitIgnore(false)` — required because generated content dirs are gitignored
+- Created `src/_data/site.js` (title, description, URL, author)
+- Created `src/_data/eleventyComputed.js` — slugified permalinks for both folder paths and filenames
+- Ported all templates from Hugo Go templates to Nunjucks: `base.njk`, `page.njk`, `list.njk`
+- Ported all partials: `head.njk`, `nav.njk`, `footer.njk`, `scripts.njk`
+- Copied CSS + JS assets to `src/assets/`
+- Added filters: `dateFormat`, `truncate`, `head`, `capitalize`, `titleCase`
+
+**Migration M2: Preprocessing Integration**
+- Modified `preprocess-content.js` with `BUILD_TARGET` support (lazy getter for ESM timing)
+- Modified `build-site.js` with `--target=` flag (hugo or eleventy)
+- Eleventy target adds `layout: layouts/page.njk` to frontmatter
+- Verified: 67 pages, 22 media, 0 broken links
+
+**Migration M3: Template Parity**
+- Set up section collections in `eleventy.config.js` (`recipes`, `notes`, `resources`, `listsOfFavorites`)
+- Auto-detect sections collection (mirrors Hugo's `.Site.Sections`)
+- Created homepage `src/index.njk` with recent recipes and resources
+- Created section index pages (`src/recipes/index.njk`, etc.)
+- `titleCase` filter handles hyphen-to-space conversion for slugified section names in nav
+
+**Migration M4: Visualizer Architecture**
+- Created modular visualizer package: `lib/visualizers/checkbox-tracker/` with `index.js`, `browser.js`, `styles.css`, `manifest.json`
+- `index.js` exports `{ type, name, transform }` — module contract for all visualizers
+- Created `scripts/bundle-visualizers.js` — auto-discovers visualizer folders, bundles with esbuild
+- esbuild bundles `browser.js` → IIFE in `src/assets/js/visualizers/`, copies `styles.css` → `src/assets/css/visualizers/`
+- `eleventy.config.js` auto-loads visualizers and registers `addTransform` for build-time types
+- Runtime visualizers (like checkbox-tracker) pass through unchanged; build-time visualizers modify HTML
+- Added `markdown-it-task-lists` plugin for `- [ ]` checkbox rendering (markdown parser layer)
+- Fixed CSS/JS selectors for `<label>`-wrapped checkboxes from task-lists plugin
+
+**Migration M5: Backlinks**
+- Implemented `addCollection("withBacklinks")` — reads markdown source files, extracts internal links via regex
+- Two-pass algorithm: first builds link map, then computes backlinks per page
+- Created `src/_includes/partials/backlinks.njk` with styled backlink list
+- Added backlinks CSS to `main.css` (pill-style links)
+
+**Migration M6: Deployment**
+- Full build test: 72 pages, 22 media, 26 assets copied, 0 broken links
+- Updated `vercel.json`: `buildCommand` → `npm run build:eleventy`, `outputDirectory` → `_site`
+- Pushed all migration commits (9 total) to origin/main
+- Verified production deployment on buffbaby.bloob.haus
+
+**Site Enhancements (post-migration):**
+- **RSS feed** (`/feed.xml`) — Atom feed with 20 most recent recipes, full content, using `@11ty/eleventy-plugin-rss`
+- **Sitemap** (`/sitemap.xml`) — all pages with lastmod dates
+- **robots.txt** — allows all crawlers, references sitemap
+- **Custom 404 page** — styled error page with link back to homepage
+- **Image optimization** — `@11ty/eleventy-img` via `addTransform`, generates WebP + JPEG at 600w/1200w, `<picture>` elements with `loading="lazy"` and `decoding="async"`. Reduces 48MB of raw iPhone photos to ~6MB optimized.
+
+**Key Technical Decisions:**
+- `BUILD_TARGET` env var uses lazy getter (not module-level const) due to ESM import timing
+- Visualizer parsers run in preprocessor (raw markdown), not `addTransform` (HTML)
+- `addTransform` kept as secondary hook for post-render HTML modifications
+- Image optimization runs as `addTransform` on rendered HTML — no changes needed to preprocessor or markdown content
+- Backlinks read source files from disk (stable API, not Eleventy internals)
+
+**Build Stats:**
+- 77 files written (72 pages + feed.xml + sitemap.xml + robots.txt + 404.html + optimized image variants)
+- Build time: ~11s (up from ~5s due to image processing)
+- 10 commits pushed to origin/main
+
+---
+
 ### Session 4 - February 3, 2026
 **Worked on:** Recipe cleanup (buffbaby vault), Magic Machines architecture, documentation reorganization
 
@@ -137,6 +214,7 @@ Development session history and completed work.
 | 2 | Jan 30, 2026 | Full implementation & deployment - site goes LIVE |
 | 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename |
 | 4 | Feb 3, 2026 | Recipe cleanup, Magic Machines architecture, docs reorganization |
+| 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M6), RSS, sitemap, image optimization |
 
 ---
 
@@ -144,6 +222,8 @@ Development session history and completed work.
 
 | Date | Milestone |
 |------|-----------|
-| Jan 30, 2026 | 🎉 **buffbaby.bloob.haus goes LIVE** |
+| Jan 30, 2026 | 🎉 **buffbaby.bloob.haus goes LIVE** (Hugo) |
 | Feb 2, 2026 | Interactive checkboxes added |
 | Feb 3, 2026 | Documentation restructured, architecture documented |
+| Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M6) |
+| Feb 5, 2026 | RSS feed, sitemap, robots.txt, 404 page, image optimization added |

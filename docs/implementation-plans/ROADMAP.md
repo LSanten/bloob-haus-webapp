@@ -125,6 +125,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 ## Technical Debt & Infrastructure
 
 ### Ongoing Considerations
+- [ ] Test suite foundation — Vitest, preprocessing unit tests ([detailed plan](phases/2026-02-07_test-suite.md))
 - [ ] Monitoring and alerting for builds
 - [ ] Error tracking (Sentry or similar)
 - [ ] Analytics (privacy-respecting: Plausible, Fathom)
@@ -134,7 +135,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 
 ### Hosting Evolution
 1. **Current:** Single Vercel project (Eleventy)
-2. **Phase 3:** Vercel for app + Cloudflare Pages for user sites
+2. **Next:** Hybrid EU + CDN — Scaleway (builds, private content, DB) + Cloudflare Pages (public content). See hosting architecture research in Obsidian vault.
 3. **Future:** Evaluate based on scale and cost
 
 ---

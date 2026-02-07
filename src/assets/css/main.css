@@ -362,6 +362,21 @@ pre code {
    Special Elements
    ================================ */
 
+/* Blockquotes */
+blockquote {
+    border-left: 4px solid var(--accent-color);
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-light);
+    font-style: italic;
+    background: var(--footer-bg);
+    border-radius: 0 4px 4px 0;
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
 /* Broken links */
 .broken-link {
     color: #d32f2f;

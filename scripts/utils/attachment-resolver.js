@@ -80,7 +80,7 @@ export function resolveAttachments(content, attachmentIndex) {
 export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
   const sourceDir = path.join(contentDir, attachmentFolder);
 
-  if (!await fs.pathExists(sourceDir)) {
+  if (!(await fs.pathExists(sourceDir))) {
     console.log(`[attachments] No attachment folder found at: ${sourceDir}`);
     return { copied: [], errors: [] };
   }
@@ -146,10 +146,12 @@ And one that doesn't exist:
 `;
 
   const mockAttachmentIndex = {
-    "Pasted image 20250315160236.jpg": "/media/Pasted image 20250315160236.jpg",
-    "pasted image 20250315160236.jpg": "/media/Pasted image 20250315160236.jpg",
+    "Pasted image 20250315160236.jpg":
+      "/media/Pasted%20image%2020250315160236.jpg",
+    "pasted image 20250315160236.jpg":
+      "/media/Pasted%20image%2020250315160236.jpg",
     "cleanshot_2026-01-10-at-22-20-23@2x.png":
-      "/media/cleanshot_2026-01-10-at-22-20-23@2x.png",
+      "/media/cleanshot_2026-01-10-at-22-20-23%402x.png",
   };
 
   const result = resolveAttachments(testContent, mockAttachmentIndex);

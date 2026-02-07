@@ -153,12 +153,16 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     // Decode URL-encoded filenames (e.g., "Pasted%20image" → "Pasted image")
     const decodedFilename = decodeURIComponent(filename);
 
-    attachments[filename] = `/media/${filename}`;
-    attachments[decodedFilename] = `/media/${filename}`;
+    // Encode filename for use in URLs (spaces → %20, etc.)
+    const encodedFilename = encodeURIComponent(filename).replace(/%2F/g, "/");
+    const mediaPath = `/media/${encodedFilename}`;
+
+    attachments[filename] = mediaPath;
+    attachments[decodedFilename] = mediaPath;
 
     // Also store lowercase versions for case-insensitive matching
-    attachments[filename.toLowerCase()] = `/media/${filename}`;
-    attachments[decodedFilename.toLowerCase()] = `/media/${filename}`;
+    attachments[filename.toLowerCase()] = mediaPath;
+    attachments[decodedFilename.toLowerCase()] = mediaPath;
   }
 
   console.log(`[index] Indexed ${files.length} attachments`);

@@ -210,7 +210,7 @@ export default async function (eleventyConfig) {
     let result = content;
     for (const match of matches) {
       const [originalTag, before, src, after] = match;
-      const inputPath = join("src", src);
+      const inputPath = join("src", decodeURIComponent(src));
       if (!existsSync(inputPath)) continue;
 
       // Extract alt text if present

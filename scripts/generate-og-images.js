@@ -79,18 +79,21 @@ async function generateSingleOgImage(sourcePath, outputPath, format) {
   const qualityStep = 10;
   let currentWidth = OG_WIDTH;
 
-  let pipeline = sharp(sourcePath);
-  const metadata = await pipeline.metadata();
+  // Use rotate() to apply EXIF orientation before processing
+  const metadata = await sharp(sourcePath).metadata();
+  const isRotated =
+    metadata.orientation && [5, 6, 7, 8].includes(metadata.orientation);
+  const actualWidth = isRotated ? metadata.height : metadata.width;
 
   // Don't enlarge images smaller than target width
-  if (metadata.width && metadata.width < currentWidth) {
-    currentWidth = metadata.width;
+  if (actualWidth && actualWidth < currentWidth) {
+    currentWidth = actualWidth;
   }
 
   let quality = startQuality;
 
   while (true) {
-    const resized = sharp(sourcePath).resize(currentWidth, null, {
+    const resized = sharp(sourcePath).rotate().resize(currentWidth, null, {
       withoutEnlargement: true,
       fit: "inside",
     });

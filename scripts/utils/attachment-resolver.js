@@ -71,6 +71,17 @@ export function resolveAttachments(content, attachmentIndex) {
 }
 
 /**
+ * Extracts the first image reference from processed markdown content.
+ * Should be called after resolveAttachments() so paths are resolved to /media/...
+ * @param {string} content - Processed markdown content
+ * @returns {string|null} - The /media/... path of the first image, or null
+ */
+export function extractFirstImage(content) {
+  const match = content.match(/!\[[^\]]*\]\((\/media\/[^)]+)\)/);
+  return match ? match[1] : null;
+}
+
+/**
  * Copies attachments from content source to static output folder.
  * @param {string} contentDir - Path to content directory
  * @param {string} attachmentFolder - Relative path to attachment folder in content

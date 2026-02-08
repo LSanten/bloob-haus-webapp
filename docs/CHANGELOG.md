@@ -6,6 +6,41 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 6 - February 7, 2026
+**Worked on:** Image processing improvements, OG preview images for chat sharing
+
+**PNG Preservation:**
+- Changed Eleventy image transform to detect source format: PNG sources output WebP + PNG (not JPEG), preserving full gradient alpha transparency
+- JPEG sources continue as WebP + JPEG (unchanged behavior)
+- GIFs skip the transform entirely — served untouched to preserve animation
+
+**OG Preview Images for Chat Sharing:**
+- Added `extractFirstImage()` utility to `attachment-resolver.js` — extracts first image reference from processed markdown
+- Preprocessor now sets `image` frontmatter field on pages with images, pointing to `/media/og/{name}-og.{format}`
+- Created `scripts/generate-og-images.js` — dedicated OG preview generator:
+  - Generates 1200w-wide previews optimized for social sharing
+  - PNG sources produce PNG previews (preserves transparency), JPEG sources produce JPEG previews
+  - GIFs copied as-is to preserve animation
+  - Iterative quality/dimension reduction to stay under 300KB (WhatsApp-compatible)
+  - File hash tracking (`.og-tracking.json`) skips unchanged images on subsequent builds
+  - Orphan cleanup for removed pages
+- Wired into build pipeline as Step 2.5 (between preprocessing and Eleventy build)
+
+**Head Meta Tag Improvements:**
+- Added `og:image:width` and `og:image:type` meta tags (supports JPEG, PNG, GIF)
+- Added `og:site_name` meta tag
+- Added `<link rel="canonical">` for SEO
+
+**Dependencies:**
+- Added `sharp` as explicit dependency (was only transitive via eleventy-img)
+
+**Build Stats:**
+- 11 OG preview images generated, all under 300KB
+- Second build skips all 11 (caching works)
+- PNG images now correctly output as WebP + PNG in `_site/media/optimized/`
+
+---
+
 ### Session 5 - February 5, 2026
 **Worked on:** Hugo → Eleventy migration (M0-M7), site enhancements (RSS, sitemap, image optimization)
 
@@ -224,6 +259,7 @@ Development session history and completed work.
 | 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename |
 | 4 | Feb 3, 2026 | Recipe cleanup, Magic Machines architecture, docs reorganization |
 | 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M7), RSS, sitemap, image optimization |
+| 6 | Feb 7, 2026 | PNG preservation, OG preview images, GIF support, SEO meta tags |
 
 ---
 
@@ -236,3 +272,4 @@ Development session history and completed work.
 | Feb 3, 2026 | Documentation restructured, architecture documented |
 | Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M7) |
 | Feb 5, 2026 | RSS feed, sitemap, robots.txt, 404 page, image optimization added |
+| Feb 7, 2026 | PNG transparency preserved, OG preview images for chat sharing, canonical URLs |

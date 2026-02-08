@@ -22,6 +22,7 @@ import { resolveMarkdownLinks } from "./utils/markdown-link-resolver.js";
 import {
   resolveAttachments,
   copyAttachments,
+  extractFirstImage,
 } from "./utils/attachment-resolver.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
@@ -170,6 +171,17 @@ export async function preprocessContent({
     // Add date if we got it from git and it's not already set
     if (gitDate && !frontmatter.date) {
       outputFrontmatter.date = gitDate;
+    }
+
+    // Extract first image for OG preview
+    const firstImage = extractFirstImage(processedContent);
+    if (firstImage) {
+      const imgFilename = path.basename(decodeURIComponent(firstImage));
+      const imgExt = path.extname(imgFilename).toLowerCase();
+      const imgBase = imgFilename.replace(/\.[^.]+$/, "");
+      const ogExt =
+        imgExt === ".gif" ? "gif" : imgExt === ".png" ? "png" : "jpeg";
+      outputFrontmatter.image = `/media/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
     }
 
     // Add layout for Eleventy

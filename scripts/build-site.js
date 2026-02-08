@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
+import { generateOgImages } from "./generate-og-images.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -53,6 +54,9 @@ async function buildSite() {
     // Step 2: Preprocess content (target-aware via BUILD_TARGET env var)
     console.log("\n");
     await preprocessContent({ contentDir });
+
+    // Step 2.5: Generate OG preview images
+    await generateOgImages();
 
     // Step 3: Build site
     if (target === "eleventy") {

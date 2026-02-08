@@ -217,10 +217,17 @@ export default async function (eleventyConfig) {
       const altMatch = (before + after).match(/alt="([^"]*)"/);
       const alt = altMatch ? altMatch[1] : "";
 
+      // Skip GIFs — serve untouched to preserve animation
+      const ext = src.toLowerCase().split(".").pop();
+      if (ext === "gif") continue;
+
       try {
+        // Preserve PNG format for transparency; use JPEG for photos
+        const formats = ext === "png" ? ["webp", "png"] : ["webp", "jpeg"];
+
         const metadata = await Image(inputPath, {
           widths: [600, 1200],
-          formats: ["webp", "jpeg"],
+          formats,
           outputDir: "_site/media/optimized",
           urlPath: "/media/optimized/",
           filenameFormat: function (id, src, width, format) {

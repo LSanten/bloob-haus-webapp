@@ -10,13 +10,19 @@
         content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}"
     />
 
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% if layout %}article{% else %}website{% endif %}" />
+    <meta property="og:site_name" content="{{ site.title }}" />
     <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
     <meta property="og:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
     <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
     {% if image %}
     <meta property="og:image" content="{{ site.url }}{{ image }}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:type" content="{% if '.gif' in image %}image/gif{% elif '.png' in image %}image/png{% else %}image/jpeg{% endif %}" />
     {% endif %}
 
     <!-- Twitter -->

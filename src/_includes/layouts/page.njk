@@ -26,6 +26,7 @@ layout: layouts/base.njk
     </div>
     {% endif %}
 
+    {# Commented out until we have a better style for recipe cascade/provenance
     {% if source %}
     <footer class="recipe-footer">
         <div class="recipe-source">
@@ -36,6 +37,7 @@ layout: layouts/base.njk
         </div>
     </footer>
     {% endif %}
+    #}
 
     {% include "partials/backlinks.njk" %}
 </article>

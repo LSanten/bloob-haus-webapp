@@ -290,4 +290,5 @@ lib/visualizers/checkbox-tracker/
 ## Related Documents
 
 - [Magic Machines Architecture](magic-machines.md) - The "write" counterpart to visualizers
-- [Recipe Scaling Plan](../implementation-plans/phases/2026-02-03_recipe-scaling.md) - Example hybrid visualizer
+- [Search Architecture](search.md) - Search, tags, and Pagefind
+- [Recipe Scaling Plan](../implementation-plans/phases/phase-2/2026-02-03_recipe-scaling.md) - Example hybrid visualizer

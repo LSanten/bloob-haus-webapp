@@ -2,7 +2,7 @@
 
 **Status:** Planning  
 **Created:** 2026-02-03  
-**Location:** `docs/implementation-plans/phases/`
+**Location:** `docs/implementation-plans/phases/phase-2/`
 
 ---
 

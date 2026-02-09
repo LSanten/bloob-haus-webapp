@@ -303,4 +303,5 @@ When content lives on GitHub (not local), magic machines need a different flow:
 ## Related Documents
 
 - [Visualizers Architecture](visualizers.md) - The "read" counterpart to magic machines
-- [Recipe Scaling Plan](../implementation-plans/phases/2026-02-03_recipe-scaling.md) - First magic machine implementation
+- [Search Architecture](search.md) - Tag suggestion as a magic machine
+- [Recipe Scaling Plan](../implementation-plans/phases/phase-2/2026-02-03_recipe-scaling.md) - First magic machine implementation

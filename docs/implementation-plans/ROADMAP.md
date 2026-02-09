@@ -10,7 +10,7 @@
 
 **Phase 2: Enhanced Linking & API Foundation**
 
-See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed tasks.
+See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for detailed tasks.
 
 ---
 
@@ -20,7 +20,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 |-------|-------|--------|---------|
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
 | Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](_completed/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
-| Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2-linking-api.md) |
+| Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |
 | Phase 5+ | Advanced features | 💡 Ideas | See below |
@@ -33,6 +33,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 |--------|-------------|------|
 | **Visualizers** | "Read" tools that transform content into visual experiences | [Architecture](../architecture/visualizers.md) |
 | **Magic Machines** | "Write" tools that transform content using AI | [Architecture](../architecture/magic-machines.md) |
+| **Search** | Static search with Pagefind, tag filtering, multi-index merging | [Architecture](../architecture/search.md) |
 
 ---
 
@@ -52,7 +53,30 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 - Pre-build validation for broken links
 - Client-side search (lunr.js or pagefind)
 
-**Detailed plan:** [phases/phase-2-linking-api.md](phases/phase-2-linking-api.md)
+**Detailed plan:** [phases/phase-2/phase-2-linking-api.md](phases/phase-2/phase-2-linking-api.md)
+
+---
+
+## Phase 2.5: Tag Index System
+
+**Goal:** Comprehensive tag indexing and navigation inspired by Digital Garden plugin.
+
+### Key Features
+- **Tag Index Page** - Browse all tags at `/tags/`
+- **Individual Tag Pages** - `/tags/[tag-name]/` showing all pages with that tag
+- **Inline Tag Suggestions** - "Related by tag" boxes on pages
+- **Privacy Protection** - Excluded pages' tags never appear in public index
+- **Hierarchical Tags** - Support for nested tags (`#recipe/dessert`)
+
+### Research Phase (Current)
+- 📋 Study Digital Garden plugin tag implementation
+- 📋 Analyze tag extraction and indexing patterns
+- 📋 Design privacy-safe tag aggregation
+- 📋 Define UI/UX patterns for tag navigation
+
+**Detailed plan:** [phases/phase-2/2026-02-08 tag system and search implementation.md](phases/phase-2/2026-02-08%20tag%20system%20and%20search%20implementation.md)
+
+**Status:** Research and planning phase. Implementation after Phase 2 completion.
 
 ---
 
@@ -79,7 +103,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 - **Graph Visualization** - Interactive note connections (D3.js)
 - **Stacked Notes** - Andy Matuschak style columns
 - **Timeline Visualizer** - Date-based content display
-- **Recipe Scaling** - Cooklang syntax with scaling UI ([detailed plan](phases/2026-02-03_recipe-scaling.md))
+- **Recipe Scaling** - Cooklang syntax with scaling UI ([detailed plan](phases/phase-2/2026-02-03_recipe-scaling.md))
 
 ### Magic Machines (Phase 4+)
 - Local magic machine runner
@@ -125,7 +149,7 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 ## Technical Debt & Infrastructure
 
 ### Ongoing Considerations
-- [ ] Test suite foundation — Vitest, preprocessing unit tests ([detailed plan](phases/2026-02-07_test-suite.md))
+- [ ] Test suite foundation — Vitest, preprocessing unit tests ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
 - [ ] Monitoring and alerting for builds
 - [ ] Error tracking (Sentry or similar)
 - [ ] Analytics (privacy-respecting: Plausible, Fathom)
@@ -157,4 +181,4 @@ See [Phase 2 Implementation Plan](phases/phase-2-linking-api.md) for detailed ta
 2. **Review phase details** before starting work
 3. **Add ideas** to [IDEAS.md](IDEAS.md), not here
 4. **Log decisions** in [DECISIONS.md](DECISIONS.md)
-5. **Create detailed plans** in `phases/` when ready to implement
+5. **Create detailed plans** in `phases/<phase-N>/` when ready to implement

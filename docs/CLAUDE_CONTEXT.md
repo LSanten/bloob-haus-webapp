@@ -262,7 +262,8 @@ docs/
 │
 ├── architecture/               ← How systems work
 │   ├── visualizers.md          ← Read/display components
-│   └── magic-machines.md       ← Write/transform AI tools
+│   ├── magic-machines.md       ← Write/transform AI tools
+│   └── search.md              ← Search, tags, and Pagefind
 │
 └── implementation-plans/
     ├── ROADMAP.md              ← Phase overview & priorities
@@ -275,8 +276,13 @@ docs/
     │   └── 2026-02-05_Migration-plan-from HUGO to ELEVENTY.md
     │
     └── phases/                 ← Active implementation plans
-        ├── phase-2-linking-api.md
-        └── 2026-02-03_recipe-scaling.md
+        ├── phase-2/             ← Phase 2 plans
+        │   ├── phase-2-linking-api.md
+        │   ├── 2026-02-03_recipe-scaling.md
+        │   ├── 2026-02-07_test-suite.md
+        │   └── 2026-02-08 tag system and search implementation.md
+        └── phase-3/             ← Phase 3 plans (future)
+            └── 2026-02-08 multi index search architecture.md
 ```
 
 **Naming conventions for new plans:**
@@ -294,7 +300,7 @@ When making changes, update the relevant docs:
 |-------------|--------|
 | New folder structure in codebase | Update "Project Structure" in this file |
 | New/changed architecture (visualizers, magic machines, etc.) | Update `architecture/` docs |
-| Implementation work on a phase | Update the plan in `phases/` |
+| Implementation work on a phase | Update the plan in `phases/<phase-N>/` |
 | Completed a session | Add to `CHANGELOG.md` |
 | Significant technical decision | Add to `DECISIONS.md` |
 | New feature idea | Add to `IDEAS.md` |

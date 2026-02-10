@@ -1,8 +1,8 @@
 # Bloob Haus Roadmap
 
 **Purpose:** High-level planning document for features and phases.  
-**Last Updated:** February 5, 2026  
-**Status:** Phase 1 Complete, Eleventy Migration Complete, Phase 2 Planning
+**Last Updated:** February 9, 2026  
+**Status:** Phase 1 Complete, Eleventy Migration Complete, Phase 2.5 (Tags & Search) Complete
 
 ---
 
@@ -57,26 +57,24 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 
 ---
 
-## Phase 2.5: Tag Index System
+## Phase 2.5: Tag Index System & Search
 
-**Goal:** Comprehensive tag indexing and navigation inspired by Digital Garden plugin.
+**Goal:** Comprehensive tag indexing, navigation, and full-text search.
 
-### Key Features
-- **Tag Index Page** - Browse all tags at `/tags/`
-- **Individual Tag Pages** - `/tags/[tag-name]/` showing all pages with that tag
-- **Inline Tag Suggestions** - "Related by tag" boxes on pages
-- **Privacy Protection** - Excluded pages' tags never appear in public index
-- **Hierarchical Tags** - Support for nested tags (`#recipe/dessert`)
+### Completed
+- ✅ **Tag extraction** — from frontmatter (with/without `#`) and inline `#tags` in body
+- ✅ **Tag Index Page** — browse all tags at `/tags/` with weighted tag cloud
+- ✅ **Individual Tag Pages** — `/tags/[tag-name]/` showing all pages with that tag
+- ✅ **Privacy Protection** — tag extraction runs after publish-filter; `not-for-public` stripped
+- ✅ **Pagefind search** — full-text search at `/search/` with tag filtering
+- ✅ **Search thumbnails** — OG images shown in search results
+- ✅ **Page preview visualizer** — eye icon button on cards/tags/search, modal overlay
 
-### Research Phase (Current)
-- 📋 Study Digital Garden plugin tag implementation
-- 📋 Analyze tag extraction and indexing patterns
-- 📋 Design privacy-safe tag aggregation
-- 📋 Define UI/UX patterns for tag navigation
+### Not Yet Implemented
+- Inline tag suggestions ("Related by tag" boxes on pages)
+- Hierarchical tags (`#recipe/dessert`)
 
 **Detailed plan:** [phases/phase-2/2026-02-08 tag system and search implementation.md](phases/phase-2/2026-02-08%20tag%20system%20and%20search%20implementation.md)
-
-**Status:** Research and planning phase. Implementation after Phase 2 completion.
 
 ---
 
@@ -99,7 +97,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 **Goal:** Dynamic, interactive visualizations beyond static pages.
 
 ### Planned Visualizers
-- **Link Previews** - Hover to see page preview
+- ~~**Link Previews** - Hover to see page preview~~ → Done as **page-preview** visualizer (eye icon button + modal)
 - **Graph Visualization** - Interactive note connections (D3.js)
 - **Stacked Notes** - Andy Matuschak style columns
 - **Timeline Visualizer** - Date-based content display

@@ -1,0 +1,15 @@
+{
+  "name": "page-preview",
+  "type": "runtime",
+  "version": "1.0.0",
+  "description": "Adds a preview button to content links. Click to see page content in a modal overlay without navigating away.",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": ".recipe-card-link, .tag-page-list li, .pagefind-ui__result"
+  },
+  "files": {
+    "browser": "browser.js",
+    "styles": "styles.css"
+  },
+  "settings": {}
+}

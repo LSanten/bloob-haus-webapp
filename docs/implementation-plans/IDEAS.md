@@ -9,7 +9,7 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 ### Site Features
 - [x] RSS feed generation (done — Session 5, `/feed.xml`)
 - [x] Sitemap generation (done — Session 5, `/sitemap.xml`)
-- [ ] Search (client-side: Pagefind, Lunr.js)
+- [x] Search (done — Pagefind with tag filtering at `/search/`)
 - [ ] Multi-language support
 - [ ] Version history / revision tracking
 - [ ] Scheduled publishing

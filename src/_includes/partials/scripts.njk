@@ -1,4 +1,4 @@
-<!-- Visualizers -->
-<script src="/assets/js/visualizers/checkbox-tracker.js"></script>
-<!-- Recipe preview modal -->
-<script src="/assets/js/recipe-preview.js"></script>
+<!-- Visualizers (auto-generated from lib/visualizers/) -->
+{% for vis in visualizers %}{% if vis.hasJs %}
+<script src="/assets/js/visualizers/{{ vis.name }}.js"></script>
+{% endif %}{% endfor %}

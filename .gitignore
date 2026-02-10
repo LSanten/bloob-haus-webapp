@@ -22,6 +22,7 @@ src/media/
 
 # Generated data (preprocessor output)
 src/_data/tagIndex.json
+src/_data/visualizers.json
 
 # Next.js (for future phases)
 .next/

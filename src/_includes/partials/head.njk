@@ -50,5 +50,8 @@
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/assets/css/main.css" />
-    <link rel="stylesheet" href="/assets/css/visualizers/checkbox-tracker.css" />
+    <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
+    {% for vis in visualizers %}{% if vis.hasCss %}
+    <link rel="stylesheet" href="/assets/css/visualizers/{{ vis.name }}.css" />
+    {% endif %}{% endfor %}
 </head>

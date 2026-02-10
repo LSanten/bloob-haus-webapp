@@ -1,0 +1,166 @@
+/* ================================
+   Page Preview Visualizer
+   ================================
+   Functional CSS for the preview button and modal overlay.
+   Survives template changes - only main.css needs replacing.
+   ================================ */
+
+/* ================================
+   Preview Button
+   ================================ */
+
+.preview-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--footer-bg, #f5ebe0);
+    border: 1px solid var(--border-color, #e8dcc4);
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--text-light, #666666);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-family: var(--font-heading, sans-serif);
+    transition:
+        opacity 0.15s,
+        background 0.15s;
+    z-index: 2;
+    opacity: 0;
+}
+
+/* Show on hover of parent */
+.recipe-card:hover .preview-btn,
+.tag-page-list li:hover .preview-btn,
+.pagefind-ui__result-inner:hover .preview-btn {
+    opacity: 1;
+}
+
+/* Always visible on touch devices */
+@media (hover: none) {
+    .preview-btn {
+        opacity: 1;
+    }
+}
+
+.preview-btn:hover {
+    background: var(--border-color, #e8dcc4);
+    color: var(--accent-dark, #8b4513);
+}
+
+.preview-btn svg {
+    flex-shrink: 0;
+}
+
+/* ================================
+   Preview Modal Overlay
+   ================================ */
+
+.preview-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+}
+
+.preview-overlay.active {
+    display: flex;
+}
+
+.preview-modal {
+    background: var(--bg-color, #fffaf0);
+    border-radius: 12px;
+    max-width: var(--max-width, 800px);
+    width: 100%;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding: var(--spacing-lg, 2rem) var(--spacing-md, 1.5rem);
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.preview-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    background: var(--footer-bg, #f5ebe0);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--text-light, #666666);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: background 0.15s;
+}
+
+.preview-close:hover {
+    background: var(--border-color, #e8dcc4);
+    color: var(--text-color, #333333);
+}
+
+.preview-content {
+    font-size: 1.05rem;
+}
+
+.preview-content h1:first-child,
+.preview-content h2:first-child,
+.preview-content h3:first-child {
+    border-bottom: 3px solid var(--accent-color, #d2691e);
+    padding-bottom: var(--spacing-md, 1.5rem);
+    margin-bottom: var(--spacing-lg, 2rem);
+}
+
+.preview-loading {
+    text-align: center;
+    padding: var(--spacing-xl, 3rem);
+    color: var(--text-light, #666666);
+}
+
+.preview-goto {
+    display: block;
+    text-align: center;
+    margin-top: var(--spacing-lg, 2rem);
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-color, #d2691e);
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: var(--font-heading, sans-serif);
+    font-weight: 600;
+    transition: opacity 0.15s;
+    position: sticky;
+    bottom: 0;
+}
+
+.preview-goto:hover {
+    opacity: 0.85;
+    color: white;
+}
+
+/* ================================
+   Responsive
+   ================================ */
+
+@media (max-width: 768px) {
+    .preview-overlay {
+        padding: 1rem 0.5rem;
+    }
+
+    .preview-modal {
+        max-height: calc(100vh - 2rem);
+        border-radius: 8px;
+    }
+}

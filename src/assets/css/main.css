@@ -592,6 +592,132 @@ blockquote p:last-child {
     --pagefind-ui-font: var(--font-body);
 }
 
+/* Hide empty thumbnail placeholders (results without images) */
+.pagefind-ui__result-thumb:not(:has(img)) {
+    display: none;
+}
+
+/* On mobile, move tag filters below search results */
+@media (max-width: 768px) {
+    .pagefind-ui__drawer {
+        flex-direction: column-reverse;
+    }
+
+    .pagefind-ui__filter-panel {
+        width: 100%;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        padding-top: var(--spacing-sm);
+    }
+}
+
+/* ================================
+   Recipe Preview Modal
+   ================================ */
+
+.preview-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+}
+
+.preview-overlay.active {
+    display: flex;
+}
+
+.preview-modal {
+    background: var(--bg-color);
+    border-radius: 12px;
+    max-width: var(--max-width);
+    width: 100%;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.preview-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    background: var(--footer-bg);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: background 0.15s;
+}
+
+.preview-close:hover {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.preview-content {
+    font-size: 1.05rem;
+}
+
+.preview-content h1:first-child,
+.preview-content h2:first-child,
+.preview-content h3:first-child {
+    border-bottom: 3px solid var(--accent-color);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.preview-loading {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-light);
+}
+
+.preview-goto {
+    display: block;
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    transition: opacity 0.15s;
+    position: sticky;
+    bottom: 0;
+}
+
+.preview-goto:hover {
+    opacity: 0.85;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .preview-overlay {
+        padding: 1rem 0.5rem;
+    }
+
+    .preview-modal {
+        max-height: calc(100vh - 2rem);
+        border-radius: 8px;
+    }
+}
+
 /* 404 page */
 .error-page {
     text-align: center;

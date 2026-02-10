@@ -1,19 +1,22 @@
 ---
 layout: layouts/base.njk
 ---
-<article class="recipe-page">
+<article class="recipe-page" data-pagefind-body>
     <div class="recipe-content">{{ content | safe }}</div>
 
     {% if tags or prep_time or cook_time or servings %}
-    <div class="recipe-meta-section">
+    <div class="recipe-meta-section" data-pagefind-ignore>
         {% if tags %}
+        {% set displayTags = tags | filterTagList %}
+        {% if displayTags.length %}
         <div class="recipe-tags">
-            {% for tag in tags %}
-                {% if not tag.startsWith("#") %}
-                <span class="tag">{{ tag }}</span>
-                {% endif %}
+            {% for tag in displayTags %}
+            <a href="/tags/{{ tag | slugify }}/"
+               class="tag-badge"
+               data-pagefind-filter="tag">{{ tag }}</a>
             {% endfor %}
         </div>
+        {% endif %}
         {% endif %}
 
         {% if prep_time or cook_time or servings %}

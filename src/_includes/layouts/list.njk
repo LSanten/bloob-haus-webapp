@@ -18,13 +18,14 @@ layout: layouts/base.njk
                 <div class="recipe-summary">{{ item.data.title }}</div>
                 {% endif %}
                 {% if item.data.tags %}
+                {% set displayTags = item.data.tags | filterTagList | head(3) %}
+                {% if displayTags.length %}
                 <div class="recipe-tags">
-                    {% for tag in item.data.tags | head(3) %}
-                        {% if not tag.startsWith("#") %}
-                        <span class="tag">{{ tag }}</span>
-                        {% endif %}
+                    {% for tag in displayTags %}
+                    <span class="tag-badge">{{ tag }}</span>
                     {% endfor %}
                 </div>
+                {% endif %}
                 {% endif %}
             </article>
         </a>

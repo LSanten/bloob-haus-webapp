@@ -1,0 +1,26 @@
+---
+layout: layouts/base.njk
+title: Search
+permalink: /search/
+eleventyExcludeFromCollections: true
+---
+<div data-pagefind-ignore>
+    <h1>Search</h1>
+    <link href="/pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/pagefind/pagefind-ui.js"></script>
+    <div id="search"></div>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            new PagefindUI({
+                element: '#search',
+                showSubResults: true,
+                showImages: false,
+                openFilters: ['tag'],
+                translations: {
+                    placeholder: 'Search notes...',
+                    zero_results: 'No results for "[SEARCH_TERM]"'
+                }
+            });
+        });
+    </script>
+</div>

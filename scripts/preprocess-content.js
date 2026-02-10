@@ -27,6 +27,7 @@ import {
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
+import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -77,7 +78,11 @@ export async function preprocessContent({
     linksBroken: 0,
     attachmentsCopied: 0,
     transclusions: 0,
+    tagsExtracted: 0,
   };
+
+  // Collect page data for tag index (built after file loop)
+  const allPageData = [];
 
   // Step 1: Read Obsidian config
   console.log("--- Step 1: Reading Obsidian config ---");
@@ -148,6 +153,12 @@ export async function preprocessContent({
     stats.linksResolved += mdLinkResult.resolved.length;
     stats.linksBroken += mdLinkResult.broken.length;
 
+    // 6f: Extract and normalize tags from frontmatter + inline content
+    const pageTags = extractTags(frontmatter, processedContent);
+    if (pageTags.length > 0) {
+      stats.tagsExtracted += pageTags.length;
+    }
+
     // Build output frontmatter
     const pageInfo =
       fileIndex.pages[
@@ -159,14 +170,27 @@ export async function preprocessContent({
     // Get last modified date from git history
     const gitDate = getLastModifiedDate(file.path, contentDir);
 
+    const pageTitle =
+      pageInfo?.title ||
+      frontmatter.title ||
+      path.basename(file.relativePath, ".md");
+
     const outputFrontmatter = {
       ...frontmatter,
-      title:
-        pageInfo?.title ||
-        frontmatter.title ||
-        path.basename(file.relativePath, ".md"),
+      title: pageTitle,
       slug: pageInfo?.slug,
+      tags: pageTags,
     };
+
+    // Collect page data for tag index
+    if (pageTags.length > 0 && pageInfo) {
+      allPageData.push({
+        title: pageTitle,
+        url: pageInfo.url,
+        tags: pageTags,
+        excerpt: frontmatter.description || "",
+      });
+    }
 
     // Add date if we got it from git and it's not already set
     if (gitDate && !frontmatter.date) {
@@ -203,8 +227,19 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Copy attachments
-  console.log("\n--- Step 7: Copying attachments ---");
+  // Step 7: Build global tag index
+  console.log("\n--- Step 7: Building tag index ---");
+  const tagIndex = buildTagIndex(allPageData);
+  const tagIndexDir = path.join(outputDir, "_data");
+  await fs.ensureDir(tagIndexDir);
+  const tagIndexPath = path.join(tagIndexDir, "tagIndex.json");
+  await fs.writeJson(tagIndexPath, tagIndex, { spaces: 2 });
+  console.log(
+    `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
+  );
+
+  // Step 8: Copy attachments
+  console.log("\n--- Step 8: Copying attachments ---");
   const mediaOutputDir = path.join(staticDir, "media");
   const { copied } = await copyAttachments(
     contentDir,
@@ -222,6 +257,8 @@ export async function preprocessContent({
   console.log(`  Links resolved:  ${stats.linksResolved}`);
   console.log(`  Links broken:    ${stats.linksBroken}`);
   console.log(`  Transclusions:   ${stats.transclusions}`);
+  console.log(`  Tags extracted:  ${stats.tagsExtracted}`);
+  console.log(`  Unique tags:     ${Object.keys(tagIndex).length}`);
   console.log(`  Attachments:     ${stats.attachmentsCopied}`);
   console.log("========================================\n");
 

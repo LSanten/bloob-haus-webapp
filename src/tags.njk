@@ -1,0 +1,40 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: collections
+  size: 1
+  alias: tag
+  filter:
+    - all
+    - nav
+    - posts
+    - tagList
+    - not-for-public
+    - sections
+    - recipes
+    - notes
+    - resources
+    - listsOfFavorites
+    - withBacklinks
+permalink: /tags/{{ tag | slugify }}/
+eleventyComputed:
+  title: "Tagged: {{ tag }}"
+eleventyExcludeFromCollections: true
+---
+<div class="tag-page">
+    <h1>Notes tagged "{{ tag }}"</h1>
+
+    <ul class="tag-page-list">
+    {% set taglist = collections[tag] %}
+    {% for post in taglist | reverse %}
+        <li>
+            <a href="{{ post.url }}">{{ post.data.title }}</a>
+            {% if post.data.description %}
+            <p class="excerpt">{{ post.data.description }}</p>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+
+    <p><a href="/tags/">&larr; All tags</a></p>
+</div>

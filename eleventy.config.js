@@ -110,6 +110,34 @@ export default async function (eleventyConfig) {
       .join(" ");
   });
 
+  // Filter out system/reserved tags from display
+  function filterTagList(tags) {
+    return (tags || []).filter(
+      (tag) => !["all", "nav", "posts", "not-for-public"].includes(tag),
+    );
+  }
+  eleventyConfig.addFilter("filterTagList", filterTagList);
+
+  // Slugify filter for tag URLs
+  eleventyConfig.addFilter("slugify", function (str) {
+    if (!str) return "";
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9\s/-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  });
+
+  // Collection of all unique tags (for tag page pagination)
+  eleventyConfig.addCollection("tagList", function (collectionApi) {
+    const tagSet = new Set();
+    collectionApi.getAll().forEach((item) => {
+      (item.data.tags || []).forEach((tag) => tagSet.add(tag));
+    });
+    return filterTagList([...tagSet]).sort();
+  });
+
   // Auto-detect sections from content directory structure
   // Mirrors Hugo's .Site.Sections behavior
   eleventyConfig.addCollection("sections", function (collectionApi) {

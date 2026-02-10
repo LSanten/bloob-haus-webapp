@@ -239,7 +239,7 @@ pre code {
     margin-top: var(--spacing-sm);
 }
 
-.tag {
+.tag-badge {
     display: inline-block;
     background: var(--footer-bg);
     color: var(--accent-dark);
@@ -248,6 +248,13 @@ pre code {
     font-size: 0.85rem;
     font-family: var(--font-heading);
     font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+a.tag-badge:hover {
+    background: var(--border-color);
+    color: var(--accent-dark);
 }
 
 .recipe-meta {
@@ -515,6 +522,63 @@ blockquote p:last-child {
     background: var(--card-bg);
     border-color: var(--accent-color);
     color: var(--link-hover);
+}
+
+/* ================================
+   Tag Pages
+   ================================ */
+
+.tag-cloud {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+.tag-cloud .tag-badge {
+    font-size: calc(0.8em + var(--tag-weight, 1) * 0.08em);
+}
+
+.tag-count {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.tag-page-list {
+    list-style: none;
+    padding: 0;
+}
+
+.tag-page-list li {
+    margin-bottom: 1em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tag-page-list li:last-child {
+    border-bottom: none;
+}
+
+.tag-page-list .excerpt {
+    margin-top: 0.3em;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+/* ================================
+   Pagefind Search UI
+   ================================ */
+
+.pagefind-ui {
+    --pagefind-ui-scale: 1;
+    --pagefind-ui-primary: var(--accent-color);
+    --pagefind-ui-text: var(--text-color);
+    --pagefind-ui-background: var(--bg-color);
+    --pagefind-ui-border: var(--border-color);
+    --pagefind-ui-tag: var(--footer-bg);
+    --pagefind-ui-border-radius: 8px;
+    --pagefind-ui-font: var(--font-body);
 }
 
 /* 404 page */

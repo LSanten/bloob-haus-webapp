@@ -132,6 +132,14 @@ async function buildEleventy() {
 
   const files = await fs.readdir(siteDir);
   console.log(`[eleventy] Build complete - ${files.length} entries in _site/`);
+
+  // Step 4: Build Pagefind search index
+  console.log("\n--- Step 4: Building search index (Pagefind) ---");
+  execSync("npx pagefind --site _site", {
+    cwd: ROOT_DIR,
+    stdio: "inherit",
+  });
+  console.log("[pagefind] Search index built");
 }
 
 /**

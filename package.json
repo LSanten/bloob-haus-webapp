@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/bundle-visualizers.js && node scripts/build-site.js --target=eleventy",
     "dev": "npx @11ty/eleventy --serve",
-    "eleventy": "npx @11ty/eleventy"
+    "eleventy": "npx @11ty/eleventy",
+    "build:search": "npx pagefind --site _site"
   },
   "keywords": [
     "obsidian",
@@ -32,6 +33,7 @@
     "@11ty/eleventy": "^3.1.2",
     "@11ty/eleventy-img": "^6.0.4",
     "@11ty/eleventy-plugin-rss": "^2.0.4",
-    "esbuild": "^0.27.3"
+    "esbuild": "^0.27.3",
+    "pagefind": "^1.4.0"
   }
 }

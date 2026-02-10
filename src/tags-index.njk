@@ -1,0 +1,26 @@
+---
+layout: layouts/base.njk
+title: All Tags
+permalink: /tags/
+eleventyExcludeFromCollections: true
+---
+<div class="tag-index-page">
+    <h1>All Tags</h1>
+
+    {% if collections.tagList.length %}
+    <ul class="tag-cloud">
+    {% for tag in collections.tagList %}
+        {% set tagCount = collections[tag].length %}
+        <li>
+            <a href="/tags/{{ tag | slugify }}/"
+               class="tag-badge"
+               style="--tag-weight: {{ tagCount }}">
+                {{ tag }} <span class="tag-count">({{ tagCount }})</span>
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>No tags found.</p>
+    {% endif %}
+</div>

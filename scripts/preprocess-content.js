@@ -205,7 +205,7 @@ export async function preprocessContent({
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
       const ogExt =
         imgExt === ".gif" ? "gif" : imgExt === ".png" ? "png" : "jpeg";
-      outputFrontmatter.image = `/media/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
+      outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
     }
 
     // Add layout for Eleventy

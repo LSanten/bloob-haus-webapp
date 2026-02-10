@@ -24,7 +24,7 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-05 | Visualizer parsers run in preprocessor (not addTransform) | Parsers receive raw markdown, enabling code sharing across Eleventy, browser preview, and Obsidian plugins |
 | 2026-02-05 | markdown-it-task-lists for checkbox rendering | Standard markdown parser concern (like Goldmark in Hugo), not a visualizer responsibility |
 | 2026-02-05 | Slugify both folder paths and filenames in URLs | Clean URLs, no spaces; consistent across Eleventy permalinks, preprocessor links, and Obsidian copy-link plugin |
-| 2026-02-09 | Image optimizer only processes /media/ root files | Subdirectories like /media/og/ and /media/favicon/ contain purpose-built assets that shouldn't be reprocessed; fixes duplicate image bug with OG images |
+| 2026-02-09 | OG images live at /og/, not /media/og/ | /media/ is purely user content (all optimized, including nested folders); system-generated assets like OG images get their own top-level dir to avoid image optimizer conflicts |
 
 ---
 

@@ -38,6 +38,8 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets");
   // Media files (images from preprocessor) — serve at /media/
   eleventyConfig.addPassthroughCopy({ "src/media": "media" });
+  // OG preview images — serve at /og/ (separate from /media/ to avoid optimization)
+  eleventyConfig.addPassthroughCopy({ "src/og": "og" });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");
@@ -226,14 +228,14 @@ export default async function (eleventyConfig) {
   });
 
   // Image optimization transform
-  // Finds <img src="/media/filename"> in rendered HTML, generates WebP + original
+  // Finds <img src="/media/..."> in rendered HTML, generates WebP + original
   // at reasonable sizes, replaces with <picture> element.
-  // Only matches images in /media/ root — skips subdirectories like /media/og/
-  // and /media/favicon/ which serve purpose-built assets that shouldn't be reprocessed.
+  // Only /media/ paths are optimized — everything in /media/ is user content
+  // (including nested folders). OG images live at /og/ and are never touched.
   eleventyConfig.addTransform("optimizeImages", async function (content) {
     if (!this.page.outputPath?.endsWith(".html")) return content;
 
-    const imgRegex = /<img\s+([^>]*?)src="(\/media\/[^/"]+)"([^>]*?)>/gi;
+    const imgRegex = /<img\s+([^>]*?)src="(\/media\/[^"]+)"([^>]*?)>/gi;
     const matches = [...content.matchAll(imgRegex)];
     if (matches.length === 0) return content;
 

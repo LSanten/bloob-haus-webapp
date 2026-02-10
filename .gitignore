@@ -19,6 +19,7 @@ src/notes/*.md
 src/resources/*.md
 src/lists of favorites/*.md
 src/media/
+src/og/
 
 # Generated data (preprocessor output)
 src/_data/tagIndex.json

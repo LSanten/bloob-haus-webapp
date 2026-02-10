@@ -21,7 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
 const SRC_DIR = path.join(ROOT_DIR, "src");
 const MEDIA_DIR = path.join(SRC_DIR, "media");
-const OG_DIR = path.join(MEDIA_DIR, "og");
+const OG_DIR = path.join(SRC_DIR, "og");
 const TRACKING_FILE = path.join(OG_DIR, ".og-tracking.json");
 const MAX_SIZE_BYTES = 300 * 1024; // 300KB target for WhatsApp
 const OG_WIDTH = 1200;
@@ -155,7 +155,7 @@ export async function generateOgImages() {
     const { data } = matter(content);
     if (!data.image) continue;
 
-    // data.image is like /media/og/IMG_7428-og.jpeg
+    // data.image is like /og/IMG_7428-og.jpeg
     const ogBasename = path.basename(data.image);
     const match = ogBasename.match(/^(.+)-og\.(jpeg|png|gif)$/);
     if (!match) continue;

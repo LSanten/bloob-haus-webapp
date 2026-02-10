@@ -592,27 +592,28 @@ blockquote p:last-child {
     --pagefind-ui-font: var(--font-body);
 }
 
-/* Square-crop thumbnails and align to top of result */
+/* Square-crop thumbnails and align to top of result.
+   !important needed to override Pagefind's Svelte-scoped selectors
+   (e.g. .pagefind-ui__result-image.svelte-xxx.svelte-xxx) */
 .pagefind-ui__result-thumb {
-    margin-top: 0;
-    overflow: hidden;
+    margin-top: 0 !important;
+    overflow: hidden !important;
 }
 
 .pagefind-ui__result-image {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    left: 0;
-    transform: none;
-    max-width: none;
-    max-height: none;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    left: 0 !important;
+    transform: none !important;
+    max-width: none !important;
+    max-height: none !important;
 }
 
 /* Align result text to top too */
 .pagefind-ui__result-inner {
-    margin-top: 0;
+    margin-top: 0 !important;
 }
 
 /* Hide empty thumbnail placeholders (results without images) */
@@ -634,6 +635,58 @@ blockquote p:last-child {
     .pagefind-ui .pagefind-ui__results-area {
         order: 1;
     }
+}
+
+/* ================================
+   Preview Button
+   ================================ */
+
+.preview-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--footer-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-family: var(--font-heading);
+    transition:
+        background 0.15s,
+        color 0.15s;
+    z-index: 2;
+    opacity: 0;
+    transition:
+        opacity 0.15s,
+        background 0.15s;
+}
+
+/* Show on hover of parent */
+.recipe-card:hover .preview-btn,
+.tag-page-list li:hover .preview-btn,
+.pagefind-ui__result-inner:hover .preview-btn {
+    opacity: 1;
+}
+
+/* Always visible on touch devices */
+@media (hover: none) {
+    .preview-btn {
+        opacity: 1;
+    }
+}
+
+.preview-btn:hover {
+    background: var(--border-color);
+    color: var(--accent-dark);
+}
+
+.preview-btn svg {
+    flex-shrink: 0;
 }
 
 /* ================================

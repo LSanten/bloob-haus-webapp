@@ -592,6 +592,29 @@ blockquote p:last-child {
     --pagefind-ui-font: var(--font-body);
 }
 
+/* Square-crop thumbnails and align to top of result */
+.pagefind-ui__result-thumb {
+    margin-top: 0;
+    overflow: hidden;
+}
+
+.pagefind-ui__result-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    left: 0;
+    transform: none;
+    max-width: none;
+    max-height: none;
+}
+
+/* Align result text to top too */
+.pagefind-ui__result-inner {
+    margin-top: 0;
+}
+
 /* Hide empty thumbnail placeholders (results without images) */
 .pagefind-ui__result-thumb:not(:has(img)) {
     display: none;
@@ -599,15 +622,17 @@ blockquote p:last-child {
 
 /* On mobile, move tag filters below search results */
 @media (max-width: 768px) {
-    .pagefind-ui__drawer {
-        flex-direction: column-reverse;
+    .pagefind-ui .pagefind-ui__drawer {
+        flex-direction: column-reverse !important;
     }
 
-    .pagefind-ui__filter-panel {
-        width: 100%;
-        border-right: none;
-        border-top: 1px solid var(--border-color);
-        padding-top: var(--spacing-sm);
+    .pagefind-ui .pagefind-ui__filter-panel {
+        width: 100% !important;
+        order: 2;
+    }
+
+    .pagefind-ui .pagefind-ui__results-area {
+        order: 1;
     }
 }
 

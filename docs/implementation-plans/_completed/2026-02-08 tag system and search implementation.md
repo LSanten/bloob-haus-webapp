@@ -2,10 +2,11 @@
 
 **Purpose:** Step-by-step implementation plan for tags and site search on Bloob Haus  
 **Created:** February 8, 2026  
-**Status:** 📋 READY TO IMPLEMENT  
+**Status:** ✅ IMPLEMENTED  
 **Phase:** 2.5 (between Enhanced Linking and Interactive Features)  
 **Estimated effort:** 5–9 hours total  
-**Depends on:** Eleventy migration (complete), preprocessing pipeline (complete)
+**Depends on:** Eleventy migration (complete), preprocessing pipeline (complete)  
+**Completed:** February 9, 2026
 
 ---
 
@@ -595,24 +596,24 @@ async function search(query, tagFilter = null) {
 
 After implementation, verify:
 
-- [ ] Tags extracted from frontmatter arrays
-- [ ] Tags extracted from frontmatter strings
-- [ ] Inline `#tags` extracted from markdown body
-- [ ] Nested tags (`#recipe/dessert`) preserved correctly
-- [ ] System tags (`not-for-public`, `all`, `nav`) filtered out
-- [ ] `tagIndex.json` generated in `src/_data/`
-- [ ] Tag index page at `/tags/` lists all tags with counts
-- [ ] Individual tag pages at `/tags/[tag-name]/` list correct pages
-- [ ] Tags from excluded/private pages NEVER appear in tag index
-- [ ] Tags from excluded/private pages NEVER appear in search results
-- [ ] Tag that exists only on private pages does NOT appear anywhere
-- [ ] Clickable tag badges on page headers link to tag pages
-- [ ] Search page at `/search/` works with Pagefind UI
-- [ ] Search results include page titles and excerpts
-- [ ] Tag filter in search UI works (filter by tag)
-- [ ] `npm run build` completes with Pagefind step
-- [ ] Build works on Vercel (auto-deploy)
-- [ ] Tags are modular — `tag-extractor.js` can be enhanced independently
+- [x] Tags extracted from frontmatter arrays
+- [x] Tags extracted from frontmatter strings
+- [x] Inline `#tags` extracted from markdown body
+- [x] Nested tags (`#recipe/dessert`) preserved correctly
+- [x] System tags (`not-for-public`, `all`, `nav`) filtered out
+- [x] `tagIndex.json` generated in `src/_data/`
+- [x] Tag index page at `/tags/` lists all tags with counts
+- [x] Individual tag pages at `/tags/[tag-name]/` list correct pages
+- [x] Tags from excluded/private pages NEVER appear in tag index
+- [x] Tags from excluded/private pages NEVER appear in search results
+- [x] Tag that exists only on private pages does NOT appear anywhere
+- [x] Clickable tag badges on page headers link to tag pages
+- [x] Search page at `/search/` works with Pagefind UI
+- [x] Search results include page titles and excerpts
+- [x] Tag filter in search UI works (filter by tag)
+- [x] `npm run build` completes with Pagefind step
+- [x] Build works on Vercel (auto-deploy)
+- [x] Tags are modular — `tag-extractor.js` can be enhanced independently
 
 ---
 

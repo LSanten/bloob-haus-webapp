@@ -21,6 +21,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
 | Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](_completed/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
 | Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
+| Phase 2.5 | Tags, search, page preview | ✅ Complete | [Archived Plan](_completed/2026-02-08%20tag%20system%20and%20search%20implementation.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |
 | Phase 5+ | Advanced features | 💡 Ideas | See below |
@@ -74,7 +75,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 - Inline tag suggestions ("Related by tag" boxes on pages)
 - Hierarchical tags (`#recipe/dessert`)
 
-**Detailed plan:** [phases/phase-2/2026-02-08 tag system and search implementation.md](phases/phase-2/2026-02-08%20tag%20system%20and%20search%20implementation.md)
+**Detailed plan:** [_completed/2026-02-08 tag system and search implementation.md](_completed/2026-02-08%20tag%20system%20and%20search%20implementation.md)
 
 ---
 

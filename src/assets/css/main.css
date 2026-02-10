@@ -587,6 +587,8 @@ blockquote p:last-child {
     --pagefind-ui-border: var(--border-color);
     --pagefind-ui-tag: var(--footer-bg);
     --pagefind-ui-border-radius: 8px;
+    --pagefind-ui-image-border-radius: 6px;
+    --pagefind-ui-image-box-ratio: 1/1;
     --pagefind-ui-font: var(--font-body);
 }
 

@@ -14,10 +14,12 @@ eleventyExcludeFromCollections: true
             new PagefindUI({
                 element: '#search',
                 showSubResults: true,
-                showImages: false,
+                showImages: true,
+                showEmptyFilters: false,
                 translations: {
-                    placeholder: 'Search notes...',
-                    zero_results: 'No results for "[SEARCH_TERM]"'
+                    placeholder: 'Search recipes and notes...',
+                    zero_results: 'No results for "[SEARCH_TERM]"',
+                    filters_label: 'Filter by tag'
                 }
             });
         });

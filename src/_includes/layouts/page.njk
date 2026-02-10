@@ -2,6 +2,9 @@
 layout: layouts/base.njk
 ---
 <article class="recipe-page" data-pagefind-body>
+    {% if image %}
+    <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden />
+    {% endif %}
     <div class="recipe-content">{{ content | safe }}</div>
 
     {% if tags or prep_time or cook_time or servings %}

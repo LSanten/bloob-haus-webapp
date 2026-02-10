@@ -15,6 +15,9 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 - [ ] Scheduled publishing
 - [ ] A/B testing for content
 
+### Infrastructure / Safety
+- [ ] Reserved root folder validation — prevent user vault folders from colliding with system directories (`assets/`, `og/`, `_data/`, `_includes/`). Becomes more important with multi-user/multi-vault support.
+
 ### Ecosystem / Integrations
 - [ ] Theme marketplace
 - [ ] Plugin/visualizer marketplace
@@ -56,3 +59,4 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 | 2026-02-03 | Obsidian plugin for Cooklang syntax preview | Session 4 planning |
 | 2026-02-03 | Ingredient database / linking | Recipe scaling discussion |
 | 2026-02-03 | Timer visualizer | Cooklang research |
+| 2026-02-09 | Reserved root folder validation | Duplicate image bug fix — OG images moved to `/og/` |

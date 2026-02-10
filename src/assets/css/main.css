@@ -102,6 +102,15 @@ body {
     color: var(--accent-color);
 }
 
+.nav-search {
+    display: flex;
+    align-items: center;
+}
+
+.nav-search svg {
+    vertical-align: middle;
+}
+
 /* ================================
    Main Layout
    ================================ */

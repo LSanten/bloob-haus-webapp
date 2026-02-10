@@ -16,12 +16,14 @@ const INLINE_TAG_REGEX = /(?:^|\s)#([a-zA-Z][\w/-]*)/g;
  * System tags used for publishing logic, not content taxonomy.
  * Stripped from the public tag list.
  */
-const SYSTEM_TAGS = new Set([
-  'not-for-public',
-  'gardenentry',
-  'all',
-  'nav',
-]);
+const SYSTEM_TAGS = new Set(["not-for-public", "gardenentry", "all", "nav"]);
+
+/**
+ * Tags to ignore from public display.
+ * These are metadata/provenance tags that aren't useful for browsing.
+ * Add tags here that you don't want appearing on the site.
+ */
+const IGNORED_TAGS = new Set(["from-wl-recipes-gdrive"]);
 
 /**
  * Extract tags from a page's frontmatter and markdown content.
@@ -43,7 +45,7 @@ export function extractTags(frontmatter, content) {
   // 1. Frontmatter tags (array or single string)
   if (Array.isArray(frontmatter.tags)) {
     tags = [...frontmatter.tags];
-  } else if (typeof frontmatter.tags === 'string') {
+  } else if (typeof frontmatter.tags === "string") {
     tags = [frontmatter.tags];
   }
 
@@ -54,11 +56,15 @@ export function extractTags(frontmatter, content) {
   }
 
   // 3. Normalize: strip # prefix, lowercase, trim, deduplicate, filter system tags
-  const normalized = [...new Set(
-    tags
-      .map(t => t.replace(/^#/, '').toLowerCase().trim())
-      .filter(t => t.length > 0 && !SYSTEM_TAGS.has(t))
-  )].sort();
+  const normalized = [
+    ...new Set(
+      tags
+        .map((t) => t.replace(/^#/, "").toLowerCase().trim())
+        .filter(
+          (t) => t.length > 0 && !SYSTEM_TAGS.has(t) && !IGNORED_TAGS.has(t),
+        ),
+    ),
+  ].sort();
 
   return normalized;
 }
@@ -84,13 +90,13 @@ export function buildTagIndex(allPages) {
       tagIndex[tag].pages.push({
         title: page.title,
         url: page.url,
-        excerpt: page.excerpt || '',
+        excerpt: page.excerpt || "",
       });
     }
   }
 
   // Sort by count descending
   return Object.fromEntries(
-    Object.entries(tagIndex).sort((a, b) => b[1].count - a[1].count)
+    Object.entries(tagIndex).sort((a, b) => b[1].count - a[1].count),
   );
 }

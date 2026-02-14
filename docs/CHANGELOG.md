@@ -6,7 +6,7 @@ Development session history and completed work.
 
 ## Session Log
 
-### Session 7 - February 13, 2026
+### Session 8 - February 13, 2026
 **Worked on:** Homepage redesign, search UX, recipe ordering fix
 
 **Homepage Redesign:**
@@ -30,6 +30,52 @@ Development session history and completed work.
 **Build Target Cleanup:**
 - Changed default `BUILD_TARGET` from `"hugo"` to `"eleventy"` in `preprocess-content.js` and `build-site.js`
 - Hugo is no longer used; prevents accidental writes to a `hugo/` folder
+
+---
+
+### Session 7 - February 8-9, 2026
+**Worked on:** Tag system, Pagefind search, page-preview visualizer, bug fixes
+
+**Tag System & Pagefind Search:**
+- Created `scripts/utils/tag-extractor.js` — extracts and normalizes tags from frontmatter and inline content
+- Added tag collections and `tagList` collection to `eleventy.config.js`
+- Created tag index page (`/tags/`) with weighted tag cloud
+- Created per-tag pages (`/tags/<tag>/`) listing all tagged content
+- Created `src/_includes/partials/tags.njk` for tag badges on content pages
+- Integrated Pagefind search with `src/search.njk` — full-text search with tag filters
+- Added Pagefind build step to Eleventy build pipeline
+- Tag filtering ignores provenance tags (internal metadata)
+
+**Search UX Polish:**
+- Search icon added to navigation bar
+- Thumbnails shown in search results via `data-pagefind-meta="image"` on pages
+- Empty filters hidden, tag filters collapsed by default
+- Filter label renamed for clarity
+- Mobile layout: tag filters moved below search results
+
+**Page Preview Modal:**
+- Built recipe preview modal — hover/click to preview page content without navigating
+- Rebuilt as hover button with extended interaction area
+- Fixed search result image display with `!important` overrides for Pagefind's scoped styles
+- Modularized as `lib/visualizers/page-preview/` visualizer package (manifest, browser.js, styles.css)
+
+**Visualizer Auto-Discovery Improvements:**
+- `bundle-visualizers.js` now auto-generates CSS and JS include paths
+- `head.njk` and `scripts.njk` updated to loop over discovered visualizers instead of hardcoded paths
+
+**Bug Fixes:**
+- Duplicate image bug: OG images moved from `/media/og/` to `/og/` to avoid being re-optimized by image transform
+- Image optimizer now skips `/media/` subdirectories (only processes top-level `/media/` images)
+
+**Documentation:**
+- Restructured `docs/implementation-plans/phases/` into `phase-2/` and `phase-3/` subdirs
+- Created `docs/architecture/search.md` — search, tags, and Pagefind architecture doc
+- Created tag system and search implementation plan (`2026-02-08`)
+- Created multi-index search architecture doc for Phase 3
+- Moved completed tag/search plan to `_completed/`
+- Source attribution line commented out pending better recipe provenance design
+- Added reserved root folder validation to IDEAS
+- Added duplicate image fix to DECISIONS log
 
 ---
 
@@ -57,6 +103,9 @@ Development session history and completed work.
 - Added `og:image:width` and `og:image:type` meta tags (supports JPEG, PNG, GIF)
 - Added `og:site_name` meta tag
 - Added `<link rel="canonical">` for SEO
+
+**EXIF Orientation Fix:**
+- Fixed OG preview images that appeared rotated — `generate-og-images.js` now applies EXIF orientation correction
 
 **Dependencies:**
 - Added `sharp` as explicit dependency (was only transitive via eleventy-img)
@@ -286,8 +335,9 @@ Development session history and completed work.
 | 3 | Feb 2, 2026 | Checkbox visualizer, modular structure, site rename |
 | 4 | Feb 3, 2026 | Recipe cleanup, Magic Machines architecture, docs reorganization |
 | 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M7), RSS, sitemap, image optimization |
-| 6 | Feb 7, 2026 | PNG preservation, OG preview images, GIF support, SEO meta tags |
-| 7 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
+| 6 | Feb 7, 2026 | PNG preservation, OG preview images, GIF support, EXIF fix, SEO meta tags |
+| 7 | Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, image bug fixes |
+| 8 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
 
 ---
 
@@ -300,5 +350,6 @@ Development session history and completed work.
 | Feb 3, 2026 | Documentation restructured, architecture documented |
 | Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M7) |
 | Feb 5, 2026 | RSS feed, sitemap, robots.txt, 404 page, image optimization added |
-| Feb 7, 2026 | PNG transparency preserved, OG preview images for chat sharing, canonical URLs |
+| Feb 7, 2026 | PNG transparency preserved, OG preview images for chat sharing, EXIF fix, canonical URLs |
+| Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, duplicate image bug fixes |
 | Feb 13, 2026 | Search-first homepage, recipe ordering fixed (full git history), Hugo defaults removed |

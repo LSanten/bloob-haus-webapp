@@ -342,7 +342,7 @@ a.tag-badge:hover {
 
 .home-header {
     text-align: center;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
 }
 
 .home-tagline {
@@ -351,9 +351,22 @@ a.tag-badge:hover {
     margin-top: var(--spacing-sm);
 }
 
-.home-sections {
-    display: grid;
-    gap: var(--spacing-xl);
+.home-search {
+    margin-bottom: var(--spacing-xl);
+}
+
+.home-tags {
+    margin-top: var(--spacing-lg);
+}
+
+.home-tags h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.home-section {
+    margin-top: var(--spacing-xl);
 }
 
 .home-section h2 {
@@ -624,16 +637,16 @@ blockquote p:last-child {
 /* On mobile, move tag filters below search results */
 @media (max-width: 768px) {
     .pagefind-ui .pagefind-ui__drawer {
-        flex-direction: column-reverse !important;
+        flex-direction: column !important;
     }
 
     .pagefind-ui .pagefind-ui__filter-panel {
         width: 100% !important;
-        order: 2;
+        order: 2 !important;
     }
 
     .pagefind-ui .pagefind-ui__results-area {
-        order: 1;
+        order: 1 !important;
     }
 }
 

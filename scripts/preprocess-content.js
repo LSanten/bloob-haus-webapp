@@ -48,7 +48,7 @@ const OUTPUT_DIRS = {
  * Get the current build target (read at call time, not import time)
  */
 function getBuildTarget() {
-  return process.env.BUILD_TARGET || "hugo";
+  return process.env.BUILD_TARGET || "eleventy";
 }
 
 /**
@@ -79,6 +79,8 @@ export async function preprocessContent({
     attachmentsCopied: 0,
     transclusions: 0,
     tagsExtracted: 0,
+    gitDatesFound: 0,
+    gitDatesMissing: 0,
   };
 
   // Collect page data for tag index (built after file loop)
@@ -195,6 +197,9 @@ export async function preprocessContent({
     // Add date if we got it from git and it's not already set
     if (gitDate && !frontmatter.date) {
       outputFrontmatter.date = gitDate;
+      stats.gitDatesFound++;
+    } else if (!gitDate && !frontmatter.date) {
+      stats.gitDatesMissing++;
     }
 
     // Extract first image for OG preview
@@ -260,6 +265,16 @@ export async function preprocessContent({
   console.log(`  Tags extracted:  ${stats.tagsExtracted}`);
   console.log(`  Unique tags:     ${Object.keys(tagIndex).length}`);
   console.log(`  Attachments:     ${stats.attachmentsCopied}`);
+  console.log(`  Git dates found: ${stats.gitDatesFound}`);
+  console.log(`  Git dates missing: ${stats.gitDatesMissing}`);
+  if (stats.gitDatesMissing > 0) {
+    console.log(
+      `  ⚠ ${stats.gitDatesMissing} files have no git date — recipe ordering may be wrong.`,
+    );
+    console.log(
+      `    Make sure content repo is cloned with full history (not --depth 1).`,
+    );
+  }
   console.log("========================================\n");
 
   return stats;

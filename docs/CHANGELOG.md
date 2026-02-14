@@ -6,6 +6,33 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 7 - February 13, 2026
+**Worked on:** Homepage redesign, search UX, recipe ordering fix
+
+**Homepage Redesign:**
+- Replaced "Recent Recipes" + "Resources" layout with search-first design
+- Pagefind search bar now centered prominently below header
+- Full tag cloud ("Browse by Tag") displayed below search bar
+- Recent Recipes list at the bottom of the page
+
+**Search UX (Mobile):**
+- Fixed mobile Pagefind layout: search results now appear above tag filters on phone
+- Root cause: conflicting `flex-direction: column-reverse` with explicit `order` values were canceling out
+- Fixed to `flex-direction: column` with `order: 1` (results) and `order: 2` (filters)
+
+**Recipe Ordering Fix (Git Dates):**
+- Root cause: `clone-content.js` used `git clone --depth 1` (shallow clone), so `git log` returned no per-file dates
+- Without dates, Eleventy fell back to filesystem creation time (identical for all files on fresh deploy)
+- Fix: full clone instead of shallow — all 64 files now get correct git dates
+- Added auto-unshallow: existing shallow repos detected and unshallowed with `git fetch --unshallow`
+- Added `gitDatesFound` / `gitDatesMissing` counters to preprocessing summary for visibility
+
+**Build Target Cleanup:**
+- Changed default `BUILD_TARGET` from `"hugo"` to `"eleventy"` in `preprocess-content.js` and `build-site.js`
+- Hugo is no longer used; prevents accidental writes to a `hugo/` folder
+
+---
+
 ### Session 6 - February 7, 2026
 **Worked on:** Image processing improvements, OG preview images for chat sharing
 
@@ -260,6 +287,7 @@ Development session history and completed work.
 | 4 | Feb 3, 2026 | Recipe cleanup, Magic Machines architecture, docs reorganization |
 | 5 | Feb 5, 2026 | Hugo → Eleventy migration (M0-M7), RSS, sitemap, image optimization |
 | 6 | Feb 7, 2026 | PNG preservation, OG preview images, GIF support, SEO meta tags |
+| 7 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
 
 ---
 
@@ -273,3 +301,4 @@ Development session history and completed work.
 | Feb 5, 2026 | 🎉 **Hugo → Eleventy migration complete** (M0-M7) |
 | Feb 5, 2026 | RSS feed, sitemap, robots.txt, 404 page, image optimization added |
 | Feb 7, 2026 | PNG transparency preserved, OG preview images for chat sharing, canonical URLs |
+| Feb 13, 2026 | Search-first homepage, recipe ordering fixed (full git history), Hugo defaults removed |

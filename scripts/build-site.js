@@ -19,7 +19,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 // Parse --target flag from command line args
 const args = process.argv.slice(2);
 const targetArg = args.find((a) => a.startsWith("--target="));
-const target = targetArg ? targetArg.split("=")[1] : "hugo";
+const target = targetArg ? targetArg.split("=")[1] : "eleventy";
 
 // Set BUILD_TARGET for preprocess-content.js
 process.env.BUILD_TARGET = target;

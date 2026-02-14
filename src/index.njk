@@ -2,43 +2,65 @@
 layout: layouts/base.njk
 permalink: /
 ---
-<div class="home-page">
+<div class="home-page" data-pagefind-ignore>
     <header class="home-header">
         <h1>{{ site.title }}</h1>
         <p class="home-tagline">{{ site.description }}</p>
     </header>
 
-    <div class="home-sections">
-        <section class="home-section">
-            <h2>Recent Recipes</h2>
-            <div class="recipe-list">
-                {% for recipe in collections.recipes | head(10) %}
-                <a href="{{ recipe.url }}" class="recipe-card-link">
-                    <article class="recipe-card">
-                        <div class="recipe-summary">
-                            {{ recipe.data.title }}
-                        </div>
-                    </article>
-                </a>
-                {% endfor %}
-            </div>
-            <a href="/recipes/" class="view-all">View all recipes →</a>
-        </section>
-
-        {% if collections.resources and collections.resources.length %}
-        <section class="home-section">
-            <h2>Resources</h2>
-            <div class="recipe-list">
-                {% for resource in collections.resources | head(5) %}
-                <a href="{{ resource.url }}" class="recipe-card-link">
-                    <article class="recipe-card">
-                        <div class="recipe-summary">{{ resource.data.title }}</div>
-                    </article>
-                </a>
-                {% endfor %}
-            </div>
-            <a href="/resources/" class="view-all">View all resources →</a>
-        </section>
-        {% endif %}
+    <div class="home-search">
+        <link href="/pagefind/pagefind-ui.css" rel="stylesheet">
+        <script src="/pagefind/pagefind-ui.js"></script>
+        <div id="search"></div>
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                new PagefindUI({
+                    element: '#search',
+                    showSubResults: true,
+                    showImages: true,
+                    showEmptyFilters: false,
+                    openFilters: ['tag'],
+                    translations: {
+                        placeholder: 'Search recipes and notes...',
+                        zero_results: 'No results for "[SEARCH_TERM]"',
+                        filters_label: 'Filter by tag'
+                    }
+                });
+            });
+        </script>
     </div>
+
+    {% if collections.tagList.length %}
+    <div class="home-tags">
+        <h2>Browse by Tag</h2>
+        <ul class="tag-cloud">
+        {% for tag in collections.tagList %}
+            {% set tagCount = collections[tag].length %}
+            <li>
+                <a href="/tags/{{ tag | slugify }}/"
+                   class="tag-badge"
+                   style="--tag-weight: {{ tagCount }}">
+                    {{ tag }} <span class="tag-count">({{ tagCount }})</span>
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <section class="home-section">
+        <h2>Recent Recipes</h2>
+        <div class="recipe-list">
+            {% for recipe in collections.recipes | head(10) %}
+            <a href="{{ recipe.url }}" class="recipe-card-link">
+                <article class="recipe-card">
+                    <div class="recipe-summary">
+                        {{ recipe.data.title }}
+                    </div>
+                </article>
+            </a>
+            {% endfor %}
+        </div>
+        <a href="/recipes/" class="view-all">View all recipes →</a>
+    </section>
 </div>

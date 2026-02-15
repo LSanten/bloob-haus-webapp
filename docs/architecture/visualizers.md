@@ -153,24 +153,36 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 
 ---
 
-## Visualizer Input Documentation (`schema.md`)
+## Visualizer Documentation (`schema.md`)
 
-Every visualizer package **must** include a `schema.md` file that documents what goes inside its code fence. This file serves three audiences:
+Every visualizer package **must** include a `schema.md` file. This file serves three audiences:
 
-1. **Human authors** — plain language explanation of the input format, available options, and examples
-2. **AI tools** — a Magic Machine or LLM can read this file and generate valid visualizer input automatically
-3. **Webapp UI** — the schema drives settings forms and configuration interfaces for non-technical users
+1. **Human authors** — what the visualizer does, how to write content for it, available settings
+2. **AI tools** — a Magic Machine or LLM can read this file and generate valid content or configuration automatically
+3. **Webapp UI** — the schema drives settings forms and documentation pages for non-technical users
 
-**Example `schema.md` for a tag-cloud visualizer:**
+The contents of `schema.md` depend on the visualizer type:
+
+**Build-time visualizers** (code fence) — documents the input format inside the code fence, available options, defaults, and examples. This is the API spec for what goes between the `` ``` `` markers.
+
+**Runtime visualizers** (auto-detect) — documents what the visualizer does, what content patterns activate it, how to write content that works with it, and what settings are configurable. These don't have code fence input, but authors still need to know how to use them (e.g., "write `- [ ]` for checkboxes").
+
+**Example `schema.md` for a build-time visualizer (tag-cloud):**
 
 ```markdown
-# Tag Cloud Input Schema
+# Tag Cloud
 
 Displays an interactive tag cloud from the site's tag index.
 
+## Activation
+
+Place a code fence in your markdown:
+    ```tag-cloud
+    ```
+
 ## Format
 
-YAML key-value pairs. All fields are optional.
+YAML key-value pairs inside the code fence. All fields are optional.
 
 ## Options
 
@@ -179,8 +191,6 @@ YAML key-value pairs. All fields are optional.
 | style | string | "flat" | Display style: "flat", "bubbles", "force" |
 | minCount | number | 1 | Only show tags with at least this many pages |
 | colorScale | string | "warm" | Color scheme: "warm", "cool", "monochrome" |
-| limit | number | (all) | Maximum number of tags to display |
-| linkToTag | boolean | true | Tags link to their tag page |
 
 ## Examples
 
@@ -196,7 +206,35 @@ Custom styling:
     ```
 ```
 
-The `schema.md` is the **API documentation** for the visualizer. It should be clear enough that someone (or an AI) who has never seen the visualizer before can write valid input after reading it.
+**Example `schema.md` for a runtime visualizer (checkbox-tracker):**
+
+```markdown
+# Checkbox Tracker
+
+Enables interactive checkboxes with persistent state.
+
+## Activation
+
+Automatic. Any page with markdown task list checkboxes activates this visualizer.
+
+## How to write content
+
+Use standard markdown task list syntax:
+- [ ] Step one
+- [ ] Step two
+
+## Settings
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| undoWindowMs | number | 60000 | Undo window duration (ms) |
+
+## Code fence
+
+This visualizer does not use a code fence.
+```
+
+The `schema.md` is the **API documentation** for the visualizer. It should be clear enough that someone (or an AI) who has never seen the visualizer before can understand how to use it.
 
 **Future:** The webapp could expose `schema.md` files as documentation pages in a visualizer library, and AI-powered tools could use them to auto-generate visualizer configurations.
 

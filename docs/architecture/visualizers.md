@@ -2,7 +2,7 @@
 
 **Status:** Modular architecture with auto-discovery. Two runtime visualizers: checkbox-tracker, page-preview.  
 **Location:** `docs/architecture/`  
-**Updated:** 2026-02-09
+**Updated:** 2026-02-13
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
 
@@ -44,18 +44,46 @@ Run during preprocessing (Node.js). Parse custom markdown syntax into data, then
 
 **Key decision:** Build-time parsers run in the **preprocessor** (before markdown-it), not in Eleventy's `addTransform` (after). This ensures parsers receive raw markdown, so the same parser code works in Eleventy, browser preview, and Obsidian plugins. See [DECISIONS.md](../implementation-plans/DECISIONS.md) for full rationale.
 
+**Embedding syntax: Fenced code blocks.** Visualizers are placed in content using markdown fenced code blocks with the visualizer name as the language identifier:
+
+````markdown
+```tag-cloud
+style: bubbles
+minCount: 2
+colorScale: warm
 ```
-raw markdown with ::: timeline
+````
+
+The preprocessor finds these blocks in raw markdown, passes the content inside the fence to the visualizer's `parser.js`, and replaces the entire block with the rendered HTML output. This happens *before* markdown-it runs, so the code fence never reaches the markdown parser.
+
+**Why code fences:**
+- Standard markdown syntax — every markdown parser understands fenced code blocks
+- Obsidian compatibility — renders as a code block (readable, not broken). A future Obsidian plugin could render live previews (same pattern as Mermaid)
+- Structured config — the content inside the fence can be YAML, JSON, plain text, or any format the visualizer's parser expects
+- Graceful degradation — in any renderer without the visualizer, it just shows as a code block
+- Code sharing — the preprocessor parses raw markdown, so the same parser works in Eleventy, browser preview, and Obsidian plugins
+
+**A code fence with no content is valid** — the visualizer uses its defaults:
+
+````markdown
+```search-bar
+```
+````
+
+**Note:** Code fences must span multiple lines. Inline placement (`` ```tag-cloud``` `` on a single line) is not possible — markdown treats that as inline code. For block-level widgets like search bars, tag clouds, and timelines, this is fine. If inline widget placement is ever needed, a different syntax (like custom directives or `@syntax{}`) would be required.
+
+```
+raw markdown with ```tag-cloud block
     ↓ parser.js (during preprocess-content.js) → structured data
     ↓ renderer.js (data → HTML string)
-modified markdown (custom syntax replaced with HTML)
+modified markdown (code fence replaced with HTML)
     ↓ markdown-it renders remaining standard markdown
 final HTML page
 ```
 
-**Examples:** Timeline, yoga sequence, recipe card layout
+**Examples:** Tag cloud, search bar, timeline, yoga sequence, recipe card layout
 
-**When to use:** When you need to parse custom markdown syntax (e.g., `::: timeline`, fenced code blocks) or generate structured data for the page.
+**When to use:** When you need to parse custom markdown syntax or generate structured data for the page. The code fence is the standard way to say "place this visualizer here with this config."
 
 ### Runtime Visualizers
 Run in the browser (JS + CSS). Enhance already-rendered HTML with interactivity.
@@ -85,11 +113,13 @@ Some need both: build-time generates data, runtime renders it interactively.
 lib/visualizers/                        ← Source of truth for all visualizer code
 ├── checkbox-tracker/                   ← Each visualizer is a self-contained package
 │   ├── manifest.json                   ← Metadata, activation method, settings schema
+│   ├── schema.md                       ← Human + AI readable input documentation
 │   ├── index.js                        ← Module entry point (exports type, name, transform)
 │   ├── browser.js                      ← Runtime: DOM events, localStorage (side effects)
 │   └── styles.css                      ← Visualizer-specific CSS
-├── timeline/                           ← (future) Build-time visualizer example
+├── tag-cloud/                          ← (future) Build-time visualizer example
 │   ├── manifest.json
+│   ├── schema.md                       ← Documents what goes inside ```tag-cloud fences
 │   ├── index.js
 │   ├── parser.js                       ← Pure: markdown → structured data
 │   ├── renderer.js                     ← Pure: data → HTML string
@@ -120,6 +150,55 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 ```
 
 **Adding a new visualizer = adding a new folder in `lib/visualizers/`.** No changes to any other file needed — the bundler auto-discovers folders, writes a manifest, and templates auto-include from that manifest.
+
+---
+
+## Visualizer Input Documentation (`schema.md`)
+
+Every visualizer package **must** include a `schema.md` file that documents what goes inside its code fence. This file serves three audiences:
+
+1. **Human authors** — plain language explanation of the input format, available options, and examples
+2. **AI tools** — a Magic Machine or LLM can read this file and generate valid visualizer input automatically
+3. **Webapp UI** — the schema drives settings forms and configuration interfaces for non-technical users
+
+**Example `schema.md` for a tag-cloud visualizer:**
+
+```markdown
+# Tag Cloud Input Schema
+
+Displays an interactive tag cloud from the site's tag index.
+
+## Format
+
+YAML key-value pairs. All fields are optional.
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| style | string | "flat" | Display style: "flat", "bubbles", "force" |
+| minCount | number | 1 | Only show tags with at least this many pages |
+| colorScale | string | "warm" | Color scheme: "warm", "cool", "monochrome" |
+| limit | number | (all) | Maximum number of tags to display |
+| linkToTag | boolean | true | Tags link to their tag page |
+
+## Examples
+
+Minimal (all defaults):
+    ```tag-cloud
+    ```
+
+Custom styling:
+    ```tag-cloud
+    style: bubbles
+    minCount: 3
+    colorScale: cool
+    ```
+```
+
+The `schema.md` is the **API documentation** for the visualizer. It should be clear enough that someone (or an AI) who has never seen the visualizer before can write valid input after reading it.
+
+**Future:** The webapp could expose `schema.md` files as documentation pages in a visualizer library, and AI-powered tools could use them to auto-generate visualizer configurations.
 
 ---
 
@@ -155,14 +234,17 @@ Each visualizer declares its metadata:
 
 ## Activation Methods (with Precedence)
 
-Visualizers can be activated in four ways. When conflicts occur, higher precedence wins:
+Visualizers can be activated in five ways. These serve different purposes and coexist:
 
-| Precedence | Method | Scope | Example |
-|------------|--------|-------|---------|
-| 1 (highest) | **Page frontmatter** | Single page | `visualizers: [timeline, graph]` |
-| 2 | **Folder config** | All pages in folder | `.bloob/visualizers.json` |
-| 3 | **Auto-detection** | Pages matching pattern | Checkbox tracker detects `- [ ]` |
-| 4 (lowest) | **Global config** | Entire site | `hugo/config.yaml` or webapp settings |
+| Precedence | Method | Scope | Purpose | Example |
+|------------|--------|-------|---------|---------|
+| 1 (highest) | **Code fence** | Exact position in content | "Place this widget here with this config" | `` ```tag-cloud `` in markdown body |
+| 2 | **Page frontmatter** | Single page | "This page uses these visualizers" | `visualizers: [timeline, graph]` |
+| 3 | **Folder config** | All pages in folder | "All recipes get recipe-scaler" | `.bloob/visualizers.json` |
+| 4 | **Auto-detection** | Pages matching pattern | "Any page with checkboxes gets tracker" | Checkbox tracker detects `- [ ]` |
+| 5 (lowest) | **Global config** | Entire site | "Every page gets page-preview" | Webapp settings or site config |
+
+**Code fences vs. other methods:** Code fences provide *placement control* — they say exactly where in the content a widget appears and what config it uses. The other methods are *activation without placement* — they say "this visualizer is active on this page" but the visualizer decides where/how it manifests (e.g., checkbox-tracker enhances existing checkboxes, page-preview adds buttons to links).
 
 **Example frontmatter:**
 ```yaml
@@ -238,18 +320,34 @@ For the webapp (Phase 3+), users should be able to:
 
 ---
 
-## Auto-Detection Syntax (Needs Further Design)
+## Auto-Detection Syntax
 
-Auto-detection should be careful and explicit. Ideas to explore:
+Auto-detection activates visualizers based on content patterns, without explicit opt-in from the author.
 
 | Pattern | Visualizer | Notes |
 |---------|------------|-------|
 | `- [ ]` in content | checkbox-tracker | Current implementation |
-| `\| date \| event \|` tables | timeline | Need to distinguish from regular tables |
-| `[[yoga:pose-name]]` | yoga-sequence | Namespaced wiki-links? |
-| Code blocks with language | various | ` ```timeline ` as trigger? |
+| `.recipe-card-link` elements | page-preview | Current implementation |
+| Code fences (`` ```visualizer-name ``) | varies | Standard embedding syntax (see Build-time Visualizers above) |
 
 **Open question:** Should auto-detection require opt-in at folder/site level? To prevent unexpected behavior.
+
+---
+
+## Future Consideration: Obsidian Callouts as Activation
+
+Obsidian's callout syntax (`> [!type]`) is another potential way to embed visualizers:
+
+```markdown
+> [!search-bar]
+
+> [!tag-cloud]
+> style: bubbles
+```
+
+**Pros:** Native Obsidian syntax, renders as a styled block in the editor, supports content inside the blockquote. **Cons:** Limited parameter passing, stretches the intended semantics of callouts.
+
+This approach could complement code fences for cases where visual feedback in Obsidian is important. Not currently planned for implementation, but noted as a viable future option. The build pipeline would detect `<blockquote>` elements with `data-callout="visualizer-name"` and replace them with widget HTML.
 
 ---
 
@@ -299,10 +397,12 @@ lib/visualizers/
 | M4 ✓ | Modular visualizer architecture, esbuild bundling, auto-discovery (Eleventy) |
 | ✓ | Page preview visualizer — modal overlay with preview button on cards/search/tags |
 | ✓ | Auto-generated CSS/JS includes via `visualizers.json` data file |
-| Next | Build-time visualizer integration in preprocessor (first candidate: timeline or recipe-card) |
+| ✓ | Architecture: code fence embedding syntax, `schema.md` spec, activation hierarchy |
+| Next | Code fence detection in preprocessor (first candidate: tag-cloud or search-bar) |
 | Next | Per-page visualizer activation via frontmatter |
 | Future | Full manifest system, folder configs, per-page CSS/JS inclusion |
 | Future | Webapp visualizer library, user uploads, UI configuration |
+| Future | Obsidian plugin to render code fence visualizer previews |
 
 ---
 

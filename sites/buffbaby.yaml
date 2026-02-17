@@ -1,0 +1,32 @@
+site:
+  name: "Buff Baby Kitchen"
+  description: "Home-cooked recipes from our kitchen"
+  url: "https://buffbaby.bloob.haus"
+  author: "Leon"
+  language: "en-us"
+
+content:
+  repo: "LSanten/buffbaby"
+  branch: "main"
+  publish_mode: "blocklist"
+  blocklist_tag: "not-for-public"
+
+theme: "warm-kitchen"
+
+visualizers:
+  - checkbox-tracker
+
+features:
+  rss: true
+  sitemap: true
+  robots_txt: true
+  search: true
+  backlinks: true
+  og_images: true
+  tags: true
+  custom_404: true
+
+media:
+  optimize: true
+  formats: ["webp", "jpeg"]
+  widths: [600, 1200]

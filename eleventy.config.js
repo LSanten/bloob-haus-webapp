@@ -3,6 +3,10 @@ import { join } from "path";
 import taskLists from "markdown-it-task-lists";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import Image from "@11ty/eleventy-img";
+import {
+  loadSiteConfig,
+  resolveSiteName,
+} from "./scripts/utils/config-loader.js";
 
 // Auto-discover visualizer packages from lib/visualizers/
 async function loadVisualizers() {
@@ -25,6 +29,10 @@ async function loadVisualizers() {
 }
 
 export default async function (eleventyConfig) {
+  // Load site configuration
+  const siteName = resolveSiteName();
+  const siteConfig = await loadSiteConfig(siteName);
+
   // Load visualizer modules for build-time transforms
   const visualizers = await loadVisualizers();
   // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
@@ -181,108 +189,112 @@ export default async function (eleventyConfig) {
   // Backlinks: compute which pages link to each other
   // Uses addCollection to attach backlinks data to each page.
   // Reads source files from disk (stable API, not Eleventy internals).
-  eleventyConfig.addCollection("withBacklinks", function (collectionApi) {
-    const all = collectionApi.getAll();
+  if (siteConfig.features.backlinks !== false)
+    eleventyConfig.addCollection("withBacklinks", function (collectionApi) {
+      const all = collectionApi.getAll();
 
-    // Extract internal links from markdown source (exclude images)
-    function extractLinks(source) {
-      const links = [];
-      // Markdown links [text](url) — exclude images ![alt](url)
-      const mdLinks = source.matchAll(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g);
-      for (const m of mdLinks) {
-        const url = m[2];
-        // Only internal links (starting with /)
-        if (url.startsWith("/") && !url.startsWith("/media/")) {
-          links.push(url.replace(/\/$/, "")); // normalize trailing slash
+      // Extract internal links from markdown source (exclude images)
+      function extractLinks(source) {
+        const links = [];
+        // Markdown links [text](url) — exclude images ![alt](url)
+        const mdLinks = source.matchAll(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g);
+        for (const m of mdLinks) {
+          const url = m[2];
+          // Only internal links (starting with /)
+          if (url.startsWith("/") && !url.startsWith("/media/")) {
+            links.push(url.replace(/\/$/, "")); // normalize trailing slash
+          }
+        }
+        return links;
+      }
+
+      // First pass: build a map of page URL → outgoing links
+      const linkMap = new Map();
+      for (const page of all) {
+        if (!page.inputPath.endsWith(".md")) continue;
+        try {
+          const source = readFileSync(page.inputPath, "utf-8");
+          linkMap.set(page.url.replace(/\/$/, ""), extractLinks(source));
+        } catch {
+          // File may not exist if it's a generated page
         }
       }
-      return links;
-    }
 
-    // First pass: build a map of page URL → outgoing links
-    const linkMap = new Map();
-    for (const page of all) {
-      if (!page.inputPath.endsWith(".md")) continue;
-      try {
-        const source = readFileSync(page.inputPath, "utf-8");
-        linkMap.set(page.url.replace(/\/$/, ""), extractLinks(source));
-      } catch {
-        // File may not exist if it's a generated page
+      // Second pass: for each page, find all pages that link TO it
+      for (const page of all) {
+        const pageUrl = page.url.replace(/\/$/, "");
+        page.data.backlinks = all
+          .filter((other) => {
+            if (other.url === page.url) return false;
+            const otherUrl = other.url.replace(/\/$/, "");
+            const outgoing = linkMap.get(otherUrl);
+            return outgoing?.includes(pageUrl);
+          })
+          .map((p) => ({ url: p.url, title: p.data.title }));
       }
-    }
 
-    // Second pass: for each page, find all pages that link TO it
-    for (const page of all) {
-      const pageUrl = page.url.replace(/\/$/, "");
-      page.data.backlinks = all
-        .filter((other) => {
-          if (other.url === page.url) return false;
-          const otherUrl = other.url.replace(/\/$/, "");
-          const outgoing = linkMap.get(otherUrl);
-          return outgoing?.includes(pageUrl);
-        })
-        .map((p) => ({ url: p.url, title: p.data.title }));
-    }
-
-    return all;
-  });
+      return all;
+    });
 
   // Image optimization transform
   // Finds <img src="/media/..."> in rendered HTML, generates WebP + original
   // at reasonable sizes, replaces with <picture> element.
   // Only /media/ paths are optimized — everything in /media/ is user content
   // (including nested folders). OG images live at /og/ and are never touched.
-  eleventyConfig.addTransform("optimizeImages", async function (content) {
-    if (!this.page.outputPath?.endsWith(".html")) return content;
+  const mediaConfig = siteConfig.media || {};
+  if (mediaConfig.optimize !== false)
+    eleventyConfig.addTransform("optimizeImages", async function (content) {
+      if (!this.page.outputPath?.endsWith(".html")) return content;
 
-    const imgRegex = /<img\s+([^>]*?)src="(\/media\/[^"]+)"([^>]*?)>/gi;
-    const matches = [...content.matchAll(imgRegex)];
-    if (matches.length === 0) return content;
+      const imgRegex = /<img\s+([^>]*?)src="(\/media\/[^"]+)"([^>]*?)>/gi;
+      const matches = [...content.matchAll(imgRegex)];
+      if (matches.length === 0) return content;
 
-    let result = content;
-    for (const match of matches) {
-      const [originalTag, before, src, after] = match;
-      const inputPath = join("src", decodeURIComponent(src));
-      if (!existsSync(inputPath)) continue;
+      let result = content;
+      for (const match of matches) {
+        const [originalTag, before, src, after] = match;
+        const inputPath = join("src", decodeURIComponent(src));
+        if (!existsSync(inputPath)) continue;
 
-      // Extract alt text if present
-      const altMatch = (before + after).match(/alt="([^"]*)"/);
-      const alt = altMatch ? altMatch[1] : "";
+        // Extract alt text if present
+        const altMatch = (before + after).match(/alt="([^"]*)"/);
+        const alt = altMatch ? altMatch[1] : "";
 
-      // Skip GIFs — serve untouched to preserve animation
-      const ext = src.toLowerCase().split(".").pop();
-      if (ext === "gif") continue;
+        // Skip GIFs — serve untouched to preserve animation
+        const ext = src.toLowerCase().split(".").pop();
+        if (ext === "gif") continue;
 
-      try {
-        // Preserve PNG format for transparency; use JPEG for photos
-        const formats = ext === "png" ? ["webp", "png"] : ["webp", "jpeg"];
+        try {
+          // Preserve PNG format for transparency; use JPEG for photos
+          const configFormats = mediaConfig.formats || ["webp", "jpeg"];
+          const formats = ext === "png" ? ["webp", "png"] : configFormats;
 
-        const metadata = await Image(inputPath, {
-          widths: [600, 1200],
-          formats,
-          outputDir: "_site/media/optimized",
-          urlPath: "/media/optimized/",
-          filenameFormat: function (id, src, width, format) {
-            const name = src.split("/").pop().split(".")[0];
-            return `${name}-${width}w.${format}`;
-          },
-        });
+          const metadata = await Image(inputPath, {
+            widths: mediaConfig.widths || [600, 1200],
+            formats,
+            outputDir: "_site/media/optimized",
+            urlPath: "/media/optimized/",
+            filenameFormat: function (id, src, width, format) {
+              const name = src.split("/").pop().split(".")[0];
+              return `${name}-${width}w.${format}`;
+            },
+          });
 
-        const pictureHtml = Image.generateHTML(metadata, {
-          alt,
-          sizes: "(max-width: 600px) 100vw, 800px",
-          loading: "lazy",
-          decoding: "async",
-        });
+          const pictureHtml = Image.generateHTML(metadata, {
+            alt,
+            sizes: "(max-width: 600px) 100vw, 800px",
+            loading: "lazy",
+            decoding: "async",
+          });
 
-        result = result.replace(originalTag, pictureHtml);
-      } catch (e) {
-        // If image processing fails, keep original tag
-        console.warn(`[image] Failed to optimize ${src}: ${e.message}`);
+          result = result.replace(originalTag, pictureHtml);
+        } catch (e) {
+          // If image processing fails, keep original tag
+          console.warn(`[image] Failed to optimize ${src}: ${e.message}`);
+        }
       }
-    }
-    return result;
-  });
+      return result;
+    });
 
   // Visualizer build-time transform
   // Runs each visualizer's transform() on rendered HTML output.

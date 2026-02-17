@@ -1,7 +1,11 @@
 /**
  * Build Site Script
- * Orchestrates the full build: clone → preprocess → site build
- * Supports both Hugo and Eleventy targets via --target flag
+ * Orchestrates the full build: config → assemble → clone → preprocess → site build
+ * Reads site configuration from sites/{name}.yaml
+ *
+ * Usage:
+ *   node scripts/build-site.js --site=buffbaby
+ *   SITE_NAME=buffbaby node scripts/build-site.js
  */
 
 import { execSync } from "child_process";
@@ -9,6 +13,8 @@ import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
+import { assembleSrc } from "./assemble-src.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
@@ -16,66 +22,84 @@ import { generateOgImages } from "./generate-og-images.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
 
-// Parse --target flag from command line args
-const args = process.argv.slice(2);
-const targetArg = args.find((a) => a.startsWith("--target="));
-const target = targetArg ? targetArg.split("=")[1] : "eleventy";
-
 // Set BUILD_TARGET for preprocess-content.js
-process.env.BUILD_TARGET = target;
+process.env.BUILD_TARGET = "eleventy";
 
 /**
  * Main build function.
  */
 async function buildSite() {
+  const siteName = resolveSiteName();
+
   console.log("\n========================================");
-  console.log(`  BLOOB HAUS BUILD (target: ${target})`);
+  console.log(`  BLOOB HAUS BUILD (site: ${siteName})`);
   console.log("========================================\n");
 
   const startTime = Date.now();
 
   try {
-    // Load environment variables
+    // Load environment variables (for GITHUB_TOKEN)
     loadEnv();
 
-    const token = process.env.GITHUB_TOKEN;
-    const repo = process.env.CONTENT_REPO;
+    // Step 1: Load site config
+    console.log("--- Step 1: Loading site configuration ---\n");
+    const config = await loadSiteConfig(siteName);
+    console.log(`[config] Site: ${config.site.name}`);
+    console.log(`[config] Theme: ${config.theme}`);
+    console.log(`[config] Content repo: ${config.content.repo}`);
 
-    if (!token || !repo) {
-      throw new Error(
-        "Missing required environment variables: GITHUB_TOKEN and CONTENT_REPO",
-      );
+    // Make site name available to eleventy.config.js
+    process.env.SITE_NAME = siteName;
+
+    // Step 2: Assemble src/ from theme
+    await assembleSrc(config);
+
+    // Step 3: Clone content
+    console.log("--- Step 3: Cloning content repository ---\n");
+    const token = process.env.GITHUB_TOKEN;
+    const repo = config.content.repo;
+
+    if (!token) {
+      throw new Error("Missing required environment variable: GITHUB_TOKEN");
     }
 
-    // Step 1: Clone content
-    console.log("--- Step 1: Cloning content repository ---\n");
     const contentDir = await cloneContent({ token, repo });
 
-    // Step 2: Preprocess content (target-aware via BUILD_TARGET env var)
+    // Step 4: Preprocess content
     console.log("\n");
+
+    // Pass config values to preprocessor via env vars
+    // (preprocessor reads these — keeps its interface unchanged)
+    process.env.CONTENT_REPO = config.content.repo;
+    process.env.PUBLISH_MODE = config.content.publish_mode;
+    process.env.BLOCKLIST_TAG = config.content.blocklist_tag;
+
     await preprocessContent({ contentDir });
 
-    // Step 2.5: Generate OG preview images
-    await generateOgImages();
-
-    // Step 3: Build site
-    if (target === "eleventy") {
-      await buildEleventy();
-    } else {
-      await buildHugo();
+    // Step 4.5: Generate OG preview images
+    if (config.features.og_images) {
+      await generateOgImages();
     }
+
+    // Step 5: Bundle visualizers
+    console.log("\n--- Step 5: Bundling visualizers ---");
+    execSync("node scripts/bundle-visualizers.js", {
+      cwd: ROOT_DIR,
+      stdio: "inherit",
+    });
+
+    // Step 6: Build Eleventy
+    await buildEleventy(config);
 
     // Build summary
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    const outputDir =
-      target === "eleventy"
-        ? path.join(ROOT_DIR, "_site")
-        : path.join(ROOT_DIR, "public");
+    const outputDir = path.join(ROOT_DIR, "_site");
 
     console.log("\n========================================");
     console.log("  BUILD COMPLETE");
     console.log("========================================");
-    console.log(`  Target: ${target}`);
+    console.log(`  Site: ${config.site.name}`);
+    console.log(`  Theme: ${config.theme}`);
     console.log(`  Duration: ${duration}s`);
     console.log(`  Output: ${outputDir}`);
     console.log("========================================\n");
@@ -86,35 +110,10 @@ async function buildSite() {
 }
 
 /**
- * Build with Hugo
- */
-async function buildHugo() {
-  console.log("\n--- Step 3: Running Hugo build ---");
-  const hugoDir = path.join(ROOT_DIR, "hugo");
-  const publicDir = path.join(ROOT_DIR, "public");
-
-  await fs.remove(publicDir);
-  console.log("[hugo] Cleaned public directory");
-
-  console.log("[hugo] Building site...");
-  execSync("npx hugo", {
-    cwd: hugoDir,
-    stdio: "inherit",
-  });
-
-  if (!(await fs.pathExists(publicDir))) {
-    throw new Error("Hugo build failed - public directory not created");
-  }
-
-  const files = await fs.readdir(publicDir);
-  console.log(`[hugo] Build complete - ${files.length} files in public/`);
-}
-
-/**
  * Build with Eleventy
  */
-async function buildEleventy() {
-  console.log("\n--- Step 3: Running Eleventy build ---");
+async function buildEleventy(config) {
+  console.log("\n--- Step 6: Running Eleventy build ---");
   const siteDir = path.join(ROOT_DIR, "_site");
 
   await fs.remove(siteDir);
@@ -133,13 +132,15 @@ async function buildEleventy() {
   const files = await fs.readdir(siteDir);
   console.log(`[eleventy] Build complete - ${files.length} entries in _site/`);
 
-  // Step 4: Build Pagefind search index
-  console.log("\n--- Step 4: Building search index (Pagefind) ---");
-  execSync("npx pagefind --site _site", {
-    cwd: ROOT_DIR,
-    stdio: "inherit",
-  });
-  console.log("[pagefind] Search index built");
+  // Step 7: Build Pagefind search index
+  if (config.features.search) {
+    console.log("\n--- Step 7: Building search index (Pagefind) ---");
+    execSync("npx pagefind --site _site", {
+      cwd: ROOT_DIR,
+      stdio: "inherit",
+    });
+    console.log("[pagefind] Search index built");
+  }
 }
 
 /**

@@ -4,8 +4,11 @@
   "description": "Transform Obsidian markdown vaults into hosted static websites using Eleventy",
   "type": "module",
   "scripts": {
-    "build": "node scripts/bundle-visualizers.js && node scripts/build-site.js --target=eleventy",
-    "dev": "npx @11ty/eleventy --serve",
+    "build": "node scripts/build-site.js",
+    "build:buffbaby": "SITE_NAME=buffbaby node scripts/build-site.js",
+    "dev": "SITE_NAME=buffbaby npx @11ty/eleventy --serve",
+    "dev:buffbaby": "SITE_NAME=buffbaby npx @11ty/eleventy --serve",
+    "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site"
   },
@@ -23,6 +26,7 @@
     "fs-extra": "^11.0.0",
     "glob": "^10.0.0",
     "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.1",
     "markdown-it-task-lists": "^2.1.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",

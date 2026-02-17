@@ -6,6 +6,40 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 9 - February 16, 2026
+**Worked on:** Templatize the builder for multi-site support
+
+**Templatized Builder Architecture:**
+- Extracted all theme files from `src/` into `themes/warm-kitchen/` (layouts, partials, pages, CSS)
+- Created `themes/_base/` for shared partials (`head.njk`, `backlinks.njk`) used across all themes
+- `src/` is now entirely generated at build time (gitignored) — never edit files in `src/` directly
+- Theme partials override base partials when they share the same name
+
+**Config-Driven Builds:**
+- Created `sites/buffbaby.yaml` — all site configuration in one YAML file (name, content repo, theme, features, media settings, publish mode)
+- Created `scripts/utils/config-loader.js` — shared YAML config loader used by assemble, build, and eleventy
+- Created `scripts/assemble-src.js` — assembles `src/` from theme + base files + generates `site.js` from config
+- Updated `scripts/build-site.js` — config-driven orchestration with `--site=` flag (defaults to `buffbaby`)
+- Updated `eleventy.config.js` — reads site config, conditionally enables backlinks and image optimization
+- Environment variables simplified: only `GITHUB_TOKEN` required as env var; everything else in YAML config
+
+**Package Updates:**
+- Added `js-yaml` dependency for YAML config parsing
+- Updated `package.json` scripts: `build`, `build:buffbaby`, `dev`, `dev:buffbaby`, `assemble`
+
+**Multi-Site Architecture:**
+- Adding a new site (e.g., marbles) requires only:
+  1. Create `themes/spatial-garden/` with layouts, partials, pages, CSS
+  2. Create `sites/marbles.yaml` pointing to theme + content repo
+  3. Run `SITE_NAME=marbles npm run build`
+- Zero changes needed to buffbaby's theme or config
+
+**Build Verified:**
+- `npm run build` produces identical output to pre-refactor build
+- 109 pages written, 67 indexed by Pagefind, 14.19s build time
+
+---
+
 ### Session 8 - February 13, 2026
 **Worked on:** Homepage redesign, search UX, recipe ordering fix
 
@@ -338,6 +372,7 @@ Development session history and completed work.
 | 6 | Feb 7, 2026 | PNG preservation, OG preview images, GIF support, EXIF fix, SEO meta tags |
 | 7 | Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, image bug fixes |
 | 8 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
+| 9 | Feb 16, 2026 | Templatize builder: multi-site architecture, config-driven builds |
 
 ---
 
@@ -353,3 +388,4 @@ Development session history and completed work.
 | Feb 7, 2026 | PNG transparency preserved, OG preview images for chat sharing, EXIF fix, canonical URLs |
 | Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, duplicate image bug fixes |
 | Feb 13, 2026 | Search-first homepage, recipe ordering fixed (full git history), Hugo defaults removed |
+| Feb 16, 2026 | Templatized builder: themes/, sites/*.yaml, config-driven builds, src/ fully generated |

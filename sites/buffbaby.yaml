@@ -15,6 +15,7 @@ theme: "warm-kitchen"
 
 visualizers:
   - checkbox-tracker
+  - graph
 
 features:
   rss: true

@@ -1,0 +1,115 @@
+/* ─── Graph Visualizer ──────────────────────────────────────────────────────── */
+/* Uses warm-kitchen CSS variables with sensible fallbacks.                     */
+/* Inline code-fence graphs and bottom-of-page layout graphs share these styles. */
+
+.graph-visualizer {
+  margin-top: var(--spacing-lg, 2rem);
+  border-top: 1px solid var(--border-color, #e8dcc4);
+  padding-top: var(--spacing-md, 1.5rem);
+}
+
+/* Header row: title + "Full graph" button */
+.graph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs, 0.5rem);
+}
+
+.graph-title {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light, #666666);
+}
+
+.graph-full-btn {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 0.7rem;
+  background: none;
+  border: 1px solid var(--border-color, #e8dcc4);
+  border-radius: 3px;
+  color: var(--text-light, #666666);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.graph-full-btn:hover {
+  background: var(--border-color, #e8dcc4);
+  color: var(--text-color, #333333);
+}
+
+/* The canvas div — force-graph appends a <canvas> inside */
+.graph-canvas {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  /* height is set by force-graph (220px for local, configurable) */
+}
+
+.graph-canvas canvas {
+  display: block;
+  width: 100% !important;
+}
+
+/* ─── Full-graph modal ───────────────────────────────────────────────────────── */
+
+.graph-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.graph-modal {
+  position: relative;
+  background: var(--bg-color, #fffaf0);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: min(90vw, 820px);
+  height: min(80vh, 600px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.graph-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-light, #666666);
+  cursor: pointer;
+  z-index: 1;
+  padding: 0;
+}
+
+.graph-modal-close:hover {
+  color: var(--text-color, #333333);
+}
+
+.graph-modal-canvas {
+  flex: 1;
+  overflow: hidden;
+}
+
+.graph-modal-canvas canvas {
+  display: block;
+}
+
+/* ─── Inline positioning (code-fence variant) ───────────────────────────────── */
+/* When rendered via ```graph code fence, the graph appears inline with content */
+
+.graph-visualizer[data-graph-position="inline"] {
+  margin-top: var(--spacing-md, 1.5rem);
+  margin-bottom: var(--spacing-md, 1.5rem);
+}

@@ -6,6 +6,58 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 12 - February 18, 2026
+**Worked on:** Phase 2 — graph.json linking API + graph visualizer
+
+**graph.json Linking API (Step 1):**
+- Created `scripts/utils/graph-builder.js` — pure `buildGraph(perPageLinks)` function
+  - Input: per-page map of `{ title, outgoing: [url] }` collected during preprocessing
+  - Output: `{ nodes: [{ id, title, section }], links: [{ source, target }] }` — D3 / force-graph compatible
+  - URL as node ID (no numeric indirection), section derived from URL path (`/recipes/chai/` → `"recipes"`)
+  - Heading anchors stripped from link targets, self-links and unknown targets filtered, duplicates deduplicated
+- Modified `preprocess-content.js` to collect resolved outgoing links per page during step 6f (from both wiki-link and markdown-link resolver output)
+- New step 7: builds graph data and writes `src/graph.json` → served at `/graph.json`
+- Added `eleventy.config.js` passthrough copy for `src/graph.json`
+- `graph.json` is **always generated** regardless of whether the graph visualizer is active
+
+**Note on backlinks vs graph.json — they're complementary, not redundant:**
+| | Backlinks | graph.json |
+|---|---|---|
+| Direction | Incoming only | Bidirectional (outgoing + incoming) |
+| Format | Eleventy data (not a public file) | Served JSON endpoint at `/graph.json` |
+| Source | Reads processed markdown from disk at Eleventy build time | Built from link resolver results during preprocessing |
+| Purpose | Static "pages that link here" list on each page | Site-wide data API for visualization and future tools |
+| Scope | Per-page | Entire site at once |
+
+**Graph Visualizer (Step 2):**
+- Created `lib/visualizers/graph/` — hybrid visualizer (build-time transform + runtime browser)
+- `manifest.json` — type: hybrid, settings schema, TODO note for right/left positioning
+- `index.js` — build-time transform: detects ` ```graph ` code fences in rendered HTML, parses YAML settings, replaces with `<div class="graph-visualizer" data-graph-position="inline" data-graph-settings='...'>` container
+- `browser.js` — runtime:
+  - Loads `force-graph` (MIT, vasturiano) from jsDelivr CDN at runtime (avoids ~300KB bundle)
+  - Fetches `/graph.json` and `/graph-settings.json` (shared, cached fetch promises)
+  - BFS local graph filtering to N-depth neighborhood of current page
+  - Renders interactive canvas graph with node labels, click-to-navigate
+  - Full-graph modal (all pages) via "Full graph" button, Escape/overlay-click to close
+  - Colors inherit from warm-kitchen CSS variables (`--accent-color`, `--border-color`, etc.) with optional hex overrides
+- `styles.css` — graph header, canvas, full-graph modal; uses CSS variables for theme matching
+- `graph.test.js` — 15 co-located tests (manifest, exports, transform behavior)
+
+**Settings system (lowest to highest priority):**
+1. Manifest defaults (`only_if_linked: true`, `depth: 2`, `show_full_graph: true`)
+2. `.bloob/graph.yaml` in content vault → preprocessor reads + writes `src/graph-settings.json` → served at `/graph-settings.json`
+3. Per-page frontmatter: `graph: { depth: 3 }`
+4. Inline code fence: ` ```graph\ndepth: 1\n``` ` (also positions graph at that location)
+
+**Wired into build:**
+- `themes/warm-kitchen/layouts/page.njk` — graph container at bottom of every page, passes `data-current-page` and frontmatter settings; conditional on graph visualizer being bundled
+- `sites/buffbaby.yaml` — added `graph` to visualizers list
+- `eleventy.config.js` — passthrough copies for both `graph.json` and `graph-settings.json`
+
+**Test suite:** 11 files, 137 tests (was 104 → 122 → 137)
+
+---
+
 ### Session 11 - February 17, 2026
 **Worked on:** Cloudflare Pages + GitHub Actions migration
 

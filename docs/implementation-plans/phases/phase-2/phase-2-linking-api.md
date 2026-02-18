@@ -1,8 +1,8 @@
 # Bloob Haus Implementation Plan: Phase 2
 
-**Version:** 2.0 (rewritten for Eleventy)  
-**Date:** February 2, 2026 (original) · February 5, 2026 (updated)  
-**Status:** PARTIALLY COMPLETE  
+**Version:** 2.1 (updated February 18, 2026)
+**Date:** February 2, 2026 (original) · February 5, 2026 (updated) · February 18, 2026 (graph complete)
+**Status:** MOSTLY COMPLETE — validation report remaining
 **Goal:** Search, link graph data, and validation
 
 ---
@@ -20,16 +20,16 @@ The Eleventy migration (M0-M7) completed several Phase 2 deliverables:
 | Sitemap | ✅ Done | `src/sitemap.njk` → `/sitemap.xml` |
 | Image optimization | ✅ Done | `@11ty/eleventy-img` via `addTransform` |
 | Link resolution | ✅ Done | Preprocessor resolves wiki-links + markdown links, tracks broken links |
-| `links.json` export | ❌ Remaining | Preprocessor tracks links but doesn't write JSON |
-| `search-index.json` | ❌ Remaining | Not yet implemented |
-| Client-side search | ❌ Remaining | No search UI |
+| `/graph.json` export | ✅ Done | `graph-builder.js` — nodes+links, bidirectional, always generated |
+| `/graph-settings.json` | ✅ Done | `graph-settings-loader.js` reads `.bloob/graph.yaml` |
+| Graph visualizer | ✅ Done | `lib/visualizers/graph/` — force-graph, local+global, settings ladder |
+| `search-index.json` | ✅ Done (via Pagefind) | Pagefind indexes rendered HTML, served from `_site/pagefind/` |
+| Client-side search | ✅ Done | Pagefind UI at `/search/` |
 | Formal validation report | ❌ Remaining | Preprocessor warns in console but no structured report |
 
 ### What Remains
 
-1. **`links.json`** — Export bidirectional link data for graph visualization
-2. **`search-index.json`** + client-side search UI
-3. **Structured validation report** for broken links
+1. **Structured validation report** — formalize broken link tracking into a structured report + `--strict` flag
 
 ---
 
@@ -59,43 +59,19 @@ This eliminates Tasks 2.1-2.8 from the original plan entirely.
 
 ## Remaining Tasks
 
-### 1. Link Graph JSON
+### 1. Link Graph JSON ✅ COMPLETE (February 18, 2026)
 
-**Goal:** Export link data for future graph visualization (D3.js, etc.)
-
-The preprocessor already tracks outgoing links per file via `wiki-link-resolver.js` and `markdown-link-resolver.js` (both return `{ content, resolved[], broken[] }`). The `withBacklinks` collection in `eleventy.config.js` also computes backlinks.
-
-**Approach:** Write a small script or Eleventy data file that aggregates preprocessor link data into a JSON file.
-
-- [ ] **1.1** Modify preprocessor to write `_site/links.json` after processing all files (aggregate resolved links per page)
-- [ ] **1.2** Include bidirectional data (outgoing + incoming)
-- [ ] **1.3** Verify JSON is served at `/links.json`
-
-**Output format:**
-```json
-{
-  "nodes": [
-    { "id": "/recipes/vegan-masala-chai/", "title": "Vegan Masala Chai", "section": "recipes" }
-  ],
-  "links": [
-    { "source": "/recipes/vegan-masala-chai/", "target": "/notes/chai-tips/" }
-  ]
-}
-```
-
-> Note: Using nodes + links format (vs. nested per-page) because it maps directly to D3 force graph input.
+- [x] **1.1** Collect per-page outgoing links during preprocessing (step 6f)
+- [x] **1.2** Build bidirectional graph data with `graph-builder.js` — nodes+links format, anchors stripped, deduped
+- [x] **1.3** Write `src/graph.json` → served at `/graph.json` via Eleventy passthrough copy
+- [x] **1.4** Graph visualizer: `lib/visualizers/graph/` hybrid (force-graph CDN, local+global, code fence positioning, settings ladder)
+- [x] **1.5** Graph settings: `graph-settings-loader.js` reads `.bloob/graph.yaml`, writes `/graph-settings.json`
 
 ---
 
-### 2. Client-Side Search (Pagefind)
+### 2. Client-Side Search (Pagefind) ✅ COMPLETE (Phase 2.5)
 
-**Goal:** Add search to the site.
-
-- [ ] **2.1** Install Pagefind (`npm install --save-dev pagefind`)
-- [ ] **2.2** Add Pagefind indexing as post-build step (`npx pagefind --site _site`)
-- [ ] **2.3** Add search UI to site (Pagefind provides a drop-in `<link>` + `<div id="search">`)
-- [ ] **2.4** Style search to match site theme
-- [ ] **2.5** Configure section filtering (recipes, notes, resources, etc.)
+Done in Phase 2.5 — Pagefind indexes rendered HTML, search UI at `/search/`.
 
 ---
 

@@ -1,8 +1,8 @@
 # Bloob Haus Roadmap
 
 **Purpose:** High-level planning document for features and phases.  
-**Last Updated:** February 17, 2026  
-**Status:** Phase 1 Complete, Eleventy Migration Complete, Templatized Builder Complete, Test Suite Phase 1+1.5 Complete
+**Last Updated:** February 18, 2026
+**Status:** Phase 1 Complete, Eleventy Migration Complete, Templatized Builder Complete, Test Suite Phase 1+1.5 Complete, graph.json API + graph visualizer complete
 
 ---
 
@@ -20,7 +20,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 |-------|-------|--------|---------|
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
 | Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](_completed/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
-| Phase 2 | Enhanced linking + API foundation | 📋 Planning | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
+| Phase 2 | Enhanced linking + API foundation | 🔧 Active (validation remaining) | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
 | Phase 2.5 | Tags, search, page preview | ✅ Complete | [Archived Plan](_completed/2026-02-08%20tag%20system%20and%20search%20implementation.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |
@@ -48,11 +48,13 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 - ✅ Sitemap (`/sitemap.xml`)
 - ✅ Image optimization (WebP + responsive)
 
-### Remaining Deliverables
-- `links.json` - Bidirectional link data for graph visualization
-- `search-index.json` - Search data with titles, excerpts, tags, images
-- Pre-build validation for broken links
-- Client-side search (lunr.js or pagefind)
+### Completed (this phase)
+- ✅ `/graph.json` — bidirectional link graph data, always generated (`graph-builder.js`)
+- ✅ `/graph-settings.json` — vault settings from `.bloob/graph.yaml`
+- ✅ **Graph visualizer** — `lib/visualizers/graph/` hybrid visualizer; force-directed canvas graph; local neighborhood + full-graph modal; CSS variable colors; code fence inline positioning; settings ladder
+
+### Remaining
+- ❌ Validation report — structured broken link report + `--strict` build flag
 
 **Detailed plan:** [phases/phase-2/phase-2-linking-api.md](phases/phase-2/phase-2-linking-api.md)
 
@@ -99,7 +101,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 
 ### Planned Visualizers
 - ~~**Link Previews** - Hover to see page preview~~ → Done as **page-preview** visualizer (eye icon button + modal)
-- **Graph Visualization** - Interactive note connections (D3.js)
+- ~~**Graph Visualization** - Interactive note connections (D3.js)~~ → Done as **graph** visualizer (force-graph, local + global)
 - **Stacked Notes** - Andy Matuschak style columns
 - **Timeline Visualizer** - Date-based content display
 - **Recipe Scaling** - Cooklang syntax with scaling UI ([detailed plan](phases/phase-2/2026-02-03_recipe-scaling.md))
@@ -148,7 +150,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 ## Technical Debt & Infrastructure
 
 ### Ongoing Considerations
-- [x] Test suite foundation — Vitest, 104 tests passing (Phase 1 + 1.5 complete) ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
+- [x] Test suite foundation — Vitest, 137 tests passing (Phase 1 + 1.5 complete; Phase 2 tests in progress) ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
 - [x] Cloudflare Pages + GitHub Actions migration — CI/CD pipeline live, DNS migrated ([detailed plan](phases/phase-2/2026-02-16_Cloudfare%20migration%20plan.md))
 - [ ] Decommission Vercel — wait for DNS propagation, then remove vercel.json and Vercel project
 - [ ] Monitoring and alerting for builds

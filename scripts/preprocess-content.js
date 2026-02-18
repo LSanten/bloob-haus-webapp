@@ -7,6 +7,7 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 import { fileURLToPath } from "url";
+import { glob } from "glob";
 
 import { readObsidianConfig } from "./utils/config-reader.js";
 import {
@@ -28,6 +29,7 @@ import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
+import { buildGraph } from "./utils/graph-builder.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -85,6 +87,9 @@ export async function preprocessContent({
 
   // Collect page data for tag index (built after file loop)
   const allPageData = [];
+
+  // Collect per-page outgoing links for graph.json (built after file loop)
+  const perPageLinks = {};
 
   // Step 1: Read Obsidian config
   console.log("--- Step 1: Reading Obsidian config ---");
@@ -155,7 +160,16 @@ export async function preprocessContent({
     stats.linksResolved += mdLinkResult.resolved.length;
     stats.linksBroken += mdLinkResult.broken.length;
 
-    // 6f: Extract and normalize tags from frontmatter + inline content
+    // 6f: Collect outgoing links for graph data (wiki-links + markdown links)
+    if (pageInfo) {
+      const outgoing = [
+        ...wikiLinkResult.resolved.map((r) => r.url),
+        ...mdLinkResult.resolved.map((r) => r.url),
+      ];
+      perPageLinks[pageInfo.url] = { title: pageTitle, outgoing };
+    }
+
+    // 6g: Extract and normalize tags from frontmatter + inline content
     const pageTags = extractTags(frontmatter, processedContent);
     if (pageTags.length > 0) {
       stats.tagsExtracted += pageTags.length;
@@ -232,8 +246,35 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Build global tag index
-  console.log("\n--- Step 7: Building tag index ---");
+  // Step 7: Build and write graph.json + run visualizer preprocess hooks
+  console.log("\n--- Step 7: Building graph data + visualizer hooks ---");
+  const graphData = buildGraph(perPageLinks);
+  const graphPath = path.join(outputDir, "graph.json");
+  await fs.writeJson(graphPath, graphData, { spaces: 2 });
+  console.log(
+    `[graph] Wrote ${graphData.nodes.length} nodes, ${graphData.links.length} links to graph.json`,
+  );
+
+  // Auto-discover preprocess-hook.js in each visualizer folder and call it.
+  // Visualizers export preprocessHook({ contentDir, outputDir }) to generate
+  // any additional files they need — no manual wiring required.
+  const hookFiles = await glob("lib/visualizers/*/preprocess-hook.js", {
+    cwd: ROOT_DIR,
+  });
+  for (const hookFile of hookFiles) {
+    try {
+      const mod = await import(path.join(ROOT_DIR, hookFile));
+      if (typeof mod.preprocessHook === "function") {
+        console.log(`[preprocess] Running hook: ${hookFile}`);
+        await mod.preprocessHook({ contentDir, outputDir });
+      }
+    } catch (e) {
+      console.warn(`[preprocess] Hook failed (${hookFile}): ${e.message}`);
+    }
+  }
+
+  // Step 8: Build global tag index
+  console.log("\n--- Step 8: Building tag index ---");
   const tagIndex = buildTagIndex(allPageData);
   const tagIndexDir = path.join(outputDir, "_data");
   await fs.ensureDir(tagIndexDir);
@@ -243,8 +284,8 @@ export async function preprocessContent({
     `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
   );
 
-  // Step 8: Copy attachments
-  console.log("\n--- Step 8: Copying attachments ---");
+  // Step 9: Copy attachments
+  console.log("\n--- Step 9: Copying attachments ---");
   const mediaOutputDir = path.join(staticDir, "media");
   const { copied } = await copyAttachments(
     contentDir,

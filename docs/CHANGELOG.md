@@ -6,6 +6,45 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 11 - February 17, 2026
+**Worked on:** Cloudflare Pages + GitHub Actions migration
+
+**GitHub Actions CI/CD:**
+- Created `.github/workflows/deploy-buffbaby.yml` — single-site deploy workflow
+  - Triggers: push to main (paths-ignore docs), `repository_dispatch` from content repo, manual
+  - Steps: checkout → Node 20 → npm ci → npm test (104 tests) → build:buffbaby → deploy to Cloudflare Pages via wrangler
+- Created `.github/workflows/rebuild-all.yml` — matrix-based rebuild of all sites
+  - Auto-discovers sites from `sites/*.yaml` using `jq`
+  - Triggers on changes to themes/, scripts/, lib/, eleventy.config.js, package.json
+  - Runs tests once, then builds/deploys each site in parallel (`fail-fast: false`)
+- Created `.github/workflows/trigger-build.yml` in **buffbaby** content repo
+  - Pushes to buffbaby → `repository_dispatch` → triggers `deploy-buffbaby` in builder repo
+  - Full chain verified: content push → build → test → deploy (1m 25s)
+
+**Cloudflare Pages Setup:**
+- Created Cloudflare account and added `bloob.haus` domain
+- Created `buffbaby` Cloudflare Pages project (Direct Upload mode)
+- Site deployed and accessible at `buffbaby-f5k.pages.dev`
+- Added custom domain `buffbaby.bloob.haus` in Cloudflare Pages
+
+**DNS Migration (Porkbun → Cloudflare):**
+- Changed nameservers from Porkbun to Cloudflare (`dimitris.ns.cloudflare.com`, `kara.ns.cloudflare.com`)
+- Added CNAME record: `buffbaby` → `buffbaby-f5k.pages.dev` (proxied)
+- Propagation in progress; Vercel still serving until nameservers switch over
+
+**GitHub Secrets Configured:**
+- `CONTENT_REPO_TOKEN` — GitHub PAT for cloning private content repos
+- `CLOUDFLARE_API_TOKEN` — Cloudflare API token with Pages edit permissions
+- `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account identifier
+- `BUILDER_REPO_TOKEN` — added to buffbaby repo for repository_dispatch
+
+**Still TODO (after DNS propagates):**
+- Verify `buffbaby.bloob.haus` serves from Cloudflare (check for `cf-ray` header)
+- Clean up stale DNS records (old Vercel A records, Porkbun CNAMEs)
+- Decommission Vercel (remove vercel.json, delete project) — wait 24-48h first
+
+---
+
 ### Session 10 - February 17, 2026
 **Worked on:** Test suite implementation (Phase 1 + 1.5)
 
@@ -407,6 +446,7 @@ Development session history and completed work.
 | 8 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
 | 9 | Feb 16, 2026 | Templatize builder: multi-site architecture, config-driven builds |
 | 10 | Feb 17, 2026 | Test suite: Vitest, 104 tests (Phase 1 + 1.5), co-located architecture |
+| 11 | Feb 17, 2026 | Cloudflare Pages + GitHub Actions migration, DNS to Cloudflare |
 
 ---
 
@@ -424,3 +464,4 @@ Development session history and completed work.
 | Feb 13, 2026 | Search-first homepage, recipe ordering fixed (full git history), Hugo defaults removed |
 | Feb 16, 2026 | Templatized builder: themes/, sites/*.yaml, config-driven builds, src/ fully generated |
 | Feb 17, 2026 | Test suite foundation: 9 files, 104 tests, co-located visualizer tests, Vitest |
+| Feb 17, 2026 | GitHub Actions CI/CD + Cloudflare Pages hosting live, DNS migrated to Cloudflare |

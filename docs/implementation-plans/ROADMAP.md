@@ -149,6 +149,8 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 
 ### Ongoing Considerations
 - [x] Test suite foundation — Vitest, 104 tests passing (Phase 1 + 1.5 complete) ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
+- [x] Cloudflare Pages + GitHub Actions migration — CI/CD pipeline live, DNS migrated ([detailed plan](phases/phase-2/2026-02-16_Cloudfare%20migration%20plan.md))
+- [ ] Decommission Vercel — wait for DNS propagation, then remove vercel.json and Vercel project
 - [ ] Monitoring and alerting for builds
 - [ ] Error tracking (Sentry or similar)
 - [ ] Analytics (privacy-respecting: Plausible, Fathom)
@@ -157,9 +159,10 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 - [ ] CDN caching strategy
 
 ### Hosting Evolution
-1. **Current:** Single Vercel project (Eleventy)
-2. **Next:** Hybrid EU + CDN — Scaleway (builds, private content, DB) + Cloudflare Pages (public content). See hosting architecture research in Obsidian vault.
-3. **Future:** Evaluate based on scale and cost
+1. ~~Single Vercel project (Eleventy)~~ — Replaced
+2. **Current:** GitHub Actions (CI/CD) + Cloudflare Pages (hosting/CDN) + Cloudflare DNS
+3. **Next:** Hybrid EU + CDN — Scaleway (builds, private content, DB) + Cloudflare Pages (public content). See hosting architecture research in Obsidian vault.
+4. **Future:** Evaluate based on scale and cost
 
 ---
 

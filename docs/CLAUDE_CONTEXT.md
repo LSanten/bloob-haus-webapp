@@ -2,7 +2,7 @@
 
 **Purpose:** Share this file at the start of each Claude Code session.  
 **Last Updated:** February 17, 2026  
-**Current Phase:** Templatized Builder Complete, Test Suite Phase 1+1.5 Complete, Phase 2 Active
+**Current Phase:** Cloudflare + GitHub Actions Live, Test Suite Phase 1+1.5 Complete, Phase 2 Active
 
 ---
 
@@ -15,9 +15,13 @@
 | Site Enhancements (RSS, sitemap, images) | ✅ COMPLETE |
 | Templatized Builder (multi-site) | ✅ COMPLETE |
 | Test Suite (Phase 1 + 1.5) | ✅ COMPLETE |
+| GitHub Actions CI/CD | ✅ COMPLETE |
+| Cloudflare Pages hosting | ✅ COMPLETE |
+| DNS migration (Porkbun → Cloudflare) | ✅ COMPLETE (propagating) |
 | Phase 2: Enhanced Linking & API | 🔧 ACTIVE |
 
-**LIVE SITE:** https://buffbaby.bloob.haus (Buff Baby Kitchen)
+**LIVE SITE:** https://buffbaby.bloob.haus (Buff Baby Kitchen)  
+**Cloudflare URL:** https://buffbaby-f5k.pages.dev
 
 ---
 
@@ -33,8 +37,9 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 
 - Full preprocessing pipeline (Obsidian → Eleventy-ready markdown)
 - Eleventy 3.x site with warm color theme
-- Auto-deployment on content updates (Vercel)
-- Custom domain with HTTPS
+- Auto-deployment via GitHub Actions → Cloudflare Pages
+- Content repo push triggers builder via `repository_dispatch`
+- Custom domain with HTTPS (Cloudflare SSL)
 - Git-based date tracking
 - Comment stripping for privacy
 - Clickable recipe cards
@@ -58,9 +63,10 @@ npm run build:buffbaby  # Explicit buffbaby build
 npm run dev             # Eleventy dev server with hot reload
 ```
 
-**Deployment:**
-- Push to `buffbaby` repo → auto-rebuild via webhook
-- Push to `bloob-haus-webapp` repo → auto-redeploy site
+**Deployment (GitHub Actions → Cloudflare Pages):**
+- Push to `buffbaby` repo → triggers `deploy-buffbaby` workflow → builds → deploys to Cloudflare
+- Push to `bloob-haus-webapp` repo → `deploy-buffbaby` + `rebuild-all` workflows fire
+- Manual: `workflow_dispatch` from GitHub Actions tab
 
 ---
 
@@ -68,8 +74,11 @@ npm run dev             # Eleventy dev server with hot reload
 
 ```
 bloob-haus-webapp/
+├── .github/workflows/
+│   ├── deploy-buffbaby.yml      ✅ CI/CD: test → build → deploy buffbaby to Cloudflare
+│   └── rebuild-all.yml          ✅ CI/CD: rebuild all sites on infrastructure changes
 ├── eleventy.config.js           ✅ Eleventy configuration (ESM, reads site config)
-├── vercel.json                  ✅ Deployment config
+├── vercel.json                  ⏳ Legacy (remove after Vercel decommission)
 ├── package.json                 ✅ Scripts and dependencies
 │
 ├── sites/                       ✅ Per-site configuration (YAML)
@@ -221,7 +230,9 @@ Most configuration has moved to `sites/buffbaby.yaml` (content repo, publish mod
     ↓ → _site/
 8. Pagefind search index
     ↓
-buffbaby.bloob.haus (via Vercel)
+9. Deploy to Cloudflare Pages (via wrangler in GitHub Actions)
+    ↓
+buffbaby.bloob.haus (via Cloudflare CDN)
 ```
 
 ---
@@ -273,14 +284,17 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
-Templatized builder is **COMPLETE**. Multi-site architecture is ready.
+Cloudflare + GitHub Actions migration is **COMPLETE**. Full CI/CD pipeline working.
+
+**Remaining cleanup (after DNS propagates):**
+- Verify `buffbaby.bloob.haus` serves from Cloudflare (check `cf-ray` response header)
+- Clean up stale DNS records in Cloudflare (old Vercel A records, Porkbun wildcard/www CNAMEs)
+- Decommission Vercel (remove vercel.json, delete Vercel project) — wait 24-48h
 
 **Next priorities:**
-- Hook up a second site repo (GitHub Actions or similar CI)
 - Build marbles site (create `themes/spatial-garden/` + `sites/marbles.yaml`)
 - Phase 2: Enhanced Linking & API Foundation
 - Build-time visualizers (timeline, recipe-card)
-- Cloudflare migration (see `docs/implementation-plans/phases/phase-2/`)
 
 See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
 

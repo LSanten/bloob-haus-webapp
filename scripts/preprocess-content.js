@@ -7,6 +7,7 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 import { fileURLToPath } from "url";
+import { glob } from "glob";
 
 import { readObsidianConfig } from "./utils/config-reader.js";
 import {
@@ -29,7 +30,6 @@ import { stripComments } from "./utils/comment-stripper.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
-import { loadGraphSettings } from "./utils/graph-settings-loader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -246,8 +246,8 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Build and write graph.json + graph-settings.json
-  console.log("\n--- Step 7: Building graph data ---");
+  // Step 7: Build and write graph.json + run visualizer preprocess hooks
+  console.log("\n--- Step 7: Building graph data + visualizer hooks ---");
   const graphData = buildGraph(perPageLinks);
   const graphPath = path.join(outputDir, "graph.json");
   await fs.writeJson(graphPath, graphData, { spaces: 2 });
@@ -255,10 +255,23 @@ export async function preprocessContent({
     `[graph] Wrote ${graphData.nodes.length} nodes, ${graphData.links.length} links to graph.json`,
   );
 
-  const graphSettings = await loadGraphSettings(contentDir);
-  const graphSettingsPath = path.join(outputDir, "graph-settings.json");
-  await fs.writeJson(graphSettingsPath, graphSettings, { spaces: 2 });
-  console.log(`[graph] Wrote vault settings to graph-settings.json`);
+  // Auto-discover preprocess-hook.js in each visualizer folder and call it.
+  // Visualizers export preprocessHook({ contentDir, outputDir }) to generate
+  // any additional files they need — no manual wiring required.
+  const hookFiles = await glob("lib/visualizers/*/preprocess-hook.js", {
+    cwd: ROOT_DIR,
+  });
+  for (const hookFile of hookFiles) {
+    try {
+      const mod = await import(path.join(ROOT_DIR, hookFile));
+      if (typeof mod.preprocessHook === "function") {
+        console.log(`[preprocess] Running hook: ${hookFile}`);
+        await mod.preprocessHook({ contentDir, outputDir });
+      }
+    } catch (e) {
+      console.warn(`[preprocess] Hook failed (${hookFile}): ${e.message}`);
+    }
+  }
 
   // Step 8: Build global tag index
   console.log("\n--- Step 8: Building tag index ---");

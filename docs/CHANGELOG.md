@@ -6,6 +6,39 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 10 - February 17, 2026
+**Worked on:** Test suite implementation (Phase 1 + 1.5)
+
+**Test Infrastructure:**
+- Installed Vitest as test framework (native ESM support, zero config)
+- Created `vitest.config.js` with dual glob patterns: `tests/**/*.test.js` (central) + `lib/**/*.test.js` (co-located)
+- Created `tests/helpers/mock-index.js` — shared factories for mock file/attachment indexes
+- Added `npm test` and `npm run test:watch` scripts to `package.json`
+
+**Phase 1 — Pure Function Unit Tests (5 files, 62 tests):**
+- `tests/utils/comment-stripper.test.js` — 11 tests (Obsidian %% %%, HTML comments, whitespace collapse)
+- `tests/utils/attachment-resolver.test.js` — 14 tests (URL decoding, wiki-style images, case-insensitive lookup, the %20 bug case)
+- `tests/utils/wiki-link-resolver.test.js` — 11 tests (title/filename/normalized lookup, headings, broken links, transclusion skip)
+- `tests/utils/markdown-link-resolver.test.js` — 9 tests (folder stripping, URL decoding, heading anchors, external URLs untouched)
+- `tests/utils/transclusion-handler.test.js` — 17 tests (page embeds, all 10 media extensions excluded, multiple transclusions)
+
+**Phase 1.5 — Templatizer & Co-located Visualizer Tests (4 files, 42 tests):**
+- `tests/build/config-loader.test.js` — 12 tests (YAML loading, CLI arg/env var priority, schema shape, error handling)
+- `tests/build/assemble-src.test.js` — 10 tests (theme structure validation, site.js generation contract, module exports)
+- `lib/visualizers/checkbox-tracker/checkbox-tracker.test.js` — 10 tests (co-located: manifest, exports, no-op transform)
+- `lib/visualizers/page-preview/page-preview.test.js` — 10 tests (co-located: manifest, exports, no-op transform)
+
+**Architecture Decisions:**
+- Co-located tests: modular packages (visualizers, future machines) carry their own `.test.js` files
+- Central tests: pipeline utilities and build orchestration tested in `tests/`
+- Vitest auto-discovers both via glob patterns
+
+**Updated test suite plan** with Phase 1.5, co-located architecture, test template for new visualizers, activation config reference table.
+
+**Results:** 9 test files, 104 tests, all passing in ~700ms.
+
+---
+
 ### Session 9 - February 16, 2026
 **Worked on:** Templatize the builder for multi-site support
 
@@ -373,6 +406,7 @@ Development session history and completed work.
 | 7 | Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, image bug fixes |
 | 8 | Feb 13, 2026 | Homepage redesign (search-first), recipe ordering fix, build target cleanup |
 | 9 | Feb 16, 2026 | Templatize builder: multi-site architecture, config-driven builds |
+| 10 | Feb 17, 2026 | Test suite: Vitest, 104 tests (Phase 1 + 1.5), co-located architecture |
 
 ---
 
@@ -389,3 +423,4 @@ Development session history and completed work.
 | Feb 8-9, 2026 | Tag system, Pagefind search, page-preview visualizer, duplicate image bug fixes |
 | Feb 13, 2026 | Search-first homepage, recipe ordering fixed (full git history), Hugo defaults removed |
 | Feb 16, 2026 | Templatized builder: themes/, sites/*.yaml, config-driven builds, src/ fully generated |
+| Feb 17, 2026 | Test suite foundation: 9 files, 104 tests, co-located visualizer tests, Vitest |

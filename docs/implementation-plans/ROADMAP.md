@@ -1,8 +1,8 @@
 # Bloob Haus Roadmap
 
 **Purpose:** High-level planning document for features and phases.  
-**Last Updated:** February 9, 2026  
-**Status:** Phase 1 Complete, Eleventy Migration Complete, Phase 2.5 (Tags & Search) Complete
+**Last Updated:** February 17, 2026  
+**Status:** Phase 1 Complete, Eleventy Migration Complete, Templatized Builder Complete, Test Suite Phase 1+1.5 Complete
 
 ---
 
@@ -148,7 +148,7 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 ## Technical Debt & Infrastructure
 
 ### Ongoing Considerations
-- [ ] Test suite foundation — Vitest, preprocessing unit tests ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
+- [x] Test suite foundation — Vitest, 104 tests passing (Phase 1 + 1.5 complete) ([detailed plan](phases/phase-2/2026-02-07_test-suite.md))
 - [ ] Monitoring and alerting for builds
 - [ ] Error tracking (Sentry or similar)
 - [ ] Analytics (privacy-respecting: Plausible, Fathom)

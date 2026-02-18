@@ -1,8 +1,8 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.  
-**Last Updated:** February 16, 2026  
-**Current Phase:** Templatized Builder Complete, Phase 2 Active
+**Last Updated:** February 17, 2026  
+**Current Phase:** Templatized Builder Complete, Test Suite Phase 1+1.5 Complete, Phase 2 Active
 
 ---
 
@@ -14,6 +14,7 @@
 | Hugo → Eleventy Migration (M0-M7) | ✅ COMPLETE |
 | Site Enhancements (RSS, sitemap, images) | ✅ COMPLETE |
 | Templatized Builder (multi-site) | ✅ COMPLETE |
+| Test Suite (Phase 1 + 1.5) | ✅ COMPLETE |
 | Phase 2: Enhanced Linking & API | 🔧 ACTIVE |
 
 **LIVE SITE:** https://buffbaby.bloob.haus (Buff Baby Kitchen)
@@ -48,6 +49,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Modular visualizer architecture with auto-discovery
 - Templatized builder: themes in `themes/`, site config in `sites/*.yaml`
 - Config-driven builds with `--site=` flag
+- Test suite: 104 tests across 9 files (Vitest), co-located visualizer tests
 
 **Build pipeline:**
 ```bash
@@ -124,6 +126,12 @@ bloob-haus-webapp/
 │       ├── tag-extractor.js         ✅ Tag extraction & normalization
 │       └── git-date-extractor.js    ✅ Last modified dates
 │
+├── tests/                       ✅ Central test suite
+│   ├── helpers/mock-index.js    ✅ Shared mock factories
+│   ├── utils/                   ✅ Preprocessing unit tests (Phase 1)
+│   └── build/                   ✅ Config/assembly tests (Phase 1.5)
+│
+├── vitest.config.js             ✅ Test config (discovers tests/ + lib/)
 ├── content-source/              ← Cloned from GitHub (gitignored)
 ├── _site/                       ← Eleventy output (gitignored)
 └── docs/                        ✅ Documentation
@@ -235,6 +243,10 @@ node scripts/preprocess-content.js
 node scripts/bundle-visualizers.js
 npx @11ty/eleventy
 
+# Tests
+npm test                 # Run all 104 tests once
+npm run test:watch       # Watch mode (re-runs on file changes)
+
 # Adding a new site (future)
 # 1. Create themes/my-theme/ with layouts, partials, pages, assets
 # 2. Create sites/my-site.yaml pointing to theme + content repo
@@ -264,6 +276,7 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 Templatized builder is **COMPLETE**. Multi-site architecture is ready.
 
 **Next priorities:**
+- Hook up a second site repo (GitHub Actions or similar CI)
 - Build marbles site (create `themes/spatial-garden/` + `sites/marbles.yaml`)
 - Phase 2: Enhanced Linking & API Foundation
 - Build-time visualizers (timeline, recipe-card)

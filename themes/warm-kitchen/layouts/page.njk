@@ -46,4 +46,13 @@ layout: layouts/base.njk
     #}
 
     {% include "partials/backlinks.njk" %}
+
+    {# Graph visualizer — shown when the "graph" visualizer is bundled for this site.
+       browser.js hides the container automatically when only_if_linked:true and
+       the page has no connections. Per-page overrides via frontmatter graph: key. #}
+    {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
+    <div class="graph-visualizer"
+         data-current-page="{{ page.url }}"
+         {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
+    {% endif %}{% endfor %}
 </article>

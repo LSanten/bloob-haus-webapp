@@ -29,6 +29,7 @@ import { stripComments } from "./utils/comment-stripper.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
+import { loadGraphSettings } from "./utils/graph-settings-loader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -245,7 +246,7 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Build and write graph.json
+  // Step 7: Build and write graph.json + graph-settings.json
   console.log("\n--- Step 7: Building graph data ---");
   const graphData = buildGraph(perPageLinks);
   const graphPath = path.join(outputDir, "graph.json");
@@ -253,6 +254,11 @@ export async function preprocessContent({
   console.log(
     `[graph] Wrote ${graphData.nodes.length} nodes, ${graphData.links.length} links to graph.json`,
   );
+
+  const graphSettings = await loadGraphSettings(contentDir);
+  const graphSettingsPath = path.join(outputDir, "graph-settings.json");
+  await fs.writeJson(graphSettingsPath, graphSettings, { spaces: 2 });
+  console.log(`[graph] Wrote vault settings to graph-settings.json`);
 
   // Step 8: Build global tag index
   console.log("\n--- Step 8: Building tag index ---");

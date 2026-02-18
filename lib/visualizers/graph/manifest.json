@@ -1,0 +1,41 @@
+{
+  "name": "graph",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Interactive force-directed graph showing connections between pages",
+  "activation": {
+    "method": "config",
+    "description": "Add 'graph' to the visualizers list in sites/*.yaml to enable globally. Override per-page in frontmatter (graph: {depth: 3}) or position inline with a ```graph code fence containing YAML settings."
+  },
+  "files": {
+    "transform": "index.js",
+    "browser": "browser.js",
+    "styles": "styles.css"
+  },
+  "settings": {
+    "only_if_linked": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hide the graph if the current page has no connections in graph.json"
+    },
+    "depth": {
+      "type": "number",
+      "default": 2,
+      "description": "How many hops from the current page to include in the local graph"
+    },
+    "show_full_graph": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show a button that opens a modal with the full graph of all pages"
+    },
+    "colors": {
+      "type": "object",
+      "default": {},
+      "description": "Override graph colors. Inherits from site CSS variables by default. Example: { node: '#ff6b6b', link: '#ddd', text: '#444', bg: '#fff' }"
+    }
+  },
+  "notes": {
+    "positioning": "TODO: a 'position' setting (values: bottom | right | left) is planned but not yet implemented. Right/left sidebar layout requires theme-level CSS grid changes. Currently the graph always renders at the bottom of the page (via the layout template) or at the ```graph code fence location if used inline.",
+    "cdn": "Renders using force-graph (MIT, vasturiano/force-graph) loaded from jsDelivr CDN at runtime. No npm install needed."
+  }
+}

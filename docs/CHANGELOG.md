@@ -30,7 +30,7 @@ Development session history and completed work.
 **DNS Migration (Porkbun → Cloudflare):**
 - Changed nameservers from Porkbun to Cloudflare (`dimitris.ns.cloudflare.com`, `kara.ns.cloudflare.com`)
 - Added CNAME record: `buffbaby` → `buffbaby-f5k.pages.dev` (proxied)
-- Propagation in progress; Vercel still serving until nameservers switch over
+- DNS propagated and verified: `buffbaby.bloob.haus` serving from Cloudflare with SSL (HTTP 200, `cf-ray` header confirmed)
 
 **GitHub Secrets Configured:**
 - `CONTENT_REPO_TOKEN` — GitHub PAT for cloning private content repos
@@ -38,10 +38,8 @@ Development session history and completed work.
 - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account identifier
 - `BUILDER_REPO_TOKEN` — added to buffbaby repo for repository_dispatch
 
-**Still TODO (after DNS propagates):**
-- Verify `buffbaby.bloob.haus` serves from Cloudflare (check for `cf-ray` header)
-- Clean up stale DNS records (old Vercel A records, Porkbun CNAMEs)
-- Decommission Vercel (remove vercel.json, delete project) — wait 24-48h first
+**Remaining cleanup:**
+- Decommission Vercel (remove vercel.json, delete project) — no rush, traffic already on Cloudflare
 
 ---
 

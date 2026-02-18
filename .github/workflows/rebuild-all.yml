@@ -1,0 +1,88 @@
+name: Rebuild All Sites
+
+on:
+  # Trigger when shared builder infrastructure changes
+  push:
+    branches: [main]
+    paths:
+      - 'themes/**'
+      - 'scripts/**'
+      - 'lib/**'
+      - 'eleventy.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vitest.config.js'
+
+  # Manual trigger to rebuild everything
+  workflow_dispatch:
+
+jobs:
+  # Discover which sites exist from sites/*.yaml
+  discover-sites:
+    runs-on: ubuntu-latest
+    outputs:
+      sites: ${{ steps.find-sites.outputs.sites }}
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Find configured sites
+        id: find-sites
+        run: |
+          sites=$(ls sites/*.yaml 2>/dev/null | xargs -I{} basename {} .yaml | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "sites=$sites" >> "$GITHUB_OUTPUT"
+          echo "Discovered sites: $sites"
+
+  # Run tests once (shared across all sites)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  # Build and deploy each site in parallel
+  build-and-deploy:
+    needs: [discover-sites, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        site: ${{ fromJson(needs.discover-sites.outputs.sites) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.site }} site
+        run: SITE_NAME=${{ matrix.site }} node scripts/build-site.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - name: Deploy ${{ matrix.site }} to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=${{ matrix.site }}

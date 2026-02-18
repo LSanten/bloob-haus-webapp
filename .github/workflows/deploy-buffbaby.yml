@@ -1,0 +1,50 @@
+name: Deploy Buffbaby
+
+on:
+  # Builder repo changes on main
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '.gitignore'
+
+  # Content repo webhook (repository_dispatch from buffbaby repo)
+  repository_dispatch:
+    types: [deploy-buffbaby]
+
+  # Manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build buffbaby site
+        run: npm run build:buffbaby
+        env:
+          GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=buffbaby

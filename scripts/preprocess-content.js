@@ -246,9 +246,20 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Build and write graph.json + run visualizer preprocess hooks
-  console.log("\n--- Step 7: Building graph data + visualizer hooks ---");
-  const graphData = buildGraph(perPageLinks);
+  // Step 7: Build tag index first (needed by graph builder for tag nodes)
+  console.log("\n--- Step 7: Building tag index ---");
+  const tagIndex = buildTagIndex(allPageData);
+  const tagIndexDir = path.join(outputDir, "_data");
+  await fs.ensureDir(tagIndexDir);
+  const tagIndexPath = path.join(tagIndexDir, "tagIndex.json");
+  await fs.writeJson(tagIndexPath, tagIndex, { spaces: 2 });
+  console.log(
+    `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
+  );
+
+  // Step 8: Build and write graph.json + run visualizer preprocess hooks
+  console.log("\n--- Step 8: Building graph data + visualizer hooks ---");
+  const graphData = buildGraph(perPageLinks, tagIndex);
   const graphPath = path.join(outputDir, "graph.json");
   await fs.writeJson(graphPath, graphData, { spaces: 2 });
   console.log(
@@ -272,17 +283,6 @@ export async function preprocessContent({
       console.warn(`[preprocess] Hook failed (${hookFile}): ${e.message}`);
     }
   }
-
-  // Step 8: Build global tag index
-  console.log("\n--- Step 8: Building tag index ---");
-  const tagIndex = buildTagIndex(allPageData);
-  const tagIndexDir = path.join(outputDir, "_data");
-  await fs.ensureDir(tagIndexDir);
-  const tagIndexPath = path.join(tagIndexDir, "tagIndex.json");
-  await fs.writeJson(tagIndexPath, tagIndex, { spaces: 2 });
-  console.log(
-    `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
-  );
 
   // Step 9: Copy attachments
   console.log("\n--- Step 9: Copying attachments ---");

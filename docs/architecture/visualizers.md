@@ -492,8 +492,9 @@ GRAPH_DEFAULTS (preprocess-hook.js)
 **What's working:**
 - Checkbox tracker: styled checkboxes, click persistence, floating reset button with undo
 - Page preview: eye icon button on recipe cards, tag pages, search results; modal overlay with fetched content
-- Graph visualizer: force-directed canvas graph (local neighborhood + full-graph modal); ````graph` code fence for inline placement with per-instance settings; `.bloob/graph.yaml` for vault-wide defaults
-- `graph.json` always generated (bidirectional link graph, D3/force-graph compatible format)
+- Graph visualizer: force-directed canvas graph (local neighborhood + full-graph modal); ` ```graph ` code fence for inline placement with per-instance settings; `.bloob/graph.yaml` for vault-wide defaults
+- Graph hover tooltip: `position:fixed` card on `document.body` follows mouse via `mousemove` on canvas (`clientX/Y`); shows OG preview image + page title; `node.image` sourced from `graph.json`
+- `graph.json` always generated (bidirectional link graph, D3/force-graph compatible format); page nodes include `image` field when an OG image exists
 - `preprocess-hook.js` convention: any visualizer can own its build-time preprocessing with zero changes to shared scripts
 - Auto-discovery: new visualizer = new folder, no config changes needed anywhere
 - esbuild bundling with sourcemaps in dev
@@ -518,6 +519,7 @@ GRAPH_DEFAULTS (preprocess-hook.js)
 | Phase 2 ✓ | `graph.json` API — bidirectional link graph, always generated (`graph-builder.js`) |
 | Phase 2 ✓ | Graph visualizer — hybrid type; force-graph CDN; local + global; code fence positioning; settings ladder |
 | Phase 2 ✓ | `preprocess-hook.js` convention — visualizer-owned build-time logic, auto-discovered, zero shared-script changes |
+| Phase 2 ✓ | Graph hover tooltip — `position:fixed` mouse-following card with OG image preview + title; image field in `graph.json` nodes |
 | Next | Per-page visualizer activation via frontmatter `visualizers:` field |
 | Next | Folder config (`.bloob/visualizers.json`) |
 | Next | First build-time visualizer code fence (tag-cloud or search-bar) |

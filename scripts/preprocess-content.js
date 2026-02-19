@@ -224,7 +224,13 @@ export async function preprocessContent({
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
       const ogExt =
         imgExt === ".gif" ? "gif" : imgExt === ".png" ? "png" : "jpeg";
+      // encodeURIComponent the filename so URLs are valid (spaces → %20, @ → %40, etc.)
+      // The OG generator writes files with the same encoding so names match on disk.
       outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
+      // Also store image on the graph node for hover previews
+      if (pageInfo && perPageLinks[pageInfo.url]) {
+        perPageLinks[pageInfo.url].image = outputFrontmatter.image;
+      }
     }
 
     // Add layout for Eleventy

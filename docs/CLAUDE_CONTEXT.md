@@ -50,7 +50,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Backlinks (static list of pages that link here, per-page)
 - `/graph.json` — site-wide bidirectional link graph API (always generated)
 - `/graph-settings.json` — vault-wide graph settings from `.bloob/graph.yaml`
-- Interactive force-directed graph visualizer on every page (local neighborhood + full-graph modal)
+- Interactive force-directed graph visualizer on every page (local neighborhood + full-graph modal, hover tooltip with OG image preview)
 - RSS feed (`/feed.xml`)
 - Sitemap (`/sitemap.xml`)
 - robots.txt
@@ -190,10 +190,16 @@ bloob-haus-webapp/
 
 ### Graph API
 - `/graph.json` — always generated at build time regardless of visualizer activation
-  - `nodes: [{ id, title, section }]` where `id` is the page URL
+  - `nodes: [{ id, title, section, type, image? }]` where `id` is the page URL; `image` is the OG image URL (present only when the page has one)
   - `links: [{ source, target }]` — bidirectional, deduplicated, anchors stripped
 - `/graph-settings.json` — vault-wide settings from `.bloob/graph.yaml`, defaults applied
 - Graph **differs from backlinks**: backlinks = incoming-only static list per page; graph.json = full bidirectional site map served as a public JSON endpoint
+
+### Graph Hover Tooltip
+- Hovering a node shows a floating card (150px) above the cursor: OG preview image (if page has one) + page title
+- Implemented as `position:fixed` div on `document.body` — follows mouse via `mousemove` on canvas using `e.clientX/Y`
+- This avoids coordinate-space issues: `graph2ScreenCoords()` returns viewport coords, not element-relative; `position:fixed` + `clientX/Y` are both viewport coords, so no math needed
+- `node.image` comes from `graph.json` (written by `graph-builder.js` when page has `image` frontmatter)
 
 ### Graph Visualizer Settings (`.bloob/graph.yaml`)
 ```yaml
@@ -214,6 +220,13 @@ Per-page override: frontmatter `graph: { depth: 1 }`. Inline positioning: ` ```g
 - Generates WebP + JPEG at 600w and 1200w
 - `<picture>` elements with `loading="lazy"` and `decoding="async"`
 - Original 48MB → ~6MB optimized
+
+### OG Image Filename Encoding Rule
+- **Disk filenames use raw characters** (`@`, spaces, etc.) — never `%`-encoded on disk
+- **URLs use `encodeURIComponent`** — frontmatter `image` field stores `/og/{encoded}-og.{ext}`
+- Single normalization point in `preprocess-content.js`: `decodeURIComponent` incoming path (normalize) → `encodeURIComponent` for URL storage
+- `generate-og-images.js` decodes frontmatter URL back to raw name before writing to disk
+- Downstream consumers (templates, graph.json node `image` field) use the URL as-is; disk operations always decode first
 
 ---
 

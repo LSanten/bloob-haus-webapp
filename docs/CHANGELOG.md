@@ -6,6 +6,40 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 13 - February 18, 2026
+**Worked on:** Graph hover tooltip with OG image preview; OG filename encoding fix
+
+**Graph Hover Tooltip:**
+- Added `makeTooltip()` function in `lib/visualizers/graph/browser.js`
+  - Creates a `position:fixed` div appended to `document.body` (not inside the canvas container)
+  - Follows the mouse via `mousemove` listener on the canvas element using `e.clientX/Y` — zero coordinate math, works perfectly with `position:fixed`
+  - Shows a small card (150px wide) above the cursor with: OG preview image (if available) + page title
+  - `position:fixed` + `clientX/Y` avoids the coordinate-space mismatch that made `graph2ScreenCoords()` + `position:absolute` fail (`graph2ScreenCoords` returns viewport coords, not element-relative coords)
+- Applied tooltip to both inline graph and full-graph modal
+- Disabled force-graph's native label tooltip: `nodeLabel(() => "")`
+- `nodeCanvasObjectMode(() => "after")` kept as always-after for click detection
+- `tooltip.attach(canvas)` called via `setTimeout(..., 100)` after graph initialization so the canvas element exists
+
+**OG Image Filename Encoding Fix:**
+- Root cause: filenames on disk used raw characters (`@`, spaces) but the pipeline was writing encoded names (e.g. `%40`, `%20`) then URL-encoding them again — double-encoding
+- **Rule established:** disk filenames always use raw characters; URL `src`/`href` attributes always use `encodeURIComponent`
+- `scripts/preprocess-content.js` — `decodeURIComponent` on the raw markdown image path (normalizes any already-encoded chars), then `encodeURIComponent` on the base name before storing as `/og/{encoded}-og.{ext}` in frontmatter
+- `scripts/generate-og-images.js` — reads the frontmatter `image` URL, `decodeURIComponent`s the base name back to raw, writes disk file with raw name (e.g. `cleanshot_2026-01-10-at-22-11-06@2x-og.png`)
+- This is the single normalization point — all downstream consumers (templates, graph.json) use the URL as-is; disk operations decode first
+
+**graph.json image field:**
+- `scripts/utils/graph-builder.js` — page nodes now include `image: "/og/..."` when the page has an OG image
+- `scripts/preprocess-content.js` — sets `perPageLinks[url].image` alongside the frontmatter image field
+- Graph tooltip uses `node.image` to display the preview
+
+**Files changed:**
+- `lib/visualizers/graph/browser.js` — hover tooltip (mouse-following card with image + title)
+- `scripts/preprocess-content.js` — image field in perPageLinks, encode/decode fix
+- `scripts/utils/graph-builder.js` — image field on page nodes
+- `scripts/generate-og-images.js` — disk files written with raw filenames
+
+---
+
 ### Session 12 - February 18, 2026
 **Worked on:** Phase 2 — graph.json linking API + graph visualizer
 
@@ -497,6 +531,8 @@ Development session history and completed work.
 | 9 | Feb 16, 2026 | Templatize builder: multi-site architecture, config-driven builds |
 | 10 | Feb 17, 2026 | Test suite: Vitest, 104 tests (Phase 1 + 1.5), co-located architecture |
 | 11 | Feb 17, 2026 | Cloudflare Pages + GitHub Actions migration, DNS to Cloudflare |
+| 12 | Feb 18, 2026 | graph.json API + graph visualizer (force-directed, local + global modal) |
+| 13 | Feb 18, 2026 | Graph hover tooltip with OG image preview; OG filename encoding fix |
 
 ---
 
@@ -515,3 +551,5 @@ Development session history and completed work.
 | Feb 16, 2026 | Templatized builder: themes/, sites/*.yaml, config-driven builds, src/ fully generated |
 | Feb 17, 2026 | Test suite foundation: 9 files, 104 tests, co-located visualizer tests, Vitest |
 | Feb 17, 2026 | GitHub Actions CI/CD + Cloudflare Pages hosting live, DNS migrated to Cloudflare |
+| Feb 18, 2026 | graph.json API + graph visualizer: force-directed, local neighborhood + full-graph modal |
+| Feb 18, 2026 | Graph hover tooltip with OG preview image; OG filename encoding unified (raw on disk, encoded in URLs) |

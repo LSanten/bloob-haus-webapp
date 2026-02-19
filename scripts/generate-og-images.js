@@ -182,7 +182,10 @@ export async function generateOgImages() {
     const ext = path.extname(sourceFile).toLowerCase();
     const isGif = ext === ".gif";
     const outputFormat = isGif ? "gif" : ext === ".png" ? "png" : "jpeg";
-    const outputFilename = `${encodeURIComponent(baseName)}-og.${outputFormat}`;
+    // Filename on disk uses raw characters (spaces, @, etc.) — NOT URL-encoded.
+    // The URL in frontmatter is encodeURIComponent'd, so browser decodes it back
+    // to the raw name, which the static server then finds on disk.
+    const outputFilename = `${baseName}-og.${outputFormat}`;
     const outputPath = path.join(OG_DIR, outputFilename);
 
     newTracking[sourceFile] = hash;
@@ -216,7 +219,7 @@ export async function generateOgImages() {
       [...imageSources.entries()].map(([baseName, sourceFile]) => {
         const ext = path.extname(sourceFile).toLowerCase();
         const fmt = ext === ".gif" ? "gif" : ext === ".png" ? "png" : "jpeg";
-        return `${encodeURIComponent(baseName)}-og.${fmt}`;
+        return `${baseName}-og.${fmt}`;
       }),
     );
 

@@ -160,16 +160,7 @@ export async function preprocessContent({
     stats.linksResolved += mdLinkResult.resolved.length;
     stats.linksBroken += mdLinkResult.broken.length;
 
-    // 6f: Collect outgoing links for graph data (wiki-links + markdown links)
-    if (pageInfo) {
-      const outgoing = [
-        ...wikiLinkResult.resolved.map((r) => r.url),
-        ...mdLinkResult.resolved.map((r) => r.url),
-      ];
-      perPageLinks[pageInfo.url] = { title: pageTitle, outgoing };
-    }
-
-    // 6g: Extract and normalize tags from frontmatter + inline content
+    // 6f: Extract and normalize tags from frontmatter + inline content
     const pageTags = extractTags(frontmatter, processedContent);
     if (pageTags.length > 0) {
       stats.tagsExtracted += pageTags.length;
@@ -190,6 +181,15 @@ export async function preprocessContent({
       pageInfo?.title ||
       frontmatter.title ||
       path.basename(file.relativePath, ".md");
+
+    // 6g: Collect outgoing links for graph data (wiki-links + markdown links)
+    if (pageInfo) {
+      const outgoing = [
+        ...wikiLinkResult.resolved.map((r) => r.url),
+        ...mdLinkResult.resolved.map((r) => r.url),
+      ];
+      perPageLinks[pageInfo.url] = { title: pageTitle, outgoing };
+    }
 
     const outputFrontmatter = {
       ...frontmatter,

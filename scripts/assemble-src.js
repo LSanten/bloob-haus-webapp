@@ -184,7 +184,7 @@ export default {
   languageCode: ${JSON.stringify(config.site.language)},
   year: new Date().getFullYear(),
   permalinks: {
-    slugify: true,
+    strategy: ${JSON.stringify(config.permalinks?.strategy || "slugify")},
   },
 };
 `;

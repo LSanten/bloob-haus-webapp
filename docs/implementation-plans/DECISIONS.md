@@ -25,6 +25,19 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-05 | markdown-it-task-lists for checkbox rendering | Standard markdown parser concern (like Goldmark in Hugo), not a visualizer responsibility |
 | 2026-02-05 | Slugify both folder paths and filenames in URLs | Clean URLs, no spaces; consistent across Eleventy permalinks, preprocessor links, and Obsidian copy-link plugin |
 | 2026-02-09 | OG images live at /og/, not /media/og/ | /media/ is purely user content (all optimized, including nested folders); system-generated assets like OG images get their own top-level dir to avoid image optimizer conflicts |
+| 2026-02-19 | Dynamic section collections | Replace hardcoded per-section collections with auto-generated ones from discovered sections — enables multi-site without touching eleventy.config.js |
+| 2026-02-19 | File identity: filename-based, UUIDs deferred | Filenames are stable identifiers for URLs. UUID-based tracking deferred to Phase 3+ when rename-tracking is needed |
+| 2026-02-19 | Dev workflow: concurrently-based file watcher | `npm run dev` runs assemble + theme watcher + Eleventy serve in parallel via `concurrently` |
+| 2026-02-19 | Image cache outside _site/ | Use `.cache/eleventy-img/` so optimized images persist across builds (not destroyed when _site/ is cleaned) |
+| 2026-02-19 | Validation report + --strict flag | Broken links collected during preprocessing with structured report; --strict flag fails CI builds on broken links |
+| 2026-02-19 | CLAUDE.md for development practices | Auto-read by Claude Code; contains session checklists, code quality rules, documentation rules |
+| 2026-02-19 | TECH-DEBT.md as living inventory | Dedicated technical debt tracking file, reviewed at session start |
+| 2026-02-19 | Configurable URL slug strategy per site | Two strategies: "slugify" (lowercase, buffbaby) and "preserve-case" (keep casing, marbles). Set via `permalinks.strategy` in sites/*.yaml |
+| 2026-02-19 | Shared slug-strategy.js utility | Centralized slug logic used by file-index-builder, eleventyComputed, transclusion-handler, and link resolvers — replaces 7 scattered implementations |
+| 2026-02-19 | Content subfolder support (`content.path`) | Sites can point to a subfolder within a repo (e.g., `_mms-md` in LSanten.github.io). Clone-content auto-detects repo switches. |
+| 2026-02-19 | Preprocessor cleans src/ before writing | Prevents cross-site content contamination on local builds. All .md files and media/ removed from src/ before each build. |
+| 2026-02-19 | Per-file exclude_files list in YAML | Allows excluding specific files by name (e.g., `ALL`) without needing a blocklist tag in the file itself. |
+| 2026-02-19 | Reserved directory filtering in section discovery | `media`, `assets`, `tags`, `pagefind`, `og`, `search` excluded from auto-discovered sections to prevent non-content dirs appearing in nav. |
 
 ---
 

@@ -6,6 +6,49 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 14 - February 19, 2026
+**Worked on:** Engineering review implementation, marbles site launch, multi-site build isolation
+
+**Infrastructure Cleanup (from engineering review):**
+- Deleted `vercel.json` (migrated to Cloudflare Pages)
+- Removed 5 unused npm dependencies (remark-wiki-link, execa, unified, remark-parse, remark-stringify)
+- Created `CLAUDE.md` (auto-read development guide) and `docs/TECH-DEBT.md`
+
+**New Features:**
+- Configurable URL slug strategy per site: "slugify" (lowercase, buffbaby) and "preserve-case" (keep casing, marbles) via `permalinks.strategy` in sites/*.yaml
+- Centralized `scripts/utils/slug-strategy.js` replacing 7 scattered slugify implementations
+- Dynamic section collections in `eleventy.config.js` — auto-discovers sections from URL structure
+- Dev workflow: `npm run dev` with `concurrently` (theme watcher + Eleventy serve)
+- Image optimization caching in `.cache/eleventy-img/` (persists across builds)
+- Validation report: broken link collection during preprocessing with `--strict` CI flag
+- Per-file `exclude_files` list in site YAML config (e.g., exclude `ALL.md` from marbles)
+- Reserved directory filtering: `media`, `assets`, `tags`, `pagefind`, `og`, `search` excluded from section discovery
+
+**Multi-Site Build Isolation:**
+- Content subfolder support: `content.path` in YAML config points to subfolder within a repo
+- Branch support: `content.branch` specifies which branch to clone
+- Repo-switch detection: `clone-content.js` detects if wrong repo is in `content-source/` and re-clones
+- Preprocessor now cleans all `.md` files and `media/` from `src/` before writing new content (prevents cross-site contamination on local builds)
+
+**Marbles Site:**
+- Created `sites/marbles.yaml` — preserve-case URLs, `#private-marble-keep-from-public` blocklist tag, content from `LSanten/LSanten.github.io:_mms-md`
+- Successfully built: 419 pages indexed, ~35s build time
+- Verified: no recipe content bleeding, no `ALL` page, no `media` in nav
+
+**Tests:**
+- Added 44 new tests: publish-filter (12), file-index-builder (16), slug-strategy (16)
+- Total: 14 files, 191 tests, all passing
+
+**Documentation:**
+- Updated DECISIONS.md with 10 new decisions
+- Updated CLAUDE_CONTEXT.md with current status
+- Updated TECH-DEBT.md with resolved items
+- Updated IDEAS.md with future improvements
+
+**Files changed:** 20+ files across scripts/, sites/, tests/, docs/, eleventy.config.js, package.json
+
+---
+
 ### Session 13 - February 18, 2026
 **Worked on:** Graph hover tooltip with OG image preview; OG filename encoding fix
 
@@ -533,6 +576,7 @@ Development session history and completed work.
 | 11 | Feb 17, 2026 | Cloudflare Pages + GitHub Actions migration, DNS to Cloudflare |
 | 12 | Feb 18, 2026 | graph.json API + graph visualizer (force-directed, local + global modal) |
 | 13 | Feb 18, 2026 | Graph hover tooltip with OG image preview; OG filename encoding fix |
+| 14 | Feb 19, 2026 | Engineering review implementation, marbles site, multi-site isolation |
 
 ---
 
@@ -553,3 +597,4 @@ Development session history and completed work.
 | Feb 17, 2026 | GitHub Actions CI/CD + Cloudflare Pages hosting live, DNS migrated to Cloudflare |
 | Feb 18, 2026 | graph.json API + graph visualizer: force-directed, local neighborhood + full-graph modal |
 | Feb 18, 2026 | Graph hover tooltip with OG preview image; OG filename encoding unified (raw on disk, encoded in URLs) |
+| Feb 19, 2026 | Engineering review implemented: cleanup, slug strategies, marbles site built, multi-site build isolation, 191 tests |

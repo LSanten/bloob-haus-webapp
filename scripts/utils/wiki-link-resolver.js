@@ -3,6 +3,8 @@
  * Converts [[wiki-links]] to standard markdown links with resolved URLs.
  */
 
+import { slugifyHeading } from "./slug-strategy.js";
+
 /**
  * Resolves wiki-links in markdown content to standard links.
  * Handles: [[Page Name]], [[Page Name|Display Text]], [[Page Name#Heading]]
@@ -71,19 +73,7 @@ function resolveLinkTarget(target, index) {
   return { url: null, found: false };
 }
 
-/**
- * Converts a heading to a URL-safe anchor.
- * @param {string} heading - The heading text
- * @returns {string} URL-safe anchor
- */
-function slugifyHeading(heading) {
-  return heading
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-}
+// slugifyHeading is imported from slug-strategy.js
 
 // Test if run directly
 if (import.meta.url === `file://${process.argv[1]}`) {

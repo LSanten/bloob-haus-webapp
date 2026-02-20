@@ -6,8 +6,8 @@
   "scripts": {
     "build": "node scripts/build-site.js",
     "build:buffbaby": "SITE_NAME=buffbaby node scripts/build-site.js",
-    "dev": "SITE_NAME=buffbaby npx @11ty/eleventy --serve",
-    "dev:buffbaby": "SITE_NAME=buffbaby npx @11ty/eleventy --serve",
+    "dev": "SITE_NAME=buffbaby node scripts/assemble-src.js --site=buffbaby && concurrently -n assemble,eleventy -c blue,green \"node scripts/watch-themes.js --site=buffbaby\" \"SITE_NAME=buffbaby npx @11ty/eleventy --serve\"",
+    "dev:buffbaby": "SITE_NAME=buffbaby node scripts/assemble-src.js --site=buffbaby && concurrently -n assemble,eleventy -c blue,green \"node scripts/watch-themes.js --site=buffbaby\" \"SITE_NAME=buffbaby npx @11ty/eleventy --serve\"",
     "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site",
@@ -23,22 +23,18 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@flowershow/remark-wiki-link": "^3.3.1",
-    "execa": "^8.0.0",
     "fs-extra": "^11.0.0",
     "glob": "^10.0.0",
     "gray-matter": "^4.0.3",
     "js-yaml": "^4.1.1",
     "markdown-it-task-lists": "^2.1.1",
-    "remark-parse": "^11.0.0",
-    "remark-stringify": "^11.0.0",
-    "sharp": "^0.33.5",
-    "unified": "^11.0.0"
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",
     "@11ty/eleventy-img": "^6.0.4",
     "@11ty/eleventy-plugin-rss": "^2.0.4",
+    "concurrently": "^9.2.1",
     "esbuild": "^0.27.3",
     "pagefind": "^1.4.0",
     "vitest": "^3.2.4"

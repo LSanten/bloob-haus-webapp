@@ -1,13 +1,32 @@
 /**
- * Slugify a string: lowercase, spaces/special chars → hyphens
+ * Slug strategies for permalink generation.
+ * Must match the strategies in scripts/utils/slug-strategy.js.
  */
-function slugify(str) {
+function slugifyStandard(str) {
   return str
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "") // remove non-word chars (except spaces and hyphens)
-    .replace(/[\s_]+/g, "-") // spaces/underscores → hyphens
-    .replace(/-+/g, "-") // collapse multiple hyphens
-    .replace(/^-|-$/g, ""); // trim leading/trailing hyphens
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function slugifyPreserveCase(str) {
+  return str
+    .replace(/[^a-zA-Z0-9\s._-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function getSlugFn(strategy) {
+  switch (strategy) {
+    case "preserve-case":
+      return slugifyPreserveCase;
+    case "slugify":
+    default:
+      return slugifyStandard;
+  }
 }
 
 export default {
@@ -18,15 +37,14 @@ export default {
     // Only modify permalinks for pages with a fileSlug (content pages)
     if (!data.page.fileSlug) return data.permalink;
 
-    const shouldSlugify = data.site?.permalinks?.slugify ?? false;
+    const strategy = data.site?.permalinks?.strategy || "slugify";
+    const slugFn = getSlugFn(strategy);
     const pathParts = data.page.filePathStem.split("/").filter(Boolean);
     const sectionParts = pathParts.slice(0, -1);
     const filename = pathParts[pathParts.length - 1];
 
-    const slug = shouldSlugify ? slugify(filename) : filename;
-    const section = shouldSlugify
-      ? sectionParts.map(slugify).join("/")
-      : sectionParts.join("/");
+    const slug = slugFn(filename);
+    const section = sectionParts.map(slugFn).join("/");
 
     if (section) {
       return `/${section}/${slug}/`;

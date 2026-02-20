@@ -3,6 +3,8 @@
  * Resolves standard markdown links like [text](file.md) to proper URLs.
  */
 
+import { slugifyHeading } from "./slug-strategy.js";
+
 /**
  * Resolves markdown links pointing to .md files to proper URLs.
  * Handles: [text](file.md), [text](folder/file.md), [text](file%20name.md)
@@ -80,19 +82,7 @@ function resolveLinkTarget(target, index) {
   return { url: null, found: false };
 }
 
-/**
- * Converts a heading to a URL-safe anchor.
- * @param {string} heading - The heading text
- * @returns {string} URL-safe anchor
- */
-function slugifyHeading(heading) {
-  return heading
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-}
+// slugifyHeading is imported from slug-strategy.js
 
 // Test if run directly
 if (import.meta.url === `file://${process.argv[1]}`) {

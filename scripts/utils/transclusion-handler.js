@@ -4,6 +4,8 @@
  * Full transclusion support is planned for Phase 2.
  */
 
+import { getSlugFunction } from "./slug-strategy.js";
+
 // Common image extensions to exclude from transclusion handling
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.mp4', '.webm', '.html'];
 
@@ -58,16 +60,13 @@ export function handleTransclusions(content) {
 
 /**
  * Simple slugify for generating placeholder links.
+ * Uses the configured slug strategy from env, falls back to standard.
  * @param {string} title - The title to slugify
  * @returns {string} URL-safe slug
  */
 function slugify(title) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+  const strategy = process.env.SLUG_STRATEGY || "slugify";
+  return getSlugFunction(strategy)(title);
 }
 
 // Test if run directly

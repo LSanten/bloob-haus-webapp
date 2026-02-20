@@ -1,8 +1,10 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.  
-**Last Updated:** February 18, 2026
-**Current Phase:** Phase 2 Active — graph.json API + graph visualizer complete; validation report remaining
+**Last Updated:** February 19, 2026
+**Current Phase:** Multi-site operational — marbles site built, build isolation working.
+
+**See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
 
 ---
 
@@ -20,10 +22,19 @@
 | DNS migration (Porkbun → Cloudflare) | ✅ COMPLETE |
 | Phase 2: graph.json API | ✅ COMPLETE |
 | Phase 2: Graph visualizer | ✅ COMPLETE |
-| Phase 2: Validation report | 🔧 REMAINING |
+| Phase 2: Validation report + --strict | ✅ COMPLETE |
+| CLAUDE.md + TECH-DEBT.md | ✅ COMPLETE |
+| Cleanup: vercel.json + unused deps | ✅ COMPLETE |
+| Test suite Phase 2 (publish-filter, file-index-builder, slug-strategy) | ✅ COMPLETE |
+| Marbles site (sites/marbles.yaml) | ✅ COMPLETE |
+| Multi-site build isolation (src/ cleanup, repo-switch detection) | ✅ COMPLETE |
+| Configurable slug strategies (slugify, preserve-case) | ✅ COMPLETE |
+| Per-file exclude_files list | ✅ COMPLETE |
+| Reserved directory filtering in section discovery | ✅ COMPLETE |
 
-**LIVE SITE:** https://buffbaby.bloob.haus (Buff Baby Kitchen)  
-**Cloudflare URL:** https://buffbaby-f5k.pages.dev
+**LIVE SITES:**
+- https://buffbaby.bloob.haus (Buff Baby Kitchen)
+- marbles.bloob.haus (Leon's Marbles — not yet deployed)
 
 ---
 
@@ -59,7 +70,12 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Modular visualizer architecture with auto-discovery
 - Templatized builder: themes in `themes/`, site config in `sites/*.yaml`
 - Config-driven builds with `--site=` flag
-- Test suite: 137 tests across 11 files (Vitest), co-located visualizer tests
+- Configurable URL slug strategy per site ("slugify" or "preserve-case")
+- Per-file `exclude_files` list in site YAML config
+- Multi-site build isolation (src/ cleaned between builds, repo-switch detection)
+- Reserved directory filtering (media, assets, etc. excluded from section nav)
+- Test suite: 191 tests across 14 files (Vitest), co-located visualizer tests
+- Validation report with `--strict` flag for CI (fails build on broken links)
 
 **Build pipeline:**
 ```bash
@@ -83,11 +99,12 @@ bloob-haus-webapp/
 │   ├── deploy-buffbaby.yml      ✅ CI/CD: test → build → deploy buffbaby to Cloudflare
 │   └── rebuild-all.yml          ✅ CI/CD: rebuild all sites on infrastructure changes
 ├── eleventy.config.js           ✅ Eleventy configuration (ESM, reads site config)
-├── vercel.json                  ⏳ Legacy (remove after Vercel decommission)
+├── CLAUDE.md                    ✅ Development practices (auto-read by Claude Code)
 ├── package.json                 ✅ Scripts and dependencies
 │
 ├── sites/                       ✅ Per-site configuration (YAML)
-│   └── buffbaby.yaml            ✅ Buff Baby Kitchen config
+│   ├── buffbaby.yaml            ✅ Buff Baby Kitchen config
+│   └── marbles.yaml             ✅ Leon's Marbles config (preserve-case slugs)
 │
 ├── themes/                      ✅ Theme library
 │   ├── _base/                   ✅ Shared across all themes
@@ -144,6 +161,7 @@ bloob-haus-webapp/
 │       ├── transclusion-handler.js  ✅ ![[Embed]] placeholders
 │       ├── comment-stripper.js      ✅ Privacy protection
 │       ├── tag-extractor.js         ✅ Tag extraction & normalization
+│       ├── slug-strategy.js          ✅ Centralized slug strategies (slugify, preserve-case)
 │       ├── git-date-extractor.js    ✅ Last modified dates
 │       ├── graph-builder.js         ✅ Builds nodes+links from per-page link data
 │       └── graph-settings-loader.js ✅ Reads .bloob/graph.yaml from vault
@@ -233,7 +251,7 @@ Per-page override: frontmatter `graph: { depth: 1 }`. Inline positioning: ` ```g
 ## Environment Variables
 
 ```bash
-# Required in .env.local (local) and Vercel dashboard (production)
+# Required in .env.local (local) and GitHub Actions secrets (production)
 GITHUB_TOKEN=ghp_xxx              # GitHub PAT with repo scope (secret, not in YAML)
 
 # Optional overrides (these are now in sites/*.yaml)
@@ -306,7 +324,7 @@ node scripts/bundle-visualizers.js
 npx @11ty/eleventy
 
 # Tests
-npm test                 # Run all 137 tests once
+npm test                 # Run all 191 tests once
 npm run test:watch       # Watch mode (re-runs on file changes)
 
 # Adding a new site (future)
@@ -335,17 +353,11 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
-Cloudflare + GitHub Actions migration is **COMPLETE**. Full CI/CD pipeline working.
+Multi-site is **OPERATIONAL**. Marbles site builds successfully with preserve-case URLs.
 
-**Remaining cleanup (after DNS propagates):**
-- Verify `buffbaby.bloob.haus` serves from Cloudflare (check `cf-ray` response header)
-- Clean up stale DNS records in Cloudflare (old Vercel A records, Porkbun wildcard/www CNAMEs)
-- Decommission Vercel (remove vercel.json, delete Vercel project) — wait 24-48h
-
-**Next priorities:**
-- Phase 2 remaining: validation report (`--strict` flag for broken links, structured report)
-- Test suite Phase 2 (6 more test files: file-index-builder, filters, computed, publish-filter, config-reader, git-date-extractor)
-- Build marbles site (create `themes/spatial-garden/` + `sites/marbles.yaml`)
+**Current priorities:**
+- Deploy marbles to Cloudflare Pages (create project + workflow)
+- Test buffbaby build still works after all changes (verify tomorrow)
 - Recipe scaling visualizer (`lib/visualizers/recipe-scaler/`)
 
 See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
@@ -355,8 +367,10 @@ See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
 ## Documentation Map
 
 ```
+CLAUDE.md                       ← Development practices (auto-read by Claude Code)
 docs/
 ├── CLAUDE_CONTEXT.md           ← This file (quick orientation)
+├── TECH-DEBT.md                ← Technical debt inventory
 ├── CHANGELOG.md                ← Session history & milestones
 │
 ├── architecture/               ← How systems work

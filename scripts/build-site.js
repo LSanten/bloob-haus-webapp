@@ -26,10 +26,18 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 process.env.BUILD_TARGET = "eleventy";
 
 /**
+ * Check if --strict flag is set (fail build on broken links).
+ */
+function isStrictMode() {
+  return process.argv.includes("--strict");
+}
+
+/**
  * Main build function.
  */
 async function buildSite() {
   const siteName = resolveSiteName();
+  const strict = isStrictMode();
 
   console.log("\n========================================");
   console.log(`  BLOOB HAUS BUILD (site: ${siteName})`);
@@ -63,7 +71,17 @@ async function buildSite() {
       throw new Error("Missing required environment variable: GITHUB_TOKEN");
     }
 
-    const contentDir = await cloneContent({ token, repo });
+    const branch = config.content.branch;
+    let contentDir = await cloneContent({ token, repo, branch });
+
+    // If config specifies a subfolder within the repo, use that as content root
+    if (config.content.path) {
+      contentDir = path.join(contentDir, config.content.path);
+      console.log(`[config] Using content subfolder: ${config.content.path}`);
+      if (!(await fs.pathExists(contentDir))) {
+        throw new Error(`Content subfolder not found: ${config.content.path}`);
+      }
+    }
 
     // Step 4: Preprocess content
     console.log("\n");
@@ -73,8 +91,17 @@ async function buildSite() {
     process.env.CONTENT_REPO = config.content.repo;
     process.env.PUBLISH_MODE = config.content.publish_mode;
     process.env.BLOCKLIST_TAG = config.content.blocklist_tag;
+    process.env.EXCLUDE_FILES = (config.content.exclude_files || []).join(",");
+    process.env.SLUG_STRATEGY = config.permalinks?.strategy || "slugify";
 
-    await preprocessContent({ contentDir });
+    const preprocessResult = await preprocessContent({ contentDir });
+
+    // Strict mode: fail if broken links found
+    if (strict && preprocessResult.brokenLinkDetails?.length > 0) {
+      throw new Error(
+        `--strict: ${preprocessResult.brokenLinkDetails.length} broken link(s) found. See validation report above.`,
+      );
+    }
 
     // Step 4.5: Generate OG preview images
     if (config.features.og_images) {

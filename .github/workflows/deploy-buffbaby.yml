@@ -38,7 +38,7 @@ jobs:
         run: npm test
 
       - name: Build buffbaby site
-        run: npm run build:buffbaby
+        run: SITE_NAME=buffbaby node scripts/build-site.js --strict
         env:
           GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 

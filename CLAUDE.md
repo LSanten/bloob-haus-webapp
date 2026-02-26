@@ -7,6 +7,9 @@ This file is read automatically by Claude Code at session start. It contains dev
 - Read `docs/TECH-DEBT.md` for outstanding technical debt
 - This file (CLAUDE.md) contains development rules and practices
 
+## Sibling Repo: Planning Vault
+The product vision, values, room concepts, and engineering reports live in a separate Obsidian vault at `../bloobhaus-notes/` (see its `CLAUDE.md`). If you need context on *why* things are designed a certain way, check there. This repo is the source of truth for *how* — technical architecture, build pipeline, and implementation plans.
+
 ## Development Principles
 1. **Don't build infrastructure for users you don't have yet** — build what makes current sites better today
 2. **Implement when needed, not when designed** — avoid over-architecture

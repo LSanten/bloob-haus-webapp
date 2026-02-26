@@ -85,6 +85,9 @@ export async function preprocessContent({
     gitDatesMissing: 0,
   };
 
+  // Collect detailed broken link info for validation report
+  const brokenLinkDetails = [];
+
   // Collect page data for tag index (built after file loop)
   const allPageData = [];
 
@@ -102,7 +105,8 @@ export async function preprocessContent({
 
   // Step 3: Build file index
   console.log("\n--- Step 3: Building file index ---");
-  const fileIndex = await buildFileIndex(published, contentDir);
+  const slugStrategy = process.env.SLUG_STRATEGY || "slugify";
+  const fileIndex = await buildFileIndex(published, contentDir, { slugStrategy });
 
   // Step 4: Build attachment index
   console.log("\n--- Step 4: Building attachment index ---");
@@ -111,8 +115,17 @@ export async function preprocessContent({
     obsidianConfig.attachmentFolderPath,
   );
 
-  // Step 5: Ensure output directories exist
+  // Step 5: Clean and prepare output directories
   console.log("\n--- Step 5: Preparing output directories ---");
+
+  // Clean all content .md files from a previous build (different site may have left stale files)
+  const existingMdFiles = await glob("**/*.md", { cwd: outputDir, absolute: true }).catch(() => []);
+  for (const f of existingMdFiles) {
+    await fs.remove(f);
+  }
+  // Clean media from previous build
+  await fs.remove(path.join(staticDir, "media"));
+
   await fs.ensureDir(outputDir);
   await fs.ensureDir(path.join(staticDir, "media"));
   console.log(`[prep] Output directory: ${outputDir}`);
@@ -147,18 +160,27 @@ export async function preprocessContent({
     processedContent = attachmentResult.content;
     stats.linksResolved += attachmentResult.resolved.length;
     stats.linksBroken += attachmentResult.broken.length;
+    for (const b of attachmentResult.broken) {
+      brokenLinkDetails.push({ source: file.relativePath, type: "attachment", target: b.original });
+    }
 
     // 6d: Resolve wiki-links
     const wikiLinkResult = resolveWikiLinks(processedContent, fileIndex);
     processedContent = wikiLinkResult.content;
     stats.linksResolved += wikiLinkResult.resolved.length;
     stats.linksBroken += wikiLinkResult.broken.length;
+    for (const b of wikiLinkResult.broken) {
+      brokenLinkDetails.push({ source: file.relativePath, type: "wiki-link", target: b.target });
+    }
 
     // 6e: Resolve markdown links
     const mdLinkResult = resolveMarkdownLinks(processedContent, fileIndex);
     processedContent = mdLinkResult.content;
     stats.linksResolved += mdLinkResult.resolved.length;
     stats.linksBroken += mdLinkResult.broken.length;
+    for (const b of mdLinkResult.broken) {
+      brokenLinkDetails.push({ source: file.relativePath, type: "markdown-link", target: b.target });
+    }
 
     // 6f: Extract and normalize tags from frontmatter + inline content
     const pageTags = extractTags(frontmatter, processedContent);
@@ -224,7 +246,13 @@ export async function preprocessContent({
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
       const ogExt =
         imgExt === ".gif" ? "gif" : imgExt === ".png" ? "png" : "jpeg";
+      // encodeURIComponent the filename so URLs are valid (spaces → %20, @ → %40, etc.)
+      // The OG generator writes files with the same encoding so names match on disk.
       outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
+      // Also store image on the graph node for hover previews
+      if (pageInfo && perPageLinks[pageInfo.url]) {
+        perPageLinks[pageInfo.url].image = outputFrontmatter.image;
+      }
     }
 
     // Add layout for Eleventy
@@ -246,9 +274,20 @@ export async function preprocessContent({
     );
   }
 
-  // Step 7: Build and write graph.json + run visualizer preprocess hooks
-  console.log("\n--- Step 7: Building graph data + visualizer hooks ---");
-  const graphData = buildGraph(perPageLinks);
+  // Step 7: Build tag index first (needed by graph builder for tag nodes)
+  console.log("\n--- Step 7: Building tag index ---");
+  const tagIndex = buildTagIndex(allPageData);
+  const tagIndexDir = path.join(outputDir, "_data");
+  await fs.ensureDir(tagIndexDir);
+  const tagIndexPath = path.join(tagIndexDir, "tagIndex.json");
+  await fs.writeJson(tagIndexPath, tagIndex, { spaces: 2 });
+  console.log(
+    `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
+  );
+
+  // Step 8: Build and write graph.json + run visualizer preprocess hooks
+  console.log("\n--- Step 8: Building graph data + visualizer hooks ---");
+  const graphData = buildGraph(perPageLinks, tagIndex);
   const graphPath = path.join(outputDir, "graph.json");
   await fs.writeJson(graphPath, graphData, { spaces: 2 });
   console.log(
@@ -273,17 +312,6 @@ export async function preprocessContent({
     }
   }
 
-  // Step 8: Build global tag index
-  console.log("\n--- Step 8: Building tag index ---");
-  const tagIndex = buildTagIndex(allPageData);
-  const tagIndexDir = path.join(outputDir, "_data");
-  await fs.ensureDir(tagIndexDir);
-  const tagIndexPath = path.join(tagIndexDir, "tagIndex.json");
-  await fs.writeJson(tagIndexPath, tagIndex, { spaces: 2 });
-  console.log(
-    `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
-  );
-
   // Step 9: Copy attachments
   console.log("\n--- Step 9: Copying attachments ---");
   const mediaOutputDir = path.join(staticDir, "media");
@@ -293,6 +321,30 @@ export async function preprocessContent({
     mediaOutputDir,
   );
   stats.attachmentsCopied = copied.length;
+
+  // Validation report: broken links
+  if (brokenLinkDetails.length > 0) {
+    console.log("\n========================================");
+    console.log("  VALIDATION REPORT: BROKEN LINKS");
+    console.log("========================================");
+    for (const item of brokenLinkDetails) {
+      console.log(`  [${item.type}] ${item.source} → ${item.target}`);
+    }
+    console.log(`\n  Total: ${brokenLinkDetails.length} broken link(s)`);
+    console.log("========================================\n");
+  }
+
+  // Write validation report JSON for CI consumption
+  const validationReport = {
+    timestamp: new Date().toISOString(),
+    brokenLinks: brokenLinkDetails,
+    stats: {
+      totalBroken: brokenLinkDetails.length,
+      totalResolved: stats.linksResolved,
+    },
+  };
+  const reportPath = path.join(outputDir, "_data", "validation-report.json");
+  await fs.writeJson(reportPath, validationReport, { spaces: 2 });
 
   // Summary
   console.log("\n========================================");
@@ -318,7 +370,7 @@ export async function preprocessContent({
   }
   console.log("========================================\n");
 
-  return stats;
+  return { ...stats, brokenLinkDetails };
 }
 
 // Run directly if this is the main module

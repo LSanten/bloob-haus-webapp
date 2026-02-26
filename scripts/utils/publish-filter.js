@@ -23,12 +23,14 @@ const DEFAULTS = {
  * @returns {Object} Publish configuration
  */
 function getPublishConfig() {
+  const excludeFilesRaw = process.env.EXCLUDE_FILES || "";
   return {
     publishMode: process.env.PUBLISH_MODE || DEFAULTS.publishMode,
     blocklistTag: process.env.BLOCKLIST_TAG || DEFAULTS.blocklistTag,
     allowlistKey: process.env.ALLOWLIST_KEY || DEFAULTS.allowlistKey,
     allowlistValue:
       process.env.ALLOWLIST_VALUE === "false" ? false : DEFAULTS.allowlistValue,
+    excludeFiles: excludeFilesRaw ? excludeFilesRaw.split(",").map(s => s.trim()) : [],
   };
 }
 
@@ -81,6 +83,9 @@ export async function filterPublishableFiles(contentDir, options = {}) {
   const pattern = path.join(contentDir, "**/*.md");
   const files = await glob(pattern, { nodir: true });
 
+  if (config.excludeFiles.length > 0) {
+    console.log(`[filter] Exclude files: ${config.excludeFiles.join(", ")}`);
+  }
   console.log(`[filter] Found ${files.length} markdown files`);
 
   const published = [];
@@ -97,7 +102,18 @@ export async function filterPublishableFiles(contentDir, options = {}) {
 
     const relativePath = path.relative(contentDir, filePath);
 
-    if (shouldPublish(frontmatter, content, config)) {
+    // Check file-level exclude list (matches filename without extension)
+    const fileBaseName = path.basename(filePath, ".md");
+    const isFileExcluded = config.excludeFiles.includes(fileBaseName);
+
+    if (isFileExcluded) {
+      excluded.push({
+        path: filePath,
+        relativePath,
+        reason: `in exclude_files list`,
+      });
+      console.log(`[filter] Excluding: ${relativePath} (exclude_files)`);
+    } else if (shouldPublish(frontmatter, content, config)) {
       published.push({
         path: filePath,
         relativePath,

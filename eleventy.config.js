@@ -54,6 +54,10 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "src/graph-settings.json": "graph-settings.json",
   });
+  // Optimized images from cache — persists between builds for faster rebuilds
+  eleventyConfig.addPassthroughCopy({
+    ".cache/eleventy-img": "media/optimized",
+  });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");
@@ -156,40 +160,48 @@ export default async function (eleventyConfig) {
 
   // Auto-detect sections from content directory structure
   // Mirrors Hugo's .Site.Sections behavior
+  // Excludes non-content directories (media, assets, tags, etc.)
+  const RESERVED_DIRS = new Set(["media", "assets", "tags", "pagefind", "og", "search"]);
+
   eleventyConfig.addCollection("sections", function (collectionApi) {
     const sections = new Set();
     collectionApi.getAll().forEach((item) => {
       const parts = item.url.split("/").filter(Boolean);
-      if (parts.length > 1) {
+      if (parts.length > 1 && !RESERVED_DIRS.has(parts[0])) {
         sections.add(parts[0]);
       }
     });
     return [...sections].sort();
   });
 
-  // Per-section collections
-  eleventyConfig.addCollection("recipes", function (collectionApi) {
-    return collectionApi
-      .getFilteredByGlob("src/recipes/**/*.md")
-      .sort((a, b) => (b.date || 0) - (a.date || 0));
-  });
+  // Dynamic per-section collections
+  // Auto-discovers top-level content folders and creates a collection for each.
+  // This replaces hardcoded per-section collections, enabling multi-site support.
+  // Collection names are camelCased from folder slugs (e.g., "lists-of-favorites" → "listsOfFavorites").
+  eleventyConfig.addCollection("_dynamicSections", function (collectionApi) {
+    const sectionSet = new Set();
+    const sectionItems = {};
 
-  eleventyConfig.addCollection("notes", function (collectionApi) {
-    return collectionApi
-      .getFilteredByGlob("src/notes/**/*.md")
-      .sort((a, b) => (b.date || 0) - (a.date || 0));
-  });
+    collectionApi.getAll().forEach((item) => {
+      const parts = item.url.split("/").filter(Boolean);
+      if (parts.length > 1 && !RESERVED_DIRS.has(parts[0])) {
+        const section = parts[0];
+        sectionSet.add(section);
+        if (!sectionItems[section]) sectionItems[section] = [];
+        sectionItems[section].push(item);
+      }
+    });
 
-  eleventyConfig.addCollection("resources", function (collectionApi) {
-    return collectionApi
-      .getFilteredByGlob("src/resources/**/*.md")
-      .sort((a, b) => (b.date || 0) - (a.date || 0));
-  });
+    // Register a collection for each discovered section
+    for (const section of sectionSet) {
+      // Convert slug to camelCase for collection name (e.g., "lists-of-favorites" → "listsOfFavorites")
+      const collectionName = section.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      eleventyConfig.addCollection(collectionName, () =>
+        sectionItems[section].sort((a, b) => (b.date || 0) - (a.date || 0)),
+      );
+    }
 
-  eleventyConfig.addCollection("listsOfFavorites", function (collectionApi) {
-    return collectionApi
-      .getFilteredByGlob("src/lists of favorites/**/*.md")
-      .sort((a, b) => (b.date || 0) - (a.date || 0));
+    return [...sectionSet].sort();
   });
 
   // Backlinks: compute which pages link to each other
@@ -278,7 +290,7 @@ export default async function (eleventyConfig) {
           const metadata = await Image(inputPath, {
             widths: mediaConfig.widths || [600, 1200],
             formats,
-            outputDir: "_site/media/optimized",
+            outputDir: ".cache/eleventy-img",
             urlPath: "/media/optimized/",
             filenameFormat: function (id, src, width, format) {
               const name = src.split("/").pop().split(".")[0];

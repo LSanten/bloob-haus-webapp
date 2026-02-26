@@ -17,9 +17,10 @@ const CONTENT_DIR = path.join(ROOT_DIR, "content-source");
  * @param {Object} options - Configuration options
  * @param {string} options.token - GitHub Personal Access Token
  * @param {string} options.repo - Repository in format "owner/repo"
+ * @param {string} [options.branch] - Branch to clone (defaults to repo default)
  * @returns {string} Path to the cloned content directory
  */
-export async function cloneContent({ token, repo }) {
+export async function cloneContent({ token, repo, branch }) {
   if (!token) {
     throw new Error("[clone] GITHUB_TOKEN is required");
   }
@@ -38,6 +39,28 @@ export async function cloneContent({ token, repo }) {
       const gitDir = path.join(CONTENT_DIR, ".git");
 
       if (fs.existsSync(gitDir)) {
+        // Check if this is the right repo — if not, remove and re-clone
+        try {
+          const currentRemote = execSync("git remote get-url origin", {
+            cwd: CONTENT_DIR,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "ignore"],
+          }).trim();
+          // Compare repo names (ignore token in URL)
+          const currentRepoMatch = currentRemote.match(/github\.com\/(.+?)\.git$/);
+          const currentRepoName = currentRepoMatch ? currentRepoMatch[1] : "";
+          if (currentRepoName.toLowerCase() !== repo.toLowerCase()) {
+            console.log(`[clone] Different repo detected (${currentRepoName} vs ${repo}), re-cloning...`);
+            await fs.remove(CONTENT_DIR);
+            await cloneFresh(repoUrl, branch);
+            const files = await fs.readdir(CONTENT_DIR);
+            console.log(`[clone] Content directory contains ${files.length} items`);
+            return CONTENT_DIR;
+          }
+        } catch {
+          // If we can't check the remote, proceed with pull
+        }
+
         // Unshallow if needed — full history is required for git date extraction
         try {
           const isShallow = execSync("git rev-parse --is-shallow-repository", {
@@ -72,11 +95,11 @@ export async function cloneContent({ token, repo }) {
           "[clone] Directory exists but is not a git repo, removing...",
         );
         await fs.remove(CONTENT_DIR);
-        await cloneFresh(repoUrl);
+        await cloneFresh(repoUrl, branch);
       }
     } else {
       // Directory doesn't exist - clone fresh
-      await cloneFresh(repoUrl);
+      await cloneFresh(repoUrl, branch);
     }
 
     // Verify the clone/pull worked
@@ -99,10 +122,12 @@ export async function cloneContent({ token, repo }) {
  * Performs a full clone of the repository.
  * Full history is needed so git-date-extractor can read per-file last-modified dates.
  * @param {string} repoUrl - Full repository URL with token
+ * @param {string} [branch] - Branch to clone (defaults to repo default)
  */
-async function cloneFresh(repoUrl) {
-  console.log("[clone] Cloning repository (full history)...");
-  execSync(`git clone "${repoUrl}" "${CONTENT_DIR}"`, {
+async function cloneFresh(repoUrl, branch) {
+  const branchFlag = branch ? ` --branch "${branch}"` : "";
+  console.log(`[clone] Cloning repository (full history)...${branch ? ` branch: ${branch}` : ""}`);
+  execSync(`git clone${branchFlag} "${repoUrl}" "${CONTENT_DIR}"`, {
     stdio: "pipe",
   });
   console.log("[clone] Clone complete");

@@ -1,18 +1,21 @@
 site:
-  name: "Buff Baby Kitchen"
-  description: "Home-cooked recipes from our kitchen"
-  url: "https://buffbaby.bloob.haus"
+  name: "Leon's Marbles"
+  description: "Thoughts, notes, and explorations"
+  url: "https://marbles.bloob.haus"
   author: "Leon"
   language: "en-us"
 
 content:
-  repo: "LSanten/buffbaby"
-  branch: "main"
+  repo: "LSanten/LSanten.github.io"
+  branch: "master"
+  path: "_mms-md"
   publish_mode: "blocklist"
-  blocklist_tag: "not-for-public"
+  blocklist_tag: "private-marble-keep-from-public"
+  exclude_files:
+    - "ALL"
 
 permalinks:
-  strategy: "slugify"
+  strategy: "preserve-case"
 
 theme: "warm-kitchen"
 

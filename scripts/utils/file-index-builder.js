@@ -7,6 +7,7 @@ import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
 import matter from "gray-matter";
+import { getSlugFunction } from "./slug-strategy.js";
 
 /**
  * Extracts the title from a markdown file.
@@ -38,6 +39,7 @@ function extractTitle(frontmatter, content, filename) {
 
 /**
  * Generates a URL-safe slug from a title.
+ * Default implementation — used as fallback when no strategy is specified.
  * @param {string} title - The title to slugify
  * @returns {string} URL-safe slug
  */
@@ -54,9 +56,12 @@ function slugify(title) {
  * Builds an index of all publishable markdown files.
  * @param {Array} publishedFiles - Array of file objects from publish filter
  * @param {string} contentDir - Path to content directory
+ * @param {Object} [options] - Optional configuration
+ * @param {string} [options.slugStrategy] - Slug strategy name ("slugify" or "preserve-case")
  * @returns {Object} Index with pages and lookup maps
  */
-export async function buildFileIndex(publishedFiles, contentDir) {
+export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
+  const slugFn = options.slugStrategy ? getSlugFunction(options.slugStrategy) : slugify;
   console.log(`[index] Building index for ${publishedFiles.length} files`);
 
   const pages = {}; // slug → page info
@@ -71,16 +76,16 @@ export async function buildFileIndex(publishedFiles, contentDir) {
     const title = extractTitle(frontmatter, body, filename);
 
     // Slug is based on FILENAME, not title (URLs stay stable even if title changes)
-    const slug = slugify(filename);
+    const slug = slugFn(filename);
 
     // Get folder path (e.g., "recipes" from "recipes/Challah.md")
     const folderPath = path.dirname(file.relativePath);
     const hasFolder = folderPath && folderPath !== ".";
 
     // Build URL with folder prefix if in a subfolder
-    // Slugify each folder segment for clean URLs
+    // Apply slug strategy to each folder segment
     const slugifiedFolder = hasFolder
-      ? folderPath.split(path.sep).map(slugify).join("/")
+      ? folderPath.split(path.sep).map(slugFn).join("/")
       : "";
     const url = hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`;
 

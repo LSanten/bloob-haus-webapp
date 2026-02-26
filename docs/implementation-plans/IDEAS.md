@@ -60,3 +60,10 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 | 2026-02-03 | Ingredient database / linking | Recipe scaling discussion |
 | 2026-02-03 | Timer visualizer | Cooklang research |
 | 2026-02-09 | Reserved root folder validation | Duplicate image bug fix — OG images moved to `/og/` |
+| 2026-02-19 | UUID-based file identity for tracking files across renames/moves | Engineering review discussion |
+| 2026-02-19 | Demo reel / showcase on bloob.haus index page | Engineering review — could be another Obsidian-powered site |
+| 2026-02-19 | `npm run lint` script with depcheck and other hygiene checks | Engineering review |
+| 2026-02-19 | CI-integrated depcheck as a workflow step | Engineering review |
+| 2026-02-19 | Git sparse checkout for subfolder-only cloning (save bandwidth/time) | Marbles site build discussion |
+| 2026-02-19 | User-editable vault customization (themes/CSS/visualizer config in Obsidian vault root) | Marbles folder structure discussion |
+| 2026-02-19 | Webapp places visualizer folders into GitHub repo/Obsidian vault | Future UX for user plugin management |

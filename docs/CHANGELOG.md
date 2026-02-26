@@ -6,6 +6,83 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 14 - February 19, 2026
+**Worked on:** Engineering review implementation, marbles site launch, multi-site build isolation
+
+**Infrastructure Cleanup (from engineering review):**
+- Deleted `vercel.json` (migrated to Cloudflare Pages)
+- Removed 5 unused npm dependencies (remark-wiki-link, execa, unified, remark-parse, remark-stringify)
+- Created `CLAUDE.md` (auto-read development guide) and `docs/TECH-DEBT.md`
+
+**New Features:**
+- Configurable URL slug strategy per site: "slugify" (lowercase, buffbaby) and "preserve-case" (keep casing, marbles) via `permalinks.strategy` in sites/*.yaml
+- Centralized `scripts/utils/slug-strategy.js` replacing 7 scattered slugify implementations
+- Dynamic section collections in `eleventy.config.js` — auto-discovers sections from URL structure
+- Dev workflow: `npm run dev` with `concurrently` (theme watcher + Eleventy serve)
+- Image optimization caching in `.cache/eleventy-img/` (persists across builds)
+- Validation report: broken link collection during preprocessing with `--strict` CI flag
+- Per-file `exclude_files` list in site YAML config (e.g., exclude `ALL.md` from marbles)
+- Reserved directory filtering: `media`, `assets`, `tags`, `pagefind`, `og`, `search` excluded from section discovery
+
+**Multi-Site Build Isolation:**
+- Content subfolder support: `content.path` in YAML config points to subfolder within a repo
+- Branch support: `content.branch` specifies which branch to clone
+- Repo-switch detection: `clone-content.js` detects if wrong repo is in `content-source/` and re-clones
+- Preprocessor now cleans all `.md` files and `media/` from `src/` before writing new content (prevents cross-site contamination on local builds)
+
+**Marbles Site:**
+- Created `sites/marbles.yaml` — preserve-case URLs, `#private-marble-keep-from-public` blocklist tag, content from `LSanten/LSanten.github.io:_mms-md`
+- Successfully built: 419 pages indexed, ~35s build time
+- Verified: no recipe content bleeding, no `ALL` page, no `media` in nav
+
+**Tests:**
+- Added 44 new tests: publish-filter (12), file-index-builder (16), slug-strategy (16)
+- Total: 14 files, 191 tests, all passing
+
+**Documentation:**
+- Updated DECISIONS.md with 10 new decisions
+- Updated CLAUDE_CONTEXT.md with current status
+- Updated TECH-DEBT.md with resolved items
+- Updated IDEAS.md with future improvements
+
+**Files changed:** 20+ files across scripts/, sites/, tests/, docs/, eleventy.config.js, package.json
+
+---
+
+### Session 13 - February 18, 2026
+**Worked on:** Graph hover tooltip with OG image preview; OG filename encoding fix
+
+**Graph Hover Tooltip:**
+- Added `makeTooltip()` function in `lib/visualizers/graph/browser.js`
+  - Creates a `position:fixed` div appended to `document.body` (not inside the canvas container)
+  - Follows the mouse via `mousemove` listener on the canvas element using `e.clientX/Y` — zero coordinate math, works perfectly with `position:fixed`
+  - Shows a small card (150px wide) above the cursor with: OG preview image (if available) + page title
+  - `position:fixed` + `clientX/Y` avoids the coordinate-space mismatch that made `graph2ScreenCoords()` + `position:absolute` fail (`graph2ScreenCoords` returns viewport coords, not element-relative coords)
+- Applied tooltip to both inline graph and full-graph modal
+- Disabled force-graph's native label tooltip: `nodeLabel(() => "")`
+- `nodeCanvasObjectMode(() => "after")` kept as always-after for click detection
+- `tooltip.attach(canvas)` called via `setTimeout(..., 100)` after graph initialization so the canvas element exists
+
+**OG Image Filename Encoding Fix:**
+- Root cause: filenames on disk used raw characters (`@`, spaces) but the pipeline was writing encoded names (e.g. `%40`, `%20`) then URL-encoding them again — double-encoding
+- **Rule established:** disk filenames always use raw characters; URL `src`/`href` attributes always use `encodeURIComponent`
+- `scripts/preprocess-content.js` — `decodeURIComponent` on the raw markdown image path (normalizes any already-encoded chars), then `encodeURIComponent` on the base name before storing as `/og/{encoded}-og.{ext}` in frontmatter
+- `scripts/generate-og-images.js` — reads the frontmatter `image` URL, `decodeURIComponent`s the base name back to raw, writes disk file with raw name (e.g. `cleanshot_2026-01-10-at-22-11-06@2x-og.png`)
+- This is the single normalization point — all downstream consumers (templates, graph.json) use the URL as-is; disk operations decode first
+
+**graph.json image field:**
+- `scripts/utils/graph-builder.js` — page nodes now include `image: "/og/..."` when the page has an OG image
+- `scripts/preprocess-content.js` — sets `perPageLinks[url].image` alongside the frontmatter image field
+- Graph tooltip uses `node.image` to display the preview
+
+**Files changed:**
+- `lib/visualizers/graph/browser.js` — hover tooltip (mouse-following card with image + title)
+- `scripts/preprocess-content.js` — image field in perPageLinks, encode/decode fix
+- `scripts/utils/graph-builder.js` — image field on page nodes
+- `scripts/generate-og-images.js` — disk files written with raw filenames
+
+---
+
 ### Session 12 - February 18, 2026
 **Worked on:** Phase 2 — graph.json linking API + graph visualizer
 
@@ -497,6 +574,9 @@ Development session history and completed work.
 | 9 | Feb 16, 2026 | Templatize builder: multi-site architecture, config-driven builds |
 | 10 | Feb 17, 2026 | Test suite: Vitest, 104 tests (Phase 1 + 1.5), co-located architecture |
 | 11 | Feb 17, 2026 | Cloudflare Pages + GitHub Actions migration, DNS to Cloudflare |
+| 12 | Feb 18, 2026 | graph.json API + graph visualizer (force-directed, local + global modal) |
+| 13 | Feb 18, 2026 | Graph hover tooltip with OG image preview; OG filename encoding fix |
+| 14 | Feb 19, 2026 | Engineering review implementation, marbles site, multi-site isolation |
 
 ---
 
@@ -515,3 +595,6 @@ Development session history and completed work.
 | Feb 16, 2026 | Templatized builder: themes/, sites/*.yaml, config-driven builds, src/ fully generated |
 | Feb 17, 2026 | Test suite foundation: 9 files, 104 tests, co-located visualizer tests, Vitest |
 | Feb 17, 2026 | GitHub Actions CI/CD + Cloudflare Pages hosting live, DNS migrated to Cloudflare |
+| Feb 18, 2026 | graph.json API + graph visualizer: force-directed, local neighborhood + full-graph modal |
+| Feb 18, 2026 | Graph hover tooltip with OG preview image; OG filename encoding unified (raw on disk, encoded in URLs) |
+| Feb 19, 2026 | Engineering review implemented: cleanup, slug strategies, marbles site built, multi-site build isolation, 191 tests |

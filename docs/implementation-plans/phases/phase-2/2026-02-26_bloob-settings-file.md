@@ -1,6 +1,6 @@
 # `_bloob-settings.md` — Vault-Level Publishing Config
 
-**Status:** Draft — needs settings review
+**Status:** Implemented — config loader now merges _bloob-settings.md
 **Created:** 2026-02-26
 **Related:** [URL Naming & Multi-Site Architecture](../phase-3/2026-02-25_url-naming-and-multi-site-architecture.md)
 
@@ -173,9 +173,57 @@ This file is one piece of the larger multi-site puzzle documented in [URL Naming
 
 ---
 
+## Vault Repo Scaffolding
+
+When the webapp (or Obsidian plugin) sets up a new vault repo for Bloob Haus, it should generate these files automatically:
+
+### `.gitignore` (canonical template)
+
+```
+# Obsidian — keep settings, ignore volatile state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.trash/
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+**Why keep `.obsidian/`:** The builder reads `.obsidian/app.json` for the attachment folder path. Plugin configs and settings may also be useful for future features (e.g., detecting which plugins the author uses).
+
+**Why ignore `workspace.json`:** It changes every time the user switches panes — creates noisy commits with no value to the build.
+
+### Build-time validation (future)
+
+The builder should warn (not fail) when a vault repo is missing expected scaffolding:
+
+| Check | Severity | Message |
+|-------|----------|---------|
+| `.gitignore` missing | warn | "No .gitignore found — workspace.json and .DS_Store will be committed" |
+| `.obsidian/workspace.json` not in `.gitignore` | warn | "workspace.json is not gitignored — this creates noisy commits" |
+| `_bloob-settings.md` missing | warn | "No _bloob-settings.md found — using defaults from sites/*.yaml" |
+| `.obsidian/app.json` missing | info | "No Obsidian config found — assuming default attachment folder" |
+
+This validation runs during the clone/preprocess step and logs to the build output. It's advisory, not blocking — a vault without a `.gitignore` still builds fine.
+
+### Scaffolding command (future)
+
+A CLI or webapp action that initializes a vault repo:
+
+```
+bloob init                          # interactive
+bloob init --subdomain=marbles      # preset
+```
+
+Creates: `_bloob-settings.md`, `.gitignore`, and optionally a `media/` folder.
+
+---
+
 ## Next Steps
 
-1. Create `_bloob-settings.md` in the buffbaby vault with current settings
-2. Update the builder to read `_bloob-settings.md` as primary config source
-3. Gradually migrate settings out of `sites/*.yaml` into vault files
-4. Debug buffbaby production issues (images, headings) — may be related to config
+1. ~~Create `_bloob-settings.md` in the buffbaby vault with current settings~~ ✅
+2. ~~Update the builder to read `_bloob-settings.md` as primary config source~~ ✅ (2026-02-26)
+3. ~~Migrate settings out of `sites/*.yaml` into vault files~~ ✅ (2026-02-26) — yaml now contains only infra settings (repo, branch, url)
+4. ~~Debug buffbaby production issues (recipes listing empty)~~ ✅ Fixed: nested addCollection bug
+5. Add build-time `.gitignore` validation as a warning

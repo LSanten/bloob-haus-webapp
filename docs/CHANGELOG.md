@@ -6,6 +6,38 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 15 - February 26, 2026
+**Worked on:** `_bloob-settings.md` as source of truth for site configuration
+
+**Core Change:**
+- **`_bloob-settings.md` now drives site config** — the markdown file in each content repo (e.g., `buffbaby/_bloob-settings.md`) is the source of truth for site-level settings like name, description, author, footer_text, theme, features, visualizers, etc.
+- **`sites/*.yaml` trimmed to infra-only** — yaml files now contain only webapp-specific settings: `site.url`, `content.repo`, `content.branch`. Everything else comes from the vault's `_bloob-settings.md`.
+
+**Implementation:**
+- Created `scripts/utils/bloob-settings-reader.js` — parses `_bloob-settings.md` frontmatter
+- Updated `scripts/utils/config-loader.js` — merges bloob settings with yaml config
+- Reordered build steps in `scripts/build-site.js` — clone content BEFORE loading full config
+- Updated `scripts/dev-local.js` — passes contentDir to config loader
+- Updated tests in `tests/build/config-loader.test.js` — tests for bloob-settings parsing and merging
+
+**Breaking Changes:**
+- `sites/*.yaml` no longer contains `name`, `description`, `author`, `footer_text`, `theme`, `features`, `visualizers`, `media`, `permalinks` — these must be in `_bloob-settings.md`
+
+**Tests:**
+- 195 tests passing (4 new tests for bloob-settings reader/merger)
+
+**Files changed:** 6 files
+- `scripts/utils/bloob-settings-reader.js` (new)
+- `scripts/utils/config-loader.js`
+- `scripts/build-site.js`
+- `scripts/dev-local.js`
+- `sites/buffbaby.yaml`
+- `sites/marbles.yaml`
+- `tests/build/config-loader.test.js`
+- `docs/implementation-plans/phases/phase-2/2026-02-26_bloob-settings-file.md`
+
+---
+
 ### Session 14 - February 19, 2026
 **Worked on:** Engineering review implementation, marbles site launch, multi-site build isolation
 

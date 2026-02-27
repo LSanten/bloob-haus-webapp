@@ -1,7 +1,7 @@
 <footer class="site-footer">
   <div class="footer-container">
     <p>&copy; {{ site.year }} {{ site.title }}</p>
-    <p class="footer-note">Developed by Leon & Whitney to make recipe sharing easier.</p>
+    {% if site.footer_text %}<p class="footer-note">{{ site.footer_text | safe }}</p>{% endif %}
     <p class="footer-note">Built with Bloob Haus — a holistic system for making sharing online resources more tangible.</p>
   </div>
 </footer>

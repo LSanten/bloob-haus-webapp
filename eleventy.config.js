@@ -274,9 +274,9 @@ export default async function (eleventyConfig) {
         if (ext === "gif") continue;
 
         try {
-          // Preserve PNG format for transparency; use JPEG for photos
-          const configFormats = mediaConfig.formats || ["webp", "jpeg"];
-          const formats = ext === "png" ? ["webp", "png"] : configFormats;
+          // Formats come from _bloob-settings.md / sites/*.yaml.
+          // Include "png" to preserve transparency for PNG source images.
+          const formats = mediaConfig.formats || ["webp", "jpeg", "png"];
 
           const metadata = await Image(inputPath, {
             widths: mediaConfig.widths || [600, 1200],

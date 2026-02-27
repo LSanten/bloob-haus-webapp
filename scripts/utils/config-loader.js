@@ -1,6 +1,11 @@
 /**
  * Config Loader
- * Loads site configuration from sites/{name}.yaml
+ * Loads site configuration from sites/{name}.yaml and merges with _bloob-settings.md
+ *
+ * Source of truth hierarchy:
+ * 1. _bloob-settings.md (in content repo) - user-editable site settings
+ * 2. sites/{name}.yaml - webapp-specific settings (repo URL, branch, deployed URL)
+ *
  * Shared by assemble-src.js, build-site.js, and eleventy.config.js
  */
 
@@ -8,6 +13,7 @@ import fs from "fs-extra";
 import path from "path";
 import yaml from "js-yaml";
 import { fileURLToPath } from "url";
+import { readBloobSettings, mergeBloobSettings } from "./bloob-settings-reader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "../..");
@@ -24,11 +30,14 @@ export function resolveSiteName() {
 }
 
 /**
- * Loads site configuration from sites/{name}.yaml
+ * Loads site configuration from sites/{name}.yaml and merges with _bloob-settings.md
  * @param {string} siteName - Site name (matches filename in sites/)
- * @returns {object} Parsed site configuration
+ * @param {Object} options - Optional configuration
+ * @param {string} options.contentDir - Path to content directory (for reading _bloob-settings.md)
+ * @param {boolean} options.skipBloobSettings - Skip reading _bloob-settings.md (for initial load before cloning)
+ * @returns {object} Merged site configuration
  */
-export async function loadSiteConfig(siteName) {
+export async function loadSiteConfig(siteName, options = {}) {
   const configPath = path.join(ROOT_DIR, "sites", `${siteName}.yaml`);
 
   if (!fs.existsSync(configPath)) {
@@ -38,7 +47,22 @@ export async function loadSiteConfig(siteName) {
   }
 
   const raw = await fs.readFile(configPath, "utf-8");
-  const config = yaml.load(raw);
+  let config = yaml.load(raw);
+
+  // Skip bloob settings merge if requested (for initial load before content is cloned)
+  if (options.skipBloobSettings) {
+    return config;
+  }
+
+  // Read and merge _bloob-settings.md from content directory
+  const contentDir = options.contentDir || path.join(ROOT_DIR, "content-source");
+  if (fs.existsSync(contentDir)) {
+    const bloobSettings = await readBloobSettings(contentDir);
+    if (bloobSettings) {
+      config = mergeBloobSettings(config, bloobSettings);
+      console.log("[config] Merged settings from _bloob-settings.md");
+    }
+  }
 
   return config;
 }

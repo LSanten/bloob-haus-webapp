@@ -1,36 +1,11 @@
-site:
-  name: "Buff Baby Kitchen"
-  description: "Home-cooked recipes from our kitchen"
-  url: "https://buffbaby.bloob.haus"
-  author: "Leon"
-  language: "en-us"
+# Bloob Haus Site Config — buffbaby
+# Infrastructure settings only. Author settings live in _bloob-settings.md in the vault.
 
+# Deployed URL (webapp infra — Cloudflare)
+site:
+  url: "https://buffbaby.bloob.haus"
+
+# Content source (webapp infra — GitHub)
 content:
   repo: "LSanten/buffbaby"
   branch: "main"
-  publish_mode: "blocklist"
-  blocklist_tag: "not-for-public"
-
-permalinks:
-  strategy: "slugify"
-
-theme: "warm-kitchen"
-
-visualizers:
-  - checkbox-tracker
-  - graph
-
-features:
-  rss: true
-  sitemap: true
-  robots_txt: true
-  search: true
-  backlinks: true
-  og_images: true
-  tags: true
-  custom_404: true
-
-media:
-  optimize: true
-  formats: ["webp", "jpeg"]
-  widths: [600, 1200]

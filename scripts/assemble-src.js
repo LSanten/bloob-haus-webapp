@@ -182,6 +182,7 @@ export default {
   url: process.env.SITE_URL || ${JSON.stringify(config.site.url)},
   author: ${JSON.stringify(config.site.author)},
   languageCode: ${JSON.stringify(config.site.language)},
+  footer_text: ${JSON.stringify(config.site.footer_text || "")},
   year: new Date().getFullYear(),
   permalinks: {
     strategy: ${JSON.stringify(config.permalinks?.strategy || "slugify")},

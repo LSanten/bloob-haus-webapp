@@ -49,21 +49,16 @@ async function buildSite() {
     // Load environment variables (for GITHUB_TOKEN)
     loadEnv();
 
-    // Step 1: Load site config
-    console.log("--- Step 1: Loading site configuration ---\n");
-    const config = await loadSiteConfig(siteName);
-    console.log(`[config] Site: ${config.site.name}`);
-    console.log(`[config] Theme: ${config.theme}`);
+    // Step 1: Load initial site config (yaml only — for repo/branch info)
+    console.log("--- Step 1: Loading initial site configuration ---\n");
+    let config = await loadSiteConfig(siteName, { skipBloobSettings: true });
     console.log(`[config] Content repo: ${config.content.repo}`);
 
     // Make site name available to eleventy.config.js
     process.env.SITE_NAME = siteName;
 
-    // Step 2: Assemble src/ from theme
-    await assembleSrc(config);
-
-    // Step 3: Clone content
-    console.log("--- Step 3: Cloning content repository ---\n");
+    // Step 2: Clone content
+    console.log("\n--- Step 2: Cloning content repository ---\n");
     const token = process.env.GITHUB_TOKEN;
     const repo = config.content.repo;
 
@@ -83,7 +78,16 @@ async function buildSite() {
       }
     }
 
-    // Step 4: Preprocess content
+    // Step 3: Reload config with _bloob-settings.md merged
+    console.log("\n--- Step 3: Loading full configuration (with _bloob-settings.md) ---\n");
+    config = await loadSiteConfig(siteName, { contentDir });
+    console.log(`[config] Site: ${config.site?.name || siteName}`);
+    console.log(`[config] Theme: ${config.theme}`);
+
+    // Step 4: Assemble src/ from theme
+    await assembleSrc(config);
+
+    // Step 5: Preprocess content
     console.log("\n");
 
     // Pass config values to preprocessor via env vars
@@ -103,19 +107,19 @@ async function buildSite() {
       );
     }
 
-    // Step 4.5: Generate OG preview images
-    if (config.features.og_images) {
+    // Step 5.5: Generate OG preview images
+    if (config.features?.og_images) {
       await generateOgImages();
     }
 
-    // Step 5: Bundle visualizers
-    console.log("\n--- Step 5: Bundling visualizers ---");
+    // Step 6: Bundle visualizers
+    console.log("\n--- Step 6: Bundling visualizers ---");
     execSync("node scripts/bundle-visualizers.js", {
       cwd: ROOT_DIR,
       stdio: "inherit",
     });
 
-    // Step 6: Build Eleventy
+    // Step 7: Build Eleventy
     await buildEleventy(config);
 
     // Build summary
@@ -140,7 +144,7 @@ async function buildSite() {
  * Build with Eleventy
  */
 async function buildEleventy(config) {
-  console.log("\n--- Step 6: Running Eleventy build ---");
+  console.log("\n--- Step 7: Running Eleventy build ---");
   const siteDir = path.join(ROOT_DIR, "_site");
 
   await fs.remove(siteDir);
@@ -159,9 +163,9 @@ async function buildEleventy(config) {
   const files = await fs.readdir(siteDir);
   console.log(`[eleventy] Build complete - ${files.length} entries in _site/`);
 
-  // Step 7: Build Pagefind search index
-  if (config.features.search) {
-    console.log("\n--- Step 7: Building search index (Pagefind) ---");
+  // Step 8: Build Pagefind search index
+  if (config.features?.search) {
+    console.log("\n--- Step 8: Building search index (Pagefind) ---");
     execSync("npx pagefind --site _site", {
       cwd: ROOT_DIR,
       stdio: "inherit",

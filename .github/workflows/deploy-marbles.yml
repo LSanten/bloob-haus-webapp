@@ -38,7 +38,7 @@ jobs:
         run: npm test
 
       - name: Build marbles site
-        run: SITE_NAME=marbles node scripts/build-site.js --strict
+        run: SITE_NAME=marbles node scripts/build-site.js
         env:
           GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 

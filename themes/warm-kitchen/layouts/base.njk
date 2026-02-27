@@ -2,11 +2,11 @@
 <html lang="{{ site.languageCode }}">
     {% include "partials/head.njk" %}
     <body>
-        {% include "partials/nav.njk" %}
+        {% if not hide_nav %}{% include "partials/nav.njk" %}{% endif %}
 
         <main class="site-main">{% block main %}{{ content | safe }}{% endblock %}</main>
 
-        {% include "partials/footer.njk" %}
+        {% if not hide_footer %}{% include "partials/footer.njk" %}{% endif %}
         {% include "partials/scripts.njk" %}
     </body>
 </html>

@@ -198,7 +198,7 @@ export default async function (eleventyConfig) {
   // Backlinks: compute which pages link to each other
   // Uses addCollection to attach backlinks data to each page.
   // Reads source files from disk (stable API, not Eleventy internals).
-  if (siteConfig.features.backlinks !== false)
+  if (siteConfig.features?.backlinks !== false)
     eleventyConfig.addCollection("withBacklinks", function (collectionApi) {
       const all = collectionApi.getAll();
 

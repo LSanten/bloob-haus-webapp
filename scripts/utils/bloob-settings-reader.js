@@ -105,5 +105,10 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     };
   }
 
+  // Mount path (for subdirectory publishing, e.g., leons.bloob.haus/marbles/)
+  if (bloobSettings.mount_path) {
+    merged.mount_path = bloobSettings.mount_path;
+  }
+
   return merged;
 }

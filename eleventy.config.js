@@ -325,13 +325,24 @@ export default async function (eleventyConfig) {
     });
   }
 
+  // Determine output directory and path prefix based on mount_path
+  // e.g., mount_path: "marbles" → output to _site/marbles/, URLs start with /marbles/
+  const mountPath = siteConfig.mount_path;
+  const outputDir = mountPath ? `_site/${mountPath}` : "_site";
+  const pathPrefix = mountPath ? `/${mountPath}/` : "/";
+
+  if (mountPath) {
+    console.log(`[eleventy] Mount path: /${mountPath}/ → output to ${outputDir}`);
+  }
+
   return {
     dir: {
       input: "src",
       includes: "_includes",
       data: "_data",
-      output: "_site",
+      output: outputDir,
     },
+    pathPrefix,
     markdownTemplateEngine: "njk",
     htmlTemplateEngine: "njk",
   };

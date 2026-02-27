@@ -124,13 +124,17 @@ async function buildSite() {
 
     // Build summary
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    const outputDir = path.join(ROOT_DIR, "_site");
+    const mountPath = config.mount_path;
+    const outputDir = mountPath
+      ? path.join(ROOT_DIR, "_site", mountPath)
+      : path.join(ROOT_DIR, "_site");
 
     console.log("\n========================================");
     console.log("  BUILD COMPLETE");
     console.log("========================================");
-    console.log(`  Site: ${config.site.name}`);
+    console.log(`  Site: ${config.site?.name || siteName}`);
     console.log(`  Theme: ${config.theme}`);
+    if (mountPath) console.log(`  Mount path: /${mountPath}/`);
     console.log(`  Duration: ${duration}s`);
     console.log(`  Output: ${outputDir}`);
     console.log("========================================\n");

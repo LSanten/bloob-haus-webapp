@@ -6,6 +6,36 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 16 - February 27, 2026
+**Worked on:** Marbles deployment, pathPrefix debugging, fridge magnets layout feature
+
+**Marbles Deployment:**
+- Deployed marbles site to `leons.bloob.haus` via Cloudflare Pages
+- Created `deploy-marbles.yml` GitHub Actions workflow
+- Discovered and documented pathPrefix + mount_path doubled-URL bug
+
+**Key Discovery — pathPrefix Bug:**
+- Eleventy's `| url` filter prepends pathPrefix to all URLs
+- When content outputs to a subdirectory (e.g., `_site/marbles/`), using `pathPrefix: "/marbles/"` causes doubled paths: `/marbles/marbles/...`
+- **Temporary workaround:** Use folder structure within single repo
+- **Needs proper fix for Phase 3:** Multi-repo "haus with rooms" architecture requires working mount_path (each room = separate repo mounted at subpath)
+- Documented in `docs/implementation-plans/DECISIONS.md` with options for proper fix
+
+**Fridge Magnets Visualizer:**
+- Added position-aware input parsing: `[text](x,y)` format stores coordinates
+- Added "Copy Layout" button to export current magnet positions
+- Restored positions on re-render if coordinates present in input
+
+**Files changed:**
+- `.github/workflows/deploy-marbles.yml` (new)
+- `lib/visualizers/fridge-magnets/browser.js`
+- `scripts/build-site.js` (pagefind mount_path handling)
+- `docs/implementation-plans/DECISIONS.md`
+- `docs/implementation-plans/phases/phase-3/2026-02-25_url-naming-and-multi-site-architecture.md`
+- `docs/TECH-DEBT.md`
+
+---
+
 ### Session 15 - February 26, 2026
 **Worked on:** `_bloob-settings.md` as source of truth for site configuration
 

@@ -19,6 +19,7 @@ Tracked items with severity, impact, and target resolution phase.
 | 13 | Marbles: Truncated attachment filenames with parentheses | Low | Missing images | Rename files in vault | ⬜ Open |
 | 14 | Marbles: HEIC image not web-compatible (IMG_7966.heic) | Low | Missing image | Convert to JPEG/PNG | ⬜ Open |
 | 15 | CI: No image optimization cache (rebuilds all images every deploy) | Medium | Slow builds | Add GH Actions cache step | ⬜ Open |
+| 16 | mount_path causes doubled URLs (pathPrefix bug) | High | Blocks multi-repo "haus with rooms" architecture | Fix before Phase 3 multi-repo | ⬜ Open |
 
 ## How to Use
 - Add new items when you notice debt

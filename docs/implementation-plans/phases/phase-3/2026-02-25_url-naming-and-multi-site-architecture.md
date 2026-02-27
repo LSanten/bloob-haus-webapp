@@ -75,6 +75,34 @@ For **webapp users (Type B, no Obsidian):** there's no GitHub repo and no folder
 
 ---
 
+## Technical Note: mount_path Bug & Temporary Workaround (2026-02-27)
+
+**Bug discovered:** Eleventy's `| url` filter + `pathPrefix` causes doubled paths when mounting content to a subdirectory.
+
+```
+Expected: /marbles/ADAPT-CHANGE/
+Actual:   /marbles/marbles/ADAPT-CHANGE/  ← doubled!
+```
+
+**Temporary workaround (single-repo):** Put content in folders within one repo. Folder structure = URL structure.
+
+**This does NOT work for the target architecture** where each room is a separate repo:
+```
+leons.bloob.haus/           ← Haus landing (lists all rooms)
+leons.bloob.haus/marbles/   ← Room from bloob-haus-marbles repo
+leons.bloob.haus/recipes/   ← Room from bloob-haus-recipes repo
+```
+
+**mount_path needs a proper fix** for multi-repo mounting. Options to explore:
+1. Don't use pathPrefix; rewrite URLs in build postprocessing
+2. Use Cloudflare Workers for path routing
+3. Custom `| url` filter that's mount_path-aware
+4. Build each room separately, merge output directories
+
+See [DECISIONS.md](../../DECISIONS.md) and [TECH-DEBT.md](../../TECH-DEBT.md) #16 for details.
+
+---
+
 ## Reserved / System URLs
 
 These paths should be treated as reserved at the platform level — user vault folders with these names must be blocked or warned about:

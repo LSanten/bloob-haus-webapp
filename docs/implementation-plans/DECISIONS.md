@@ -38,6 +38,7 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-19 | Preprocessor cleans src/ before writing | Prevents cross-site content contamination on local builds. All .md files and media/ removed from src/ before each build. |
 | 2026-02-19 | Per-file exclude_files list in YAML | Allows excluding specific files by name (e.g., `ALL`) without needing a blocklist tag in the file itself. |
 | 2026-02-19 | Reserved directory filtering in section discovery | `media`, `assets`, `tags`, `pagefind`, `og`, `search` excluded from auto-discovered sections to prevent non-content dirs appearing in nav. |
+| 2026-02-27 | Folder-based URL structure over pathPrefix (temporary workaround) | Eleventy's pathPrefix + subdirectory output causes doubled paths. Folder structure works for now; proper mount_path fix needed for multi-repo architecture. See detailed record below. |
 
 ---
 
@@ -148,3 +149,87 @@ Final HTML page
 | markdown-it + plugins | Standard markdown (`- [ ]`, `**bold**`) | Markdown |
 | addTransform | Post-render HTML modifications | HTML |
 | browser.js | Interactivity, state, DOM enhancement | Rendered DOM |
+
+---
+
+### Folder-Based URL Structure Over pathPrefix (2026-02-27)
+
+**Context:** Needed to deploy marbles content to `leons.bloob.haus/marbles/` while potentially having other content at the root. Attempted to use Eleventy's `pathPrefix` configuration combined with `mount_path` to achieve this.
+
+**Problem discovered:** Eleventy's `| url` filter prepends the pathPrefix to every path. When content is already output to a subdirectory (e.g., `_site/marbles/`), using `pathPrefix: "/marbles/"` causes **doubled paths**:
+
+```
+Expected: /marbles/ADAPT-CHANGE/
+Actual:   /marbles/marbles/ADAPT-CHANGE/
+```
+
+**Why this happens:**
+1. Content in the `marbles/` folder outputs to `_site/marbles/page-name/`
+2. Templates use `| url` filter for assets and links
+3. pathPrefix `/marbles/` gets prepended to all URLs
+4. Result: `/marbles/` (from pathPrefix) + `/marbles/` (from folder) = doubled
+
+**Options explored:**
+1. **pathPrefix only** — works for deploying entire site to subdirectory, but doesn't allow content at root
+2. **Output directory manipulation** — moving content to root output with pathPrefix caused permalink conflicts
+3. **basePath global data** — still doubled because `| url` filter is independent of folder structure
+4. **Folder-based approach (chosen)** — put content in a `marbles/` folder, no pathPrefix
+
+**Decision:** Use folder structure to create URL paths, not pathPrefix.
+
+**How it works:**
+```
+Content repo structure:
+  marbles/           ← content folder
+    ADAPT-CHANGE.md
+
+Build output:
+  _site/
+    marbles/
+      ADAPT-CHANGE/
+        index.html
+
+URLs:
+  leons.bloob.haus/marbles/ADAPT-CHANGE/  ✓
+```
+
+**Rationale:**
+- Simpler mental model: folder = URL path
+- No template changes needed (hardcoded asset paths work)
+- No pathPrefix configuration complexity
+- Avoids subtle bugs from pathPrefix + subdirectory interaction
+
+**When pathPrefix IS appropriate:**
+- Deploying an **entire site** to a subdirectory (e.g., GitHub Pages at `/repo-name/`)
+- When ALL content lives under that prefix
+- NOT for mounting specific content at a subpath while having other content at root
+
+**This is a TEMPORARY WORKAROUND — not the final architecture.**
+
+**Future multi-repo architecture requires proper mount_path:**
+The long-term vision is:
+```
+leons.bloob.haus/           ← "Haus" landing page (shows all rooms)
+leons.bloob.haus/marbles/   ← Room 1 (separate repo: bloob-haus-marbles)
+leons.bloob.haus/recipes/   ← Room 2 (separate repo: bloob-haus-recipes)
+leons.bloob.haus/notes/     ← Room 3 (separate repo: bloob-haus-notes)
+```
+
+Each room is a **separate GitHub repo** mounted at a subpath. This requires:
+1. A working `mount_path` implementation that doesn't double URLs
+2. A "haus" root that aggregates/displays all connected rooms
+3. Proper handling of pathPrefix OR alternative URL rewriting approach
+
+**The bug to fix:** Eleventy's `| url` filter behavior with pathPrefix. Options:
+- Don't use pathPrefix; rewrite URLs in postprocessing
+- Use Cloudflare Workers/redirect rules for path mounting
+- Custom Eleventy filter that's mount_path-aware
+
+**Current workaround (single-repo, folder-based):**
+For now, putting content in folders within one repo works. But this doesn't scale to the multi-repo "haus with rooms" vision.
+
+**Implications for future URL/API work:**
+1. **mount_path needs a proper fix** — the concept is right, the implementation has a bug
+2. **Haus landing pages** — need a way to generate a root page that lists all mounted rooms
+3. **Cross-room linking** — links between rooms (separate repos) need special handling
+4. **Reserved paths:** System paths (`/assets/`, `/tags/`, `/search/`) at root must not conflict with room names

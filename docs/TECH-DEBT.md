@@ -15,6 +15,10 @@ Tracked items with severity, impact, and target resolution phase.
 | 9 | Hugo output dirs still referenced in preprocess-content.js | Low | Dead code | Cleanup session | ⬜ Open |
 | 10 | Local builds share single src/ and _site/ dir | Low | Must build sequentially | Future: per-site workspaces | ⬜ Open |
 | 11 | eleventyComputed.js duplicates slug strategies inline | Low | Can't import ESM in Eleventy data files | Accept or migrate to CJS | ⬜ Open |
+| 12 | Marbles: 25 broken links (MILIT-A/B, MESH-CAP-J/K/L/M, etc.) | Low | Dead links on site | Content cleanup | ⬜ Open |
+| 13 | Marbles: Truncated attachment filenames with parentheses | Low | Missing images | Rename files in vault | ⬜ Open |
+| 14 | Marbles: HEIC image not web-compatible (IMG_7966.heic) | Low | Missing image | Convert to JPEG/PNG | ⬜ Open |
+| 15 | CI: No image optimization cache (rebuilds all images every deploy) | Medium | Slow builds | Add GH Actions cache step | ⬜ Open |
 
 ## How to Use
 - Add new items when you notice debt

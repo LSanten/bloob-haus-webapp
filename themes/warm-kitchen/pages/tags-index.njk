@@ -12,7 +12,7 @@ eleventyExcludeFromCollections: true
     {% for tag in collections.tagList %}
         {% set tagCount = collections[tag].length %}
         <li>
-            <a href="/tags/{{ tag | slugify }}/"
+            <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}"
                class="tag-badge"
                style="--tag-weight: {{ tagCount }}">
                 {{ tag }} <span class="tag-count">({{ tagCount }})</span>

@@ -14,7 +14,7 @@ layout: layouts/base.njk
         {% if displayTags.length %}
         <div class="recipe-tags">
             {% for tag in displayTags %}
-            <a href="/tags/{{ tag | slugify }}/"
+            <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}"
                class="tag-badge"
                data-pagefind-filter="tag">{{ tag }}</a>
             {% endfor %}

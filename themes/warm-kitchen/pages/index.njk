@@ -9,8 +9,8 @@ permalink: /
     </header>
 
     <div class="home-search">
-        <link href="/pagefind/pagefind-ui.css" rel="stylesheet">
-        <script src="/pagefind/pagefind-ui.js"></script>
+        <link href="{{ "/pagefind/pagefind-ui.css" | url }}" rel="stylesheet">
+        <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
         <div id="search"></div>
         <script>
             window.addEventListener('DOMContentLoaded', function() {
@@ -37,7 +37,7 @@ permalink: /
         {% for tag in collections.tagList %}
             {% set tagCount = collections[tag].length %}
             <li>
-                <a href="/tags/{{ tag | slugify }}/"
+                <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}"
                    class="tag-badge"
                    style="--tag-weight: {{ tagCount }}">
                     {{ tag }} <span class="tag-count">({{ tagCount }})</span>
@@ -61,6 +61,6 @@ permalink: /
             </a>
             {% endfor %}
         </div>
-        <a href="/recipes/" class="view-all">View all recipes →</a>
+        <a href="{{ "/recipes/" | url }}" class="view-all">View all recipes →</a>
     </section>
 </div>

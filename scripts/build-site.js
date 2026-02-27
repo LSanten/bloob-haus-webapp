@@ -170,7 +170,8 @@ async function buildEleventy(config) {
   // Step 8: Build Pagefind search index
   if (config.features?.search) {
     console.log("\n--- Step 8: Building search index (Pagefind) ---");
-    execSync("npx pagefind --site _site", {
+    const pagefindSite = config.mount_path ? `_site/${config.mount_path}` : "_site";
+    execSync(`npx pagefind --site ${pagefindSite}`, {
       cwd: ROOT_DIR,
       stdio: "inherit",
     });

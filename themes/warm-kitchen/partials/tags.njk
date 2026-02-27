@@ -3,7 +3,7 @@
 {% if displayTags.length %}
 <div class="recipe-tags">
     {% for tag in displayTags %}
-    <a href="/tags/{{ tag | slugify }}/" class="tag-badge">{{ tag }}</a>
+    <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge">{{ tag }}</a>
     {% endfor %}
 </div>
 {% endif %}

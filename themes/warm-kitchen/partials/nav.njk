@@ -1,13 +1,13 @@
 <nav class="site-nav">
     <div class="nav-container">
-        <a href="/" class="site-title">{{ site.title }}</a>
+        <a href="{{ "/" | url }}" class="site-title">{{ site.title }}</a>
 
         <div class="nav-links">
             {% for section in collections.sections %}
-            <a href="/{{ section }}/">{{ section | titleCase }}</a>
+            <a href="{{ ("/" + section + "/") | url }}">{{ section | titleCase }}</a>
             {% endfor %}
-            <a href="/tags/">Tags</a>
-            <a href="/search/" class="nav-search" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
+            <a href="{{ "/tags/" | url }}">Tags</a>
+            <a href="{{ "/search/" | url }}" class="nav-search" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
         </div>
     </div>
 </nav>

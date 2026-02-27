@@ -175,34 +175,25 @@ export default async function (eleventyConfig) {
   });
 
   // Dynamic per-section collections
-  // Auto-discovers top-level content folders and creates a collection for each.
-  // This replaces hardcoded per-section collections, enabling multi-site support.
+  // Auto-discovers top-level content folders in src/ and registers a collection for each.
+  // Each section gets its own top-level addCollection call (Eleventy doesn't support
+  // registering collections inside another collection callback — they resolve too late).
   // Collection names are camelCased from folder slugs (e.g., "lists-of-favorites" → "listsOfFavorites").
-  eleventyConfig.addCollection("_dynamicSections", function (collectionApi) {
-    const sectionSet = new Set();
-    const sectionItems = {};
+  const srcDirs = readdirSync("src", { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !RESERVED_DIRS.has(d.name) && !d.name.startsWith("_"))
+    .map((d) => d.name);
 
-    collectionApi.getAll().forEach((item) => {
-      const parts = item.url.split("/").filter(Boolean);
-      if (parts.length > 1 && !RESERVED_DIRS.has(parts[0])) {
-        const section = parts[0];
-        sectionSet.add(section);
-        if (!sectionItems[section]) sectionItems[section] = [];
-        sectionItems[section].push(item);
-      }
+  for (const section of srcDirs) {
+    const collectionName = section.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    eleventyConfig.addCollection(collectionName, function (collectionApi) {
+      return collectionApi.getAll()
+        .filter((item) => {
+          const parts = item.url.split("/").filter(Boolean);
+          return parts.length > 1 && parts[0] === section;
+        })
+        .sort((a, b) => (b.date || 0) - (a.date || 0));
     });
-
-    // Register a collection for each discovered section
-    for (const section of sectionSet) {
-      // Convert slug to camelCase for collection name (e.g., "lists-of-favorites" → "listsOfFavorites")
-      const collectionName = section.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-      eleventyConfig.addCollection(collectionName, () =>
-        sectionItems[section].sort((a, b) => (b.date || 0) - (a.date || 0)),
-      );
-    }
-
-    return [...sectionSet].sort();
-  });
+  }
 
   // Backlinks: compute which pages link to each other
   // Uses addCollection to attach backlinks data to each page.

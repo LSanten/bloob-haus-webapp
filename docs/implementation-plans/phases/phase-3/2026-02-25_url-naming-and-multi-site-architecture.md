@@ -2,7 +2,7 @@
 
 **Status:** Planning / thinking-out-loud
 **Created:** 2026-02-25
-**Related:** [ROADMAP.md Phase 3](../ROADMAP.md), [Obsidian Plugin Plan](../phase-2/2026-02-25_Obsidian%20plugin.md)
+**Related:** [ROADMAP.md Phase 3](../ROADMAP.md), [Obsidian Plugin Plan](../phase-2/2026-02-25_Obsidian%20plugin.md), [`_bloob-settings.md` spec](../phase-2/2026-02-26_bloob-settings-file.md)
 
 ---
 

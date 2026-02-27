@@ -1,0 +1,27 @@
+{
+  "name": "fridge-magnets",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Interactive fridge magnet board — drag and rearrange word cards to compose sentences",
+  "activation": {
+    "method": "code-fence",
+    "description": "Place a ```fridge-magnets code fence in markdown. Cards pre-load from the 'cards' string. Users can drag, rearrange, and add new canvases."
+  },
+  "files": {
+    "transform": "index.js",
+    "browser": "browser.js",
+    "styles": "styles.css"
+  },
+  "settings": {
+    "cards": {
+      "type": "string",
+      "default": "",
+      "description": "Pre-loaded card text. Wrap each card in [brackets]: \"[One] [gas burner] [equals] [four cars]\""
+    },
+    "height": {
+      "type": "number",
+      "default": 280,
+      "description": "Initial canvas area height in pixels"
+    }
+  }
+}

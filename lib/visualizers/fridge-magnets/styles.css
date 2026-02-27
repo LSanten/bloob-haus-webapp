@@ -1,0 +1,204 @@
+/* ── Fridge Magnets Visualizer ────────────────────────────────────────────
+   No background — the page's own background shows through everywhere.
+   Uses fm- prefix on all classes to avoid collisions with page styles.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.fm-root {
+  margin: 1.5rem 0;
+}
+
+/* ── Canvas wrapper ── */
+.fm-canvas-wrapper {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-top: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  margin-bottom: 1rem;
+}
+
+/* ── Header bar ── */
+.fm-canvas-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.fm-canvas-stats {
+  font-size: 11px;
+  color: #888;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.3px;
+  flex: 1;
+}
+
+.fm-copy-btn,
+.fm-clear-btn {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  color: #555;
+  transition: background 0.1s, border-color 0.1s;
+  white-space: nowrap;
+}
+
+.fm-copy-btn:hover,
+.fm-clear-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.fm-copy-btn.fm-copied {
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+
+/* ── Canvas area — the draggable surface ── */
+.fm-canvas-area {
+  position: relative;
+  padding: 10px;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+/* ── Cards ── */
+.fm-card {
+  position: absolute;
+  background: #fff;
+  border: 1.5px solid #2a2a2a;
+  padding: 6px 10px;
+  font-size: 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  white-space: nowrap;
+  height: 36px;
+  line-height: 22px;
+  cursor: grab;
+  visibility: hidden;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.1s;
+}
+
+.fm-card:hover {
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+.fm-card.fm-selected {
+  border: 2px solid #1a56db;
+  box-shadow:
+    0 0 0 2px rgba(26, 86, 219, 0.2),
+    2px 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.fm-card.fm-dragging {
+  cursor: grabbing;
+  box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+/* ── Lasso ── */
+.fm-lasso {
+  position: absolute;
+  border: 1.5px dashed #1a56db;
+  background: rgba(26, 86, 219, 0.06);
+  pointer-events: none;
+  z-index: 200;
+}
+
+/* ── Input area ── */
+.fm-canvas-input-area {
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fm-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.fm-canvas-input-area textarea {
+  flex: 1;
+  height: 56px;
+  padding: 7px 9px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  resize: vertical;
+  border-radius: 2px;
+  line-height: 1.5;
+  color: #222;
+  outline: none;
+}
+
+.fm-canvas-input-area textarea:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.fm-load-btn {
+  padding: 7px 16px;
+  background: #2a2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  align-self: flex-start;
+  transition: background 0.1s;
+}
+
+.fm-load-btn:hover {
+  background: #444;
+}
+
+.fm-input-hint {
+  font-size: 10px;
+  color: #999;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+.fm-input-hint b {
+  color: #666;
+}
+
+/* ── Add canvas button ── */
+.fm-add-canvas-wrap {
+  margin-top: 4px;
+}
+
+.fm-add-canvas-btn {
+  padding: 9px 28px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  color: #666;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fm-add-canvas-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.35);
+  color: #333;
+}

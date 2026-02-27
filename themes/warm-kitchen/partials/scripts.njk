@@ -1,4 +1,4 @@
 <!-- Visualizers (auto-generated from lib/visualizers/) -->
 {% for vis in visualizers %}{% if vis.hasJs %}
-<script src="/assets/js/visualizers/{{ vis.name }}.js"></script>
+<script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
 {% endif %}{% endfor %}

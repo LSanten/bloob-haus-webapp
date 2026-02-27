@@ -16,7 +16,7 @@
     "cards": {
       "type": "string",
       "default": "",
-      "description": "Pre-loaded card text. Wrap each card in [brackets]: \"[One] [gas burner] [equals] [four cars]\""
+      "description": "Pre-loaded card text. Use [text] for auto-layout or [text](x,y) for positioned cards: \"[One](10,10) [gas burner](80,10)\""
     },
     "height": {
       "type": "number",

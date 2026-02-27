@@ -33,6 +33,7 @@
 }
 
 .fm-copy-btn,
+.fm-copy-layout-btn,
 .fm-clear-btn {
   padding: 3px 9px;
   font-size: 11px;
@@ -48,11 +49,13 @@
 }
 
 .fm-copy-btn:hover,
+.fm-copy-layout-btn:hover,
 .fm-clear-btn:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
-.fm-copy-btn.fm-copied {
+.fm-copy-btn.fm-copied,
+.fm-copy-layout-btn.fm-copied {
   border-color: #4caf50;
   color: #2e7d32;
 }

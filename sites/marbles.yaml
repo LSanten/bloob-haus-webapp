@@ -9,3 +9,7 @@ site:
 content:
   repo: "LSanten/bloob-haus-marbles"
   branch: "main"
+
+# Build features
+features:
+  search: true   # Pagefind search index — enables search bar on homepage

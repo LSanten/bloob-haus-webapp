@@ -5,7 +5,7 @@
 
 :root {
   /* Palette */
-  --bg-color: #EEE2F3;          /* whole page: soft lavender */
+  --bg-color: #dce8f8;          /* whole page: soft blue */
   --banner-bg: #ffffff;          /* banner: white */
   --text-color: #333333;
   --text-light: #666666;
@@ -46,7 +46,7 @@
    ================================ */
 
 body {
-  background: var(--bg-color);   /* soft lavender */
+  background: var(--bg-color);   /* soft blue */
   color: var(--text-color);
   font-family: var(--font-body);
   font-size: 18px;
@@ -173,7 +173,7 @@ th {
 .site-banner {
   background: var(--banner-bg);   /* white */
   text-align: center;
-  padding: var(--spacing-xl) var(--spacing-sm) 80px; /* extra bottom for wave overlap */
+  padding: var(--spacing-xl) var(--spacing-sm) 180px; /* large bottom so wave sits far below content */
   position: relative;
   /* no overflow:hidden — the bottom wave SVG needs to protrude */
 }
@@ -234,18 +234,18 @@ th {
   border-color: rgba(145, 76, 154, 0.35);
 }
 
-/* Bottom wave — filled shape that bridges banner → body (lavender) */
+/* Bottom wave — filled shape that bridges banner (white) → body (blue) */
 .site-banner__wave {
   position: absolute;
-  bottom: -1px;      /* flush with bottom edge, bleeds into lavender body */
+  bottom: -1px;      /* flush with bottom edge, bleeds into blue body */
   left: 0;
   width: 100%;
-  height: auto;
+  height: 90px;      /* fixed height — prevents wave from scaling too tall */
   z-index: 2;
 }
 
 .site-banner__wave path {
-  fill: var(--bg-color);   /* lavender — matches body, creates organic bottom edge */
+  fill: var(--bg-color);   /* blue — matches body, creates organic bottom edge */
   stroke: none;
 }
 
@@ -334,23 +334,23 @@ th {
 
 .site-footer {
   background: var(--footer-bg);  /* white */
-  padding: calc(var(--spacing-xl) + 60px) var(--spacing-sm) var(--spacing-xl);  /* top pad accounts for wave bleed */
+  padding: calc(var(--spacing-xl) + 89px) var(--spacing-sm) var(--spacing-xl);  /* top pad accounts for wave bleed */
   margin-top: var(--spacing-xl);
   position: relative;
 }
 
-/* Top wave — filled white shape that bleeds above footer into lavender body */
+/* Top wave — filled white shape that bleeds above footer into blue body */
 .site-footer__wave {
   position: absolute;
-  top: -60px;   /* protrudes above footer into the lavender body */
+  top: -89px;   /* protrudes 89px above footer into blue body */
   left: 0;
   width: 100%;
-  height: auto;
+  height: 90px;    /* fixed height */
   z-index: 2;
 }
 
 .site-footer__wave path {
-  fill: var(--footer-bg);  /* white — footer peeking up into lavender body */
+  fill: var(--footer-bg);  /* white — footer peeking up into blue body */
   stroke: none;
 }
 
@@ -542,6 +542,40 @@ details > *:not(summary) {
   font-size: 0.8rem;
   color: var(--text-light);
   margin-left: 0.5em;
+}
+
+/* ================================
+   Search (Pagefind UI overrides)
+   ================================ */
+
+.home-search {
+  margin: 0 0 var(--spacing-xl);
+}
+
+.pagefind-ui__search-input {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 999px !important;
+  font-family: var(--font-body) !important;
+  color: var(--text-color) !important;
+}
+
+.pagefind-ui__search-input:focus {
+  outline: none !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 3px rgba(145, 76, 154, 0.12) !important;
+}
+
+.pagefind-ui__search-clear {
+  color: var(--text-light) !important;
+}
+
+.pagefind-ui__result-link {
+  color: var(--link-color) !important;
+}
+
+.pagefind-ui__result-excerpt {
+  color: var(--text-light) !important;
 }
 
 /* ================================

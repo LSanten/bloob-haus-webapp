@@ -17,6 +17,7 @@ public/
 src/_includes/
 src/_data/site.js
 src/assets/css/main.css
+src/assets/objects/
 src/*.njk
 src/recipes/index.njk
 src/notes/index.njk

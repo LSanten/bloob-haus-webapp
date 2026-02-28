@@ -39,6 +39,11 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-19 | Per-file exclude_files list in YAML | Allows excluding specific files by name (e.g., `ALL`) without needing a blocklist tag in the file itself. |
 | 2026-02-19 | Reserved directory filtering in section discovery | `media`, `assets`, `tags`, `pagefind`, `og`, `search` excluded from auto-discovered sections to prevent non-content dirs appearing in nav. |
 | 2026-02-27 | Folder-based URL structure over pathPrefix (temporary workaround) | Eleventy's pathPrefix + subdirectory output causes doubled paths. Folder structure works for now; proper mount_path fix needed for multi-repo architecture. See detailed record below. |
+| 2026-02-27 | marbles-pouch body color #dce8f8 (light blue) not lavender | Visual decision based on old site reference; white banner, blue body, white footer creates clear hierarchy |
+| 2026-02-27 | SVG waves use filled paths with all y-values within viewBox | Peaks outside viewBox create disconnected arch artifacts; in-bounds paths render correctly at all viewport widths |
+| 2026-02-27 | Remove `<h1>` from page.njk layout | Marble content files provide their own `# Title` heading; rendering it in both layout and markdown caused duplication |
+| 2026-02-27 | Default banner image = marble.png when bloob_object not set | Most content is marbles; marble.png (woven-marble-3.png) as universal fallback avoids blank banners |
+| 2026-02-27 | bloob-object: marble added to all existing marbles content files | 471 files updated; ensures consistent banner rendering before user updates individual files |
 
 ---
 

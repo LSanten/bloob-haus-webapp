@@ -1,7 +1,7 @@
 # Implementation Plan: Marbles Pouch Theme + Object Identity System
 
 **Created:** 2026-02-28
-**Status:** In progress — Parts 1, 2, 6 complete; Parts 3, 4, 5 pending
+**Status:** In progress — Parts 1, 2, 6 complete; visual polish + search done; Parts 3, 4 pending; Part 7 deploy in progress
 **Phase:** 2.5 (parallel to existing phase-2 work)
 **Goal:** Build the `marbles-pouch` theme for `leons.bloob.haus`, standardize the Bloob Object identity system, and add base-layer features (image zoom, LaTeX) that benefit all themes.
 
@@ -66,8 +66,8 @@ bloob-settings: objects
   - Pass through as `bloob_object` in processed frontmatter
 - [x] **O3** — Add `bloob-objects-reader.js` as a preprocessing step in `preprocess-content.js` (runs once before per-file processing, like `graph-builder.js`)
 - [x] **O4** — Add `bloobObjects` to `src/_data/` so it's available in all templates
-- [ ] **O5** — Ship starter `_bloob-objects.md` in the marbles content repo with marble, note, letter, pouch types
-- [ ] **O6** — Ship starter object images in `themes/marbles-pouch/assets/objects/` (can be placeholder SVGs initially)
+- [x] **O5** — Added `bloob-object: marble` to all 471 `.md` files in marbles content repo (2026-02-27)
+- [x] **O6** — Ship starter object images in `themes/marbles-pouch/assets/objects/`: `marble.png` (woven-marble-3.png from old site), plus `shape-2/3/4.png` decorative shapes; note/letter/pouch still need dedicated images
 
 **Decisions:**
 - `_bloob-objects.md` lives in the **content repo root** (user-owned, per-site)
@@ -176,12 +176,10 @@ themes/marbles-pouch/
   - CC license mark
 - [x] **T7** — Create `themes/marbles-pouch/pages/index.njk`
   - Homepage banner uses a special homepage object entry (or site.title/description)
-  - Lists recent marbles or links to collections
+  - Lists recent marbles + Pagefind search bar (enabled via `features.search: true` in site YAML)
   - Note: homepage config is currently hardcoded; document this as future work
 - [x] **T8** — Create `themes/marbles-pouch/pages/404.njk`, `tags.njk`, `feed.njk`
-- [ ] **T9** — Add object type images to `themes/marbles-pouch/assets/objects/`
-  - `marble.png` — use `woven-marble-3.png` from old site as starting point
-  - Others — placeholder SVGs initially
+- [x] **T9** — Add `marble.png` to `themes/marbles-pouch/assets/objects/` (woven-marble-3.png from old site); `note.png`, `letter.png`, `pouch.png` still pending — `_bloob-objects.md` uses `none` for these until images are created
 
 ### Homepage banner note
 Homepages don't have a `bloob-object` type; their banner is currently hardcoded per theme. This is a known gap — a future `_bloob-homepage.md` or `homepage:` section in `_bloob-settings.md` could standardize this. For now, `pages/index.njk` hardcodes its banner text and image, and this is documented in `themes.md` under Future Considerations.
@@ -348,7 +346,7 @@ KaTeX renders `$...$` (inline) and `$$...$$` (block) math. It's a visualizer bec
 
 ### Prerequisites (must complete Parts 1–6 first)
 
-- [ ] **D1** — Update `sites/marbles.yaml` with theme, features, visualizer config
+- [x] **D1** — Update `sites/marbles.yaml` with `features.search: true`; theme and visualizer config already in place
 - [ ] **D2** — Ensure marbles content repo (`LSanten/bloob-haus-marbles`) has `_bloob-settings.md` and `_bloob-objects.md`
 - [ ] **D3** — Local test: `SITE_NAME=marbles npm run build` succeeds
 - [ ] **D4** — Local dev server test: `SITE_NAME=marbles npm run dev` renders correctly

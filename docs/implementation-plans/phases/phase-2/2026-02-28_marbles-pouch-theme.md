@@ -392,6 +392,33 @@ D1-D8 (deploy)
 | Pouch visualizer (marble grid) | Phase 4+ | When `bloob-object: pouch`, render links as visual grid |
 | Bookshelf visualizer | Phase 4+ | When `bloob-object: bookshelf`, render links as books |
 | `<details>` circles preview indicator | Deferred | Old site showed image circles of content inside collapsed sections — omit from base scope |
+| Magic machine delivery model for collections | Needs design — see note below | Old Python scripts ran locally; future must work in web/cloud context |
+
+### Magic Machines for Collections — Design Note
+
+The old marbles site had Python scripts that ran locally to maintain frontmatter on `.md` files: adding `date_created`, `date_lastchanged`, `bloob-object`, tags, and other metadata automatically. We just did this manually for `bloob-object: marble` across 471 files — that was a one-time migration, but going forward this kind of maintenance needs to be systematic and **must not assume local script execution**.
+
+**The core tension:**
+- Magic machines need to write to content files (frontmatter mutation)
+- The future architecture is: user edits in Obsidian → pushes to GitHub → webapp builds → site updates
+- There is no guaranteed "local Python environment" in that loop
+
+**Three possible delivery models to evaluate:**
+
+1. **GitHub Actions on push** — A workflow runs on every push to the content repo. It checks for missing frontmatter fields and opens a PR (or commits directly to main) with additions. Runs in the cloud, no local dependency. Downside: async (user pushes, then waits for bot commit), potential commit loops.
+
+2. **Obsidian plugin (client-side)** — A Bloob Haus Obsidian plugin runs magic machines locally on save/open. Writes frontmatter before the user ever pushes. Upside: instant, user sees changes immediately. Downside: requires plugin installation and maintenance; doesn't work for users who edit outside Obsidian.
+
+3. **Build-time normalization (read-only)** — The preprocessor fills in missing values at build time without writing back to source files. `bloob-object` defaults to `marble` if missing. `date_created` falls back to git log. No source mutation. Upside: zero delivery complexity. Downside: metadata never persists back to the vault; Obsidian Dataview queries won't see it; user can't see or correct it in their editor.
+
+**Likely answer: a combination**
+- Build-time normalization for display (preprocessor fills gaps so the site never breaks)
+- GitHub Actions bot for durable backfill (runs once when a field is missing, writes it back to the repo)
+- Obsidian plugin as a future enhancement (not required for v1)
+
+**This affects:** `bloob-object`, `date_created`, `date_lastchanged`, tags, any future auto-generated fields.
+
+**Action:** Design this properly before building any new magic machine. The current `bloob-object: marble` backfill was done manually as a one-time migration — this is not a scalable pattern for new users or new object types.
 
 ---
 

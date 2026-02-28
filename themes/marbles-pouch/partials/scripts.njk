@@ -1,0 +1,16 @@
+{# Visualizer scripts (auto-generated from lib/visualizers/) #}
+{% for vis in visualizers %}{% if vis.hasJs %}
+<script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
+{% endif %}{% endfor %}
+
+{# Image zoom — medium-zoom, on by default (opt-out via features.image_zoom: false in _bloob-settings.md) #}
+{% if site.features.image_zoom != false %}
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mediumZoom('article img:not(.no-zoom)', {
+      background: 'var(--zoom-overlay-bg, rgba(0,0,0,0.85))'
+    });
+  });
+</script>
+{% endif %}

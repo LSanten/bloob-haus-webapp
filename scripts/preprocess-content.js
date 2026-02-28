@@ -30,6 +30,10 @@ import { stripComments } from "./utils/comment-stripper.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
+import {
+  readBloobObjects,
+  normalizeBloobObject,
+} from "./utils/bloob-objects-reader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -114,6 +118,10 @@ export async function preprocessContent({
     contentDir,
     obsidianConfig.attachmentFolderPath,
   );
+
+  // Step 4.5: Read bloob-objects registry (once per build)
+  console.log("\n--- Step 4.5: Reading bloob-objects registry ---");
+  const bloobObjectsRegistry = await readBloobObjects(contentDir);
 
   // Step 5: Clean and prepare output directories
   console.log("\n--- Step 5: Preparing output directories ---");
@@ -213,11 +221,15 @@ export async function preprocessContent({
       perPageLinks[pageInfo.url] = { title: pageTitle, outgoing };
     }
 
+    // 6h: Normalize bloob-object type
+    const bloobObject = normalizeBloobObject(frontmatter["bloob-object"]);
+
     const outputFrontmatter = {
       ...frontmatter,
       title: pageTitle,
       slug: pageInfo?.slug,
       tags: pageTags,
+      ...(bloobObject && { bloob_object: bloobObject }),
     };
 
     // Collect page data for tag index
@@ -311,6 +323,14 @@ export async function preprocessContent({
       console.warn(`[preprocess] Hook failed (${hookFile}): ${e.message}`);
     }
   }
+
+  // Step 8.5: Write bloobObjects.json
+  console.log("\n--- Step 8.5: Writing bloobObjects.json ---");
+  const bloobObjectsPath = path.join(outputDir, "_data", "bloobObjects.json");
+  await fs.writeJson(bloobObjectsPath, bloobObjectsRegistry, { spaces: 2 });
+  console.log(
+    `[bloob-objects] Wrote ${Object.keys(bloobObjectsRegistry).length} object types to bloobObjects.json`,
+  );
 
   // Step 9: Copy attachments
   console.log("\n--- Step 9: Copying attachments ---");

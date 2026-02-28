@@ -1,0 +1,35 @@
+---
+layout: layouts/base.njk
+---
+<article class="marble-page" data-pagefind-body>
+  {# Hidden image for OG/Pagefind indexing #}
+  {% if image %}
+  <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden />
+  {% endif %}
+
+  <h1 class="page-title">{{ title }}</h1>
+
+  <div class="marble-content">{{ content | safe }}</div>
+
+  {% if tags %}
+  {% set displayTags = tags | filterTagList %}
+  {% if displayTags.length %}
+  <div class="page-tags" data-pagefind-ignore>
+    {% for tag in displayTags %}
+    <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}"
+       class="tag-badge"
+       data-pagefind-filter="tag">{{ tag }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% include "partials/backlinks.njk" %}
+
+  {# Graph visualizer — shown when bundled for this site #}
+  {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
+  <div class="graph-visualizer"
+       data-current-page="{{ page.url }}"
+       {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
+  {% endif %}{% endfor %}
+</article>

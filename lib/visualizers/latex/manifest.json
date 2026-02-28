@@ -1,0 +1,25 @@
+{
+  "name": "latex",
+  "type": "runtime",
+  "version": "1.0.0",
+  "description": "Renders LaTeX math expressions using KaTeX. Supports $...$ (inline) and $$...$$ (block) delimiters.",
+  "activation": {
+    "method": "config",
+    "description": "Add 'latex' to the visualizers list in _bloob-settings.md or sites/*.yaml. Themes can default it on via theme.yaml visualizer_defaults."
+  },
+  "files": {
+    "browser": "browser.js",
+    "styles": "styles.css"
+  },
+  "settings": {
+    "throw_on_error": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, KaTeX throws on parse errors instead of rendering a fallback"
+    }
+  },
+  "notes": {
+    "cdn": "Loads KaTeX 0.16.9 from jsDelivr CDN at runtime. No npm install needed.",
+    "delimiters": "Supports $$...$$  (display/block) and $...$ (inline). Both are enabled by default."
+  }
+}

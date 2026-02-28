@@ -1,0 +1,20 @@
+# marbles-pouch theme
+# Visual theme for Leon's marbles site (leons.bloob.haus / marbles.bloob.haus)
+#
+# Palette: lavender/pink background, purple accent, green highlight
+# Layout:  Single-column, no top nav, banner on every page, SVG wave footer
+
+name: marbles-pouch
+version: "1.0.0"
+description: "A soft lavender theme for sharing marbles — notes shaped for the world."
+
+# Visualizers enabled by default for this theme.
+# Users can override these in _bloob-settings.md under `visualizers:`.
+visualizer_defaults:
+  latex: true
+  graph: true
+
+# Base-layer features enabled by default.
+# Users can override in _bloob-settings.md under `features:`.
+feature_defaults:
+  image_zoom: true

@@ -1,0 +1,79 @@
+{#
+  banner.njk — Object-aware banner for marbles-pouch theme.
+
+  Uses bloob_object (set by preprocessor from frontmatter `bloob-object:`) to look up
+  image + banner_text + description from the bloobObjects data file.
+
+  Falls back to site title/description when no object type is set (e.g. homepage).
+#}
+
+{% set objType = bloob_object %}
+{% set objData = bloobObjects[objType] if objType and bloobObjects[objType] %}
+
+{# Resolve banner image: _bloob-objects.md path → theme asset → nothing #}
+{% if objData and objData.image %}
+  {% set bannerImage = objData.image %}
+{% elif objType %}
+  {% set bannerImage = "/assets/objects/" + objType + ".png" %}
+{% else %}
+  {% set bannerImage = null %}
+{% endif %}
+
+{# Resolve banner text #}
+{% if objData and objData.banner_text %}
+  {% set bannerText = objData.banner_text %}
+{% elif page.url == "/" %}
+  {% set bannerText = site.description %}
+{% else %}
+  {% set bannerText = null %}
+{% endif %}
+
+{# Resolve display name for the modal button label #}
+{% if objData and objData.display_name %}
+  {% set objLabel = objData.display_name | lower %}
+{% elif objType %}
+  {% set objLabel = objType %}
+{% else %}
+  {% set objLabel = "this" %}
+{% endif %}
+
+<div class="site-banner">
+  <div class="site-banner__inner">
+
+    {% if bannerImage %}
+    <img
+      class="site-banner__image no-zoom"
+      src="{{ bannerImage | url }}"
+      alt="{{ objLabel }} image"
+      width="200"
+    />
+    {% endif %}
+
+    {% if bannerText %}
+    <p class="site-banner__text">{{ bannerText }}</p>
+    {% endif %}
+
+    {% if page.url != "/" %}
+    <p class="site-banner__byline">Yours, <a href="{{ site.url }}">Leon</a></p>
+    {% endif %}
+
+    {% if objData and objData.description %}
+    <button
+      class="site-banner__info-btn"
+      id="banner-modal-trigger"
+      aria-haspopup="dialog"
+    >✨ What is a {{ objLabel }}?</button>
+    {% endif %}
+
+  </div>
+
+  {# Decorative shapes — uses theme assets/objects/*.png images #}
+  <img class="banner-shape banner-shape--1 no-zoom" src="{{ "/assets/objects/shape-2.png" | url }}" alt="" aria-hidden="true" width="80">
+  <img class="banner-shape banner-shape--2 no-zoom" src="{{ "/assets/objects/shape-4.png" | url }}" alt="" aria-hidden="true" width="65">
+  <img class="banner-shape banner-shape--3 no-zoom" src="{{ "/assets/objects/shape-3.png" | url }}" alt="" aria-hidden="true" width="80">
+
+  {# Bottom wave — green stroke line that bridges banner → white content area #}
+  <svg class="site-banner__wave" height="100" viewBox="0 0 2204 214" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+    <path d="M2203 213C2136.58 157.994 1942.77 -33.1996 1633.1 53.0486C1414.13 114.038 1200.92 188.208 967.765 118.127C820.12 73.7483 263.977 -143.754 0.999958 158.899" stroke-width="3"/>
+  </svg>
+</div>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="{{ site.languageCode or 'en' }}">
+  {% include "partials/head.njk" %}
+  <body>
+
+    {% if not hide_banner %}
+      {% include "partials/banner.njk" %}
+    {% endif %}
+
+    {% include "partials/banner-modal.njk" %}
+
+    <main class="site-main">
+      {% block main %}{{ content | safe }}{% endblock %}
+    </main>
+
+    {% if not hide_footer %}
+      {% include "partials/footer.njk" %}
+    {% endif %}
+
+    {% include "partials/scripts.njk" %}
+  </body>
+</html>

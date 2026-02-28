@@ -1,0 +1,71 @@
+{#
+  banner-modal.njk — "What is a [object]?" modal for marbles-pouch theme.
+
+  Only rendered when the current page has a bloob_object with a description.
+  Opened by the button in banner.njk.
+#}
+
+{% set objType = bloob_object %}
+{% set objData = bloobObjects[objType] if objType and bloobObjects[objType] %}
+
+{% if objData and objData.description %}
+{% set objLabel = objData.display_name or objType %}
+
+<div
+  class="banner-modal-overlay"
+  id="banner-modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="banner-modal-title"
+>
+  <div class="banner-modal">
+    <button
+      class="banner-modal__close"
+      id="banner-modal-close"
+      aria-label="Close modal"
+    >&times;</button>
+
+    <h3 class="banner-modal__title" id="banner-modal-title">
+      🔮 What is a {{ objLabel | lower }}?
+    </h3>
+
+    <div class="banner-modal__body">
+      {{ objData.description }}
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var overlay = document.getElementById('banner-modal-overlay');
+  var trigger = document.getElementById('banner-modal-trigger');
+  var closeBtn = document.getElementById('banner-modal-close');
+  if (!overlay || !trigger) return;
+
+  trigger.addEventListener('click', function () {
+    overlay.classList.add('is-open');
+    closeBtn.focus();
+  });
+
+  closeBtn.addEventListener('click', function () {
+    overlay.classList.remove('is-open');
+    trigger.focus();
+  });
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('is-open');
+      trigger.focus();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+      overlay.classList.remove('is-open');
+      trigger.focus();
+    }
+  });
+}());
+</script>
+
+{% endif %}

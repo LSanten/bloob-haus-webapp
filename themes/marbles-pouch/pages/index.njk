@@ -1,0 +1,26 @@
+---
+layout: layouts/base.njk
+permalink: /
+hide_banner: false
+eleventyExcludeFromCollections: true
+---
+<div class="home-intro" data-pagefind-ignore>
+  <p>{{ site.description }}</p>
+</div>
+
+<section data-pagefind-ignore>
+  <p class="recent-marbles__title">Recent marbles</p>
+  <ul class="recent-marbles__list">
+  {% set allPages = collections.all | reverse %}
+  {% for page in allPages | head(20) %}
+    {% if page.data.bloob_object or page.data.tags %}
+    <li>
+      <a href="{{ page.url }}">{{ page.data.title }}</a>
+      {% if page.date %}
+      <span class="recent-marbles__date">{{ page.date | dateFormat }}</span>
+      {% endif %}
+    </li>
+    {% endif %}
+  {% endfor %}
+  </ul>
+</section>

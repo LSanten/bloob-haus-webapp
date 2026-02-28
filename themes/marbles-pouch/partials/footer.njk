@@ -1,0 +1,33 @@
+<footer class="site-footer">
+  {# SVG wave border — ported from old site #}
+  <svg class="site-footer__wave" height="60" viewBox="0 0 2204 214" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path
+      d="M2203 213C2136.58 157.994 1942.77 -33.1996 1633.1 53.0486C1414.13 114.038 1200.92 188.208 967.765 118.127C820.12 73.7483 263.977 -143.754 0.999958 158.899"
+      stroke-width="2"
+    />
+  </svg>
+
+  <div class="site-footer__inner">
+    <ul class="site-footer__links">
+      <li><a href="{{ "/" | url }}">home</a></li>
+      {% if site.author and site.author.email %}
+      <li><a href="mailto:{{ site.author.email }}">email</a></li>
+      {% endif %}
+      {% if site.author and site.author.linkedin %}
+      <li><a href="{{ site.author.linkedin }}" target="_blank" rel="noopener">linkedin</a></li>
+      {% endif %}
+      <li><a href="{{ "/feed.xml" | url }}">rss</a></li>
+    </ul>
+
+    <div class="site-footer__license">
+      {% if site.footer_text %}
+        {{ site.footer_text }}
+      {% else %}
+        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">
+          <img src="https://mirrors.creativecommons.org/presskit/logos/cc.logo.svg" alt="Creative Commons" />
+        </a>
+        CC BY-NC-SA 4.0
+      {% endif %}
+    </div>
+  </div>
+</footer>

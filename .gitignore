@@ -34,8 +34,17 @@ src/og/
 # Generated data (preprocessor/visualizer output)
 src/_data/tagIndex.json
 src/_data/visualizers.json
+src/_data/bloobObjects.json
+src/_data/validation-report.json
 src/assets/css/visualizers/
 src/assets/js/
+src/graph-settings.json
+src/graph.json
+
+# Local dev content (populated from content repo at build time)
+src/_bloob-settings.md
+src/_bloob-objects.md
+src/marbles/
 
 # Next.js (for future phases)
 .next/

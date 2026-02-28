@@ -1,0 +1,15 @@
+/**
+ * LaTeX visualizer styles
+ * Loads KaTeX CSS from CDN. This file is a minimal wrapper — the actual
+ * KaTeX rendering styles come from the CDN stylesheet below.
+ */
+
+/* KaTeX CDN stylesheet — loaded via @import so it works as a standard visualizer CSS */
+@import url("https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css");
+
+/* Ensure display math is centered and has breathing room */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}

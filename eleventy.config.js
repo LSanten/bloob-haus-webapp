@@ -63,6 +63,11 @@ export default async function (eleventyConfig) {
   eleventyConfig.addWatchTarget("src/assets/");
   eleventyConfig.addWatchTarget("lib/");
 
+  // Don't watch media — large binary files synced by iCloud/Dropbox cause rebuild loops
+  eleventyConfig.watchIgnores.add("src/media/**");
+  eleventyConfig.watchIgnores.add("src/og/**");
+  eleventyConfig.watchIgnores.add(".cache/**");
+
   // Enable task list checkboxes in markdown (- [ ] and - [x] syntax)
   eleventyConfig.amendLibrary("md", (mdLib) => {
     mdLib.use(taskLists, { enabled: false, label: true });

@@ -10,13 +10,13 @@
 {% set objType = bloob_object %}
 {% set objData = bloobObjects[objType] if objType and bloobObjects[objType] %}
 
-{# Resolve banner image: _bloob-objects.md path → theme asset → nothing #}
+{# Resolve banner image: _bloob-objects.md path → theme asset → marble.png fallback #}
 {% if objData and objData.image %}
   {% set bannerImage = objData.image %}
 {% elif objType %}
   {% set bannerImage = "/assets/objects/" + objType + ".png" %}
 {% else %}
-  {% set bannerImage = null %}
+  {% set bannerImage = "/assets/objects/marble.png" %}
 {% endif %}
 
 {# Resolve banner text #}
@@ -72,8 +72,8 @@
   <img class="banner-shape banner-shape--2 no-zoom" src="{{ "/assets/objects/shape-4.png" | url }}" alt="" aria-hidden="true" width="65">
   <img class="banner-shape banner-shape--3 no-zoom" src="{{ "/assets/objects/shape-3.png" | url }}" alt="" aria-hidden="true" width="80">
 
-  {# Bottom wave — green stroke line that bridges banner → white content area #}
-  <svg class="site-banner__wave" height="100" viewBox="0 0 2204 214" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
-    <path d="M2203 213C2136.58 157.994 1942.77 -33.1996 1633.1 53.0486C1414.13 114.038 1200.92 188.208 967.765 118.127C820.12 73.7483 263.977 -143.754 0.999958 158.899" stroke-width="3"/>
+  {# Bottom wave — filled shape that transitions banner (white) → body (lavender) #}
+  <svg class="site-banner__wave" height="100" viewBox="0 0 2204 214" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+    <path d="M2203 213C2136.58 157.994 1942.77 -33.1996 1633.1 53.0486C1414.13 114.038 1200.92 188.208 967.765 118.127C820.12 73.7483 263.977 -143.754 0.999958 158.899L0 214L2204 214Z"/>
   </svg>
 </div>

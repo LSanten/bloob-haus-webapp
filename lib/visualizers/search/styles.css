@@ -1,0 +1,24 @@
+/* Search Visualizer — Styles
+ *
+ * Loaded automatically in head.njk for all themes via the visualizer CSS
+ * auto-include system (bundle-visualizers.js → assets/css/visualizers/search.css).
+ *
+ * Standard mobile behavior: show search results above tag filters.
+ * PagefindUI renders filters and results side-by-side in .pagefind-ui__drawer;
+ * on mobile we stack them and move filters below results using CSS order.
+ */
+
+@media (max-width: 768px) {
+  .pagefind-ui .pagefind-ui__drawer {
+    flex-direction: column !important;
+  }
+
+  .pagefind-ui .pagefind-ui__results-area {
+    order: 1 !important;
+  }
+
+  .pagefind-ui .pagefind-ui__filter-panel {
+    width: 100% !important;
+    order: 2 !important;
+  }
+}

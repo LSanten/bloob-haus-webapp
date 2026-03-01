@@ -22,6 +22,27 @@ Tracked items with severity, impact, and target resolution phase.
 | 16 | mount_path causes doubled URLs (pathPrefix bug) | High | Blocks multi-repo "haus with rooms" architecture | Fix before Phase 3 multi-repo | ⬜ Open |
 | 17 | buffbaby: image links broken site-wide | High | All images missing on live site | Investigate and fix image path/passthrough config | ⬜ Open |
 | 18 | marbles: compressed/resized images not found (404) | Medium | Missing images on leons.bloob.haus for any optimized image | Debug image optimizer output path vs Eleventy passthrough | ⬜ Open |
+| 19 | warm-kitchen: inline search widget + redundant mobile CSS | Low | Diverges from code-fence standard; mobile fix duplicated in main.css | Migrate warm-kitchen to index.md code-fence approach (see notes) | ⬜ Open |
+
+## Notes
+
+### #19 — warm-kitchen: migrate to index.md code-fence search
+
+**Context:** marbles-pouch was migrated (2026-03-01) to use `\`\`\`search\`\`\`` code fences in the content repo's `index.md`. The search visualizer's `styles.css` now handles mobile reordering (results above filters) as a standard. warm-kitchen still uses the old approach.
+
+**What needs to change:**
+
+1. **`themes/warm-kitchen/pages/index.njk`** — remove the inline `<div class="home-search">` block (hardcoded `new PagefindUI(...)`, inline `<script src="pagefind-ui.js">`). The homepage content should come from the content repo's `index.md` instead.
+
+2. **`themes/warm-kitchen/assets/css/main.css`** — remove the mobile reorder block (lines ~645–659). This is now handled globally by `lib/visualizers/search/styles.css` → `src/assets/css/visualizers/search.css`.
+
+3. **warm-kitchen content repo** — add an `index.md` with a `\`\`\`search\`\`\`` fence (and `\`\`\`tags\`\`\`` if wanted). Match the pattern from `bloob-haus-marbles/index.md`.
+
+4. **Verify** warm-kitchen `head.njk` loads `pagefind-ui.css` in `<head>` (anti-FOUC) — check if it already does via `_base/partials/head.njk` or theme-specific head.
+
+**No FOUC risk** — pagefind-ui.css is already in `<head>` and the visualizer CSS is auto-included. The `order` CSS is layout-only, not a flash concern.
+
+---
 
 ## How to Use
 - Add new items when you notice debt

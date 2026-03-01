@@ -175,6 +175,23 @@ These features are provided by `_base/` and available to all themes automaticall
 | **Backlinks** | `partials/backlinks.njk` | On when `features.backlinks: true` in site config |
 | **OG meta tags** | `partials/head.njk` | Always on |
 
+### Search bar CSS contract
+
+Themes load `/pagefind/pagefind-ui.css` in `head.njk` when `features.search != false`. Theme styling uses CSS custom properties in `main.css`:
+
+```css
+:root {
+  --pagefind-ui-primary: ...;     /* accent color */
+  --pagefind-ui-text: ...;        /* result text */
+  --pagefind-ui-background: ...;  /* widget background */
+  --pagefind-ui-border: ...;      /* input border */
+  --pagefind-ui-tag: ...;         /* tag chip background */
+  --pagefind-ui-font: ...;        /* font family */
+}
+```
+
+Additional overrides can target `.pagefind-ui__*` class selectors. The search visualizer uses `resetStyles: false` so Pagefind's built-in styles apply and CSS variables work. The `browser.js` never touches CSS — that's the theme's job.
+
 ### Image zoom CSS custom property contract
 
 Themes that want to style the zoom overlay must define:
@@ -468,7 +485,7 @@ show_count: true
 
 ## Future Considerations
 
-- **Vault `index.md` as homepage** — if vault root has `index.md`, use its content as homepage body. Theme's `index.njk` checks for this and renders it; search/tags shortcodes let users embed widgets inline. See `IDEAS.md` for full design.
+- **Vault `index.md` as homepage** — ✅ implemented. Root and subfolder `index.md` files override the theme's index template. Preprocessor auto-injects all required Eleventy frontmatter (no YAML needed from the user). Use ` ```search ``` ` code fence to embed search. A `folder-contents` code fence (to replace the Nunjucks for loop) is deferred to later — see `IDEAS.md`.
 - **Homepage config standard** — currently homepages are hardcoded per theme; a future `_bloob-homepage.md` or frontmatter convention could standardize this
 - **Per-page banner override** — `banner_image:` frontmatter to use a custom image for that page's banner
 - **Pouch visualizer** — when `bloob-object: pouch`, render outgoing links as a visual marble grid (Phase 4+)

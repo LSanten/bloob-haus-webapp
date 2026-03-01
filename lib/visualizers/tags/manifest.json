@@ -1,0 +1,35 @@
+{
+  "name": "tags",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Tag cloud or list embedded via ```tags code fences. Fetches tagIndex.json at runtime.",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": ".tags-visualizer"
+  },
+  "files": {
+    "browser": "browser.js"
+  },
+  "settings": {
+    "style": {
+      "type": "string",
+      "default": "cloud",
+      "description": "Display style: 'cloud' (sized by count) or 'list'"
+    },
+    "sort": {
+      "type": "string",
+      "default": "count",
+      "description": "Sort order: 'count' (most used first) or 'alpha'"
+    },
+    "limit": {
+      "type": "number",
+      "default": null,
+      "description": "Max number of tags to display (default: all)"
+    },
+    "show_count": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show the count badge next to each tag"
+    }
+  }
+}

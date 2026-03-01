@@ -630,6 +630,29 @@ details > *:not(summary) {
 
 .pagefind-ui__search-clear {
   color: var(--text-light) !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.pagefind-ui__filter-panel {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.pagefind-ui__filter-group {
+  border: none !important;
+}
+
+.pagefind-ui__filter-block {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+.search-visualizer {
+  margin-bottom: var(--spacing-2xl, 3rem);
 }
 
 .pagefind-ui__result-link {
@@ -638,6 +661,59 @@ details > *:not(summary) {
 
 .pagefind-ui__result-excerpt {
   color: var(--text-light) !important;
+}
+
+/* ================================
+   Tags Visualizer
+   ================================ */
+
+.tags-visualizer {
+  margin-bottom: var(--spacing-2xl, 3rem);
+}
+
+.tags-visualizer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 0.6em;
+  align-items: center;
+}
+
+.tags-visualizer--list {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4em;
+}
+
+.tags-visualizer__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tags-visualizer__tag:hover {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+}
+
+/* Cloud weight sizing (data-weight 1–5) */
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="5"] { font-size: 1.25rem; font-weight: 700; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="4"] { font-size: 1.1rem; font-weight: 600; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="3"] { font-size: 1rem; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="2"] { font-size: 0.875rem; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="1"] { font-size: 0.8rem; opacity: 0.8; }
+
+.tags-visualizer__count {
+  font-size: 0.75em;
+  opacity: 0.65;
 }
 
 /* ================================

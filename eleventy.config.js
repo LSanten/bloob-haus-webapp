@@ -54,6 +54,10 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "src/graph-settings.json": "graph-settings.json",
   });
+  // Tag index — served at /tagIndex.json for the tags visualizer (runtime fetch)
+  eleventyConfig.addPassthroughCopy({
+    "src/_data/tagIndex.json": "tagIndex.json",
+  });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");

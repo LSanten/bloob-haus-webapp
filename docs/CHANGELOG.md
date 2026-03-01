@@ -6,6 +6,38 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 17 - February 28, 2026
+**Worked on:** marbles-pouch search polish, tags visualizer, dev workflow fix
+
+**Search UI polish (marbles-pouch):**
+- Removed boxes/borders from Pagefind Clear button (`.pagefind-ui__search-clear`) and filter panel (`.pagefind-ui__filter-panel`, `.pagefind-ui__filter-group`)
+- Added 3rem bottom margin to `.search-visualizer` so Recent Marbles doesn't crowd the search bar
+
+**Tags Visualizer (new):**
+- Created `lib/visualizers/tags/` with `index.js` (build-time transform), `browser.js` (runtime fetch + render), `manifest.json`
+- Code fence: ` ```tags\nsort: count\n``` ` — settings: `style` (cloud/list), `sort` (count/alpha), `limit`, `show_count`
+- Fetches `/tagIndex.json` at runtime; tags sized by usage count in cloud mode (weight 1–5)
+- Added `tagIndex.json` passthrough copy in `eleventy.config.js` so it's served statically at `/tagIndex.json`
+- Added CSS to marbles-pouch `main.css`: pill-shaped tags, weight scaling, hover → accent color
+- Added ` ```tags\nsort: count\n``` ` to `bloob-haus-marbles/index.md`
+
+**Dev workflow fix:**
+- `bundle-visualizers.js` only runs during full build, not `dev` — new visualizers need a manual `node scripts/bundle-visualizers.js` after creation in dev mode
+
+**Recent Marbles:**
+- Removed date display from Recent Marbles list — deferred to future date visualization work
+
+**Files changed:**
+- `lib/visualizers/tags/index.js` (new)
+- `lib/visualizers/tags/browser.js` (new)
+- `lib/visualizers/tags/manifest.json` (new)
+- `themes/marbles-pouch/assets/css/main.css` (Pagefind border fixes, search spacing, tags CSS)
+- `eleventy.config.js` (tagIndex.json passthrough)
+- `bloob-haus-marbles/index.md` (tags fence, date removed)
+- `src/index.md` (tags fence, date removed — generated file, reflects marbles/index.md)
+
+---
+
 ### Session 16 - February 27, 2026
 **Worked on:** Marbles deployment, pathPrefix debugging, fridge magnets layout feature
 

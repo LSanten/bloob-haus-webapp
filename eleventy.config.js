@@ -54,10 +54,6 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "src/graph-settings.json": "graph-settings.json",
   });
-  // Optimized images from cache — persists between builds for faster rebuilds
-  eleventyConfig.addPassthroughCopy({
-    ".cache/eleventy-img": "media/optimized",
-  });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");
@@ -279,14 +275,14 @@ export default async function (eleventyConfig) {
         if (ext === "gif") continue;
 
         try {
-          // Formats come from _bloob-settings.md / sites/*.yaml.
-          // Include "png" to preserve transparency for PNG source images.
-          const formats = mediaConfig.formats || ["webp", "jpeg", "png"];
+          // WebP for modern browsers (alpha preserved), PNG fallback for old browsers.
+          // No JPEG — JPEG has no alpha channel and would make transparency black.
+          const formats = mediaConfig.formats || ["webp", "png"];
 
           const metadata = await Image(inputPath, {
             widths: mediaConfig.widths || [600, 1200],
             formats,
-            outputDir: ".cache/eleventy-img",
+            outputDir: join(outputDir, "media/optimized"),
             urlPath: "/media/optimized/",
             filenameFormat: function (id, src, width, format) {
               const name = src.split("/").pop().split(".")[0];
@@ -301,7 +297,26 @@ export default async function (eleventyConfig) {
             decoding: "async",
           });
 
-          result = result.replace(originalTag, pictureHtml);
+          // Wrap in <a> for PhotoSwipe: dimensions from metadata, original path for full-res button
+          const webpImages = metadata.webp || [];
+          const allImages = webpImages.length > 0 ? webpImages : (metadata.png || []);
+          const largest = allImages[allImages.length - 1];
+          const pswpSrcset = webpImages.map((img) => `${img.url} ${img.width}w`).join(", ");
+
+          const wrapped = [
+            `<a class="pswp-gallery__item"`,
+            ` href="${src}"`,
+            ` data-pswp-src="${largest.url}"`,
+            pswpSrcset ? ` data-pswp-srcset="${pswpSrcset}"` : "",
+            ` data-pswp-width="${largest.width}"`,
+            ` data-pswp-height="${largest.height}"`,
+            ` data-original="${src}"`,
+            `>`,
+            pictureHtml,
+            `</a>`,
+          ].join("");
+
+          result = result.replace(originalTag, wrapped);
         } catch (e) {
           // If image processing fails, keep original tag
           console.warn(`[image] Failed to optimize ${src}: ${e.message}`);

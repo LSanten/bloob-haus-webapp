@@ -97,6 +97,12 @@ export async function filterPublishableFiles(contentDir, options = {}) {
       continue;
     }
 
+    // Skip system files that should never be published
+    const baseName = path.basename(filePath, ".md");
+    if (baseName === "_bloob-settings" || baseName === "_bloob-objects") {
+      continue;
+    }
+
     const fileContent = await fs.readFile(filePath, "utf-8");
     const { data: frontmatter, content } = matter(fileContent);
 

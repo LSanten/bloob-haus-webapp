@@ -30,7 +30,7 @@
   --spacing-xl: 3rem;
 
   /* Layout */
-  --max-width: 700px;
+  --max-width: 840px;
 }
 
 *,
@@ -87,10 +87,10 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent-dark);
 }
 
-h1 { font-size: 1.8rem; }
-h2 { font-size: 1.4rem; }
-h3 { font-size: 1.2rem; }
-h4 { font-size: 1.05rem; }
+h1 { font-size: 2.05rem; }   /* ~37px (old Jekyll) */
+h2 { font-size: 1.45rem; }   /* ~26px */
+h3 { font-size: 1.1rem; }    /* ~20px */
+h4 { font-size: 0.95rem; }   /* ~17px */
 
 p {
   margin-bottom: var(--spacing-sm);
@@ -148,6 +148,51 @@ img {
   border-radius: 4px;
 }
 
+/* ================================
+   Image zoom (PhotoSwipe)
+   ================================ */
+
+/* Wrapper <a> injected by the image optimizer transform */
+a.pswp-gallery__item {
+  display: block;
+  position: relative;
+  cursor: zoom-in;
+  text-decoration: none;
+  line-height: 0; /* prevent gap below <picture> */
+}
+
+/* Magnifying-glass-plus icon shown in bottom-right corner on hover */
+a.pswp-gallery__item::after {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  /* zoom-in icon (magnifier + plus) as inline SVG data URL */
+  background:
+    rgba(0, 0, 0, 0.55)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3Cline x1='11' y1='8' x2='11' y2='14'/%3E%3Cline x1='8' y1='11' x2='14' y2='11'/%3E%3C/svg%3E")
+    center / 16px no-repeat;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+a.pswp-gallery__item:hover::after {
+  opacity: 1;
+}
+
+/* "Open full resolution" button inside the PhotoSwipe toolbar */
+.pswp__button--open-original {
+  opacity: 0.75;
+}
+.pswp__button--open-original:hover {
+  opacity: 1;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -173,7 +218,7 @@ th {
 .site-banner {
   background: var(--banner-bg);   /* white */
   text-align: center;
-  padding: var(--spacing-xl) var(--spacing-sm) 180px; /* large bottom so wave sits far below content */
+  padding: var(--spacing-xl) var(--spacing-sm) 120px; /* bottom gives wave room without excess whitespace */
   position: relative;
   /* no overflow:hidden — the bottom wave SVG needs to protrude */
 }

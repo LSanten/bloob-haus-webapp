@@ -11,7 +11,8 @@
 {% set objData = bloobObjects[objType] if objType and bloobObjects[objType] %}
 
 {# Resolve banner image: _bloob-objects.md path → theme asset → marble.png fallback #}
-{% if objData and objData.image %}
+{# "default" in image column means "use theme default" — treat as unset #}
+{% if objData and objData.image and objData.image != "default" %}
   {% set bannerImage = objData.image %}
 {% elif objType %}
   {% set bannerImage = "/assets/objects/" + objType + ".png" %}

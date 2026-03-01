@@ -29,6 +29,14 @@
     /* Layout */
     --max-width: 800px;
     --nav-height: 60px;
+
+    /* Pagefind UI theming */
+    --pagefind-ui-primary: #d2691e;
+    --pagefind-ui-text: #333333;
+    --pagefind-ui-background: #ffffff;
+    --pagefind-ui-border: #e8dcc4;
+    --pagefind-ui-tag: #f5ebe0;
+    --pagefind-ui-font: "Crimson Pro", Georgia, serif;
 }
 
 * {

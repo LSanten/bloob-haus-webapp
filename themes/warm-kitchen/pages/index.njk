@@ -8,10 +8,9 @@ permalink: /
         <p class="home-tagline">{{ site.description }}</p>
     </header>
 
-    <div class="home-search">
-        <link href="{{ "/pagefind/pagefind-ui.css" | url }}" rel="stylesheet">
-        <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
+    <div class="home-search" data-pagefind-ignore>
         <div id="search"></div>
+        <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
         <script>
             window.addEventListener('DOMContentLoaded', function() {
                 new PagefindUI({
@@ -20,6 +19,7 @@ permalink: /
                     showImages: true,
                     showEmptyFilters: false,
                     openFilters: ['tag'],
+                    resetStyles: false,
                     translations: {
                         placeholder: 'Search recipes and notes...',
                         zero_results: 'No results for "[SEARCH_TERM]"',

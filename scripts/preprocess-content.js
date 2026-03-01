@@ -279,6 +279,21 @@ export async function preprocessContent({
       }
     }
 
+    // Auto-inject Eleventy frontmatter for index.md files.
+    // Users should write plain content — no YAML boilerplate needed.
+    // Works for root index.md (permalink: /) and subfolder index.md (permalink: /folder/).
+    const isIndexFile =
+      path.basename(file.relativePath, ".md") === "index";
+    if (isIndexFile && BUILD_TARGET === "eleventy") {
+      const dir = path.dirname(file.relativePath);
+      const permalink =
+        dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
+      outputFrontmatter.permalink = permalink;
+      outputFrontmatter.layout = "layouts/base.njk";
+      outputFrontmatter.eleventyExcludeFromCollections = true;
+      outputFrontmatter.templateEngineOverride = "njk,md";
+    }
+
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 

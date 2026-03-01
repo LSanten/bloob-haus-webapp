@@ -1,0 +1,40 @@
+{
+  "name": "search",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Pagefind search widget embedded via ```search code fences. Defaults to warm-kitchen style settings.",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": ".search-visualizer"
+  },
+  "files": {
+    "browser": "browser.js"
+  },
+  "settings": {
+    "placeholder": {
+      "type": "string",
+      "default": "Search...",
+      "description": "Search input placeholder text (shorthand for translations.placeholder)"
+    },
+    "showImages": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show page thumbnail images in results"
+    },
+    "showSubResults": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show sub-results within each result"
+    },
+    "showEmptyFilters": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show filter categories even when empty"
+    },
+    "openFilters": {
+      "type": "array",
+      "default": ["tag"],
+      "description": "Filter categories to show expanded by default"
+    }
+  }
+}

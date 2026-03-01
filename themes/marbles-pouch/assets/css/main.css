@@ -31,6 +31,14 @@
 
   /* Layout */
   --max-width: 840px;
+
+  /* Pagefind UI theming */
+  --pagefind-ui-primary: #914c9a;
+  --pagefind-ui-text: #333333;
+  --pagefind-ui-background: #ffffff;
+  --pagefind-ui-border: rgba(145, 76, 154, 0.2);
+  --pagefind-ui-tag: rgba(145, 76, 154, 0.1);
+  --pagefind-ui-font: "Nunito Sans", sans-serif;
 }
 
 *,

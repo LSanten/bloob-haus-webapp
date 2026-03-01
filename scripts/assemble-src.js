@@ -79,6 +79,8 @@ export async function assembleSrc(config, contentDir = null) {
     const pagesDir = path.join(themeDir, "pages");
 
     // Copy section index pages (pages/sections/recipes/index.njk → src/recipes/index.njk)
+    // Skip a section's index.njk if the vault has its own index.md for that folder
+    // (same collision-prevention logic as root index.md).
     const sectionsDir = path.join(pagesDir, "sections");
     if (fs.existsSync(sectionsDir)) {
       const sections = await fs.readdir(sectionsDir);
@@ -86,7 +88,29 @@ export async function assembleSrc(config, contentDir = null) {
         const sectionSrc = path.join(sectionsDir, section);
         const sectionDest = path.join(SRC_DIR, section);
         const stat = await fs.stat(sectionSrc);
-        if (stat.isDirectory()) {
+        if (!stat.isDirectory()) continue;
+
+        const vaultHasSectionIndex =
+          contentDir &&
+          fs.existsSync(path.join(contentDir, section, "index.md"));
+
+        if (vaultHasSectionIndex) {
+          // Copy everything in the section folder EXCEPT index.njk
+          const sectionEntries = await fs.readdir(sectionSrc);
+          for (const entry of sectionEntries) {
+            if (entry === "index.njk") {
+              console.log(
+                `[assemble] Vault has ${section}/index.md — skipping theme ${section}/index.njk`,
+              );
+              continue;
+            }
+            await fs.copy(
+              path.join(sectionSrc, entry),
+              path.join(sectionDest, entry),
+              { overwrite: true },
+            );
+          }
+        } else {
           await fs.copy(sectionSrc, sectionDest, { overwrite: true });
         }
       }

@@ -57,4 +57,8 @@
     {% for vis in visualizers %}{% if vis.hasCss %}
     <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
     {% endif %}{% endfor %}
+    <!-- Pagefind UI styles — loaded on all pages when search is enabled -->
+    {% if site.features.search != false %}
+    <link rel="stylesheet" href="{{ "/pagefind/pagefind-ui.css" | url }}" />
+    {% endif %}
 </head>

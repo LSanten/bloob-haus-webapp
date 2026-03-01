@@ -7,34 +7,67 @@ Development session history and completed work.
 ## Session Log
 
 ### Session 17 - February 28, 2026
-**Worked on:** marbles-pouch search polish, tags visualizer, dev workflow fix
+**Worked on:** Vault index.md homepage, search visualizer, external links, tags visualizer, marbles-pouch polish
+
+**Vault index.md as homepage:**
+- `assemble-src.js`: skip theme `index.njk` when vault has `index.md` at root (prevents permalink collision)
+- `preprocess-content.js`: auto-inject `permalink`, `layout`, `eleventyExcludeFromCollections`, `templateEngineOverride` for any `index.md` (root or subfolder) — zero frontmatter needed from authors
+- `preprocess-content.js`: don't override `layout` if author already set it; guard against Jekyll-style layout values (`default`, `page`, `post`) that break Eleventy — only preserve `layouts/` paths
+- `build-site.js`: pass `contentDir` to `assembleSrc` for vault index detection
+- New `search-widget.njk` partial for reusable search widget in vault markdown files
+
+**Byline system (marbles-pouch banner):**
+- `byline` frontmatter: write the full byline yourself (overrides "Yours,") — supports `[text](url)` links + `\n` line breaks
+- `author` frontmatter still works for name-only override
+- New `nl2br` filter in `eleventy.config.js`
+
+**Search visualizer (new — `lib/visualizers/search/`):**
+- Code fence ` ```search``` ` mounts PagefindUI with warm-kitchen-style defaults (`resetStyles: false`, `showImages: true`, `showSubResults: true`, `openFilters: ['tag']`)
+- `placeholder` shorthand supported in YAML settings
+- `pagefind-ui.css` loaded in `head.njk` (both themes) when `features.search != false`
+- Pagefind CSS variables (`--pagefind-ui-*`) added to both themes' `:root`
+- `browser.js` loads `pagefind-ui.js` dynamically — only on pages with a search widget
+
+**External links:**
+- `features/theme_settings` wired through `site.js` (were always `undefined` in templates before)
+- `bloob-settings-reader.js`: deep merge for `theme_settings`
+- `external_links_new_tab` feature flag added to `scripts.njk` in both themes; defaults to **on** (opt-out)
+- `docs/architecture/themes.md`: baseline features contract table, `theme_settings` namespace docs
+
+**Tags visualizer (new — `lib/visualizers/tags/`):**
+- Code fence ` ```tags sort: count``` ` renders a tag cloud sorted by usage; weight 1–5 font scaling
+- Fetches `/tagIndex.json` at runtime; `tagIndex.json` added as Eleventy passthrough copy
+- Settings: `style` (cloud/list), `sort` (count/alpha), `limit`, `show_count`
+- CSS in marbles-pouch `main.css`: pill-shaped tags, hover → accent color
 
 **Search UI polish (marbles-pouch):**
-- Removed boxes/borders from Pagefind Clear button (`.pagefind-ui__search-clear`) and filter panel (`.pagefind-ui__filter-panel`, `.pagefind-ui__filter-group`)
-- Added 3rem bottom margin to `.search-visualizer` so Recent Marbles doesn't crowd the search bar
-
-**Tags Visualizer (new):**
-- Created `lib/visualizers/tags/` with `index.js` (build-time transform), `browser.js` (runtime fetch + render), `manifest.json`
-- Code fence: ` ```tags\nsort: count\n``` ` — settings: `style` (cloud/list), `sort` (count/alpha), `limit`, `show_count`
-- Fetches `/tagIndex.json` at runtime; tags sized by usage count in cloud mode (weight 1–5)
-- Added `tagIndex.json` passthrough copy in `eleventy.config.js` so it's served statically at `/tagIndex.json`
-- Added CSS to marbles-pouch `main.css`: pill-shaped tags, weight scaling, hover → accent color
-- Added ` ```tags\nsort: count\n``` ` to `bloob-haus-marbles/index.md`
-
-**Dev workflow fix:**
-- `bundle-visualizers.js` only runs during full build, not `dev` — new visualizers need a manual `node scripts/bundle-visualizers.js` after creation in dev mode
+- Removed borders/boxes from Pagefind Clear button and filter panel
+- Added 3rem bottom margin to `.search-visualizer`
 
 **Recent Marbles:**
-- Removed date display from Recent Marbles list — deferred to future date visualization work
+- Removed date display — deferred to future date visualization work
 
-**Files changed:**
-- `lib/visualizers/tags/index.js` (new)
-- `lib/visualizers/tags/browser.js` (new)
-- `lib/visualizers/tags/manifest.json` (new)
-- `themes/marbles-pouch/assets/css/main.css` (Pagefind border fixes, search spacing, tags CSS)
-- `eleventy.config.js` (tagIndex.json passthrough)
+**Docs:**
+- `docs/architecture/visualizers.md`: dev workflow note — run `node scripts/bundle-visualizers.js` manually after adding a visualizer in dev
+- `docs/architecture/themes.md`: search CSS contract, `index.md` implemented status
+- `CLAUDE.md`: session checklist reminder to update vault settings tables
+
+**Files changed (10 commits):**
+- `lib/visualizers/search/` (new: index.js, browser.js, manifest.json)
+- `lib/visualizers/tags/` (new: index.js, browser.js, manifest.json)
+- `eleventy.config.js` (nl2br filter, tagIndex.json passthrough)
+- `scripts/assemble-src.js` (vault index.md skip, subfolder index skip, --content-dir flag)
+- `scripts/preprocess-content.js` (auto-frontmatter for index.md, layout guard)
+- `scripts/build-site.js` (pass contentDir to assembleSrc)
+- `scripts/utils/bloob-settings-reader.js` (theme_settings deep merge)
+- `themes/marbles-pouch/assets/css/main.css` (Pagefind overrides, tags CSS)
+- `themes/marbles-pouch/partials/banner.njk` (byline system)
+- `themes/marbles-pouch/partials/search-widget.njk` (new)
+- `themes/marbles-pouch/partials/scripts.njk` (external_links_new_tab)
+- `themes/warm-kitchen/partials/scripts.njk` (external_links_new_tab)
+- `themes/_base/partials/head.njk` + `themes/marbles-pouch/partials/head.njk` (pagefind-ui.css)
 - `bloob-haus-marbles/index.md` (tags fence, date removed)
-- `src/index.md` (tags fence, date removed — generated file, reflects marbles/index.md)
+- `docs/architecture/themes.md`, `docs/architecture/visualizers.md`, `CLAUDE.md`
 
 ---
 

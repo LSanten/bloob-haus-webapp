@@ -172,6 +172,8 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 
 **Adding a new visualizer = adding a new folder in `lib/visualizers/`.** No changes to any other file needed — the bundler auto-discovers folders, writes a manifest, and templates auto-include from that manifest. If the visualizer needs preprocessing, it exports `preprocessHook` from `preprocess-hook.js` and it is called automatically.
 
+> **Dev workflow note:** `bundle-visualizers.js` only runs as part of the full build (`build-site.js`). After adding a new visualizer during a dev session, run `node scripts/bundle-visualizers.js` manually before expecting the JS bundle and `visualizers.json` manifest to be updated.
+
 ---
 
 ## `preprocess-hook.js` Convention

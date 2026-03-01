@@ -267,9 +267,16 @@ export async function preprocessContent({
       }
     }
 
-    // Add layout for Eleventy — only set default if not already declared in frontmatter
-    if (BUILD_TARGET === "eleventy" && !frontmatter.layout) {
-      outputFrontmatter.layout = "layouts/page.njk";
+    // Add layout for Eleventy.
+    // Preserve layout only if it's already an Eleventy-style path (starts with "layouts/").
+    // Old Jekyll-style values like "default" or "page" don't exist in Eleventy and must
+    // be overridden. Vault authors can use layouts/base.njk to opt out of page.njk.
+    if (BUILD_TARGET === "eleventy") {
+      const hasEleventyLayout =
+        frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
+      if (!hasEleventyLayout) {
+        outputFrontmatter.layout = "layouts/page.njk";
+      }
     }
 
     // Reconstruct the file with frontmatter

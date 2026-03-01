@@ -234,8 +234,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const siteName = resolveSiteName();
   console.log(`[assemble] Loading config for site: ${siteName}`);
 
+  // Optional --content-dir flag for local dev (points to the vault on disk)
+  const contentDirArg = process.argv
+    .find((a) => a.startsWith("--content-dir="))
+    ?.replace("--content-dir=", "");
+  const contentDir = contentDirArg
+    ? path.resolve(contentDirArg)
+    : null;
+
   loadSiteConfig(siteName)
-    .then((config) => assembleSrc(config))
+    .then((config) => assembleSrc(config, contentDir))
     .catch((error) => {
       console.error("❌ Assembly failed:", error.message);
       process.exit(1);

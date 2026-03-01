@@ -8,6 +8,7 @@
     "build:buffbaby": "SITE_NAME=buffbaby node scripts/build-site.js",
     "dev": "SITE_NAME=buffbaby node scripts/assemble-src.js --site=buffbaby && concurrently -n assemble,eleventy -c blue,green \"node scripts/watch-themes.js --site=buffbaby\" \"SITE_NAME=buffbaby npx @11ty/eleventy --serve\"",
     "dev:buffbaby": "SITE_NAME=buffbaby node scripts/assemble-src.js --site=buffbaby && concurrently -n assemble,eleventy -c blue,green \"node scripts/watch-themes.js --site=buffbaby\" \"SITE_NAME=buffbaby npx @11ty/eleventy --serve\"",
+    "dev:marbles": "SITE_NAME=marbles node scripts/assemble-src.js --site=marbles --content-dir=../bloob-haus-marbles && concurrently -n assemble,eleventy -c blue,green \"node scripts/watch-themes.js --site=marbles\" \"SITE_NAME=marbles npx @11ty/eleventy --serve\"",
     "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site",

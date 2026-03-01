@@ -92,6 +92,19 @@ export default async function (eleventyConfig) {
     return array.slice(0, n);
   });
 
+  // Render markdown-style links [text](url) → <a href="url">text</a>
+  // External URLs (https?://) open in a new tab; bare paths are treated as internal.
+  eleventyConfig.addFilter("mdLinks", function (str) {
+    if (!str) return "";
+    return String(str).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => {
+      const isExternal = /^https?:\/\//.test(url);
+      const attrs = isExternal
+        ? `href="${url}" target="_blank" rel="noopener"`
+        : `href="${url}"`;
+      return `<a ${attrs}>${text}</a>`;
+    });
+  });
+
   // Capitalize filter
   eleventyConfig.addFilter("capitalize", function (str) {
     if (!str) return "";

@@ -237,6 +237,15 @@ th {
   height: auto;
 }
 
+.site-banner__site-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.2;
+}
+
 .site-banner__text {
   font-size: 1.2rem;
   font-weight: 600;

@@ -50,12 +50,18 @@
     />
     {% endif %}
 
+    {% if page.url == "/" %}
+    <h1 class="site-banner__site-title">{{ site.title }}</h1>
+    {% endif %}
+
     {% if bannerText %}
     <p class="site-banner__text">{{ bannerText }}</p>
     {% endif %}
 
     {% if page.url != "/" %}
-    <p class="site-banner__byline">Yours, <a href="{{ site.url }}">Leon</a></p>
+    {# Per-page author overrides site.author; both support [text](url) markdown links #}
+    {% set bylineAuthor = author if author else site.author %}
+    <p class="site-banner__byline">Yours, {{ bylineAuthor | mdLinks | safe }}</p>
     {% endif %}
 
     {% if objData and objData.description %}

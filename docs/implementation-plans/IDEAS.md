@@ -10,6 +10,11 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 - [x] RSS feed generation (done — Session 5, `/feed.xml`)
 - [x] Sitemap generation (done — Session 5, `/sitemap.xml`)
 - [x] Search (done — Pagefind with tag filtering at `/search/`)
+- [ ] **Vault index.md homepage** — if vault root has `index.md`, use its content as the homepage body. Design options:
+  - **Option A (recommended):** Preprocessor detects `index.md` at vault root → copies it without modification into `src/`. Theme's `index.njk` checks `collections.vaultIndex` (a special collection); if found, renders its content. Shortcodes `{% search %}` and `{% tags %}` let users inline the search bar and tag cloud from their markdown.
+  - **Option B:** If vault `index.md` has `permalink: /`, it overrides theme's `index.njk` entirely. Requires assemble-src.js to suppress theme's `index.njk` when vault index exists (to avoid conflict).
+  - **Shortcodes needed:** `eleventyConfig.addShortcode("search", ...)` → renders Pagefind widget HTML; `eleventyConfig.addShortcode("tags", ...)` → renders tag cloud. These shortcodes would work in any `.md` file (not just index).
+  - No existing standard for inline search or tags yet — this would establish it.
 - [ ] Multi-language support
 - [ ] Version history / revision tracking
 - [ ] Scheduled publishing
@@ -67,3 +72,4 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 | 2026-02-19 | Git sparse checkout for subfolder-only cloning (save bandwidth/time) | Marbles site build discussion |
 | 2026-02-19 | User-editable vault customization (themes/CSS/visualizer config in Obsidian vault root) | Marbles folder structure discussion |
 | 2026-02-19 | Webapp places visualizer folders into GitHub repo/Obsidian vault | Future UX for user plugin management |
+| 2026-02-28 | Vault index.md to control homepage content + search/tags shortcodes | User session — marbles homepage |

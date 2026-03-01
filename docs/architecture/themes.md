@@ -358,13 +358,69 @@ The preprocessor converts this to a preview card HTML block that the `marble-pre
 
 ---
 
+## Theme-Provided Default Images
+
+Themes can ship default images for the Bloob Object identity system. These are placed in `themes/[name]/assets/objects/` and assembled into `src/assets/objects/` at build time (by `scripts/assemble-src.js`).
+
+**Why this exists:** `_bloob-objects.md` in the vault stores a table of object types with optional image paths. If a user hasn't customized an image (or the field is set to `"default"`), the banner.njk template falls through to the theme's default:
+
+```
+Image resolution order:
+1. Path in _bloob-objects.md table (explicit user image)
+2. "default" or absent → falls through to:
+3. /assets/objects/[object_type].png  ← theme provides this
+4. No image (banner renders without image)
+```
+
+**Rule:** `banner.njk` treats `objData.image == "default"` the same as unset — it falls through to `/assets/objects/[type].png`. This means users can set `image: default` in the table to explicitly use the theme default, or just leave the column empty.
+
+**Implication for theme authors:** A theme that uses the Bloob Object system should provide a PNG for each object type it declares. At minimum, a `marble.png` fallback is expected for the marbles-pouch theme. Images are assembled to `src/assets/objects/` during the build, then passthrough-copied to `_site/assets/objects/`.
+
+**Adding custom images to the vault:** Users can override theme defaults by placing images anywhere in their vault media folder and pointing to them in `_bloob-objects.md`:
+
+```markdown
+| marble | Marble | /media/my-custom-marble.png | Here is a marble | ... |
+```
+
+---
+
+## Search and Tags as Inline Visualizers
+
+Search and tag cloud widgets can be embedded inline in any markdown page using the standard code fence visualizer syntax — the same pattern as `graph`, `checkbox-tracker`, etc.
+
+**Planned syntax:**
+
+````markdown
+```search
+placeholder: Search my marbles...
+```
+
+```tags
+style: cloud
+show_count: true
+```
+````
+
+**How it works (same as graph visualizer):**
+
+1. **Build-time (`index.js`):** Replaces the code fence with a `<div class="search-visualizer" data-search-settings='...'>` (or `tags-visualizer`)
+2. **Runtime (`browser.js`):** Mounts the Pagefind UI or tag cloud into the div
+
+**Key design consideration for search:** Pagefind's UI scripts (`/pagefind/pagefind-ui.js`, `/pagefind/pagefind-ui.css`) are generated at build time and must be loaded on the page. The search visualizer's `browser.js` can dynamically inject these script/link tags if they're not already present (detect by checking `window.PagefindUI`).
+
+**Key design consideration for tags:** Tag data is already available as `/tagIndex.json` (generated at build time). The tags visualizer's `browser.js` fetches this and renders the cloud client-side.
+
+**No existing standard yet** — this is the planned approach. The first implementation will establish the pattern. When implemented, `index.njk` should be refactored to use these code fences instead of its current inline HTML.
+
+---
+
 ## Creating a New Theme
 
 1. Create folder: `themes/[theme-name]/`
 2. Implement all Tier 1 required files
 3. Define all required CSS custom properties in `main.css`
 4. Create `theme.yaml` with feature declarations and visualizer defaults
-5. Optionally add `assets/objects/` with identity images for object types
+5. Add `assets/objects/` with identity images for the object types your theme supports (at minimum: the default object type)
 6. Test with a site: `SITE_NAME=my-site npm run build`
 
 **Theme selection:** Set `theme: [theme-name]` in `_bloob-settings.md` in the content repo.
@@ -373,6 +429,7 @@ The preprocessor converts this to a preview card HTML block that the `marble-pre
 
 ## Future Considerations
 
+- **Vault `index.md` as homepage** — if vault root has `index.md`, use its content as homepage body. Theme's `index.njk` checks for this and renders it; search/tags shortcodes let users embed widgets inline. See `IDEAS.md` for full design.
 - **Homepage config standard** — currently homepages are hardcoded per theme; a future `_bloob-homepage.md` or frontmatter convention could standardize this
 - **Per-page banner override** — `banner_image:` frontmatter to use a custom image for that page's banner
 - **Pouch visualizer** — when `bloob-object: pouch`, render outgoing links as a visual marble grid (Phase 4+)

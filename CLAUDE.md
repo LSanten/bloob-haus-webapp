@@ -30,6 +30,7 @@ The product vision, values, room concepts, and engineering reports live in a sep
 - [ ] Update `docs/CLAUDE_CONTEXT.md` if project structure or status changed
 - [ ] Update `docs/TECH-DEBT.md` if new debt was introduced or old debt resolved
 - [ ] Update `docs/architecture/` if new architectural patterns were introduced
+- [ ] **If new features or settings were added:** manually update the "All Possible Settings" table in `_bloob-settings.md` in both vault repos (`bloob-haus-marbles` and `buffbaby`). This is handwritten until a magic machine automates it.
 - [ ] Run tests: `npm test`
 
 ## Code Quality Rules

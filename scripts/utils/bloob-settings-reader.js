@@ -110,5 +110,13 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     merged.mount_path = bloobSettings.mount_path;
   }
 
+  // Theme-specific settings — opaque bag passed through to site.theme_settings in templates
+  if (bloobSettings.theme_settings) {
+    merged.theme_settings = {
+      ...siteConfig.theme_settings,
+      ...bloobSettings.theme_settings,
+    };
+  }
+
   return merged;
 }

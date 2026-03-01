@@ -3,6 +3,18 @@
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
 {% endif %}{% endfor %}
 
+{# External links in new tab — opt-in via features.external_links_new_tab: true #}
+{% if site.features.external_links_new_tab %}
+<script>
+  document.querySelectorAll('article a[href^="http"]').forEach(function(a) {
+    if (!a.hostname || a.hostname !== location.hostname) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    }
+  });
+</script>
+{% endif %}
+
 {# Image zoom — PhotoSwipe 5, on by default (opt-out via features.image_zoom: false) #}
 {# CSS is loaded in head.njk. JS uses ES modules (no build step needed). #}
 {% if site.features.image_zoom != false %}

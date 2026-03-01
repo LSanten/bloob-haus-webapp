@@ -62,7 +62,8 @@
     {#
       Byline resolution:
       1. `byline` frontmatter — write the full text yourself (replaces "Yours," entirely).
-         Supports [text](url) links and literal newlines (use YAML block scalar with |).
+         Use <br> for line breaks and [text](url) for links.
+         Example: byline: "Yours,<br>[Leon](https://leonsanten.info/)"
       2. `author` frontmatter — replaces just the name after "Yours,"
       3. site.author from _bloob-settings.md
     #}

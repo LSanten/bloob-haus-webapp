@@ -2,3 +2,15 @@
 {% for vis in visualizers %}{% if vis.hasJs %}
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
 {% endif %}{% endfor %}
+
+<!-- External links in new tab — opt-in via features.external_links_new_tab: true -->
+{% if site.features.external_links_new_tab %}
+<script>
+  document.querySelectorAll('article a[href^="http"]').forEach(function(a) {
+    if (!a.hostname || a.hostname !== location.hostname) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    }
+  });
+</script>
+{% endif %}

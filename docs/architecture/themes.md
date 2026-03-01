@@ -188,6 +188,43 @@ If not defined, `_base` defaults are used.
 
 ---
 
+## Baseline Features Contract
+
+All themes must respect these `features:` flags from `_bloob-settings.md`. A feature is **on by default** unless documented as opt-in.
+
+| Feature key | Default | Description |
+|-------------|---------|-------------|
+| `features.rss` | `true` | Generate RSS feed at `/feed.xml` |
+| `features.sitemap` | `true` | Generate `sitemap.xml` |
+| `features.robots_txt` | `true` | Generate `robots.txt` |
+| `features.search` | `true` | Pagefind search index + search bar |
+| `features.backlinks` | `true` | Show backlinks section on each page |
+| `features.og_images` | `true` | Open Graph meta tags for social sharing |
+| `features.tags` | `true` | Tag system + tag index pages |
+| `features.custom_404` | `true` | Custom 404 page |
+| `features.external_links_new_tab` | `false` | Open external links in a new tab (opt-in) |
+| `features.image_zoom` | `true` | Click-to-zoom images (PhotoSwipe or medium-zoom, opt-out) |
+
+These are checked in templates via `site.features.[key]`. The `features` object is written to `src/_data/site.js` at build time by `scripts/assemble-src.js`.
+
+---
+
+## `theme_settings:` Namespace
+
+`theme_settings:` in `_bloob-settings.md` holds theme-specific config that doesn't belong in the baseline `features:` contract. It is separate because different themes may support different keys.
+
+```yaml
+theme_settings:
+  banner_height: tall       # marbles-pouch specific
+  wave_color: "#dce8f8"     # marbles-pouch specific
+```
+
+Templates access it via `site.theme_settings.[key]`. `_bloob-settings.md` values for `theme_settings` are deep-merged on top of `sites/*.yaml` defaults by `bloob-settings-reader.js`.
+
+**Rule:** Baseline toggles (on/off for all themes) → `features:`. Theme-specific visual/layout config → `theme_settings:`.
+
+---
+
 ## Site Data (Always Available)
 
 These variables come from `_bloob-settings.md` in the content repo, merged with `sites/*.yaml`. Available in all templates via the `site` object.
@@ -197,11 +234,13 @@ These variables come from `_bloob-settings.md` in the content repo, merged with 
 | `site.title` | string | `_bloob-settings.md` → `name` | Site display name |
 | `site.description` | string | `_bloob-settings.md` | Site tagline/description |
 | `site.url` | string | `sites/*.yaml` | Full URL (e.g., `https://marbles.bloob.haus`) |
-| `site.author` | string | `_bloob-settings.md` | Site author name |
+| `site.author` | string | `_bloob-settings.md` | Site author name (supports markdown links: `[Name](url)`) |
 | `site.languageCode` | string | `_bloob-settings.md` → `language` | Language code (e.g., `en-us`) |
 | `site.footer_text` | string | `_bloob-settings.md` | Custom footer message (supports HTML) |
 | `site.year` | number | Generated | Current year (for copyright) |
 | `site.permalinks.strategy` | string | `_bloob-settings.md` → `permalink_strategy` | `"slugify"` or `"preserve-case"` |
+| `site.features` | object | Merged from settings | Feature flags object (see Baseline Features Contract) |
+| `site.theme_settings` | object | Merged from settings | Theme-specific config namespace |
 
 ---
 
@@ -436,7 +475,7 @@ show_count: true
 - **Bookshelf visualizer** — when `bloob-object: bookshelf`, render linked notes as books on a shelf (Phase 4+)
 - **Dark mode** — site-wide or per-page toggle
 - **Theme inheritance** — themes formally extend `_base` with overrides
-- **Theme-specific `_bloob-settings.md` fields** — allow themes to declare custom config keys
+- **Theme-specific `_bloob-settings.md` fields** — ✅ implemented via `theme_settings:` namespace; themes can declare supported keys in `theme.yaml`
 
 ---
 

@@ -197,6 +197,8 @@ export default {
   permalinks: {
     strategy: ${JSON.stringify(config.permalinks?.strategy || "slugify")},
   },
+  features: ${JSON.stringify(config.features || {})},
+  theme_settings: ${JSON.stringify(config.theme_settings || {})},
 };
 `;
 

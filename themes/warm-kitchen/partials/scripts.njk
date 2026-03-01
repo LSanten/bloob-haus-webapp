@@ -3,8 +3,8 @@
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
 {% endif %}{% endfor %}
 
-<!-- External links in new tab — opt-in via features.external_links_new_tab: true -->
-{% if site.features.external_links_new_tab %}
+<!-- External links in new tab — on by default (opt-out via features.external_links_new_tab: false) -->
+{% if site.features.external_links_new_tab != false %}
 <script>
   document.querySelectorAll('article a[href^="http"]').forEach(function(a) {
     if (!a.hostname || a.hostname !== location.hostname) {

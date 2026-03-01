@@ -202,7 +202,7 @@ All themes must respect these `features:` flags from `_bloob-settings.md`. A fea
 | `features.og_images` | `true` | Open Graph meta tags for social sharing |
 | `features.tags` | `true` | Tag system + tag index pages |
 | `features.custom_404` | `true` | Custom 404 page |
-| `features.external_links_new_tab` | `false` | Open external links in a new tab (opt-in) |
+| `features.external_links_new_tab` | `true` | Open external links in a new tab (opt-out via `false`) |
 | `features.image_zoom` | `true` | Click-to-zoom images (PhotoSwipe or medium-zoom, opt-out) |
 
 These are checked in templates via `site.features.[key]`. The `features` object is written to `src/_data/site.js` at build time by `scripts/assemble-src.js`.

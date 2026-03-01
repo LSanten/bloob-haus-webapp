@@ -92,6 +92,12 @@ export default async function (eleventyConfig) {
     return array.slice(0, n);
   });
 
+  // Convert \n newlines to <br> — used for multi-line bylines
+  eleventyConfig.addFilter("nl2br", function (str) {
+    if (!str) return "";
+    return String(str).replace(/\n/g, "<br>");
+  });
+
   // Render markdown-style links [text](url) → <a href="url">text</a>
   // External URLs (https?://) open in a new tab; bare paths are treated as internal.
   eleventyConfig.addFilter("mdLinks", function (str) {

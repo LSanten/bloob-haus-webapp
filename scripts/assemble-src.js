@@ -25,8 +25,11 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
 /**
  * Assembles the src/ directory from theme + base files.
  * @param {object} config - Site configuration from config-loader
+ * @param {string} [contentDir] - Path to the cloned content directory (optional).
+ *   If provided and the vault has an index.md at its root, the theme's index.njk
+ *   is skipped so there is no permalink collision at "/".
  */
-export async function assembleSrc(config) {
+export async function assembleSrc(config, contentDir = null) {
   const themeName = config.theme;
   const themeDir = path.join(THEMES_DIR, themeName);
   const baseDir = path.join(THEMES_DIR, "_base");
@@ -89,10 +92,17 @@ export async function assembleSrc(config) {
       }
     }
 
+    // If vault has index.md at its root, skip theme's index.njk to avoid permalink collision
+    const vaultHasIndex = contentDir && fs.existsSync(path.join(contentDir, "index.md"));
+    if (vaultHasIndex) {
+      console.log("[assemble] Vault has index.md — skipping theme index.njk");
+    }
+
     // Copy top-level pages (index.njk, 404.njk, etc. → src/)
     const entries = await fs.readdir(pagesDir);
     for (const entry of entries) {
       if (entry === "sections") continue; // already handled above
+      if (entry === "index.njk" && vaultHasIndex) continue; // vault index takes precedence
       const srcPath = path.join(pagesDir, entry);
       const destPath = path.join(SRC_DIR, entry);
       await fs.copy(srcPath, destPath, { overwrite: true });

@@ -267,8 +267,8 @@ export async function preprocessContent({
       }
     }
 
-    // Add layout for Eleventy
-    if (BUILD_TARGET === "eleventy") {
+    // Add layout for Eleventy — only set default if not already declared in frontmatter
+    if (BUILD_TARGET === "eleventy" && !frontmatter.layout) {
       outputFrontmatter.layout = "layouts/page.njk";
     }
 

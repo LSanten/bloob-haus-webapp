@@ -1,0 +1,12 @@
+{% if site.features.search != false %}
+<div class="home-search" data-pagefind-ignore>
+  <link href="{{ "/pagefind/pagefind-ui.css" | url }}" rel="stylesheet">
+  <div id="search"></div>
+  <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      new PagefindUI({ element: "#search", showSubResults: false, resetStyles: false });
+    });
+  </script>
+</div>
+{% endif %}

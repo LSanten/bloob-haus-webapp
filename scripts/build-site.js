@@ -85,7 +85,8 @@ async function buildSite() {
     console.log(`[config] Theme: ${config.theme}`);
 
     // Step 4: Assemble src/ from theme
-    await assembleSrc(config);
+    // Pass contentDir so assemble-src can detect vault index.md
+    await assembleSrc(config, contentDir);
 
     // Step 5: Preprocess content
     console.log("\n");

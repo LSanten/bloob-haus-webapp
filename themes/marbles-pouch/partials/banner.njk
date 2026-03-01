@@ -59,9 +59,19 @@
     {% endif %}
 
     {% if page.url != "/" %}
-    {# Per-page author overrides site.author; both support [text](url) markdown links #}
+    {#
+      Byline resolution:
+      1. `byline` frontmatter — write the full text yourself (replaces "Yours," entirely).
+         Supports [text](url) links and literal newlines (use YAML block scalar with |).
+      2. `author` frontmatter — replaces just the name after "Yours,"
+      3. site.author from _bloob-settings.md
+    #}
+    {% if byline %}
+    <p class="site-banner__byline">{{ byline | mdLinks | nl2br | safe }}</p>
+    {% else %}
     {% set bylineAuthor = author if author else site.author %}
     <p class="site-banner__byline">Yours, {{ bylineAuthor | mdLinks | safe }}</p>
+    {% endif %}
     {% endif %}
 
     {% if objData and objData.description %}

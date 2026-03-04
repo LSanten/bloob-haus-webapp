@@ -249,6 +249,10 @@ function generateEmbed(scene) {
 }
 
 // ── Import: parse code fence + apply to loaded images ─────────────────────────
+// ⚠️  SYNC NOTE: This parser duplicates the logic in
+//     lib/visualizers/scene-nav/parser.js (Node.js, build-time).
+//     When adding new fields to the scene-nav schema, update BOTH files.
+//     Canonical field reference: lib/visualizers/scene-nav/schema.md
 function parseCodeFence(text) {
   const match = text.match(/```scene-nav\n([\s\S]*?)```/);
   const yaml  = match ? match[1] : text;

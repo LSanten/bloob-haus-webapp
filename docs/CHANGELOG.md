@@ -57,7 +57,8 @@ Development session history and completed work.
 
 **Files changed:**
 - `lib/magic-machines/scene-nav-builder/app/index.html` (all builder changes)
-- `docs/architecture/magic-machines.md` (architecture documentation)
+- `lib/visualizers/scene-nav/parser.js`, `renderer.js`, `browser.js`, `styles.css`
+- `docs/architecture/magic-machines.md`
 
 ---
 

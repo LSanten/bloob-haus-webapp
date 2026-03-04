@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scene Nav Builder — Bloob Haus</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { background: #08080e; color: #ddd; font-family: 'DM Sans', system-ui, sans-serif; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a14; }
+    ::-webkit-scrollbar-thumb { background: #1e1e30; border-radius: 3px; }
+
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      background: #1e1e30; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; cursor: pointer;
+      background: var(--range-color, #FFD700);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%; border: none; cursor: pointer;
+      background: var(--range-color, #FFD700);
+    }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+
+<div id="app" style="height:100vh;display:flex;flex-direction:column;"></div>
+<input id="bg-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+<input id="el-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+
+<script>
+/* =============================================================================
+   BLOOB HAUS — Scene Nav Builder (Magic Machine)
+   Vanilla JS, no dependencies, no build step. Open in any browser.
+
+   Outputs:
+   1. ```scene-nav``` code fence (YAML) — source of truth for Bloob Haus
+   2. Standalone HTML/CSS/JS embed code — for Shopify, any website
+
+   Architecture:
+   - State: plain object S
+   - DOM: init() builds the layout skeleton once; render* functions update regions
+   - Drag: updates DOM directly during mousemove, commits x/y to state on mouseup
+   ============================================================================= */
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+const GLOW_PRESETS = [
+  { name: 'Gold',   color: '#FFD700' },
+  { name: 'Rose',   color: '#FF6B9D' },
+  { name: 'Cyan',   color: '#00E5FF' },
+  { name: 'Violet', color: '#B388FF' },
+  { name: 'Mint',   color: '#69F0AE' },
+  { name: 'Coral',  color: '#FF8A65' },
+  { name: 'White',  color: '#FFFFFF' },
+  { name: 'Blue',   color: '#448AFF' },
+];
+
+const ACTION_TYPES = [
+  { value: 'filter', label: 'Filter (Shopify tag)', icon: '◉' },
+  { value: 'link',   label: 'Open link (new tab)',  icon: '↗' },
+  { value: 'anchor', label: 'Jump to section',      icon: '↓' },
+];
+
+const ASPECT_RATIOS = [
+  { label: '16:9', value: '16/9' },
+  { label: '4:3',  value: '4/3'  },
+  { label: '3:2',  value: '3/2'  },
+  { label: '1:1',  value: '1/1'  },
+  { label: '9:16', value: '9/16' },
+];
+
+// The HTML parser closes a <script> block on the first </scr + ipt> it finds in the source.
+// SCRIPT_CLOSE is built at runtime so that sequence never appears literally here.
+const SCRIPT_CLOSE = '<' + '/script>';
+
+// ── State ──────────────────────────────────────────────────────────────────────
+const S = {
+  elements:      [],
+  backgrounds:   [],       // [{id, src, fileName, x, y, scale}]
+  aspectRatio:   '16/9',   // CSS aspect-ratio value for the canvas
+  imagePrefix:   '',        // e.g. '../media/studio-bloob/' — prepended in code fence output as ![]()
+  editBgColor:   '#0d0d1a',
+  previewBgColor:'#000000',
+  exportBgColor: 'transparent', // hex color or 'transparent'
+  selectedId:    null,
+  mode:          'edit',   // 'edit' | 'preview' | 'code'
+  codeTab:       'embed',  // 'embed' | 'markdown' | 'import'
+};
+let _idN = 0;
+const nextId = () => 'el_' + Date.now() + '_' + (_idN++);
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const esc     = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const escHtml = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// Resolve selectedId to the actual object (checks elements then backgrounds)
+function getSelected() {
+  if (!S.selectedId) return { el: null, bg: null };
+  const el = S.elements.find(e => e.id === S.selectedId) || null;
+  const bg = el ? null : (S.backgrounds.find(b => b.id === S.selectedId) || null);
+  return { el, bg };
+}
+
+// ── Code generators ────────────────────────────────────────────────────────────
+// Returns filename wrapped in Obsidian image syntax if a prefix is set, else bare filename
+function imgRef(fileName, pfx) {
+  return pfx ? '![](' + pfx + fileName + ')' : fileName;
+}
+
+function generateCodeFence(scene) {
+  const pfx  = scene.imagePrefix || '';
+  let yaml = 'aspectRatio: "' + scene.aspectRatio + '"\n';
+
+  if (scene.backgrounds.length === 1 && scene.backgrounds[0].x === 0 && scene.backgrounds[0].y === 0 && scene.backgrounds[0].scale === 100) {
+    yaml += 'background: ' + imgRef(scene.backgrounds[0].fileName, pfx) + '\n';
+  } else if (scene.backgrounds.length > 0) {
+    yaml += 'backgrounds:\n';
+    scene.backgrounds.forEach(bg => {
+      yaml += '  - image: ' + imgRef(bg.fileName, pfx) + '\n';
+      if (bg.x !== 0)      yaml += '    x: '     + (Math.round(bg.x     * 10) / 10) + '\n';
+      if (bg.y !== 0)      yaml += '    y: '     + (Math.round(bg.y     * 10) / 10) + '\n';
+      if (bg.scale !== 100) yaml += '    scale: ' + (Math.round(bg.scale * 10) / 10) + '\n';
+    });
+  }
+
+  if (scene.elements.length === 0) return '```scene-nav\n' + yaml + '```';
+
+  yaml += 'elements:\n';
+  scene.elements.forEach(el => {
+    yaml += '  - image: ' + imgRef(el.fileName, pfx) + '\n';
+    yaml += '    x: '     + (Math.round(el.x     * 10) / 10) + '\n';
+    yaml += '    y: '     + (Math.round(el.y     * 10) / 10) + '\n';
+    yaml += '    scale: ' + (Math.round(el.scale * 10) / 10) + '\n';
+    if (el.rotation)                       yaml += '    rotation: ' + el.rotation + '\n';
+    if (el.resetRotationOnHover === false) yaml += '    resetRotationOnHover: false\n';
+    if (el.label)               yaml += '    label: "' + el.label + '"\n';
+    yaml += '    glow: "' + el.glowColor + '"\n';
+    if (el.glowIntensity !== 1) yaml += '    glowIntensity: ' + el.glowIntensity + '\n';
+    yaml += '    action: ' + el.actionType + '\n';
+    if (el.actionValue)         yaml += '    value: "' + el.actionValue + '"\n';
+  });
+  return '```scene-nav\n' + yaml + '```';
+}
+
+function generateEmbed(scene) {
+  const pfx = scene.imagePrefix || '';
+  const config = {
+    aspectRatio: scene.aspectRatio,
+    backgrounds: scene.backgrounds.map(bg => ({
+      src:   pfx + bg.fileName,
+      x:     Math.round(bg.x     * 10) / 10,
+      y:     Math.round(bg.y     * 10) / 10,
+      scale: Math.round(bg.scale * 10) / 10,
+    })),
+    elements: scene.elements.map(el => ({
+      image:         pfx + el.fileName,
+      src:           pfx + el.fileName,
+      x:             Math.round(el.x     * 10) / 10,
+      y:             Math.round(el.y     * 10) / 10,
+      scale:         Math.round(el.scale * 10) / 10,
+      rotation:             el.rotation    || 0,
+      resetRotationOnHover: el.resetRotationOnHover !== false,
+      label:         el.label       || null,
+      glow:          el.glowColor,
+      glowIntensity: el.glowIntensity,
+      action:        el.actionType,
+      value:         el.actionValue || null,
+    })),
+  };
+
+  // Build as array — the closing tag must not appear literally in this source file.
+  return [
+    '<!-- Scene Nav — generated by Bloob Haus builder -->',
+    '<!-- Replace filename src values with hosted image URLs before deploying -->',
+    '<div id="bloob-scene-nav" style="position:relative;max-width:900px;margin:0 auto;aspect-ratio:' + scene.aspectRatio + ';overflow:hidden;' + (scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '') + '">',
+    '<style>',
+    '  #bloob-scene-nav { font-family: system-ui, sans-serif; }',
+    '  .sn-bg-layer { position:absolute; pointer-events:none; }',
+    '  .sn-bg-layer img { width:100%; height:auto; display:block; }',
+    '  .sn-el { position:absolute; cursor:pointer; transition: filter 0.35s ease, transform 0.25s ease; }',
+    '  .sn-el img { width:100%; height:auto; display:block; pointer-events:none; user-select:none; }',
+    '  .sn-label {',
+    '    position:absolute; bottom:-26px; left:50%; transform:translateX(-50%);',
+    '    background:rgba(0,0,0,0.8); color:#fff; padding:3px 11px; border-radius:12px;',
+    '    font-size:12px; white-space:nowrap; opacity:0; transition:opacity 0.25s;',
+    '    pointer-events:none; letter-spacing:0.02em;',
+    '  }',
+    '  .sn-el:hover .sn-label { opacity:1; }',
+    '</style>',
+    '<script>',
+    '(function(){',
+    '  var S = ' + JSON.stringify(config, null, 2) + ';',
+    '  var c = document.getElementById(\'bloob-scene-nav\');',
+    '  (S.backgrounds || []).forEach(function(bg) {',
+    '    var d = document.createElement(\'div\');',
+    '    d.className = \'sn-bg-layer\';',
+    '    d.style.left = (bg.x || 0) + \'%\'; d.style.top = (bg.y || 0) + \'%\'; d.style.width = (bg.scale || 100) + \'%\';',
+    '    var img = document.createElement(\'img\');',
+    '    img.src = bg.src; img.draggable = false;',
+    '    d.appendChild(img); c.appendChild(d);',
+    '  });',
+    '  S.elements.forEach(function(el) {',
+    '    var d = document.createElement(\'div\');',
+    '    d.className = \'sn-el\';',
+    '    d.style.left = el.x + \'%\'; d.style.top = el.y + \'%\'; d.style.width = el.scale + \'%\'; d.style.transform = \'rotate(\' + (el.rotation || 0) + \'deg)\';',
+    '    var gI = el.glowIntensity || 1;',
+    '    var g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);',
+    '    var baseRot = \'rotate(\' + (el.rotation || 0) + \'deg)\';',
+    '    d.onmouseenter = function() {',
+    '      d.style.filter = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
+    '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : baseRot + \' \') + \'scale(1.06)\';',
+    '    };',
+    '    d.onmouseleave = function() { d.style.filter = \'none\'; d.style.transform = baseRot; };',
+    '    d.onclick = function() {',
+    '      if (el.action === \'link\' && el.value) { window.open(el.value, \'_blank\'); return; }',
+    '      if (el.action === \'anchor\' && el.value) {',
+    '        var t = document.getElementById(el.value) || document.querySelector(\'[name="\'+el.value+\'"]\');',
+    '        if (t) t.scrollIntoView({ behavior: \'smooth\' }); return;',
+    '      }',
+    '      if (el.action === \'filter\' && el.value) {',
+    '        window.dispatchEvent(new CustomEvent(\'bloob:filter\', { detail: { tag: el.value } }));',
+    '        var p = window.location.pathname;',
+    '        if (p.indexOf(\'/collections/\') > -1)',
+    '          window.location.href = p.split(\'?\')[0] + \'?filter.p.tag=\' + encodeURIComponent(el.value);',
+    '      }',
+    '    };',
+    '    var img = document.createElement(\'img\');',
+    '    img.src = el.src; img.alt = el.label || \'\'; img.draggable = false;',
+    '    d.appendChild(img);',
+    '    if (el.label) {',
+    '      var lbl = document.createElement(\'span\');',
+    '      lbl.className = \'sn-label\'; lbl.textContent = el.label;',
+    '      d.appendChild(lbl);',
+    '    }',
+    '    c.appendChild(d);',
+    '  });',
+    '})();',
+    SCRIPT_CLOSE,
+    '</div>',
+  ].join('\n');
+}
+
+// ── Import: parse code fence + apply to loaded images ─────────────────────────
+function parseCodeFence(text) {
+  const match = text.match(/```scene-nav\n([\s\S]*?)```/);
+  const yaml  = match ? match[1] : text;
+  const result = { aspectRatio: null, backgrounds: [], elements: [] };
+  let section = null, item = null;
+
+  // Strip Obsidian image syntax: ![]( path ) → path
+  const stripImg = (v) => { const m = v.match(/!\[\]\((.+)\)/); return m ? m[1] : v; };
+
+  const pushItem = () => {
+    if (!item) return;
+    if (section === 'backgrounds') result.backgrounds.push(item);
+    else if (section === 'elements') result.elements.push(item);
+    item = null;
+  };
+
+  for (const rawLine of yaml.split('\n')) {
+    const trimmed = rawLine.trim(); if (!trimmed) continue;
+    const indent = rawLine.match(/^(\s*)/)[1].length;
+    if (indent === 0) {
+      pushItem();
+      if (trimmed.startsWith('aspectRatio:')) {
+        result.aspectRatio = trimmed.split(':').slice(1).join(':').trim().replace(/^"|"$/g, '');
+      } else if (trimmed.startsWith('background:')) {
+        result.backgrounds = [{ fileName: stripImg(trimmed.split(':').slice(1).join(':').trim()), x: 0, y: 0, scale: 100 }];
+      } else if (trimmed === 'backgrounds:') { section = 'backgrounds'; }
+        else if (trimmed === 'elements:')    { section = 'elements'; }
+    } else {
+      if (trimmed.startsWith('- ')) {
+        pushItem(); item = {};
+        if (trimmed.startsWith('- image:')) item.fileName = stripImg(trimmed.replace(/^-\s*image:\s*/, ''));
+      } else if (item && trimmed.includes(':')) {
+        const ci = trimmed.indexOf(':');
+        const k  = trimmed.slice(0, ci).trim();
+        const v  = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
+        if (k === 'image') item.fileName = stripImg(v); else item[k] = v;
+      }
+    }
+  }
+  pushItem();
+  return result;
+}
+
+function applyImport(parsed) {
+  let appliedEl = 0, appliedBg = 0;
+  const basename = (p) => (p || '').split('/').pop();
+  if (parsed.aspectRatio) S.aspectRatio = parsed.aspectRatio;
+
+  // Auto-detect prefix from the first image path that contains a directory
+  const allPaths = [...parsed.backgrounds, ...parsed.elements].map(i => i.fileName).filter(Boolean);
+  const withDir  = allPaths.find(p => p.includes('/'));
+  if (withDir) S.imagePrefix = withDir.substring(0, withDir.lastIndexOf('/') + 1);
+
+  parsed.backgrounds.forEach(imp => {
+    const bg = S.backgrounds.find(b => basename(b.fileName) === basename(imp.fileName)); if (!bg) return;
+    if (imp.x     !== undefined) bg.x     = parseFloat(imp.x)     || 0;
+    if (imp.y     !== undefined) bg.y     = parseFloat(imp.y)     || 0;
+    if (imp.scale !== undefined) bg.scale = parseFloat(imp.scale) || 100;
+    appliedBg++;
+  });
+  parsed.elements.forEach(imp => {
+    const el = S.elements.find(e => basename(e.fileName) === basename(imp.fileName)); if (!el) return;
+    if (imp.x             !== undefined) el.x             = parseFloat(imp.x)             || 0;
+    if (imp.y             !== undefined) el.y             = parseFloat(imp.y)             || 0;
+    if (imp.scale         !== undefined) el.scale         = parseFloat(imp.scale)         || 18;
+    if (imp.rotation      !== undefined) el.rotation      = parseFloat(imp.rotation)      || 0;
+    if (imp.label         !== undefined) el.label         = imp.label;
+    if (imp.glow          !== undefined) el.glowColor     = imp.glow;
+    if (imp.glowIntensity !== undefined) el.glowIntensity = parseFloat(imp.glowIntensity) || 1;
+    if (imp.action               !== undefined) el.actionType           = imp.action;
+    if (imp.value                !== undefined) el.actionValue          = imp.value;
+    if (imp.resetRotationOnHover !== undefined) el.resetRotationOnHover = imp.resetRotationOnHover !== 'false' && imp.resetRotationOnHover !== false;
+    appliedEl++;
+  });
+  return { appliedEl, appliedBg };
+}
+
+// ── State helpers ──────────────────────────────────────────────────────────────
+function updateEl(id, patch) {
+  const el = S.elements.find(e => e.id === id);
+  if (el) Object.assign(el, patch);
+}
+function removeEl(id) {
+  S.elements = S.elements.filter(e => e.id !== id);
+  if (S.selectedId === id) S.selectedId = null;
+}
+function updateBg(id, patch) {
+  const bg = S.backgrounds.find(b => b.id === id);
+  if (bg) Object.assign(bg, patch);
+}
+function removeBg(id) {
+  S.backgrounds = S.backgrounds.filter(b => b.id !== id);
+  if (S.selectedId === id) S.selectedId = null;
+}
+
+// ── Canvas: mount draggable background layers ──────────────────────────────────
+function mountBackgroundLayers(container) {
+  container.querySelectorAll('.sn-bg-layer').forEach(n => n.remove());
+
+  S.backgrounds.forEach(bg => {
+    const div = document.createElement('div');
+    div.className  = 'sn-bg-layer';
+    div.dataset.bgid = bg.id;
+
+    const isSelected = S.selectedId === bg.id;
+    Object.assign(div.style, {
+      position:      'absolute',
+      left:          bg.x + '%',
+      top:           bg.y + '%',
+      width:         bg.scale + '%',
+      zIndex:        2,
+      cursor:        S.mode === 'preview' ? 'default' : 'grab',
+      outline:       isSelected ? '2px dashed #8888aa' : 'none',
+      outlineOffset: '3px',
+      transition:    'outline 0.12s',
+    });
+
+    const img = document.createElement('img');
+    img.src = bg.src; img.draggable = false;
+    Object.assign(img.style, { width:'100%', height:'auto', display:'block', pointerEvents:'none', userSelect:'none' });
+    div.appendChild(img);
+
+    if (S.mode !== 'preview') {
+      div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        S.selectedId = bg.id;
+        renderLeftPanel();
+        container.querySelectorAll('.sn-bg-layer').forEach(d => {
+          d.style.outline = d.dataset.bgid === bg.id ? '2px dashed #8888aa' : 'none';
+        });
+        container.querySelectorAll('.sn-builder-el').forEach(d => { d.style.outline = 'none'; });
+      });
+
+      div.addEventListener('mousedown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const rect    = container.getBoundingClientRect();
+        const startMx = e.clientX, startMy = e.clientY;
+        const startBx = bg.x,      startBy = bg.y;
+        div.style.cursor = 'grabbing'; div.style.transition = 'none';
+
+        const onMove = (ev) => {
+          bg.x = startBx + ((ev.clientX - startMx) / rect.width)  * 100;
+          bg.y = startBy + ((ev.clientY - startMy) / rect.height) * 100;
+          div.style.left = bg.x + '%'; div.style.top = bg.y + '%';
+          if (S.selectedId === bg.id) {
+            const xi = document.getElementById('bg-x');
+            if (xi) { xi.value = bg.x; document.getElementById('bg-x-display').textContent = Math.round(bg.x) + '%'; }
+            const yi = document.getElementById('bg-y');
+            if (yi) { yi.value = bg.y; document.getElementById('bg-y-display').textContent = Math.round(bg.y) + '%'; }
+          }
+        };
+        const onUp = () => {
+          div.style.cursor = 'grab'; div.style.transition = 'outline 0.12s';
+          updateBg(bg.id, { x: bg.x, y: bg.y });
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup',   onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup',   onUp);
+      });
+    }
+
+    container.insertBefore(div, container.firstChild);
+  });
+}
+
+// ── Canvas: mount draggable scene elements ─────────────────────────────────────
+function mountSceneElements(container) {
+  container.querySelectorAll('.sn-builder-el').forEach(n => n.remove());
+
+  S.elements.forEach(el => {
+    const div = document.createElement('div');
+    div.className  = 'sn-builder-el';
+    div.dataset.id = el.id;
+
+    const isSelected = S.selectedId === el.id;
+    const isPreview  = S.mode === 'preview';
+
+    Object.assign(div.style, {
+      position:      'absolute',
+      left:          el.x + '%',
+      top:           el.y + '%',
+      width:         el.scale + '%',
+      cursor:        isPreview ? 'pointer' : 'grab',
+      transition:    'filter 0.35s ease, transform 0.25s ease',
+      transform:     'rotate(' + (el.rotation || 0) + 'deg)',
+      zIndex:        isSelected ? 50 : 10,
+      outline:       (!isPreview && isSelected) ? '2px dashed ' + el.glowColor : 'none',
+      outlineOffset: '4px',
+    });
+
+    const img = document.createElement('img');
+    img.src = el.src; img.alt = el.label || ''; img.draggable = false;
+    Object.assign(img.style, { width:'100%', height:'auto', display:'block', pointerEvents:'none', userSelect:'none' });
+    div.appendChild(img);
+
+    if (el.label) {
+      const lbl = document.createElement('div');
+      lbl.className = 'sn-builder-label'; lbl.textContent = el.label;
+      Object.assign(lbl.style, {
+        position:'absolute', bottom:'-28px', left:'50%', transform:'translateX(-50%)',
+        background:'rgba(0,0,0,0.82)', color:'#fff', padding:'4px 12px', borderRadius:'14px',
+        fontSize:'12px', whiteSpace:'nowrap', pointerEvents:'none',
+        fontFamily:"'DM Sans', sans-serif", opacity:0, transition:'opacity 0.2s',
+      });
+      div.appendChild(lbl);
+    }
+
+    // Hover: edit always keeps rotation; preview respects resetRotationOnHover
+    div.addEventListener('mouseenter', () => {
+      const cur = S.elements.find(e => e.id === el.id); if (!cur) return;
+      const gI = cur.glowIntensity || 1;
+      const g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);
+      div.style.filter    = `drop-shadow(0 0 ${g1}px ${cur.glowColor}) drop-shadow(0 0 ${g2}px ${cur.glowColor}) drop-shadow(0 0 ${g3}px ${cur.glowColor}80)`;
+      const keepRot = !isPreview || cur.resetRotationOnHover === false;
+      div.style.transform = (keepRot ? 'rotate(' + (cur.rotation || 0) + 'deg) ' : '') + 'scale(1.06)';
+      const lbl = div.querySelector('.sn-builder-label');
+      if (lbl) lbl.style.opacity = 1;
+    });
+    div.addEventListener('mouseleave', () => {
+      const cur = S.elements.find(e => e.id === el.id);
+      div.style.filter    = 'none';
+      div.style.transform = 'rotate(' + ((cur && cur.rotation) || 0) + 'deg)';
+      const lbl = div.querySelector('.sn-builder-label');
+      if (lbl) lbl.style.opacity = 0;
+    });
+
+    // Click: select (edit) or activate (preview)
+    div.addEventListener('click', (e) => {
+      if (isPreview) {
+        if (el.actionType === 'link'   && el.actionValue) { window.open(el.actionValue, '_blank'); return; }
+        if (el.actionType === 'anchor' && el.actionValue) {
+          const t = document.getElementById(el.actionValue);
+          if (t) t.scrollIntoView({ behavior: 'smooth' }); return;
+        }
+        if (el.actionType === 'filter') { alert('Filter → ' + (el.actionValue || '(no tag set)')); return; }
+        return;
+      }
+      e.stopPropagation();
+      S.selectedId = el.id;
+      renderLeftPanel();
+      // Update outlines without full canvas remount
+      container.querySelectorAll('.sn-builder-el').forEach(d => {
+        const eel = S.elements.find(e => e.id === d.dataset.id); if (!eel) return;
+        d.style.outline = d.dataset.id === el.id ? '2px dashed ' + eel.glowColor : 'none';
+        d.style.zIndex  = d.dataset.id === el.id ? 50 : 10;
+      });
+      container.querySelectorAll('.sn-bg-layer').forEach(d => { d.style.outline = 'none'; });
+    });
+
+    // Drag: smooth DOM-only updates during move, state commit on mouseup
+    if (!isPreview) {
+      div.addEventListener('mousedown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const rect    = container.getBoundingClientRect();
+        const startMx = e.clientX, startMy = e.clientY;
+        const startEx = el.x,      startEy = el.y;
+        div.style.cursor = 'grabbing'; div.style.zIndex = 100; div.style.transition = 'none';
+
+        const onMove = (ev) => {
+          el.x = startEx + ((ev.clientX - startMx) / rect.width)  * 100;
+          el.y = startEy + ((ev.clientY - startMy) / rect.height) * 100;
+          div.style.left = el.x + '%'; div.style.top = el.y + '%';
+        };
+        const onUp = () => {
+          div.style.cursor     = 'grab';
+          div.style.zIndex     = S.selectedId === el.id ? 50 : 10;
+          div.style.transition = 'filter 0.35s ease, transform 0.25s ease';
+          updateEl(el.id, { x: el.x, y: el.y });
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup',   onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup',   onUp);
+      });
+    }
+
+    container.appendChild(div);
+  });
+}
+
+// ── Render: canvas area ────────────────────────────────────────────────────────
+function renderCanvas() {
+  const canvasArea = document.getElementById('canvas-area');
+  const container  = document.getElementById('scene-container');
+  if (!canvasArea || !container) return;
+
+  const isPreview = S.mode === 'preview';
+  canvasArea.style.background = isPreview
+    ? 'radial-gradient(ellipse at center, #0e0e1a 0%, #050508 100%)'
+    : '#08080e';
+
+  // Canvas dimensions + background color
+  container.style.aspectRatio = S.aspectRatio;
+  container.style.minHeight   = '280px';
+  container.style.background  = isPreview ? S.previewBgColor : S.editBgColor;
+
+  mountBackgroundLayers(container);
+
+  // Empty state placeholder
+  let ph = container.querySelector('.sn-placeholder');
+  if (!S.backgrounds.length && S.elements.length === 0) {
+    if (!ph) {
+      ph = document.createElement('div'); ph.className = 'sn-placeholder';
+      Object.assign(ph.style, { position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#505070', gap:'10px' });
+      ph.innerHTML = '<div style="font-size:42px;opacity:0.5">✦</div><div style="font-size:13px;text-align:center;line-height:1.7;max-width:240px">Upload a transparent background PNG, then add character images to position them.</div>';
+      container.appendChild(ph);
+    }
+  } else { if (ph) ph.remove(); }
+
+  mountSceneElements(container);
+
+  // Preview hint
+  let hint = document.getElementById('preview-hint');
+  if (isPreview && S.elements.length > 0) {
+    if (!hint) {
+      hint = document.createElement('div'); hint.id = 'preview-hint';
+      Object.assign(hint.style, { marginTop:'14px', fontSize:'11px', color:'#667799', fontFamily:"'Space Mono', monospace", textAlign:'center' });
+      hint.textContent = 'hover to glow · click to activate';
+      canvasArea.appendChild(hint);
+    }
+  } else { if (hint) hint.remove(); }
+}
+
+// ── Render: left panel ─────────────────────────────────────────────────────────
+function renderLeftPanel() {
+  const panel = document.getElementById('left-panel'); if (!panel) return;
+  const { el: sel, bg: selBg } = getSelected();
+
+  // Aspect ratio buttons
+  const arBtns = ASPECT_RATIOS.map(ar => {
+    const active = S.aspectRatio === ar.value;
+    return `<button class="ar-btn" data-ar="${esc(ar.value)}" style="
+        flex:1;padding:5px 2px;border-radius:5px;border:1px solid ${active ? '#FFD700' : '#1e1e30'};
+        background:${active ? '#FFD70014' : 'transparent'};color:${active ? '#FFD700' : '#8888aa'};
+        cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;transition:all 0.12s;">
+      ${esc(ar.label)}</button>`;
+  }).join('');
+
+  // Background list
+  const bgListHtml = S.backgrounds.map(bg => {
+    const active = bg.id === S.selectedId;
+    return `<div class="bg-item" data-bgid="${esc(bg.id)}" style="
+        padding:7px 10px;margin-bottom:3px;border-radius:7px;cursor:pointer;
+        background:${active ? '#111122' : 'transparent'};
+        border:1px solid ${active ? '#8888aa30' : 'transparent'};
+        display:flex;align-items:center;gap:8px;transition:all 0.12s;">
+      <div style="width:26px;height:26px;border-radius:5px;background:#0c0c16;overflow:hidden;
+                  flex-shrink:0;border:1px solid #1e1e3060;display:flex;align-items:center;justify-content:center;">
+        <img class="bg-thumb" data-bgid="${esc(bg.id)}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+      </div>
+      <div style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ccc;">${esc(bg.fileName)}</div>
+    </div>`;
+  }).join('');
+
+  // Element list
+  const listHtml = S.elements.map(el => {
+    const active = el.id === S.selectedId;
+    const badge  = el.actionType === 'filter' && el.actionValue ? '◉ ' + el.actionValue
+                 : el.actionType === 'link'   ? '↗ link'
+                 : el.actionType === 'anchor' ? '↓ anchor' : '◉ filter';
+    return `<div class="el-item" data-id="${esc(el.id)}" style="
+        padding:8px 10px;margin-bottom:3px;border-radius:7px;cursor:pointer;
+        background:${active ? '#111122' : 'transparent'};
+        border:1px solid ${active ? el.glowColor + '30' : 'transparent'};
+        display:flex;align-items:center;gap:8px;transition:all 0.12s;">
+      <div style="width:26px;height:26px;border-radius:5px;background:#0c0c16;overflow:hidden;
+                  flex-shrink:0;border:1px solid ${el.glowColor}20;display:flex;align-items:center;justify-content:center;">
+        <img class="el-thumb" data-elid="${esc(el.id)}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(el.label || el.fileName)}</div>
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;">${esc(badge)}</div>
+      </div>
+      <div style="width:10px;height:10px;border-radius:50%;background:${el.glowColor};flex-shrink:0;box-shadow:0 0 6px ${el.glowColor}60;"></div>
+    </div>`;
+  }).join('');
+
+  // Background properties panel
+  let bgPropsHtml = '';
+  if (selBg) {
+    bgPropsHtml = `
+      <div style="margin-top:16px;padding:12px;border-radius:8px;background:#0c0c18;border:1px solid #8888aa18;">
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em;">Background Layer</div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Size · <span id="bg-scale-display">${Math.round(selBg.scale)}%</span>
+          </div>
+          <input id="bg-scale" type="range" min="10" max="200" step="1" value="${selBg.scale}"
+                 style="--range-color:#8888aa" />
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            X offset · <span id="bg-x-display">${Math.round(selBg.x)}%</span>
+          </div>
+          <input id="bg-x" type="range" min="-50" max="150" step="0.5" value="${selBg.x}"
+                 style="--range-color:#8888aa" />
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Y offset · <span id="bg-y-display">${Math.round(selBg.y)}%</span>
+          </div>
+          <input id="bg-y" type="range" min="-50" max="150" step="0.5" value="${selBg.y}"
+                 style="--range-color:#8888aa" />
+        </div>
+
+        <button id="remove-bg-btn" style="
+            width:100%;padding:7px;border-radius:6px;border:1px solid #552222;
+            background:transparent;color:#aa4444;cursor:pointer;font-size:11px;
+            transition:all 0.15s;">Remove</button>
+      </div>`;
+  }
+
+  // Element properties panel
+  let propsHtml = '';
+  if (sel) {
+    const swatches = GLOW_PRESETS.map(p => `
+      <div class="glow-swatch" data-color="${esc(p.color)}" title="${esc(p.name)}" style="
+          width:20px;height:20px;border-radius:5px;background:${p.color};cursor:pointer;
+          border:2px solid ${sel.glowColor === p.color ? '#fff' : 'transparent'};
+          box-shadow:${sel.glowColor === p.color ? '0 0 8px ' + p.color : 'none'};
+          transition:all 0.12s;"></div>`).join('');
+
+    const actionBtns = ACTION_TYPES.map(a => `
+      <div class="action-btn" data-action="${esc(a.value)}" style="
+          padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;
+          background:${sel.actionType === a.value ? sel.glowColor + '12' : 'transparent'};
+          border:1px solid ${sel.actionType === a.value ? sel.glowColor + '40' : '#1a1a2e'};
+          color:${sel.actionType === a.value ? sel.glowColor : '#8888aa'};
+          transition:all 0.12s;display:flex;align-items:center;gap:6px;">
+        <span style="font-family:'Space Mono',monospace;">${esc(a.icon)}</span>${esc(a.label)}
+      </div>`).join('');
+
+    const actionLabel = sel.actionType === 'filter' ? 'Shopify tag' : sel.actionType === 'link' ? 'URL' : 'Heading ID / anchor';
+    const actionPh    = sel.actionType === 'filter' ? 'character:bloob' : sel.actionType === 'link' ? 'https://...' : 'section-name';
+
+    propsHtml = `
+      <div style="margin-top:16px;padding:12px;border-radius:8px;background:#0c0c18;border:1px solid ${sel.glowColor}15;">
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em;">Properties</div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:3px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Label</div>
+          <input id="prop-label" type="text" value="${esc(sel.label || '')}" placeholder="Display name" style="
+            width:100%;padding:7px 10px;border-radius:6px;border:1px solid #1e1e30;
+            background:#0c0c18;color:#ccc;font-size:13px;font-family:'DM Sans',sans-serif;
+            outline:none;box-sizing:border-box;transition:border-color 0.15s;" />
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Size · <span id="scale-display">${Math.round(sel.scale)}%</span>
+          </div>
+          <input id="prop-scale" type="range" min="3" max="60" step="0.5" value="${sel.scale}"
+                 style="--range-color:${sel.glowColor}" />
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Rotation · <span id="rotation-display">${sel.rotation || 0}°</span>
+          </div>
+          <input id="prop-rotation" type="range" min="-180" max="180" step="1" value="${sel.rotation || 0}"
+                 style="--range-color:${sel.glowColor}" />
+        </div>
+
+        <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+          <input id="prop-reset-rot" type="checkbox" ${sel.resetRotationOnHover !== false ? 'checked' : ''}
+                 style="cursor:pointer;accent-color:${sel.glowColor};width:14px;height:14px;" />
+          <label for="prop-reset-rot" style="font-size:11px;color:#8888aa;cursor:pointer;user-select:none;line-height:1.3;">
+            Reset to 0° on hover<br><span style="color:#505070;font-family:'Space Mono',monospace;font-size:9px;">preview + embed code</span>
+          </label>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Glow color</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">${swatches}</div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Glow intensity · <span id="intensity-display">${sel.glowIntensity.toFixed(1)}x</span>
+          </div>
+          <input id="prop-intensity" type="range" min="0.2" max="3" step="0.1" value="${sel.glowIntensity}"
+                 style="--range-color:${sel.glowColor}" />
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Click action</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">${actionBtns}</div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:3px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">${esc(actionLabel)}</div>
+          <input id="prop-action-value" type="text" value="${esc(sel.actionValue || '')}"
+                 placeholder="${esc(actionPh)}" style="
+            width:100%;padding:7px 10px;border-radius:6px;border:1px solid #1e1e30;
+            background:#0c0c18;color:#ccc;font-size:13px;font-family:'Space Mono',monospace;
+            outline:none;box-sizing:border-box;transition:border-color 0.15s;" />
+        </div>
+
+        <button id="remove-btn" style="
+            width:100%;padding:7px;border-radius:6px;border:1px solid #552222;
+            background:transparent;color:#aa4444;cursor:pointer;font-size:11px;
+            transition:all 0.15s;margin-top:4px;">Remove</button>
+      </div>`;
+  }
+
+  panel.innerHTML = `
+    <div style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px;">
+      <button id="bg-btn" style="width:100%;padding:9px;border-radius:7px;border:1px dashed #1e1e30;
+          background:transparent;color:#8888aa;cursor:pointer;font-size:12px;transition:all 0.15s;">
+        ＋ Add background PNGs
+      </button>
+      <button id="el-btn" style="width:100%;padding:9px;border-radius:7px;border:1px dashed #1e1e30;
+          background:transparent;color:#8888aa;cursor:pointer;font-size:12px;transition:all 0.15s;">
+        ＋ Add element PNGs
+      </button>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Image path prefix</div>
+      <input id="image-prefix-input" type="text" value="${esc(S.imagePrefix)}"
+             placeholder="../media/studio-bloob/"
+             style="width:100%;padding:7px 10px;border-radius:6px;border:1px solid #1e1e30;
+                    background:#0c0c18;color:#ccc;font-size:11px;font-family:'Space Mono',monospace;
+                    outline:none;box-sizing:border-box;transition:border-color 0.15s;" />
+      <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:3px;line-height:1.4;">
+        Prepended to filenames in code output<br>as <span style="color:#7a7a9a;">![](<em>prefix</em>filename.png)</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Canvas size</div>
+      <div style="display:flex;gap:4px;">${arBtns}</div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Canvas background</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#8888aa;font-family:'Space Mono',monospace;width:50px;">Edit</span>
+          <input id="bg-edit-color" type="color" value="${S.editBgColor}"
+                 style="width:32px;height:22px;border:1px solid #1e1e30;border-radius:4px;background:transparent;cursor:pointer;padding:1px;" />
+          <span style="font-size:10px;color:#505070;font-family:'Space Mono',monospace;">${S.editBgColor}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#8888aa;font-family:'Space Mono',monospace;width:50px;">Preview</span>
+          <input id="bg-preview-color" type="color" value="${S.previewBgColor}"
+                 style="width:32px;height:22px;border:1px solid #1e1e30;border-radius:4px;background:transparent;cursor:pointer;padding:1px;" />
+          <span style="font-size:10px;color:#505070;font-family:'Space Mono',monospace;">${S.previewBgColor}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#8888aa;font-family:'Space Mono',monospace;width:50px;">Export</span>
+          <input id="bg-export-color" type="color" value="${S.exportBgColor === 'transparent' ? '#000000' : S.exportBgColor}"
+                 ${S.exportBgColor === 'transparent' ? 'disabled' : ''}
+                 style="width:32px;height:22px;border:1px solid #1e1e30;border-radius:4px;background:transparent;cursor:pointer;padding:1px;opacity:${S.exportBgColor === 'transparent' ? '0.3' : '1'};" />
+          <button id="bg-export-transparent" style="padding:3px 7px;border-radius:4px;font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;
+              border:1px solid ${S.exportBgColor === 'transparent' ? '#FFD700' : '#1e1e30'};
+              background:${S.exportBgColor === 'transparent' ? '#FFD70018' : 'transparent'};
+              color:${S.exportBgColor === 'transparent' ? '#FFD700' : '#8888aa'};transition:all 0.12s;">
+            transp.</button>
+        </div>
+      </div>
+    </div>
+
+    ${S.backgrounds.length > 0 ? `
+    <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">
+      Backgrounds · ${S.backgrounds.length}
+    </div>
+    ${bgListHtml}
+    <div style="margin-top:10px;"></div>
+    ` : ''}
+
+    <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">
+      Elements · ${S.elements.length}
+    </div>
+
+    ${listHtml}
+
+    ${S.elements.length === 0 && S.backgrounds.length === 0 ? '<div style="text-align:center;padding:24px 8px;color:#505070;font-size:12px;line-height:1.7;">Upload a background,<br>then add character PNGs<br>to build your scene.</div>' : ''}
+
+    ${bgPropsHtml}
+    ${propsHtml}
+  `;
+
+  // Set thumbnail srcs via JS (data-URIs safe via property, not HTML attribute)
+  panel.querySelectorAll('.bg-thumb').forEach(img => {
+    const bg = S.backgrounds.find(b => b.id === img.dataset.bgid);
+    if (bg) img.src = bg.src;
+  });
+  panel.querySelectorAll('.el-thumb').forEach(img => {
+    const el = S.elements.find(e => e.id === img.dataset.elid);
+    if (el) img.src = el.src;
+  });
+
+  // Upload buttons
+  const bgBtn = document.getElementById('bg-btn');
+  bgBtn.onclick      = () => document.getElementById('bg-input').click();
+  bgBtn.onmouseenter = () => { bgBtn.style.borderColor = '#FFD700'; bgBtn.style.color = '#FFD700'; };
+  bgBtn.onmouseleave = () => { bgBtn.style.borderColor = '#1e1e30'; bgBtn.style.color = '#8888aa'; };
+
+  const elBtn = document.getElementById('el-btn');
+  elBtn.onclick      = () => document.getElementById('el-input').click();
+  elBtn.onmouseenter = () => { elBtn.style.borderColor = '#69F0AE'; elBtn.style.color = '#69F0AE'; };
+  elBtn.onmouseleave = () => { elBtn.style.borderColor = '#1e1e30'; elBtn.style.color = '#8888aa'; };
+
+  // Image prefix input
+  const prefixInput = document.getElementById('image-prefix-input');
+  prefixInput.addEventListener('input', () => { S.imagePrefix = prefixInput.value; });
+  prefixInput.onfocus = e => e.target.style.borderColor = '#444';
+  prefixInput.onblur  = e => e.target.style.borderColor = '#1e1e30';
+
+  // Aspect ratio buttons
+  panel.querySelectorAll('.ar-btn').forEach(btn => {
+    btn.onclick = () => {
+      S.aspectRatio = btn.dataset.ar;
+      const container = document.getElementById('scene-container');
+      if (container) container.style.aspectRatio = S.aspectRatio;
+      renderLeftPanel();
+    };
+  });
+
+  // Canvas background color handlers
+  document.getElementById('bg-edit-color').addEventListener('input', e => {
+    S.editBgColor = e.target.value;
+    e.target.nextElementSibling.textContent = S.editBgColor;
+    if (S.mode === 'edit') { const c = document.getElementById('scene-container'); if (c) c.style.background = S.editBgColor; }
+  });
+  document.getElementById('bg-preview-color').addEventListener('input', e => {
+    S.previewBgColor = e.target.value;
+    e.target.nextElementSibling.textContent = S.previewBgColor;
+    if (S.mode === 'preview') { const c = document.getElementById('scene-container'); if (c) c.style.background = S.previewBgColor; }
+  });
+  document.getElementById('bg-export-color').addEventListener('input', e => {
+    if (S.exportBgColor !== 'transparent') S.exportBgColor = e.target.value;
+  });
+  document.getElementById('bg-export-transparent').onclick = () => {
+    if (S.exportBgColor === 'transparent') {
+      const picker = document.getElementById('bg-export-color');
+      S.exportBgColor = picker ? picker.value : '#000000';
+    } else {
+      S.exportBgColor = 'transparent';
+    }
+    renderLeftPanel();
+  };
+
+  // Background list → select
+  panel.querySelectorAll('.bg-item').forEach(item => {
+    item.onclick = () => { S.selectedId = item.dataset.bgid; renderLeftPanel(); renderCanvas(); };
+  });
+
+  // Element list → select
+  panel.querySelectorAll('.el-item').forEach(item => {
+    item.onclick = () => { S.selectedId = item.dataset.id; renderLeftPanel(); renderCanvas(); };
+  });
+
+  // Background properties handlers
+  if (selBg) {
+    const bgScale = document.getElementById('bg-scale');
+    bgScale.addEventListener('input', () => {
+      const v = Number(bgScale.value);
+      updateBg(selBg.id, { scale: v });
+      document.getElementById('bg-scale-display').textContent = Math.round(v) + '%';
+      const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
+      if (canvasEl) canvasEl.style.width = v + '%';
+    });
+
+    const bgX = document.getElementById('bg-x');
+    bgX.addEventListener('input', () => {
+      const v = Number(bgX.value);
+      updateBg(selBg.id, { x: v });
+      document.getElementById('bg-x-display').textContent = Math.round(v) + '%';
+      const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
+      if (canvasEl) canvasEl.style.left = v + '%';
+    });
+
+    const bgY = document.getElementById('bg-y');
+    bgY.addEventListener('input', () => {
+      const v = Number(bgY.value);
+      updateBg(selBg.id, { y: v });
+      document.getElementById('bg-y-display').textContent = Math.round(v) + '%';
+      const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
+      if (canvasEl) canvasEl.style.top = v + '%';
+    });
+
+    const removeBgBtn = document.getElementById('remove-bg-btn');
+    removeBgBtn.onclick      = () => { removeBg(selBg.id); renderLeftPanel(); renderCanvas(); };
+    removeBgBtn.onmouseenter = () => removeBgBtn.style.background = '#221111';
+    removeBgBtn.onmouseleave = () => removeBgBtn.style.background = 'transparent';
+  }
+
+  if (!sel) return;
+
+  // Element properties handlers
+  const labelInput = document.getElementById('prop-label');
+  labelInput.addEventListener('input', () => {
+    updateEl(sel.id, { label: labelInput.value });
+    const li = panel.querySelector('.el-item[data-id="' + sel.id + '"]');
+    if (li) li.querySelector('div > div:first-child').textContent = labelInput.value || sel.fileName;
+    const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+    if (canvasEl) { const lbl = canvasEl.querySelector('.sn-builder-label'); if (lbl) lbl.textContent = labelInput.value; }
+  });
+  labelInput.onfocus = e => e.target.style.borderColor = '#444';
+  labelInput.onblur  = e => e.target.style.borderColor = '#1e1e30';
+
+  const scaleInput = document.getElementById('prop-scale');
+  scaleInput.addEventListener('input', () => {
+    const v = Number(scaleInput.value);
+    updateEl(sel.id, { scale: v });
+    document.getElementById('scale-display').textContent = Math.round(v) + '%';
+    const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+    if (canvasEl) canvasEl.style.width = v + '%';
+  });
+
+  const rotationInput = document.getElementById('prop-rotation');
+  rotationInput.addEventListener('input', () => {
+    const v = Number(rotationInput.value);
+    updateEl(sel.id, { rotation: v });
+    document.getElementById('rotation-display').textContent = v + '°';
+    const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+    if (canvasEl) canvasEl.style.transform = 'rotate(' + v + 'deg)';
+  });
+
+  const resetRotInput = document.getElementById('prop-reset-rot');
+  resetRotInput.addEventListener('change', () => updateEl(sel.id, { resetRotationOnHover: resetRotInput.checked }));
+
+  const intensityInput = document.getElementById('prop-intensity');
+  intensityInput.addEventListener('input', () => {
+    const v = Number(intensityInput.value);
+    updateEl(sel.id, { glowIntensity: v });
+    document.getElementById('intensity-display').textContent = v.toFixed(1) + 'x';
+  });
+
+  panel.querySelectorAll('.glow-swatch').forEach(sw => {
+    sw.onclick = () => {
+      updateEl(sel.id, { glowColor: sw.dataset.color });
+      renderLeftPanel();
+      const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+      if (canvasEl) canvasEl.style.outline = '2px dashed ' + sw.dataset.color;
+    };
+  });
+
+  panel.querySelectorAll('.action-btn').forEach(btn => {
+    btn.onclick = () => { updateEl(sel.id, { actionType: btn.dataset.action }); renderLeftPanel(); };
+  });
+
+  const avInput = document.getElementById('prop-action-value');
+  avInput.addEventListener('input', () => updateEl(sel.id, { actionValue: avInput.value }));
+  avInput.onfocus = e => e.target.style.borderColor = '#444';
+  avInput.onblur  = e => e.target.style.borderColor = '#1e1e30';
+
+  const removeBtn = document.getElementById('remove-btn');
+  removeBtn.onclick      = () => { removeEl(sel.id); renderLeftPanel(); renderCanvas(); };
+  removeBtn.onmouseenter = () => removeBtn.style.background = '#221111';
+  removeBtn.onmouseleave = () => removeBtn.style.background = 'transparent';
+}
+
+// ── Render: code panel ─────────────────────────────────────────────────────────
+function renderCodePanel() {
+  const panel = document.getElementById('code-panel'); if (!panel) return;
+
+  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix };
+  const fenceCode = generateCodeFence(scene);
+  const embedCode = generateEmbed(scene);
+  const code      = S.elements.length > 0 || S.backgrounds.length > 0
+    ? (S.codeTab === 'markdown' ? fenceCode : embedCode)
+    : '// Add elements to generate code';
+
+  const tabStyle = (active) => `padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;font-weight:${active?600:400};border:1px solid ${active?'#FFD700':'#1e1e30'};background:${active?'#FFD70012':'transparent'};color:${active?'#FFD700':'#8888aa'};transition:all 0.15s;`;
+
+  const isOutput = S.codeTab === 'embed' || S.codeTab === 'markdown';
+
+  const desc = S.codeTab === 'markdown'
+    ? 'The <span style="color:#FFD700;font-family:\'Space Mono\',monospace;">```scene-nav```</span> code fence for your markdown file. Source of truth — the visualizer reads this at build time.'
+    : S.codeTab === 'embed'
+    ? 'Standalone HTML/CSS/JS — paste into Shopify or any website. Replace filename image sources with hosted URLs for production.'
+    : 'Paste a <span style="color:#FFD700;font-family:\'Space Mono\',monospace;">```scene-nav```</span> code fence to apply its settings to images with matching filenames.';
+
+  panel.innerHTML = `
+    <div style="padding:12px 16px;border-bottom:1px solid #141422;display:flex;gap:6px;flex-wrap:wrap;">
+      <button id="tab-embed"    style="${tabStyle(S.codeTab==='embed')}">Embed HTML</button>
+      <button id="tab-markdown" style="${tabStyle(S.codeTab==='markdown')}">&#96;&#96;&#96; Markdown &#96;&#96;&#96;</button>
+      <button id="tab-import"   style="${tabStyle(S.codeTab==='import')}">↓ Import</button>
+    </div>
+    <div style="padding:12px 16px;border-bottom:1px solid #0e0e1e;font-size:12px;color:#7a7a9a;line-height:1.6;">${desc}</div>
+
+    ${isOutput ? `
+    <div style="flex:1;overflow:auto;padding:16px;">
+      <pre style="margin:0;font-size:11px;line-height:1.65;color:#9090b0;font-family:'Space Mono',monospace;white-space:pre-wrap;word-break:break-all;">${escHtml(code)}</pre>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #141422;">
+      <button id="copy-btn" style="width:100%;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#FFD700,#FF6B9D);color:#000;font-weight:700;font-size:13px;cursor:pointer;">
+        Copy ${S.codeTab === 'markdown' ? 'Markdown' : 'Embed Code'}
+      </button>
+    </div>
+    ` : `
+    <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;">
+      <textarea id="import-textarea" placeholder="\`\`\`scene-nav&#10;aspectRatio: &quot;16/9&quot;&#10;background: scene.png&#10;elements:&#10;  - image: char.png&#10;    x: 25&#10;    y: 30&#10;    scale: 18&#10;\`\`\`" style="
+        flex:1;width:100%;min-height:240px;background:#0c0c18;color:#ccc;
+        border:1px solid #1e1e30;border-radius:6px;padding:10px;
+        font-family:'Space Mono',monospace;font-size:11px;line-height:1.6;
+        outline:none;resize:none;transition:border-color 0.15s;"></textarea>
+      <div id="import-status" style="font-size:11px;color:#7a7a9a;font-family:'Space Mono',monospace;min-height:16px;"></div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #141422;">
+      <button id="import-apply-btn" style="width:100%;padding:10px;border-radius:8px;border:1px solid #FFD70050;background:#FFD70012;color:#FFD700;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.15s;">
+        Apply Settings
+      </button>
+    </div>
+    `}
+  `;
+
+  document.getElementById('tab-embed').onclick    = () => { S.codeTab = 'embed';    renderCodePanel(); };
+  document.getElementById('tab-markdown').onclick = () => { S.codeTab = 'markdown'; renderCodePanel(); };
+  document.getElementById('tab-import').onclick   = () => { S.codeTab = 'import';   renderCodePanel(); };
+
+  if (isOutput) {
+    document.getElementById('copy-btn').onclick = () => {
+      const text = S.codeTab === 'markdown' ? fenceCode : embedCode;
+      const btn  = document.getElementById('copy-btn');
+      const label = S.codeTab === 'markdown' ? 'Markdown' : 'Embed Code';
+      const confirm = () => {
+        btn.textContent = '✓ Copied!';
+        btn.style.background = 'linear-gradient(135deg,#69F0AE,#00E5FF)';
+        setTimeout(() => { btn.textContent = 'Copy ' + label; btn.style.background = 'linear-gradient(135deg,#FFD700,#FF6B9D)'; }, 1800);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(confirm).catch(() => { fallbackCopy(text); confirm(); });
+      } else { fallbackCopy(text); confirm(); }
+    };
+  } else {
+    const ta = document.getElementById('import-textarea');
+    ta.onfocus = () => ta.style.borderColor = '#444';
+    ta.onblur  = () => ta.style.borderColor = '#1e1e30';
+    document.getElementById('import-apply-btn').onclick = () => {
+      const text = ta.value.trim(); if (!text) return;
+      const parsed = parseCodeFence(text);
+      const { appliedEl, appliedBg } = applyImport(parsed);
+      const status = document.getElementById('import-status');
+      const parts = [];
+      if (appliedEl) parts.push(appliedEl + ' element' + (appliedEl !== 1 ? 's' : ''));
+      if (appliedBg) parts.push(appliedBg + ' background' + (appliedBg !== 1 ? 's' : ''));
+      status.textContent = parts.length ? '✓ Applied to ' + parts.join(', ') + '.' : 'No matching images found — upload images first, then import.';
+      status.style.color = parts.length ? '#69F0AE' : '#aa6644';
+      if (parts.length) { renderLeftPanel(); renderCanvas(); }
+    };
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+}
+
+// ── Mode switch ────────────────────────────────────────────────────────────────
+function updateModeBtns() {
+  ['edit','preview','code'].forEach(m => {
+    const btn = document.getElementById('mode-' + m); if (!btn) return;
+    btn.style.background = S.mode === m ? '#1a1a2e' : 'transparent';
+    btn.style.color      = S.mode === m ? '#FFD700' : '#8888aa';
+    btn.style.fontWeight = S.mode === m ? 700 : 400;
+  });
+}
+
+function switchMode(m) {
+  S.mode = m; updateModeBtns();
+  const lw = document.getElementById('left-panel-wrap');
+  const ca = document.getElementById('canvas-area');
+  const cp = document.getElementById('code-panel');
+  if (lw) lw.style.display = m === 'edit' ? 'flex' : 'none';
+  if (ca) ca.style.display = m !== 'code' ? 'flex' : 'none';
+  if (cp) cp.style.display = m === 'code' ? 'flex' : 'none';
+  if (m !== 'code') renderCanvas();
+  if (m === 'code') renderCodePanel();
+  if (m === 'edit') renderLeftPanel();
+}
+
+// ── File uploads ───────────────────────────────────────────────────────────────
+document.getElementById('bg-input').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files); if (!files.length) return;
+  let loaded = 0;
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => {
+      S.backgrounds.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100 });
+      if (++loaded === files.length) { renderCanvas(); renderLeftPanel(); }
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+document.getElementById('el-input').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files); let loaded = 0;
+  files.forEach((f, i) => {
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        S.elements.push({
+          id: nextId(), src: ev.target.result, fileName: f.name,
+          naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+          x: 15 + Math.random() * 25, y: 15 + Math.random() * 25, scale: 18,
+          label:        f.name.replace(/\.[^.]+$/, ''),
+          glowColor:    GLOW_PRESETS[(S.elements.length + i) % GLOW_PRESETS.length].color,
+          glowIntensity: 1, actionType: 'filter', actionValue: '', rotation: 0, resetRotationOnHover: true,
+        });
+        if (++loaded === files.length) { renderLeftPanel(); renderCanvas(); }
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────────
+window.addEventListener('keydown', (e) => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && S.selectedId && !['INPUT','TEXTAREA'].includes(e.target.tagName)) {
+    const { el, bg } = getSelected();
+    if (el) { removeEl(S.selectedId); renderLeftPanel(); renderCanvas(); }
+    if (bg) { removeBg(S.selectedId); renderLeftPanel(); renderCanvas(); }
+  }
+  if (e.key === 'Escape') { S.selectedId = null; renderLeftPanel(); renderCanvas(); }
+});
+
+// ── Init: DOM skeleton ─────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('app').innerHTML = `
+    <div style="padding:12px 20px;border-bottom:1px solid #141422;display:flex;align-items:center;justify-content:space-between;background:#0a0a14;flex-wrap:wrap;gap:10px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#FFD700,#FF6B9D);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">✦</div>
+        <div>
+          <span style="font-weight:700;font-size:14px;letter-spacing:-0.02em;">Scene Nav</span>
+          <span style="font-size:11px;color:#7a7a9a;font-family:'Space Mono',monospace;margin-left:8px;">magic machine</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;background:#0c0c16;border-radius:8px;padding:3px;border:1px solid #141422;">
+        <button id="mode-edit"    style="padding:6px 16px;border-radius:6px;border:none;background:#1a1a2e;color:#FFD700;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;transition:all 0.15s;">Edit</button>
+        <button id="mode-preview" style="padding:6px 16px;border-radius:6px;border:none;background:transparent;color:#8888aa;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;font-weight:400;transition:all 0.15s;">Preview</button>
+        <button id="mode-code"    style="padding:6px 16px;border-radius:6px;border:none;background:transparent;color:#8888aa;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;font-weight:400;transition:all 0.15s;">Code</button>
+      </div>
+    </div>
+
+    <div id="main" style="display:flex;flex:1;overflow:hidden;">
+      <div id="left-panel-wrap" style="width:260px;border-right:1px solid #141422;background:#0a0a14;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;">
+        <div id="left-panel" style="padding:14px;"></div>
+      </div>
+
+      <div id="canvas-area" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto;background:#08080e;">
+        <div id="scene-container" style="position:relative;width:100%;max-width:800px;aspect-ratio:16/9;min-height:280px;border-radius:10px;overflow:hidden;border:1px solid #141422;background:repeating-conic-gradient(#111118 0% 25%, #0d0d14 0% 50%) 50% / 18px 18px;"></div>
+      </div>
+
+      <div id="code-panel" style="flex:1;display:none;flex-direction:column;background:#0a0a14;"></div>
+    </div>
+  `;
+
+  document.getElementById('mode-edit').onclick    = () => switchMode('edit');
+  document.getElementById('mode-preview').onclick = () => switchMode('preview');
+  document.getElementById('mode-code').onclick    = () => switchMode('code');
+
+  // Click canvas background → deselect
+  document.getElementById('scene-container').addEventListener('click', (e) => {
+    if (e.target.closest('.sn-builder-el') || e.target.closest('.sn-bg-layer')) return;
+    if (S.mode === 'edit') { S.selectedId = null; renderLeftPanel(); renderCanvas(); }
+  });
+
+  renderLeftPanel();
+  renderCanvas();
+}
+
+init();
+</script>
+</body>
+</html>

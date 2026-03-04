@@ -6,6 +6,61 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 18 - March 3, 2026
+**Worked on:** Scene Nav Builder — major GUI upgrades (rotation, multi-bg, aspect ratio, hover controls, image prefix, import)
+
+**Scene Nav Builder (`lib/magic-machines/scene-nav-builder/app/index.html`):**
+
+**Rotation:**
+- Per-element rotation slider (−180° to 180°) in properties panel
+- Rotation serialized in code fence (`rotation:`) and embed config
+- In edit mode, hover always preserves set rotation for accurate positioning
+- `resetRotationOnHover` checkbox (default ON): in preview mode + embed code, hover snaps element upright; turn OFF to keep tilt on hover
+- Fixed embed hover: removed ineffective CSS `:hover` transform rule (was overridden by inline style); now JS-driven per-element, correctly applying `rotate() scale(1.06)` compound transform
+
+**Multiple backgrounds:**
+- `S.backgrounds[]` array replaces single `S.background` — upload multiple PNGs at once
+- Each background layer: draggable, selectable, independently scalable (10–200%) and positionable (X/Y offset sliders)
+- Selected background gets dashed outline; click canvas background → deselect
+- Code fence outputs `backgrounds:` array; single full-width background collapses to shorthand `background:` key
+
+**Aspect ratio presets:**
+- `[16:9] [4:3] [3:2] [1:1] [9:16]` buttons; updates canvas `aspect-ratio` CSS live
+
+**Canvas background colors:**
+- Separate color pickers for Edit, Preview, and Export modes
+- Export supports "transparent" toggle (omits `background:` from embed HTML)
+
+**Image path prefix:**
+- Prefix input field (e.g. `../media/studio-bloob/`) prepended to all filenames in code fence output as Obsidian-style `![](prefix+filename.png)` syntax
+- Embed HTML output uses the prefix as a plain path (no `![]()` wrapper)
+- Leave blank → plain filenames (previous behavior)
+
+**Import from code fence:**
+- Paste a `\`\`\`scene-nav\`\`\`` code fence into the Import tab → click "Apply Settings"
+- Parser strips Obsidian `![]()` image syntax automatically
+- Matches by basename — so `![](../media/studio-bloob/dragonfly.png)` matches uploaded `dragonfly.png`
+- Auto-detects and sets the prefix from the pasted paths
+- Applies: x, y, scale, rotation, label, glow color/intensity, action, value, resetRotationOnHover
+
+**Copy feedback:**
+- Copy button turns green with "✓ Copied!" for 1.8s after copying embed or markdown
+
+**Contrast improvements:**
+- Bumped dark gray text colors throughout UI for better legibility against near-black background
+
+**Architecture docs (`docs/architecture/magic-machines.md`):**
+- Type taxonomy table (gui / ai / script)
+- GUI Magic Machines section documenting scene-nav-builder conventions
+- Pairing convention: `scene-nav-builder` produces `\`\`\`scene-nav\`\`\`` → read by `scene-nav` visualizer
+- Updated folder structure and related documents
+
+**Files changed:**
+- `lib/magic-machines/scene-nav-builder/app/index.html` (all builder changes)
+- `docs/architecture/magic-machines.md` (architecture documentation)
+
+---
+
 ### Session 17 - February 28, 2026
 **Worked on:** Vault index.md homepage, search visualizer, external links, tags visualizer, marbles-pouch polish
 

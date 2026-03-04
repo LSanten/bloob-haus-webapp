@@ -1,0 +1,12 @@
+{
+  "name": "scene-nav-builder",
+  "type": "gui",
+  "version": "1.0.0",
+  "description": "Visual builder for scene-nav image maps. Positions transparent PNGs over a background, configures hover glow effects and click actions, and outputs a ```scene-nav``` code fence or standalone embed HTML.",
+  "pairs_with": "scene-nav",
+  "app": {
+    "entry": "app/index.html",
+    "standalone": true,
+    "description": "Open in any browser — no build step, no server required."
+  }
+}

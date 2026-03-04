@@ -1,9 +1,9 @@
 # Magic Machines Architecture
 
-**Status:** Planning  
+**Status:** In progress — GUI type implemented (`scene-nav-builder`); AI type planned
 **Location:** `docs/architecture/`
 
-Magic Machines are modular AI-powered tools that transform content. They are the "write" counterpart to Visualizers (which are "read" tools).
+Magic Machines are modular tools that produce or transform content. They are the "write" counterpart to Visualizers (which are "read" tools). A magic machine can be AI-powered, GUI-based, or a pure script transformation — but they all live in `lib/magic-machines/`, share a manifest format, and can pair with a visualizer.
 
 ---
 
@@ -22,6 +22,54 @@ Magic Machines are modular AI-powered tools that transform content. They are the
 2. **Declarative** - Defined in JSON manifests with prompts, settings, I/O formats
 3. **Idempotent** - Running twice should produce same result (or be skipped)
 4. **Auditable** - Track which files have been processed via frontmatter
+
+---
+
+## Type Taxonomy
+
+Every magic machine declares a `type` in its manifest:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `"gui"` | Visual builder that produces markdown output through a UI | `scene-nav-builder` |
+| `"ai"` | Sends content to an LLM and writes the result back | `recipe-unit-extractor` (planned) |
+| `"script"` | Pure code transformation, no AI, no UI | link-checker (planned) |
+
+GUI machines are the simplest to use (just open in a browser) but the most interactive. AI machines are automated and batch-process files. Script machines are deterministic transforms.
+
+---
+
+## GUI Magic Machines
+
+GUI machines produce markdown (or other output) through a visual interface rather than a script. They are portable standalone HTML apps.
+
+**Conventions:**
+- Live in `lib/magic-machines/<name>/app/`
+- The `app/` folder contains a single `index.html` — no framework, no build step
+- Can be opened directly in a browser (`file://`) or hosted
+- Produce a code fence that a paired visualizer reads
+
+**Scene Nav Builder** is the first GUI machine and establishes the pattern:
+
+```
+lib/magic-machines/scene-nav-builder/
+├── manifest.json
+└── app/
+    └── index.html       ← Standalone vanilla JS builder. Open in any browser.
+```
+
+**What it does:** Upload background PNGs + character PNGs → drag to position, set glow effects and click actions → copy a ` ```scene-nav``` ` code fence or standalone embed HTML.
+
+**Paired visualizer:** `lib/visualizers/scene-nav/` reads the ` ```scene-nav``` ` code fences at build time.
+
+### Pairing Convention
+
+When a machine produces output for a visualizer, they share a name prefix:
+
+```
+scene-nav-builder  →  produces  →  ```scene-nav``` fences
+scene-nav          →  renders   →  ```scene-nav``` fences
+```
 
 ---
 
@@ -200,20 +248,26 @@ magic_machine_status:
 
 ## Folder Structure
 
+Magic machines live in `lib/magic-machines/`, parallel to `lib/visualizers/`. The AI runner (future) will live in `scripts/magic-machines/`.
+
 ```
-scripts/magic-machines/
-├── registry.json                    ← Lists all available machines
-├── runner.js                        ← Core execution engine
-├── recipe-unit-extractor/
+lib/magic-machines/
+├── scene-nav-builder/               ← GUI type (implemented)
 │   ├── manifest.json
-│   ├── prompt.md
-│   └── README.md
-├── tag-suggester/
+│   └── app/
+│       └── index.html               ← Standalone builder, open in browser
+│
+├── recipe-unit-extractor/           ← AI type (planned)
 │   ├── manifest.json
 │   └── prompt.md
-└── excerpt-generator/
+│
+└── tag-suggester/                   ← AI type (planned)
     ├── manifest.json
     └── prompt.md
+
+scripts/magic-machines/              ← AI runner (planned, Phase 4)
+├── registry.json
+└── runner.js
 ```
 
 ---
@@ -304,4 +358,5 @@ When content lives on GitHub (not local), magic machines need a different flow:
 
 - [Visualizers Architecture](visualizers.md) - The "read" counterpart to magic machines
 - [Search Architecture](search.md) - Tag suggestion as a magic machine
-- [Recipe Scaling Plan](../implementation-plans/phases/phase-2/2026-02-03_recipe-scaling.md) - First magic machine implementation
+- [Scene Nav Handoff](../implementation-plans/phases/phase-2/2026-03-03_scene-nav-handoff.md) - First GUI machine, establishes conventions
+- [Recipe Scaling Plan](../implementation-plans/phases/phase-2/2026-02-03_recipe-scaling.md) - First AI machine (planned)

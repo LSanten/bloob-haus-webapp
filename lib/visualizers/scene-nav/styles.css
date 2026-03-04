@@ -1,0 +1,56 @@
+/* Scene Nav Visualizer */
+
+.scene-nav-container {
+  position: relative;
+  margin: 0 auto;
+  /* max-width and aspect-ratio set inline by renderer.js */
+}
+
+/* Background layers — absolutely positioned, stacked behind elements */
+.scene-nav-bg-layer {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scene-nav-bg-layer img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scene-nav-el {
+  position: absolute;
+  cursor: pointer;
+  transition: filter 0.35s ease, transform 0.25s ease;
+}
+
+.scene-nav-el img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scene-nav-label {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  padding: 3px 11px;
+  border-radius: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+  font-family: system-ui, sans-serif;
+}
+
+.scene-nav-el:hover .scene-nav-label {
+  opacity: 1;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "scene-nav",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Interactive image-map navigation. Position transparent PNGs over a background; elements glow on hover and trigger actions (Shopify filter, link, anchor scroll) on click.",
+  "activation": {
+    "method": "code-fence",
+    "language": "scene-nav",
+    "description": "Place a ```scene-nav``` code fence in any markdown file. Use the scene-nav-builder magic machine to generate the YAML config visually."
+  },
+  "files": {
+    "transform": "index.js",
+    "parser":    "parser.js",
+    "renderer":  "renderer.js",
+    "browser":   "browser.js",
+    "css":       "styles.css"
+  },
+  "settings": {
+    "maxWidth": {
+      "type":        "string",
+      "default":     "900px",
+      "description": "Maximum width of the scene container"
+    }
+  },
+  "pairs_with": "scene-nav-builder"
+}

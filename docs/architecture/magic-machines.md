@@ -71,6 +71,26 @@ scene-nav-builder  →  produces  →  ```scene-nav``` fences
 scene-nav          →  renders   →  ```scene-nav``` fences
 ```
 
+**Naming rule:** The builder and visualizer are distinct things. In markdown frontmatter, always reference the **visualizer** name (e.g. `scene-nav`), not the builder:
+
+```yaml
+# ✓ correct — references the visualizer
+visualizers:
+  - scene-nav
+
+# ✗ wrong — scene-nav-builder is the magic machine (authoring tool), not the visualizer
+visualizers:
+  - scene-nav-builder
+```
+
+### Shared Logic: Builder vs. Visualizer (Future Refactor)
+
+The builder (`scene-nav-builder/app/index.html`) and the visualizer (`scene-nav/parser.js`) both parse `scene-nav` code fences — the builder for its Import tab, the visualizer at build time. Right now this logic is duplicated, which means schema changes (new fields, renamed keys) must be applied in both places manually.
+
+**These two parsers should stay in sync.** The canonical schema reference is `lib/visualizers/scene-nav/schema.md`.
+
+A future refactor (Phase 5+) could unify them — for example as a shared isomorphic module, or by generating the builder's import parser from the visualizer's schema. Not worth the complexity now, but worth knowing about.
+
 ---
 
 ## Magic Machine Manifest Format

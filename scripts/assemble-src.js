@@ -90,9 +90,14 @@ export async function assembleSrc(config, contentDir = null) {
         const stat = await fs.stat(sectionSrc);
         if (!stat.isDirectory()) continue;
 
+        // Skip theme section index if vault has its own page that would produce the same permalink.
+        // Covers: section/index.md, section.md, or Section.md at vault root.
+        const capitalized = section.charAt(0).toUpperCase() + section.slice(1);
         const vaultHasSectionIndex =
           contentDir &&
-          fs.existsSync(path.join(contentDir, section, "index.md"));
+          (fs.existsSync(path.join(contentDir, section, "index.md")) ||
+            fs.existsSync(path.join(contentDir, section + ".md")) ||
+            fs.existsSync(path.join(contentDir, capitalized + ".md")));
 
         if (vaultHasSectionIndex) {
           // Copy everything in the section folder EXCEPT index.njk
@@ -100,7 +105,7 @@ export async function assembleSrc(config, contentDir = null) {
           for (const entry of sectionEntries) {
             if (entry === "index.njk") {
               console.log(
-                `[assemble] Vault has ${section}/index.md — skipping theme ${section}/index.njk`,
+                `[assemble] Vault has ${section} page — skipping theme ${section}/index.njk`,
               );
               continue;
             }

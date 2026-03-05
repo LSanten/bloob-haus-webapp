@@ -1,19 +1,9 @@
 name: Rebuild All Sites
 
 on:
-  # Trigger when shared builder infrastructure changes
-  push:
-    branches: [main]
-    paths:
-      - 'themes/**'
-      - 'scripts/**'
-      - 'lib/**'
-      - 'eleventy.config.js'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'vitest.config.js'
-
-  # Manual trigger to rebuild everything
+  # Manual trigger only — individual deploy-*.yml workflows handle push triggers.
+  # Running rebuild-all on push caused concurrent Cloudflare deployments to the same
+  # project (from both this workflow and deploy-*.yml), resulting in 502 errors.
   workflow_dispatch:
 
 jobs:

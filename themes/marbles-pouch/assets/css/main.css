@@ -201,7 +201,13 @@ a.pswp-gallery__item:hover::after {
   opacity: 1;
 }
 
+/* THEME STANDARD: tables scroll horizontally on narrow screens without
+   moving the whole page. Use display:block + overflow-x:auto on the element.
+   All themes must include this pattern. */
 table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing-sm);
@@ -258,7 +264,7 @@ th {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--text-color);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
 }
 
 .site-banner__text em {
@@ -742,7 +748,7 @@ details > *:not(summary) {
   }
 
   .site-banner {
-    padding: var(--spacing-lg) var(--spacing-sm);
+    padding: var(--spacing-lg) var(--spacing-sm) 110px; /* keep bottom padding for wave */
   }
 
   .site-banner__image {

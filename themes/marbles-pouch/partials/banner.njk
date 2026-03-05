@@ -61,17 +61,14 @@
     {% if page.url != "/" %}
     {#
       Byline resolution:
-      1. `byline` frontmatter — write the full text yourself (replaces "Yours," entirely).
-         Use <br> for line breaks and [text](url) for links.
-         Example: byline: "Yours,<br>[Leon](https://leonsanten.info/)"
-      2. `author` frontmatter — replaces just the name after "Yours,"
-      3. site.author from _bloob-settings.md
+      1. `author` frontmatter — full custom text. Supports <br> and [text](url) links.
+         Example: author: "Yours,<br>[Leon](https://leonsanten.info/),<br>in collaboration with..."
+      2. site.author from _bloob-settings.md — used as fallback, wrapped in "Yours, <name>"
     #}
-    {% if byline %}
-    <p class="site-banner__byline">{{ byline | mdLinks | nl2br | safe }}</p>
+    {% if author %}
+    <p class="site-banner__byline">{{ author | mdLinks | nl2br | safe }}</p>
     {% else %}
-    {% set bylineAuthor = author if author else site.author %}
-    <p class="site-banner__byline">Yours, {{ bylineAuthor | mdLinks | safe }}</p>
+    <p class="site-banner__byline">Yours, {{ site.author | mdLinks | safe }}</p>
     {% endif %}
     {% endif %}
 

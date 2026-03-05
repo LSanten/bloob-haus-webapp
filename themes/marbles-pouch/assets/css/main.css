@@ -232,16 +232,36 @@ th {
 .site-banner {
   background: var(--banner-bg);   /* white */
   text-align: center;
-  padding: var(--spacing-xl) var(--spacing-sm) 120px; /* bottom gives wave room without excess whitespace */
+  padding: var(--spacing-xl) var(--spacing-sm);  /* natural padding — wave is a sibling, not inside */
   position: relative;
-  /* no overflow:hidden — the bottom wave SVG needs to protrude */
 }
 
 .site-banner__inner {
   max-width: var(--max-width);
   margin: 0 auto;
   position: relative;
-  z-index: 3; /* must be above .site-banner__wave (z-index:2) so button is never covered */
+  z-index: 1;
+}
+
+/* Wave divider — sits between banner and body as a sibling element.
+   Banner bg (white) continues here; SVG path filled with body bg (blue)
+   creates the organic wavy top edge of the blue content area. */
+.site-banner__wave-container {
+  background: var(--banner-bg);  /* white — continues banner bg */
+  display: block;
+  line-height: 0;
+  font-size: 0;
+}
+
+.site-banner__wave-container svg {
+  display: block;
+  width: 100%;
+  height: 90px;
+}
+
+.site-banner__wave-container path {
+  fill: var(--bg-color);  /* blue — matches body, creates organic bottom edge */
+  stroke: none;
 }
 
 .site-banner__image {
@@ -300,21 +320,6 @@ th {
 .site-banner__info-btn:hover {
   background: rgba(145, 76, 154, 0.15);
   border-color: rgba(145, 76, 154, 0.35);
-}
-
-/* Bottom wave — filled shape that bridges banner (white) → body (blue) */
-.site-banner__wave {
-  position: absolute;
-  bottom: -1px;      /* flush with bottom edge, bleeds into blue body */
-  left: 0;
-  width: 100%;
-  height: 90px;      /* fixed height — prevents wave from scaling too tall */
-  z-index: 2;
-}
-
-.site-banner__wave path {
-  fill: var(--bg-color);   /* blue — matches body, creates organic bottom edge */
-  stroke: none;
 }
 
 /* Decorative shapes in banner */
@@ -795,16 +800,16 @@ details > *:not(summary) {
     font-size: 16px;
   }
 
-  .site-banner {
-    padding: var(--spacing-lg) var(--spacing-sm) 110px; /* keep bottom padding for wave */
-  }
-
   .site-banner__image {
     width: 150px;
   }
 
   .banner-shape {
     display: none;
+  }
+
+  .site-banner__wave-container svg {
+    height: 60px;  /* shorter wave on mobile */
   }
 
   .site-main {

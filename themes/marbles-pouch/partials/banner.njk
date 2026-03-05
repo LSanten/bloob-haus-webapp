@@ -86,9 +86,16 @@
   <img class="banner-shape banner-shape--1 no-zoom" src="{{ "/assets/objects/shape-2.png" | url }}" alt="" aria-hidden="true" width="80">
   <img class="banner-shape banner-shape--2 no-zoom" src="{{ "/assets/objects/shape-4.png" | url }}" alt="" aria-hidden="true" width="65">
   <img class="banner-shape banner-shape--3 no-zoom" src="{{ "/assets/objects/shape-3.png" | url }}" alt="" aria-hidden="true" width="80">
+</div>
 
-  {# Bottom wave — gentle wave, all y-values within viewBox (no off-screen peaks) #}
-  <svg class="site-banner__wave" viewBox="0 0 2204 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+{#
+  Wave sits OUTSIDE the banner as a sibling element.
+  Banner bg (white) continues through this container, then the SVG path
+  filled with the body bg (blue) creates the organic wavy edge.
+  This way banner padding is natural — no fixed pixel compensation needed.
+#}
+<div class="site-banner__wave-container" aria-hidden="true">
+  <svg viewBox="0 0 2204 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
     <path d="M0,65 C300,25 600,80 900,50 C1200,22 1500,75 1800,45 C2000,28 2150,65 2204,60 L2204,100 L0,100 Z"/>
   </svg>
 </div>

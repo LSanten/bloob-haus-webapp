@@ -105,7 +105,9 @@ See `scripts/generate-favicons.js` for the implementation.
 
 If `site.logo` is set, the nav should render an `<img>` for it. The value of `site.logo` is a resolved URL path like `/media/logo.png`, set by `assemble-src.js` from the raw wiki-link in `_bloob-settings.md`.
 
-warm-kitchen nav uses `.site-nav__logo` with `max-height: 36px`.
+warm-kitchen nav uses `.site-nav__logo` with `height: 40px; width: auto`.
+
+**Always add `class="no-zoom"` to the logo img.** The image optimizer (`optimizeImages` transform in `eleventy.config.js`) replaces any `<img src="/media/...">` with a full `<picture>` + PhotoSwipe zoom wrapper, discarding the original class and size. `no-zoom` opts the image out. This also applies to any other UI images (decorative shapes, icons) that happen to live in `/media/`.
 
 ## Build-Time Object Images
 

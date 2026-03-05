@@ -300,6 +300,10 @@ export default async function (eleventyConfig) {
       let result = content;
       for (const match of matches) {
         const [originalTag, before, src, after] = match;
+
+        // Skip images marked no-zoom — they're UI elements (logo, decorative shapes)
+        // that must not be wrapped in a PhotoSwipe gallery link or resized.
+        if ((before + after).includes("no-zoom")) continue;
         const inputPath = join("src", decodeURIComponent(src));
         if (!existsSync(inputPath)) continue;
 

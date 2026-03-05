@@ -117,10 +117,10 @@ export async function generateFavicons({ config }) {
 
   console.log(`[favicon] Generating favicons from: ${sourceImagePath}`);
 
-  await sharp(sourceBuffer).resize(32, 32).png().toFile(path.join(SRC_DIR, "favicon.png"));
-  await sharp(sourceBuffer).resize(180, 180).png().toFile(path.join(SRC_DIR, "apple-touch-icon.png"));
+  await sharp(sourceBuffer).resize(64, 64).sharpen({ sigma: 0.5 }).png().toFile(path.join(SRC_DIR, "favicon.png"));
+  await sharp(sourceBuffer).resize(310, 310).sharpen({ sigma: 0.5 }).png().toFile(path.join(SRC_DIR, "apple-touch-icon.png"));
 
   await fs.writeFile(hashFile, hash);
 
-  console.log("[favicon] Generated favicon.png (32×32) and apple-touch-icon.png (180×180)");
+  console.log("[favicon] Generated favicon.png (64×64) and apple-touch-icon.png (310×310)");
 }

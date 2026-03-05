@@ -206,9 +206,12 @@ async function cleanGeneratedFiles() {
  * Resolves a logo/favicon field value to a URL path for use in templates.
  * Supports:
  *   [[icon.png]]                  → "/media/icon.png"
- *   [](media/marble%20simple.png) → "/media/marble simple.png"  (URL-decoded, prefixed)
+ *   [](media/marble%20simple.png) → "/media/marble%20simple.png"  (kept encoded — valid URL)
  *   [label](path/to/file.png)     → "/path/to/file.png"
  *   plain/path.png                → "plain/path.png" (passed through)
+ *
+ * NOTE: do NOT decode %20 etc. here — this value goes into HTML as a URL.
+ *       generate-favicons.js does the decoding for disk lookups separately.
  * @param {string|undefined} value
  * @returns {string|null}
  */
@@ -216,14 +219,14 @@ function resolveLogoUrl(value) {
   if (!value) return null;
   const s = String(value).trim();
 
-  // [[wiki-link]] → /media/filename
+  // [[wiki-link]] → /media/filename (wiki filenames don't have URL encoding)
   const wikiMatch = s.match(/^\[\[(.+?)\]\]$/);
   if (wikiMatch) return `/media/${wikiMatch[1]}`;
 
-  // [label](url) or [](url) — decode and prefix with / if relative
+  // [label](url) or [](url) — keep URL-encoded, just prefix with / if relative
   const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
   if (mdMatch) {
-    const p = decodeURIComponent(mdMatch[1]);
+    const p = mdMatch[1]; // keep %20 etc. intact — it's already a valid URL
     return p.startsWith("/") ? p : `/${p}`;
   }
 

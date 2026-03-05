@@ -1,3 +1,6 @@
+{# Internal link pills + bloob-object icons (client-side, reads graph.json) #}
+<script src="{{ '/assets/js/internal-links.js' | url }}"></script>
+
 {# Visualizer scripts (auto-generated from lib/visualizers/) #}
 {% for vis in visualizers %}{% if vis.hasJs %}
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>

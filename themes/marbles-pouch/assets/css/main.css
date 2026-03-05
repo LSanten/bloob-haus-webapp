@@ -490,20 +490,19 @@ article.marble-page {
   margin: 0 auto var(--spacing-sm);
 }
 
-/* THEME STANDARD: internal link pills (applied by preprocessor to all vault links) */
+/* THEME STANDARD: internal link pills */
 a.internal-link {
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
-  padding: 0.1em 0.6em 0.1em 0.35em;
+  padding: 0.05em 0.55em 0.05em 0.35em;
   background: rgba(145, 76, 154, 0.06);
   border: 1px solid var(--border-color);
   border-radius: 999px;
-  font-size: 0.93em;
   color: var(--link-color);
   text-decoration: none;
   vertical-align: baseline;
-  line-height: 1.4;
+  line-height: inherit;
   transition: background 0.15s, border-color 0.15s;
 }
 
@@ -515,8 +514,8 @@ a.internal-link:hover {
 }
 
 .internal-link__icon {
-  width: 16px;
-  height: 16px;
+  width: 1em;
+  height: 1em;
   object-fit: contain;
   border-radius: 0;
   flex-shrink: 0;

@@ -56,6 +56,7 @@ export function buildGraph(perPageLinks, tagIndex = {}) {
     section: sectionFromUrl(url),
     type: "page",
     ...(page.image ? { image: page.image } : {}),
+    ...(page.bloobIcon ? { bloobIcon: page.bloobIcon } : {}),
   }));
 
   // Build page→page links — deduplicated, only between known nodes, no self-links

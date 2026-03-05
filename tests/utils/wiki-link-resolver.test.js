@@ -14,7 +14,8 @@ describe('resolveWikiLinks', () => {
       const result = resolveWikiLinks('See [[Fluffy Millet Quinoa-Cake]] for details.', index);
       expect(result.content).toContain('/recipes/fluffy-millet-quinoa-cake/');
       expect(result.content).toContain('Fluffy Millet Quinoa-Cake');
-      expect(result.content).toContain('class="internal-link"');
+      // Pills are applied client-side — resolved links are plain markdown [text](url)
+      expect(result.content).not.toContain('class="internal-link"');
       expect(result.resolved).toHaveLength(1);
     });
 
@@ -36,7 +37,6 @@ describe('resolveWikiLinks', () => {
       const result = resolveWikiLinks('[[Cauliflower Stir Fry|this recipe]]', index);
       expect(result.content).toContain('/recipes/cauliflower-stir-fry/');
       expect(result.content).toContain('this recipe');
-      expect(result.content).toContain('class="internal-link"');
     });
   });
 
@@ -50,7 +50,6 @@ describe('resolveWikiLinks', () => {
       const result = resolveWikiLinks('[[Cooking Tips#My Heading|see tips]]', index);
       expect(result.content).toContain('/notes/cooking-tips/#my-heading');
       expect(result.content).toContain('see tips');
-      expect(result.content).toContain('class="internal-link"');
     });
 
     it('uses target#heading as default display when no pipe text', () => {

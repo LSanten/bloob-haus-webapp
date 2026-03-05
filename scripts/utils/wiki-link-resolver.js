@@ -6,19 +6,18 @@
 import { slugifyHeading } from "./slug-strategy.js";
 
 /**
- * Resolves wiki-links in markdown content to styled internal-link HTML.
+ * Resolves wiki-links in markdown content to standard markdown links.
  * Handles: [[Page Name]], [[Page Name|Display Text]], [[Page Name#Heading]]
  *
- * Resolved links become <a class="internal-link"> pills. If the target page has a
- * bloob_object type registered in bloobObjectsRegistry, its image is embedded inline.
- * Pages without a registered image get a pill but no icon.
+ * Resolved links become plain markdown [display](url) links. The internal-link
+ * pill class and bloob-object icon are applied client-side by internal-links.js,
+ * which reads graph.json after page load.
  *
  * @param {string} content - Markdown content with wiki-links
  * @param {Object} index - File index from buildFileIndex()
- * @param {Object} [bloobObjectsRegistry] - Optional registry from readBloobObjects()
  * @returns {Object} { content, resolved, broken } - processed content and link stats
  */
-export function resolveWikiLinks(content, index, bloobObjectsRegistry = {}) {
+export function resolveWikiLinks(content, index) {
   const resolved = [];
   const broken = [];
 
@@ -30,24 +29,13 @@ export function resolveWikiLinks(content, index, bloobObjectsRegistry = {}) {
     const trimmedTarget = target.trim();
     const display = displayText?.trim() || (heading ? `${trimmedTarget}#${heading}` : trimmedTarget);
 
-    // Try to resolve the link
-    const { url, slug, found } = resolveLinkTarget(trimmedTarget, index);
+    // Try to resolve the link (slug returned for graph lookups if needed in future)
+    const { url, found } = resolveLinkTarget(trimmedTarget, index);
 
     if (found) {
       const fullUrl = heading ? `${url}#${slugifyHeading(heading)}` : url;
       resolved.push({ target: trimmedTarget, url: fullUrl });
-
-      // Look up the target page's bloob_object type for the inline icon
-      const targetPage = slug ? index.pages[slug] : null;
-      const rawObjType = targetPage?.frontmatter?.['bloob-object'];
-      const objType = rawObjType ? rawObjType.trim().replace(/^#/, '').toLowerCase() : null;
-      const objData = objType ? bloobObjectsRegistry[objType] : null;
-      const objImage = (objData?.image && objData.image !== 'default') ? objData.image : null;
-
-      const imgHtml = objImage
-        ? `<img src="${objImage}" class="internal-link__icon" alt="" aria-hidden="true">`
-        : '';
-      return `<a href="${fullUrl}" class="internal-link">${imgHtml}${display}</a>`;
+      return `[${display}](${fullUrl})`;
     } else {
       broken.push({ target: trimmedTarget, original: match });
       // Return a broken link with a special class for styling

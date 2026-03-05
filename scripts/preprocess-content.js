@@ -37,6 +37,7 @@ import { buildGraph } from "./utils/graph-builder.js";
 import {
   readBloobObjects,
   normalizeBloobObject,
+  parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -187,8 +188,8 @@ export async function preprocessContent({
       brokenLinkDetails.push({ source: file.relativePath, type: "attachment", target: b.original });
     }
 
-    // 6d: Resolve wiki-links (pass registry so resolved links get inline object icons)
-    const wikiLinkResult = resolveWikiLinks(processedContent, fileIndex, bloobObjectsRegistry);
+    // 6d: Resolve wiki-links → plain markdown links (pills applied client-side by internal-links.js)
+    const wikiLinkResult = resolveWikiLinks(processedContent, fileIndex);
     processedContent = wikiLinkResult.content;
     stats.linksResolved += wikiLinkResult.resolved.length;
     stats.linksBroken += wikiLinkResult.broken.length;
@@ -246,6 +247,21 @@ export async function preprocessContent({
       tags: pageTags,
       ...(bloobObject && { bloob_object: bloobObject }),
     };
+
+    // Store bloob icon path on graph node for use in pills and the connections graph.
+    // - Specific image → resized icon at /assets/objects/bloob-icons/[type]-icon.png
+    // - "default"      → /favicon.png (site's own favicon as fallback)
+    // - "none" / unset → no icon
+    const objData = bloobObjectsRegistry[bloobObject];
+    if (bloobObject && objData && pageInfo && perPageLinks[pageInfo.url]) {
+      const hasSpecificImage = parseObjectImageField(objData.image);
+      const isDefault = objData.image === "default";
+      if (hasSpecificImage) {
+        perPageLinks[pageInfo.url].bloobIcon = `/assets/objects/bloob-icons/${bloobObject}-icon.png`;
+      } else if (isDefault) {
+        perPageLinks[pageInfo.url].bloobIcon = "/favicon.png";
+      }
+    }
 
     // Collect page data for tag index
     if (pageTags.length > 0 && pageInfo) {

@@ -17,6 +17,7 @@ import {
   ROOT_DIR,
 } from "./utils/config-loader.js";
 import { generateFavicons } from "./generate-favicons.js";
+import { generateBloobIcons } from "./generate-bloob-icons.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +55,12 @@ export async function assembleSrc(config, contentDir = null) {
       path.join(baseDir, "partials"),
       path.join(SRC_DIR, "_includes", "partials"),
     );
+  }
+
+  // Step 2b: Copy base assets (shared JS, etc. — theme assets in Step 6 override these)
+  if (fs.existsSync(path.join(baseDir, "assets"))) {
+    console.log("[assemble] Copying base assets...");
+    await fs.copy(path.join(baseDir, "assets"), path.join(SRC_DIR, "assets"));
   }
 
   // Step 3: Copy theme layouts
@@ -157,6 +164,10 @@ export async function assembleSrc(config, contentDir = null) {
   // Step 9: Generate favicons from site logo (must run after preprocessing copies attachments)
   console.log("[assemble] Generating favicons...");
   await generateFavicons({ config });
+
+  // Step 10: Generate bloob-object icons (24×24, must run after theme assets are in src/)
+  console.log("[assemble] Generating bloob-object icons...");
+  await generateBloobIcons({ contentDir, srcDir: SRC_DIR });
 
   console.log("[assemble] Done! src/ is ready.\n");
 }

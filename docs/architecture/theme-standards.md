@@ -23,7 +23,14 @@ table {
 
 ### 2. Internal link pills
 
-All resolved internal (vault) links are wrapped with `class="internal-link"` by the preprocessor. Themes must style these as compact pills. Object-type images (if available) appear inline as 16×16 icons.
+Internal link pills are applied **client-side** by `_base/assets/js/internal-links.js`, which runs on every page. It scans all `<a>` elements in the content area, checks if they point to a same-origin content page (via `graph.json`), and adds `class="internal-link"`. Cross-site links to other `*.bloob.haus` domains are also detected and pilled. Bloob-object icons (24×24) are fetched from `graph.json` and injected inline.
+
+**Themes must:**
+1. Include the script tag in `scripts.njk`:
+   ```njk
+   <script src="{{ '/assets/js/internal-links.js' | url }}"></script>
+   ```
+2. Style `a.internal-link` and `.internal-link__icon` in `main.css`:
 
 ```css
 a.internal-link {
@@ -47,13 +54,29 @@ a.internal-link:hover {
   text-decoration: none;
 }
 .internal-link__icon {
-  width: 16px;
-  height: 16px;
+  width: 1em;   /* scales with surrounding text */
+  height: 1em;
   object-fit: contain;
   border-radius: 0;
   flex-shrink: 0;
 }
 ```
+
+**Opt-out:** Add `data-no-pills` to any container (e.g. the connections graph, nav) to exclude its links from pill detection.
+
+**How icons work:** `_bloob-objects.md` declares types with an `image`. `generate-bloob-icons.js` (called from `assemble-src.js` Step 10) resizes each image to 24×24 PNG (transparency preserved) and writes it to `src/assets/objects/bloob-icons/[type]-icon.png`. `preprocess-content.js` stores the path on each page's graph node. `internal-links.js` reads `graph.json` and injects the icon `<img>` when adding the pill class.
+
+**`image` field values in `_bloob-objects.md`:**
+
+| Value | Behaviour |
+|---|---|
+| `none` | No icon — pill text only |
+| `default` | Falls back to `/favicon.png` (the site's own favicon) |
+| `![](media/file.png)` | Markdown image syntax — path is URL-decoded and resolved from `src/` |
+| `[[filename.png]]` | Wiki-link — resolved to `src/media/filename.png` |
+| `/assets/objects/marble.png` | Plain URL path from `src/` |
+
+Pages with no `bloob-object` frontmatter set get a plain pill with no icon.
 
 ### 3. Date created pill
 
@@ -111,6 +134,8 @@ warm-kitchen nav uses `.site-nav__logo` with `height: 40px; width: auto`.
 
 ## Build-Time Object Images
 
-The `bloobObjectsRegistry` is passed to `resolveWikiLinks()` during preprocessing. When an internal link resolves, the target page's `bloob-object` frontmatter type is looked up and its registered image (if any) is embedded as an `<img class="internal-link__icon">` inside the `<a>`.
+Bloob-object icons are generated at build time by `scripts/generate-bloob-icons.js` (Step 10 in `assemble-src.js`). Each type declared in `_bloob-objects.md` with a real image (not `none` or `default`) gets a 24×24 PNG at `src/assets/objects/bloob-icons/[type]-icon.png`. Source images are read from `src/assets/objects/` (copied there by Step 6 from the theme). Transparency is preserved via `sharp`'s PNG output with transparent `contain` padding.
 
-Pages with no `bloob-object` get a pill without an icon. This is intentional — no fallback "broken image" icon.
+Types with `image: default` are not resized — `preprocess-content.js` stores `/favicon.png` as their `bloobIcon` directly. Types with `image: none` get no icon at all.
+
+The icon URL is stored on each page's `graph.json` node as `bloobIcon`. `internal-links.js` reads this at runtime to inject the icon into pills. The same `bloobIcon` field is available for the connections graph to use.

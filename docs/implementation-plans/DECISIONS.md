@@ -50,6 +50,10 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-28 | tagIndex.json served as static asset via passthrough copy | `src/_data/tagIndex.json` is Eleventy data (not auto-served); explicit passthrough to `/tagIndex.json` needed for browser fetch |
 | 2026-02-28 | Recent Marbles dates hidden for now | Date display deferred pending a proper date visualization strategy — dates will be revisited in Phase 3+ |
 | 2026-02-28 | Pagefind UI border overrides in theme main.css (not visualizer styles.css) | Search visualizer is theme-aware; `resetStyles: false` preserves Pagefind defaults that are then selectively overridden per-theme |
+| 2026-03-05 | Internal link pills applied client-side (not build-time) | Build-time injection only caught wiki-links; JS approach catches all `<a>` elements including "Pages that link here", connections graph, and cross-site links. Single `internal-links.js` in `_base/` works for all themes. |
+| 2026-03-05 | Pill icons sourced from graph.json (not injected at preprocess time) | graph.json is already fetched once for pills; adding `bloobIcon` per node adds no extra network request and makes icons available to the connections graph too |
+| 2026-03-05 | bloob-object `default` image → favicon.png as pill icon | `default` means "use the theme's built-in rendering", not "no image". Favicon is always present and site-branded, making it a clean universal fallback |
+| 2026-03-05 | Shared client-side JS in `_base/assets/js/` (not per-theme) | One file, zero duplication. Assembler copies it to `src/assets/js/` before theme assets so themes can override if needed. New themes just add one `<script>` tag. |
 
 ---
 

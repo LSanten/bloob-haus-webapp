@@ -124,6 +124,34 @@ export async function readBloobObjects(contentDir) {
 }
 
 /**
+ * Parses the raw `image` field from a _bloob-objects.md row into a relative
+ * filesystem path (no leading slash). Returns null if no valid image.
+ *
+ * Handles:
+ *   "none" / "default" / ""       → null (no icon)
+ *   "![](media/file.png)"          → "media/file.png"  (URL-decoded)
+ *   "[[filename.png]]"             → "media/filename.png"
+ *   "/assets/objects/marble.png"   → "assets/objects/marble.png"
+ *
+ * @param {string|undefined} imageField - Raw image cell value from the table
+ * @returns {string|null} Relative filesystem path or null
+ */
+export function parseObjectImageField(imageField) {
+  if (!imageField || imageField === "none" || imageField === "default") return null;
+
+  // Markdown image syntax: ![alt](path)
+  const mdMatch = imageField.match(/^!\[.*?\]\((.+?)\)$/);
+  if (mdMatch) return decodeURIComponent(mdMatch[1]);
+
+  // Wiki-link syntax: [[filename.png]]
+  const wikiMatch = imageField.match(/^\[\[(.+?)\]\]$/);
+  if (wikiMatch) return `media/${wikiMatch[1]}`;
+
+  // Plain URL path — strip leading slash for filesystem use
+  return imageField.replace(/^\//, "");
+}
+
+/**
  * Normalizes a raw `bloob-object` frontmatter value.
  * Strips leading `#` (in case someone writes `bloob-object: #marble`),
  * lowercases, and trims.

@@ -7,6 +7,20 @@ layout: layouts/base.njk
   <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden />
   {% endif %}
 
+  {#
+    Date created pill.
+    Frontmatter: date_created: 2024-11-07
+             or: date_created: 2024-11-07, Visual created on
+    First comma-split: date | optional label (defaults to "Started on")
+  #}
+  {% if date_created %}
+  {% set dcStr = date_created | string %}
+  {% set dcParts = dcStr | split(",") %}
+  {% set dcDate = dcParts[0] | trim %}
+  {% set dcLabel = (dcParts[1] | trim) if dcParts.length > 1 else "Started on" %}
+  <p class="marble-date" data-pagefind-ignore>{{ dcLabel }} {{ dcDate | dateFormat }}</p>
+  {% endif %}
+
   <div class="marble-content">{{ content | safe }}</div>
 
   {% if tags %}

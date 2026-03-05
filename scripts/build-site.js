@@ -18,6 +18,7 @@ import { assembleSrc } from "./assemble-src.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
+import { generateFavicons } from "./generate-favicons.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -112,6 +113,10 @@ async function buildSite() {
     if (config.features?.og_images) {
       await generateOgImages();
     }
+
+    // Step 5.6: Generate favicons from site logo (runs after preprocessing copies attachments)
+    console.log("\n--- Step 5.6: Generating favicons ---");
+    await generateFavicons({ config });
 
     // Step 6: Bundle visualizers
     console.log("\n--- Step 6: Bundling visualizers ---");

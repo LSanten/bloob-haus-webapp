@@ -1,6 +1,12 @@
 <nav class="site-nav">
     <div class="nav-container">
-        <a href="{{ "/" | url }}" class="site-title">{{ site.title }}</a>
+        <a href="{{ "/" | url }}" class="site-title">
+            {%- if site.logo -%}
+            <img src="{{ site.logo | url }}" alt="{{ site.title }}" class="site-nav__logo">
+            {%- else -%}
+            {{ site.title }}
+            {%- endif -%}
+        </a>
 
         <div class="nav-links">
             {% for section in collections.sections %}

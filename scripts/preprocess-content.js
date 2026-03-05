@@ -172,8 +172,8 @@ export async function preprocessContent({
       brokenLinkDetails.push({ source: file.relativePath, type: "attachment", target: b.original });
     }
 
-    // 6d: Resolve wiki-links
-    const wikiLinkResult = resolveWikiLinks(processedContent, fileIndex);
+    // 6d: Resolve wiki-links (pass registry so resolved links get inline object icons)
+    const wikiLinkResult = resolveWikiLinks(processedContent, fileIndex, bloobObjectsRegistry);
     processedContent = wikiLinkResult.content;
     stats.linksResolved += wikiLinkResult.resolved.length;
     stats.linksBroken += wikiLinkResult.broken.length;

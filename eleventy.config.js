@@ -74,9 +74,17 @@ export default async function (eleventyConfig) {
   });
 
   // Date formatting filter
+  // Handles JS Date objects and YYYY-MM-DD strings.
+  // YYYY-MM-DD strings are treated as local noon to avoid off-by-one timezone issues.
   eleventyConfig.addFilter("dateFormat", function (date) {
     if (!date) return "";
-    return new Date(date).toLocaleDateString("en-US", {
+    let d;
+    if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+      d = new Date(date.trim() + "T12:00:00");
+    } else {
+      d = new Date(date);
+    }
+    return d.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",

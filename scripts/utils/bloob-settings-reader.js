@@ -59,6 +59,9 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     author: bloobSettings.author || siteConfig.site?.author,
     language: bloobSettings.language || siteConfig.site?.language,
     footer_text: bloobSettings.footer_text || siteConfig.site?.footer_text,
+    // Logo/favicon: wiki-link [[filename]] or plain path; resolved to /media/ URL by assemble-src
+    logo: bloobSettings.logo || siteConfig.site?.logo,
+    favicon: bloobSettings.favicon || siteConfig.site?.favicon,
   };
 
   // Theme

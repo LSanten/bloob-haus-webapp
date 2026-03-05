@@ -12,7 +12,9 @@ describe('resolveWikiLinks', () => {
   describe('basic resolution', () => {
     it('resolves a simple wiki link by title', () => {
       const result = resolveWikiLinks('See [[Fluffy Millet Quinoa-Cake]] for details.', index);
-      expect(result.content).toBe('See [Fluffy Millet Quinoa-Cake](/recipes/fluffy-millet-quinoa-cake/) for details.');
+      expect(result.content).toContain('/recipes/fluffy-millet-quinoa-cake/');
+      expect(result.content).toContain('Fluffy Millet Quinoa-Cake');
+      expect(result.content).toContain('class="internal-link"');
       expect(result.resolved).toHaveLength(1);
     });
 
@@ -32,7 +34,9 @@ describe('resolveWikiLinks', () => {
   describe('display text', () => {
     it('uses pipe display text', () => {
       const result = resolveWikiLinks('[[Cauliflower Stir Fry|this recipe]]', index);
-      expect(result.content).toBe('[this recipe](/recipes/cauliflower-stir-fry/)');
+      expect(result.content).toContain('/recipes/cauliflower-stir-fry/');
+      expect(result.content).toContain('this recipe');
+      expect(result.content).toContain('class="internal-link"');
     });
   });
 
@@ -44,12 +48,14 @@ describe('resolveWikiLinks', () => {
 
     it('handles heading + display text', () => {
       const result = resolveWikiLinks('[[Cooking Tips#My Heading|see tips]]', index);
-      expect(result.content).toBe('[see tips](/notes/cooking-tips/#my-heading)');
+      expect(result.content).toContain('/notes/cooking-tips/#my-heading');
+      expect(result.content).toContain('see tips');
+      expect(result.content).toContain('class="internal-link"');
     });
 
     it('uses target#heading as default display when no pipe text', () => {
       const result = resolveWikiLinks('[[Cooking Tips#My Heading]]', index);
-      expect(result.content).toContain('[Cooking Tips#My Heading]');
+      expect(result.content).toContain('Cooking Tips#My Heading');
     });
   });
 

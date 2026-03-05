@@ -241,7 +241,7 @@ th {
   max-width: var(--max-width);
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 3; /* must be above .site-banner__wave (z-index:2) so button is never covered */
 }
 
 .site-banner__image {

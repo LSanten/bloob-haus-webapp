@@ -93,8 +93,9 @@ body {
 }
 
 .site-nav__logo {
-    max-height: 36px;
+    height: 36px;
     width: auto;
+    max-width: 160px;
     display: block;
     border-radius: 0;
     margin: 0;

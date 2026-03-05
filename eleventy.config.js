@@ -129,6 +129,12 @@ export default async function (eleventyConfig) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   });
 
+  // Split filter — splits a string by a delimiter, returns array
+  eleventyConfig.addFilter("split", function (str, delimiter) {
+    if (!str) return [];
+    return String(str).split(delimiter);
+  });
+
   // Title case filter — matches Hugo's .Title behavior (lowercase small words)
   // Also converts hyphens to spaces for slugified strings
   eleventyConfig.addFilter("titleCase", function (str) {

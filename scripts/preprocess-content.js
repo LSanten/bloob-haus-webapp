@@ -429,7 +429,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
   }
 
-  preprocessContent()
+  // Optional --content-dir flag for local dev (skips GitHub clone)
+  const contentDirArg = process.argv
+    .find((a) => a.startsWith("--content-dir="))
+    ?.replace("--content-dir=", "");
+  const contentDir = contentDirArg ? path.resolve(contentDirArg) : undefined;
+
+  preprocessContent({ ...(contentDir && { contentDir }) })
     .then((stats) => {
       console.log("Preprocessing completed successfully!");
     })

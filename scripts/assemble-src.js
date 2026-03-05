@@ -16,6 +16,7 @@ import {
   resolveSiteName,
   ROOT_DIR,
 } from "./utils/config-loader.js";
+import { generateFavicons } from "./generate-favicons.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -152,6 +153,10 @@ export async function assembleSrc(config, contentDir = null) {
   // This file is checked into the repo root at src/_data/eleventyComputed.js
   // but since we clean _data/site.js, we need to ensure eleventyComputed.js persists.
   // It's NOT cleaned (we only clean site.js), so it stays in place.
+
+  // Step 9: Generate favicons from site logo (must run after preprocessing copies attachments)
+  console.log("[assemble] Generating favicons...");
+  await generateFavicons({ config });
 
   console.log("[assemble] Done! src/ is ready.\n");
 }

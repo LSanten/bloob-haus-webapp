@@ -15,6 +15,10 @@ import {
   removeExcludedFiles,
 } from "./utils/publish-filter.js";
 import {
+  loadSiteConfig,
+  resolveSiteName,
+} from "./utils/config-loader.js";
+import {
   buildFileIndex,
   buildAttachmentIndex,
 } from "./utils/file-index-builder.js";
@@ -102,9 +106,20 @@ export async function preprocessContent({
   console.log("--- Step 1: Reading Obsidian config ---");
   const obsidianConfig = await readObsidianConfig(contentDir);
 
+  // Load site config to get publish settings from _bloob-settings.md
+  // This ensures blocklist_tag and publish_mode are always read from the vault,
+  // not from env vars that may not be set (e.g. during `npm run dev:*`).
+  const siteName = resolveSiteName();
+  const siteConfig = await loadSiteConfig(siteName, { contentDir });
+  const publishOptions = {
+    ...(siteConfig.content?.publish_mode && { publishMode: siteConfig.content.publish_mode }),
+    ...(siteConfig.content?.blocklist_tag && { blocklistTag: siteConfig.content.blocklist_tag }),
+    ...(siteConfig.content?.exclude_files && { excludeFiles: siteConfig.content.exclude_files }),
+  };
+
   // Step 2: Filter publishable files
   console.log("\n--- Step 2: Filtering publishable files ---");
-  const { published, excluded } = await filterPublishableFiles(contentDir);
+  const { published, excluded } = await filterPublishableFiles(contentDir, publishOptions);
   stats.filesExcluded = excluded.length;
 
   // Step 3: Build file index

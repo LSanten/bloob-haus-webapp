@@ -1,7 +1,7 @@
 /**
  * Local Dev Script
  * Builds from a local vault directory (no GitHub clone).
- * Runs: preprocess → bundle visualizers → assemble theme → Eleventy serve.
+ * Runs: preprocess → assemble theme → bundle visualizers → Eleventy serve + theme watcher.
  *
  * Usage:
  *   node scripts/dev-local.js --site=marbles --content=../bloob-haus-marbles
@@ -51,11 +51,11 @@ async function devLocal() {
   process.env.EXCLUDE_FILES = (config.content.exclude_files || []).join(",");
   process.env.SLUG_STRATEGY = config.permalinks?.strategy || "slugify";
 
-  // Step 1: Assemble theme
-  await assembleSrc(config);
-
-  // Step 2: Preprocess content from local path
+  // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
   await preprocessContent({ contentDir });
+
+  // Step 2: Assemble theme (favicon generation reads from src/media/ populated in step 1)
+  await assembleSrc(config, contentDir);
 
   // Step 3: Bundle visualizers
   console.log("\n--- Bundling visualizers ---");
@@ -64,12 +64,12 @@ async function devLocal() {
     stdio: "inherit",
   });
 
-  // Step 4: Serve with Eleventy
+  // Step 4: Serve with Eleventy + watch themes concurrently
   console.log("\n--- Starting Eleventy dev server ---\n");
-  execSync(`SITE_NAME=${siteName} npx @11ty/eleventy --serve`, {
-    cwd: ROOT_DIR,
-    stdio: "inherit",
-  });
+  execSync(
+    `npx concurrently -n watch,eleventy -c blue,green "node scripts/watch-themes.js --site=${siteName}" "SITE_NAME=${siteName} npx @11ty/eleventy --serve"`,
+    { cwd: ROOT_DIR, stdio: "inherit" },
+  );
 }
 
 devLocal().catch((error) => {

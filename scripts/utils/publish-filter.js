@@ -70,6 +70,12 @@ function shouldPublish(frontmatter, content, config) {
 export async function filterPublishableFiles(contentDir, options = {}) {
   const config = { ...getPublishConfig(), ...options };
 
+  // Safety: strip leading # from blocklistTag — users may write `#tag` or `tag` in settings,
+  // both must work identically so private content is never accidentally exposed.
+  if (config.blocklistTag?.startsWith("#")) {
+    config.blocklistTag = config.blocklistTag.slice(1);
+  }
+
   console.log(`[filter] Mode: ${config.publishMode}`);
   if (config.publishMode === "blocklist") {
     console.log(`[filter] Blocklist tag: #${config.blocklistTag}`);

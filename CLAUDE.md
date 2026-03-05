@@ -54,10 +54,27 @@ The product vision, values, room concepts, and engineering reports live in a sep
 - If a file is renamed, its URL changes. This is the current design tradeoff.
 - UUID-based file identity is deferred to Phase 3+ (noted in IDEAS.md)
 
+## Build Pipeline Architecture
+Both dev and prod use the same orchestration steps via `scripts/dev-local.js` and `scripts/build-site.js`:
+1. **Preprocess** (`preprocess-content.js`) — filter private content, copy attachments, resolve links
+2. **Assemble** (`assemble-src.js`) — copy theme files, generate favicons
+3. **Bundle visualizers** (`bundle-visualizers.js`)
+4. **Eleventy** — build or serve
+
+**Do not add new dev-only script chains in `package.json`.** All dev commands go through `dev-local.js`. This keeps dev/prod behavior identical and prevents bugs from env var differences.
+
+## Private Content Safety Rules
+- `publish-filter.js` reads `blocklist_tag` from the vault's `_bloob-settings.md` — **never from env vars alone**
+- `preprocess-content.js` loads site config itself; callers don't need to pre-set env vars
+- `blocklist_tag` accepts both `tag` and `#tag` formats — the `#` is stripped at filter entry
+- **Any change to publish filtering must be tested with actual private-tagged files**
+
 ## Key Commands
 ```bash
 npm run build             # Full build (defaults to buffbaby)
 npm run dev               # Dev server with hot reload + file watching
+npm run dev:marbles       # Dev server for marbles site
+npm run dev:buffbaby      # Dev server for buffbaby site
 npm test                  # Run all tests
 npm run test:watch        # Watch mode
 ```

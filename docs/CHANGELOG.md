@@ -6,6 +6,26 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 20 - March 5, 2026
+**Worked on:** Favicon delivery fix, private content safety, dev/prod pipeline unification
+
+**Favicon pipeline fixes:**
+- `generate-favicons.js`: fixed `resolveLogoPath` — wiki-link syntax `[[icon.png]]` now correctly resolves to `src/media/icon.png` (Obsidian attachments are copied there); was resolving to `src/icon.png` (wrong)
+- `assemble-src.js`: added `generateFavicons({ config })` call as Step 9, so favicons are generated during both dev and prod builds (was only called in `build-site.js` before)
+- `eleventy.config.js` passthrough copy for `favicon.png` / `apple-touch-icon.png` now always finds its source
+
+**Private content safety fix (critical):**
+- Bug: `dev:marbles` / `dev:buffbaby` npm scripts ran `preprocess-content.js` directly without setting `BLOCKLIST_TAG` env var, causing filter to use default `"not-for-public"` instead of vault's `"private-marble-keep-from-public"` — private marbles were visible in local dev
+- Fix: `preprocess-content.js` now loads site config itself (reads `_bloob-settings.md`) and passes `publishMode`, `blocklistTag`, `excludeFiles` directly to `filterPublishableFiles` — no env var dependency
+- Safety: `publish-filter.js` now strips leading `#` from `blocklistTag` — `blocklist_tag: "#private-marble-keep-from-public"` and `blocklist_tag: "private-marble-keep-from-public"` work identically
+
+**Dev/prod pipeline unification:**
+- `dev:marbles` and `dev:buffbaby` npm scripts now call `dev-local.js` instead of manually chaining raw scripts — same orchestration as prod
+- `dev-local.js` updated: correct step order (preprocess → assemble, so attachments exist for favicon gen), passes `contentDir` to `assembleSrc`, runs Eleventy + theme watcher concurrently
+- Eliminated the fragile manual script chain that caused both bugs above
+
+---
+
 ### Session 19 - March 4, 2026
 **Worked on:** Theme standards — layout fixes, internal link pills, date pill, favicon pipeline, logo in nav
 
@@ -798,6 +818,8 @@ Development session history and completed work.
 | 12 | Feb 18, 2026 | graph.json API + graph visualizer (force-directed, local + global modal) |
 | 13 | Feb 18, 2026 | Graph hover tooltip with OG image preview; OG filename encoding fix |
 | 14 | Feb 19, 2026 | Engineering review implementation, marbles site, multi-site isolation |
+| 19 | Mar 4, 2026 | Theme standards, internal link pills, date pill, favicon pipeline, logo in nav |
+| 20 | Mar 5, 2026 | Favicon delivery fix, private content safety, dev/prod pipeline unification |
 
 ---
 

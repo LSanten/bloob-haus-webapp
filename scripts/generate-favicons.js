@@ -59,6 +59,11 @@ function extractFilePath(value) {
  */
 function resolveLogoPath(rawValue) {
   if (!rawValue) return null;
+
+  // Detect wiki-links before extracting — bare [[filename]] means Obsidian attachment
+  // Attachments are copied to src/media/ during preprocessing
+  const isWikiLink = /^\[\[.+\]\]$/.test(String(rawValue).trim());
+
   const filePath = extractFilePath(rawValue);
   if (!filePath) return null;
 
@@ -67,7 +72,12 @@ function resolveLogoPath(rawValue) {
     return path.join(SRC_DIR, filePath.replace(/^\//, ""));
   }
 
-  // Relative path (e.g. "media/icon.png" or just "icon.png") → resolve relative to src/
+  // Wiki-links are bare attachment filenames → look in src/media/
+  if (isWikiLink && !filePath.includes("/")) {
+    return path.join(SRC_DIR, "media", filePath);
+  }
+
+  // Relative path (e.g. "media/icon.png") → resolve relative to src/
   return path.join(SRC_DIR, filePath);
 }
 

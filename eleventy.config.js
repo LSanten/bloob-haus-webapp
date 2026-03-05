@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync, existsSync } from "fs";
+import { readdirSync, readFileSync, existsSync, mkdirSync } from "fs";
+import sharp from "sharp";
 import { join } from "path";
 import taskLists from "markdown-it-task-lists";
 import pluginRss from "@11ty/eleventy-plugin-rss";
@@ -57,6 +58,11 @@ export default async function (eleventyConfig) {
   // Tag index — served at /tagIndex.json for the tags visualizer (runtime fetch)
   eleventyConfig.addPassthroughCopy({
     "src/_data/tagIndex.json": "tagIndex.json",
+  });
+  // Favicons — generated at build time by scripts/generate-favicons.js into src/
+  eleventyConfig.addPassthroughCopy({ "src/favicon.png": "favicon.png" });
+  eleventyConfig.addPassthroughCopy({
+    "src/apple-touch-icon.png": "apple-touch-icon.png",
   });
 
   // Watch for changes during development
@@ -301,11 +307,33 @@ export default async function (eleventyConfig) {
       for (const match of matches) {
         const [originalTag, before, src, after] = match;
 
-        // Skip images marked no-zoom — they're UI elements (logo, decorative shapes)
-        // that must not be wrapped in a PhotoSwipe gallery link or resized.
-        if ((before + after).includes("no-zoom")) continue;
         const inputPath = join("src", decodeURIComponent(src));
         if (!existsSync(inputPath)) continue;
+
+        // UI images (no-zoom): optimize to a small webp but keep the <img> tag intact.
+        // No PhotoSwipe wrapper — these are logos, icons, decorative shapes, not content.
+        // Output: 80px tall (2× retina for 40px CSS display), aspect ratio preserved.
+        if ((before + after).includes("no-zoom")) {
+          const ext = src.toLowerCase().split(".").pop();
+          if (ext === "gif") continue;
+          try {
+            const optimizedDir = join(outputDir, "media/optimized");
+            mkdirSync(optimizedDir, { recursive: true });
+            const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
+            const outFile = join(optimizedDir, `${baseName}-nav.webp`);
+            const outUrl = `/media/optimized/${baseName}-nav.webp`;
+            if (!existsSync(outFile)) {
+              await sharp(inputPath)
+                .resize({ height: 80, withoutEnlargement: true })
+                .webp({ quality: 85 })
+                .toFile(outFile);
+            }
+            result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
+          } catch (e) {
+            console.warn(`[image] Failed to optimize UI image ${src}: ${e.message}`);
+          }
+          continue;
+        }
 
         // Extract alt text if present
         const altMatch = (before + after).match(/alt="([^"]*)"/);

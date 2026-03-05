@@ -276,7 +276,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     ? path.resolve(contentDirArg)
     : null;
 
-  loadSiteConfig(siteName)
+  // Pass contentDir so loadSiteConfig reads _bloob-settings.md from the right vault
+  loadSiteConfig(siteName, { ...(contentDir && { contentDir }) })
     .then((config) => assembleSrc(config, contentDir))
     .catch((error) => {
       console.error("❌ Assembly failed:", error.message);

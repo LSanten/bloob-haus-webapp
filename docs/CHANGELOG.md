@@ -6,6 +6,44 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 19 - March 4, 2026
+**Worked on:** Theme standards — layout fixes, internal link pills, date pill, favicon pipeline, logo in nav
+
+**marbles-pouch layout fixes:**
+- Tables: `display:block` + `overflow-x:auto` so wide tables scroll in-place on mobile without scrolling the whole page (now a documented theme standard)
+- Banner mobile: restored 110px bottom padding (breakpoint was wiping it, causing 90px wave to overlap "What is a marble?" button)
+- Banner description text: increased `margin-bottom` from `xs` to `md` for more breathing room
+- Byline: `author` frontmatter is now the full replacement text (no auto "Yours," prefix prepended); `site.author` fallback still uses "Yours, {name}"
+
+**Internal link pills (both themes):**
+- `wiki-link-resolver.js`: resolved wiki-links now output `<a class="internal-link">` HTML instead of markdown `[text](url)`
+- If the target page has a `bloob-object` type registered in `_bloob-objects.md`, its image is embedded inline as a 16×16 `<img class="internal-link__icon">`
+- Pages without a registered image get a pill but no icon (no broken-image fallback)
+- `bloobObjectsRegistry` passed from `preprocess-content.js` to resolver
+- `resolveLinkTarget()` now returns `slug` alongside `url` for frontmatter lookup
+- CSS pill styles added to both `marbles-pouch` and `warm-kitchen`
+- Regression tests updated (195/195 pass)
+
+**Date created pill (marbles-pouch):**
+- `date_created` frontmatter renders as a centered pill above page content
+- Format: `date_created: 2024-11-07` or `date_created: 2024-11-07, Visual created on`
+- Default label "Started on" when no comma label given
+- `dateFormat` filter fixed: YYYY-MM-DD strings now parsed as local noon (avoids off-by-one timezone issue)
+
+**Favicon generation (build pipeline):**
+- New `scripts/generate-favicons.js`: uses `sharp` to generate `favicon.png` (32×32) and `apple-touch-icon.png` (180×180) from site logo; caches via MD5 hash of source image
+- Wired into `build-site.js` as Step 5.6 (after preprocessing copies attachments to `src/media/`)
+- `_base/partials/head.njk`: added `<link rel="apple-touch-icon">` link
+- `bloob-settings-reader.js`: now passes `logo` and `favicon` fields through the merge
+- `assemble-src.js`: resolves `[[wiki-link]]` logo syntax → `/media/filename` URL in generated `site.js`; `site.logo` is now available in all templates
+
+**Logo in warm-kitchen nav:**
+- `nav.njk`: shows `<img class="site-nav__logo">` when `site.logo` is set; falls back to `site.title` text
+- CSS: `max-height: 36px`
+
+**Theme standards doc:**
+- `docs/architecture/theme-standards.md`: checklist for all themes (table scroll, internal link pills, date pill, favicon, logo)
+
 ### Session 18 - March 3, 2026
 **Worked on:** Scene Nav Builder — major GUI upgrades (rotation, multi-bg, aspect ratio, hover controls, image prefix, import)
 

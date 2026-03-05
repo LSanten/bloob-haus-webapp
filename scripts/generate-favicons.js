@@ -22,37 +22,53 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const SRC_DIR = path.join(ROOT_DIR, "src");
 
 /**
- * Strips [[...]] wiki-link syntax from a field value.
- * @param {string} value - Raw value, e.g. "[[icon.png]]" or "/assets/logo.png"
- * @returns {string} Filename or path, e.g. "icon.png" or "/assets/logo.png"
+ * Extracts a file path from supported YAML link formats:
+ *   [[icon.png]]                   → "icon.png"
+ *   [](media/marble%20simple.png)  → "media/marble simple.png"  (URL-decoded)
+ *   [label](path/to/file.png)      → "path/to/file.png"
+ *   plain/path.png                 → "plain/path.png"
+ *
+ * @param {string} value - Raw value from site config
+ * @returns {string|null}
  */
-function stripWikiLink(value) {
+function extractFilePath(value) {
   if (!value) return null;
-  const match = String(value).match(/^\[\[(.+?)\]\]$/);
-  return match ? match[1] : value;
+  const s = String(value).trim();
+
+  // [[wiki-link]]
+  const wikiMatch = s.match(/^\[\[(.+?)\]\]$/);
+  if (wikiMatch) return wikiMatch[1];
+
+  // [label](url) or [](url) — standard markdown link
+  const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
+  if (mdMatch) return decodeURIComponent(mdMatch[1]);
+
+  return s;
 }
 
 /**
  * Resolves a logo field value to an absolute file path on disk.
- * Wiki-link filenames (e.g. "icon.png") are looked up in src/media/.
- * Plain paths (e.g. "/assets/logo.png") are resolved relative to src/.
+ *
+ * Handles:
+ *   - [[icon.png]]                  → src/media/icon.png
+ *   - [](media/marble simple.png)   → src/media/marble simple.png  (path relative to src/)
+ *   - /assets/logo.png              → src/assets/logo.png
  *
  * @param {string} rawValue - Raw logo value from site config
  * @returns {string|null} Absolute path to the source image, or null if unresolvable
  */
 function resolveLogoPath(rawValue) {
   if (!rawValue) return null;
-  const filename = stripWikiLink(rawValue);
-  if (!filename) return null;
+  const filePath = extractFilePath(rawValue);
+  if (!filePath) return null;
 
-  // Wiki-link filename — find in src/media/
-  if (!filename.startsWith("/")) {
-    const candidate = path.join(SRC_DIR, "media", filename);
-    return candidate;
+  // Absolute URL path → resolve relative to src/
+  if (filePath.startsWith("/")) {
+    return path.join(SRC_DIR, filePath.replace(/^\//, ""));
   }
 
-  // Plain path relative to src/
-  return path.join(SRC_DIR, filename.replace(/^\//, ""));
+  // Relative path (e.g. "media/icon.png" or just "icon.png") → resolve relative to src/
+  return path.join(SRC_DIR, filePath);
 }
 
 /**

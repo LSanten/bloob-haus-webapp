@@ -204,15 +204,30 @@ async function cleanGeneratedFiles() {
 
 /**
  * Resolves a logo/favicon field value to a URL path for use in templates.
- * Strips [[wiki-link]] syntax: "[[icon.png]]" → "/media/icon.png"
- * Plain paths are passed through as-is.
+ * Supports:
+ *   [[icon.png]]                  → "/media/icon.png"
+ *   [](media/marble%20simple.png) → "/media/marble simple.png"  (URL-decoded, prefixed)
+ *   [label](path/to/file.png)     → "/path/to/file.png"
+ *   plain/path.png                → "plain/path.png" (passed through)
  * @param {string|undefined} value
  * @returns {string|null}
  */
 function resolveLogoUrl(value) {
   if (!value) return null;
-  const match = String(value).match(/^\[\[(.+?)\]\]$/);
-  return match ? `/media/${match[1]}` : value;
+  const s = String(value).trim();
+
+  // [[wiki-link]] → /media/filename
+  const wikiMatch = s.match(/^\[\[(.+?)\]\]$/);
+  if (wikiMatch) return `/media/${wikiMatch[1]}`;
+
+  // [label](url) or [](url) — decode and prefix with / if relative
+  const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
+  if (mdMatch) {
+    const p = decodeURIComponent(mdMatch[1]);
+    return p.startsWith("/") ? p : `/${p}`;
+  }
+
+  return s;
 }
 
 /**

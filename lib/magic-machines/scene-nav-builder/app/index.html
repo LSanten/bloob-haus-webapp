@@ -116,12 +116,36 @@ const nextId = () => 'el_' + Date.now() + '_' + (_idN++);
 const esc     = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const escHtml = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-// Resolve selectedId to the actual object (checks elements then backgrounds)
+// Resolve selectedId to the actual object (checks elements, then desktop bgs, then mobile bgs)
 function getSelected() {
   if (!S.selectedId) return { el: null, bg: null };
   const el = S.elements.find(e => e.id === S.selectedId) || null;
-  const bg = el ? null : (S.backgrounds.find(b => b.id === S.selectedId) || null);
+  const bg = el ? null : (
+    S.backgrounds.find(b => b.id === S.selectedId) ||
+    S.mobileBgs.find(b => b.id === S.selectedId) ||
+    null
+  );
   return { el, bg };
+}
+
+// True if the bg object belongs to S.mobileBgs (vs desktop S.backgrounds)
+function isMobileBg(bg) {
+  return S.mobileBgs.some(b => b.id === bg.id);
+}
+
+// Effective bg position for the current canvas mode.
+// Desktop bgs in mobile mode: merges mobileOverride. Mobile bgs: read directly.
+function getBgOnCanvas(bg) {
+  if (S.canvasMode === 'mobile' && !isMobileBg(bg)) {
+    const mo = bg.mobileOverride || {};
+    return {
+      x:        mo.x        !== undefined ? mo.x        : bg.x,
+      y:        mo.y        !== undefined ? mo.y        : bg.y,
+      scale:    mo.scale    !== undefined ? mo.scale    : bg.scale,
+      rotation: mo.rotation !== undefined ? mo.rotation : (bg.rotation || 0),
+    };
+  }
+  return { x: bg.x, y: bg.y, scale: bg.scale, rotation: bg.rotation || 0 };
 }
 
 // ── Canvas mode helpers ─────────────────────────────────────────────────────────
@@ -155,15 +179,26 @@ function generateCodeFence(scene) {
   const pfx  = scene.imagePrefix || '';
   let yaml = 'aspectRatio: "' + scene.aspectRatio + '"\n';
 
-  if (scene.backgrounds.length === 1 && scene.backgrounds[0].x === 0 && scene.backgrounds[0].y === 0 && scene.backgrounds[0].scale === 100) {
+  const bgHasMobileOverride = scene.backgrounds.some(bg => bg.mobileOverride && Object.keys(bg.mobileOverride).length > 0);
+  const bgSimple = scene.backgrounds.length === 1 && scene.backgrounds[0].x === 0 && scene.backgrounds[0].y === 0 && scene.backgrounds[0].scale === 100 && !scene.backgrounds[0].rotation && !bgHasMobileOverride;
+  if (bgSimple) {
     yaml += 'background: ' + imgRef(scene.backgrounds[0].fileName, pfx) + '\n';
   } else if (scene.backgrounds.length > 0) {
     yaml += 'backgrounds:\n';
     scene.backgrounds.forEach(bg => {
       yaml += '  - image: ' + imgRef(bg.fileName, pfx) + '\n';
-      if (bg.x !== 0)       yaml += '    x: '     + (Math.round(bg.x     * 10) / 10) + '\n';
-      if (bg.y !== 0)       yaml += '    y: '     + (Math.round(bg.y     * 10) / 10) + '\n';
-      if (bg.scale !== 100) yaml += '    scale: ' + (Math.round(bg.scale * 10) / 10) + '\n';
+      if (bg.x !== 0)        yaml += '    x: '        + (Math.round(bg.x        * 10) / 10) + '\n';
+      if (bg.y !== 0)        yaml += '    y: '        + (Math.round(bg.y        * 10) / 10) + '\n';
+      if (bg.scale !== 100)  yaml += '    scale: '    + (Math.round(bg.scale    * 10) / 10) + '\n';
+      if (bg.rotation)       yaml += '    rotation: ' + bg.rotation + '\n';
+      if (scene.mobileEnabled && bg.mobileOverride && Object.keys(bg.mobileOverride).length > 0) {
+        yaml += '    mobile:\n';
+        const mo = bg.mobileOverride;
+        if (mo.x        !== undefined) yaml += '      x: '        + (Math.round(mo.x        * 10) / 10) + '\n';
+        if (mo.y        !== undefined) yaml += '      y: '        + (Math.round(mo.y        * 10) / 10) + '\n';
+        if (mo.scale    !== undefined) yaml += '      scale: '    + (Math.round(mo.scale    * 10) / 10) + '\n';
+        if (mo.rotation !== undefined) yaml += '      rotation: ' + mo.rotation + '\n';
+      }
     });
   }
 
@@ -372,7 +407,7 @@ function parseCodeFence(text) {
   const match = text.match(/```scene-nav\n([\s\S]*?)```/);
   const yaml  = match ? match[1] : text;
   const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null };
-  let section = null, item = null, mobileItem = null, inMobileBlock = false, inElementMobileBlock = false;
+  let section = null, item = null, mobileItem = null, inMobileBlock = false, inElementMobileBlock = false, inBgMobileBlock = false;
 
   const stripImg = (v) => { const m = v.match(/!\[\]\((.+)\)/); return m ? m[1] : v; };
 
@@ -380,7 +415,7 @@ function parseCodeFence(text) {
     if (!item) return;
     if (section === 'backgrounds') result.backgrounds.push(item);
     else if (section === 'elements') result.elements.push(item);
-    item = null; mobileItem = null; inElementMobileBlock = false;
+    item = null; mobileItem = null; inElementMobileBlock = false; inBgMobileBlock = false;
   };
 
   for (const rawLine of yaml.split('\n')) {
@@ -388,7 +423,7 @@ function parseCodeFence(text) {
     const indent = rawLine.match(/^(\s*)/)[1].length;
 
     if (indent === 0) {
-      pushItem(); inMobileBlock = false;
+      pushItem(); inMobileBlock = false; inBgMobileBlock = false;
       if (trimmed.startsWith('aspectRatio:')) {
         result.aspectRatio = trimmed.split(':').slice(1).join(':').trim().replace(/^"|"$/g, '');
       } else if (trimmed.startsWith('background:')) {
@@ -413,28 +448,41 @@ function parseCodeFence(text) {
         pushItem(); item = {};
         if (trimmed.startsWith('- image:')) item.fileName = stripImg(trimmed.replace(/^-\s*image:\s*/, ''));
       } else if (item) {
-        // Check for element-level mobile: block (indent 4) or mobile block fields (indent 6)
-        if (trimmed === 'mobile:' && section === 'elements' && indent === 4) {
+        // Per-bg mobile: block (indent 4 in backgrounds section)
+        if (trimmed === 'mobile:' && section === 'backgrounds' && indent === 4) {
+          inBgMobileBlock = true; item.mobileOverride = {};
+        } else if (inBgMobileBlock && section === 'backgrounds' && indent >= 6) {
+          const ci = trimmed.indexOf(':');
+          if (ci > -1) {
+            const k = trimmed.slice(0, ci).trim();
+            const v = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
+            if (k === 'x')        item.mobileOverride.x        = parseFloat(v) || 0;
+            if (k === 'y')        item.mobileOverride.y        = parseFloat(v) || 0;
+            if (k === 'scale')    item.mobileOverride.scale    = parseFloat(v) || 100;
+            if (k === 'rotation') item.mobileOverride.rotation = parseFloat(v) || 0;
+          }
+        // Per-element mobile: block (indent 4 in elements section)
+        } else if (trimmed === 'mobile:' && section === 'elements' && indent === 4) {
           inElementMobileBlock = true; item.mobileOverride = {};
         } else if (inElementMobileBlock && indent >= 6) {
           const ci = trimmed.indexOf(':');
           if (ci > -1) {
             const k = trimmed.slice(0, ci).trim();
             const v = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
-            if (k === 'image')  item.mobileOverride.fileName   = stripImg(v);
-            if (k === 'x')      item.mobileOverride.x          = parseFloat(v) || 0;
-            if (k === 'y')      item.mobileOverride.y          = parseFloat(v) || 0;
-            if (k === 'scale')  item.mobileOverride.scale      = parseFloat(v) || 18;
-            if (k === 'rotation') item.mobileOverride.rotation = parseFloat(v) || 0;
-            if (k === 'action') item.mobileOverride.actionType = v;
-            if (k === 'value')  item.mobileOverride.actionValue = v;
+            if (k === 'image')    item.mobileOverride.fileName    = stripImg(v);
+            if (k === 'x')        item.mobileOverride.x           = parseFloat(v) || 0;
+            if (k === 'y')        item.mobileOverride.y           = parseFloat(v) || 0;
+            if (k === 'scale')    item.mobileOverride.scale       = parseFloat(v) || 18;
+            if (k === 'rotation') item.mobileOverride.rotation    = parseFloat(v) || 0;
+            if (k === 'action')   item.mobileOverride.actionType  = v;
+            if (k === 'value')    item.mobileOverride.actionValue = v;
           }
-        } else if (!inElementMobileBlock && trimmed.includes(':')) {
-          inElementMobileBlock = false;
+        } else if (!inElementMobileBlock && !inBgMobileBlock && trimmed.includes(':')) {
+          inElementMobileBlock = false; inBgMobileBlock = false;
           const ci = trimmed.indexOf(':');
           const k  = trimmed.slice(0, ci).trim();
           const v  = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
-          if (k === 'image')  item.fileName = stripImg(v); else item[k] = v;
+          if (k === 'image') item.fileName = stripImg(v); else item[k] = v;
         }
       }
     }
@@ -462,9 +510,11 @@ function applyImport(parsed) {
 
   parsed.backgrounds.forEach(imp => {
     const bg = S.backgrounds.find(b => basename(b.fileName) === basename(imp.fileName)); if (!bg) return;
-    if (imp.x     !== undefined) bg.x     = parseFloat(imp.x)     || 0;
-    if (imp.y     !== undefined) bg.y     = parseFloat(imp.y)     || 0;
-    if (imp.scale !== undefined) bg.scale = parseFloat(imp.scale) || 100;
+    if (imp.x            !== undefined) bg.x            = parseFloat(imp.x)        || 0;
+    if (imp.y            !== undefined) bg.y            = parseFloat(imp.y)        || 0;
+    if (imp.scale        !== undefined) bg.scale        = parseFloat(imp.scale)    || 100;
+    if (imp.rotation     !== undefined) bg.rotation     = parseFloat(imp.rotation) || 0;
+    if (imp.mobileOverride)             bg.mobileOverride = imp.mobileOverride;
     appliedBg++;
   });
   parsed.elements.forEach(imp => {
@@ -495,9 +545,15 @@ function removeEl(id) {
   S.elements = S.elements.filter(e => e.id !== id);
   if (S.selectedId === id) S.selectedId = null;
 }
-function updateBg(id, patch) {
-  const bg = S.backgrounds.find(b => b.id === id);
-  if (bg) Object.assign(bg, patch);
+function updateBg(id, patch, toOverride) {
+  const bg = S.backgrounds.find(b => b.id === id) || S.mobileBgs.find(b => b.id === id);
+  if (!bg) return;
+  if (toOverride) {
+    if (!bg.mobileOverride) bg.mobileOverride = {};
+    Object.assign(bg.mobileOverride, patch);
+  } else {
+    Object.assign(bg, patch);
+  }
 }
 function removeBg(id) {
   S.backgrounds = S.backgrounds.filter(b => b.id !== id);
@@ -516,16 +572,19 @@ function mountBackgroundLayers(container) {
     div.dataset.bgid = bg.id;
 
     const isSelected = S.selectedId === bg.id;
+    const pos = getBgOnCanvas(bg);
     Object.assign(div.style, {
-      position:      'absolute',
-      left:          bg.x + '%',
-      top:           bg.y + '%',
-      width:         bg.scale + '%',
-      zIndex:        2,
-      cursor:        S.mode === 'preview' ? 'default' : 'grab',
-      outline:       isSelected ? '2px dashed #8888aa' : 'none',
-      outlineOffset: '3px',
-      transition:    'outline 0.12s',
+      position:        'absolute',
+      left:            pos.x + '%',
+      top:             pos.y + '%',
+      width:           pos.scale + '%',
+      transform:       pos.rotation ? `rotate(${pos.rotation}deg)` : '',
+      transformOrigin: 'center',
+      zIndex:          2,
+      cursor:          S.mode === 'preview' ? 'default' : 'grab',
+      outline:         isSelected ? '2px dashed #8888aa' : 'none',
+      outlineOffset:   '3px',
+      transition:      'outline 0.12s',
     });
 
     const img = document.createElement('img');
@@ -548,23 +607,36 @@ function mountBackgroundLayers(container) {
         e.preventDefault(); e.stopPropagation();
         const rect    = container.getBoundingClientRect();
         const startMx = e.clientX, startMy = e.clientY;
-        const startBx = bg.x,      startBy = bg.y;
+        const curPos  = getBgOnCanvas(bg);
+        const startBx = curPos.x, startBy = curPos.y;
+        // In mobile mode, desktop bgs write to mobileOverride; mobile bgs write directly
+        const writesToOverride = S.canvasMode === 'mobile' && !isMobileBg(bg);
         div.style.cursor = 'grabbing'; div.style.transition = 'none';
 
         const onMove = (ev) => {
-          bg.x = startBx + ((ev.clientX - startMx) / rect.width)  * 100;
-          bg.y = startBy + ((ev.clientY - startMy) / rect.height) * 100;
-          div.style.left = bg.x + '%'; div.style.top = bg.y + '%';
+          const newX = startBx + ((ev.clientX - startMx) / rect.width)  * 100;
+          const newY = startBy + ((ev.clientY - startMy) / rect.height) * 100;
+          if (writesToOverride) {
+            if (!bg.mobileOverride) bg.mobileOverride = {};
+            bg.mobileOverride.x = newX; bg.mobileOverride.y = newY;
+          } else {
+            bg.x = newX; bg.y = newY;
+          }
+          div.style.left = newX + '%'; div.style.top = newY + '%';
           if (S.selectedId === bg.id) {
             const xi = document.getElementById('bg-x');
-            if (xi) { xi.value = bg.x; document.getElementById('bg-x-display').textContent = Math.round(bg.x) + '%'; }
+            if (xi) { xi.value = newX; document.getElementById('bg-x-display').textContent = Math.round(newX) + '%'; }
             const yi = document.getElementById('bg-y');
-            if (yi) { yi.value = bg.y; document.getElementById('bg-y-display').textContent = Math.round(bg.y) + '%'; }
+            if (yi) { yi.value = newY; document.getElementById('bg-y-display').textContent = Math.round(newY) + '%'; }
           }
         };
         const onUp = () => {
           div.style.cursor = 'grab'; div.style.transition = 'outline 0.12s';
-          updateBg(bg.id, { x: bg.x, y: bg.y });
+          if (writesToOverride) {
+            updateBg(bg.id, { x: bg.mobileOverride.x, y: bg.mobileOverride.y }, true);
+          } else {
+            updateBg(bg.id, { x: bg.x, y: bg.y });
+          }
           window.removeEventListener('mousemove', onMove);
           window.removeEventListener('mouseup',   onUp);
         };
@@ -841,31 +913,42 @@ function renderLeftPanel() {
   // Background properties panel
   let bgPropsHtml = '';
   if (selBg) {
+    const bgPos = getBgOnCanvas(selBg);
+    const bgIsOverride = S.canvasMode === 'mobile' && !isMobileBg(selBg);
+    const mobileTag = bgIsOverride ? ' <span style="font-size:9px;color:#69F0AE;">(mobile)</span>' : '';
     bgPropsHtml = `
       <div style="margin-top:16px;padding:12px;border-radius:8px;background:#0c0c18;border:1px solid #8888aa18;">
         <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em;">Background Layer</div>
 
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
-            Size · <span id="bg-scale-display">${Math.round(selBg.scale)}%</span>
+            Size · <span id="bg-scale-display">${Math.round(bgPos.scale)}%</span>${mobileTag}
           </div>
-          <input id="bg-scale" type="range" min="10" max="200" step="1" value="${selBg.scale}"
+          <input id="bg-scale" type="range" min="10" max="200" step="1" value="${bgPos.scale}"
                  style="--range-color:#8888aa" />
         </div>
 
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
-            X offset · <span id="bg-x-display">${Math.round(selBg.x)}%</span>
+            X offset · <span id="bg-x-display">${Math.round(bgPos.x)}%</span>${mobileTag}
           </div>
-          <input id="bg-x" type="range" min="-50" max="150" step="0.5" value="${selBg.x}"
+          <input id="bg-x" type="range" min="-100" max="200" step="0.5" value="${bgPos.x}"
+                 style="--range-color:#8888aa" />
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
+            Y offset · <span id="bg-y-display">${Math.round(bgPos.y)}%</span>${mobileTag}
+          </div>
+          <input id="bg-y" type="range" min="-100" max="200" step="0.5" value="${bgPos.y}"
                  style="--range-color:#8888aa" />
         </div>
 
         <div style="margin-bottom:12px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
-            Y offset · <span id="bg-y-display">${Math.round(selBg.y)}%</span>
+            Rotation · <span id="bg-rotation-display">${bgPos.rotation}°</span>${mobileTag}
           </div>
-          <input id="bg-y" type="range" min="-50" max="150" step="0.5" value="${selBg.y}"
+          <input id="bg-rotation" type="range" min="-180" max="180" step="1" value="${bgPos.rotation}"
                  style="--range-color:#8888aa" />
         </div>
 
@@ -913,17 +996,17 @@ function renderLeftPanel() {
 
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
-            Size · <span id="scale-display">${Math.round(sel.scale)}%</span>
+            Size · <span id="scale-display">${Math.round(getElOnCanvas(sel).scale)}%</span>${S.canvasMode==='mobile'&&sel.onlyShowOn!=='mobile'?' <span style="font-size:9px;color:#69F0AE;">(mobile)</span>':''}
           </div>
-          <input id="prop-scale" type="range" min="3" max="60" step="0.5" value="${sel.scale}"
+          <input id="prop-scale" type="range" min="3" max="60" step="0.5" value="${getElOnCanvas(sel).scale}"
                  style="--range-color:${sel.glowColor}" />
         </div>
 
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">
-            Rotation · <span id="rotation-display">${sel.rotation || 0}°</span>
+            Rotation · <span id="rotation-display">${getElOnCanvas(sel).rotation}°</span>${S.canvasMode==='mobile'&&sel.onlyShowOn!=='mobile'?' <span style="font-size:9px;color:#69F0AE;">(mobile)</span>':''}
           </div>
-          <input id="prop-rotation" type="range" min="-180" max="180" step="1" value="${sel.rotation || 0}"
+          <input id="prop-rotation" type="range" min="-180" max="180" step="1" value="${getElOnCanvas(sel).rotation}"
                  style="--range-color:${sel.glowColor}" />
         </div>
 
@@ -1167,10 +1250,12 @@ function renderLeftPanel() {
 
   // Background properties handlers
   if (selBg) {
+    const bgToOverride = S.canvasMode === 'mobile' && !isMobileBg(selBg);
+
     const bgScale = document.getElementById('bg-scale');
     bgScale.addEventListener('input', () => {
       const v = Number(bgScale.value);
-      updateBg(selBg.id, { scale: v });
+      updateBg(selBg.id, { scale: v }, bgToOverride);
       document.getElementById('bg-scale-display').textContent = Math.round(v) + '%';
       const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
       if (canvasEl) canvasEl.style.width = v + '%';
@@ -1179,7 +1264,7 @@ function renderLeftPanel() {
     const bgX = document.getElementById('bg-x');
     bgX.addEventListener('input', () => {
       const v = Number(bgX.value);
-      updateBg(selBg.id, { x: v });
+      updateBg(selBg.id, { x: v }, bgToOverride);
       document.getElementById('bg-x-display').textContent = Math.round(v) + '%';
       const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
       if (canvasEl) canvasEl.style.left = v + '%';
@@ -1188,10 +1273,19 @@ function renderLeftPanel() {
     const bgY = document.getElementById('bg-y');
     bgY.addEventListener('input', () => {
       const v = Number(bgY.value);
-      updateBg(selBg.id, { y: v });
+      updateBg(selBg.id, { y: v }, bgToOverride);
       document.getElementById('bg-y-display').textContent = Math.round(v) + '%';
       const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
       if (canvasEl) canvasEl.style.top = v + '%';
+    });
+
+    const bgRotation = document.getElementById('bg-rotation');
+    bgRotation.addEventListener('input', () => {
+      const v = Number(bgRotation.value);
+      updateBg(selBg.id, { rotation: v }, bgToOverride);
+      document.getElementById('bg-rotation-display').textContent = v + '°';
+      const canvasEl = document.querySelector('.sn-bg-layer[data-bgid="' + selBg.id + '"]');
+      if (canvasEl) canvasEl.style.transform = v ? 'rotate(' + v + 'deg)' : '';
     });
 
     const removeBgBtn = document.getElementById('remove-bg-btn');
@@ -1217,7 +1311,14 @@ function renderLeftPanel() {
   const scaleInput = document.getElementById('prop-scale');
   scaleInput.addEventListener('input', () => {
     const v = Number(scaleInput.value);
-    updateEl(sel.id, { scale: v });
+    const writesToOverride = S.canvasMode === 'mobile' && sel.onlyShowOn !== 'mobile';
+    if (writesToOverride) {
+      if (!sel.mobileOverride) sel.mobileOverride = {};
+      sel.mobileOverride.scale = v;
+      updateEl(sel.id, { mobileOverride: { ...sel.mobileOverride } });
+    } else {
+      updateEl(sel.id, { scale: v });
+    }
     document.getElementById('scale-display').textContent = Math.round(v) + '%';
     const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
     if (canvasEl) canvasEl.style.width = v + '%';
@@ -1226,7 +1327,14 @@ function renderLeftPanel() {
   const rotationInput = document.getElementById('prop-rotation');
   rotationInput.addEventListener('input', () => {
     const v = Number(rotationInput.value);
-    updateEl(sel.id, { rotation: v });
+    const writesToOverride = S.canvasMode === 'mobile' && sel.onlyShowOn !== 'mobile';
+    if (writesToOverride) {
+      if (!sel.mobileOverride) sel.mobileOverride = {};
+      sel.mobileOverride.rotation = v;
+      updateEl(sel.id, { mobileOverride: { ...sel.mobileOverride } });
+    } else {
+      updateEl(sel.id, { rotation: v });
+    }
     document.getElementById('rotation-display').textContent = v + '°';
     const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
     if (canvasEl) canvasEl.style.transform = 'rotate(' + v + 'deg)';
@@ -1432,7 +1540,7 @@ document.getElementById('bg-input').addEventListener('change', (e) => {
   files.forEach(f => {
     const r = new FileReader();
     r.onload = ev => {
-      S.backgrounds.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100 });
+      S.backgrounds.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100, rotation: 0, mobileOverride: null });
       if (++loaded === files.length) { renderCanvas(); renderLeftPanel(); }
     };
     r.readAsDataURL(f);
@@ -1472,7 +1580,7 @@ document.getElementById('mobile-bg-input').addEventListener('change', (e) => {
   files.forEach(f => {
     const r = new FileReader();
     r.onload = ev => {
-      S.mobileBgs.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100 });
+      S.mobileBgs.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100, rotation: 0 });
       if (++loaded === files.length) { renderLeftPanel(); renderCanvas(); }
     };
     r.readAsDataURL(f);

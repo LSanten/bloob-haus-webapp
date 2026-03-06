@@ -720,8 +720,21 @@ function renderCanvas() {
 
   // Canvas dimensions + background color
   const activeAR = (S.mobileEnabled && S.canvasMode === 'mobile') ? S.mobileAspectRatio : S.aspectRatio;
+  const [arW, arH] = activeAR.split('/').map(Number);
+  const isPortrait = arH > arW;
   container.style.aspectRatio = activeAR;
-  container.style.minHeight   = '280px';
+  if (isPortrait) {
+    // Height-based sizing: constrain to viewport so the canvas never overflows off-screen
+    container.style.width    = 'auto';
+    container.style.maxWidth = '100%';
+    container.style.height   = '70vh';
+    container.style.minHeight = '';
+  } else {
+    container.style.width    = '100%';
+    container.style.maxWidth = '800px';
+    container.style.height   = '';
+    container.style.minHeight = '280px';
+  }
   container.style.background  = isPreview ? S.previewBgColor : S.editBgColor;
 
   // Canvas mode toggle (only in edit mode, only when mobile is enabled)
@@ -1500,7 +1513,7 @@ function init() {
         <div id="left-panel" style="padding:14px;"></div>
       </div>
 
-      <div id="canvas-area" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto;background:#08080e;">
+      <div id="canvas-area" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px;overflow:auto;background:#08080e;">
         <div id="scene-container" style="position:relative;width:100%;max-width:800px;aspect-ratio:16/9;min-height:280px;border-radius:10px;overflow:hidden;border:1px solid #141422;background:repeating-conic-gradient(#111118 0% 25%, #0d0d14 0% 50%) 50% / 18px 18px;"></div>
       </div>
 

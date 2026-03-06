@@ -33,8 +33,9 @@
 <body>
 
 <div id="app" style="height:100vh;display:flex;flex-direction:column;"></div>
-<input id="bg-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
-<input id="el-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+<input id="bg-input"        type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+<input id="mobile-bg-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+<input id="el-input"        type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
 
 <script>
 /* =============================================================================
@@ -77,22 +78,36 @@ const ASPECT_RATIOS = [
   { label: '9:16', value: '9/16' },
 ];
 
+const MOBILE_ASPECT_RATIOS = [
+  { label: '9:16', value: '9/16' },
+  { label: '4:5',  value: '4/5'  },
+  { label: '3:4',  value: '3/4'  },
+  { label: '2:3',  value: '2/3'  },
+  { label: '1:1',  value: '1/1'  },
+];
+
 // The HTML parser closes a <script> block on the first </scr + ipt> it finds in the source.
 // SCRIPT_CLOSE is built at runtime so that sequence never appears literally here.
 const SCRIPT_CLOSE = '<' + '/script>';
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const S = {
-  elements:      [],
-  backgrounds:   [],       // [{id, src, fileName, x, y, scale}]
-  aspectRatio:   '16/9',   // CSS aspect-ratio value for the canvas
-  imagePrefix:   '',        // e.g. '../media/studio-bloob/' — prepended in code fence output as ![]()
-  editBgColor:   '#0d0d1a',
-  previewBgColor:'#000000',
-  exportBgColor: 'transparent', // hex color or 'transparent'
-  selectedId:    null,
-  mode:          'edit',   // 'edit' | 'preview' | 'code'
-  codeTab:       'embed',  // 'embed' | 'markdown' | 'import'
+  elements:          [],
+  backgrounds:       [],       // [{id, src, fileName, x, y, scale}]
+  mobileBgs:         [],       // [{id, src, fileName, x, y, scale}] — mobile-only backgrounds
+  aspectRatio:       '16/9',
+  imagePrefix:       '',
+  editBgColor:       '#0d0d1a',
+  previewBgColor:    '#000000',
+  exportBgColor:     'transparent',
+  selectedId:        null,
+  mode:              'edit',   // 'edit' | 'preview' | 'code'
+  codeTab:           'embed',  // 'embed' | 'markdown' | 'import'
+  // Mobile layout
+  mobileEnabled:     false,
+  mobileBreakpoint:  768,
+  mobileAspectRatio: '9/16',
+  canvasMode:        'desktop', // 'desktop' | 'mobile'
 };
 let _idN = 0;
 const nextId = () => 'el_' + Date.now() + '_' + (_idN++);
@@ -107,6 +122,27 @@ function getSelected() {
   const el = S.elements.find(e => e.id === S.selectedId) || null;
   const bg = el ? null : (S.backgrounds.find(b => b.id === S.selectedId) || null);
   return { el, bg };
+}
+
+// ── Canvas mode helpers ─────────────────────────────────────────────────────────
+// Returns effective position/scale for the current canvas mode
+function getElOnCanvas(el) {
+  if (S.canvasMode === 'mobile') {
+    const mo = el.mobileOverride || {};
+    return {
+      x:        mo.x        !== undefined ? mo.x        : el.x,
+      y:        mo.y        !== undefined ? mo.y        : el.y,
+      scale:    mo.scale    !== undefined ? mo.scale    : el.scale,
+      rotation: mo.rotation !== undefined ? mo.rotation : (el.rotation || 0),
+    };
+  }
+  return { x: el.x, y: el.y, scale: el.scale, rotation: el.rotation || 0 };
+}
+
+// Whether an element should appear on the current canvas
+function visibleOnCanvas(el) {
+  if (S.canvasMode === 'mobile') return !el.onlyShowOn || el.onlyShowOn === 'mobile';
+  return !el.onlyShowOn || el.onlyShowOn === 'desktop';
 }
 
 // ── Code generators ────────────────────────────────────────────────────────────
@@ -125,10 +161,28 @@ function generateCodeFence(scene) {
     yaml += 'backgrounds:\n';
     scene.backgrounds.forEach(bg => {
       yaml += '  - image: ' + imgRef(bg.fileName, pfx) + '\n';
-      if (bg.x !== 0)      yaml += '    x: '     + (Math.round(bg.x     * 10) / 10) + '\n';
-      if (bg.y !== 0)      yaml += '    y: '     + (Math.round(bg.y     * 10) / 10) + '\n';
+      if (bg.x !== 0)       yaml += '    x: '     + (Math.round(bg.x     * 10) / 10) + '\n';
+      if (bg.y !== 0)       yaml += '    y: '     + (Math.round(bg.y     * 10) / 10) + '\n';
       if (bg.scale !== 100) yaml += '    scale: ' + (Math.round(bg.scale * 10) / 10) + '\n';
     });
+  }
+
+  // Mobile top-level block
+  if (scene.mobileEnabled) {
+    yaml += 'mobile:\n';
+    yaml += '  breakpoint: ' + scene.mobileBreakpoint + '\n';
+    yaml += '  aspectRatio: "' + scene.mobileAspectRatio + '"\n';
+    if (scene.mobileBgs.length === 1 && scene.mobileBgs[0].x === 0 && scene.mobileBgs[0].y === 0 && scene.mobileBgs[0].scale === 100) {
+      yaml += '  background: ' + imgRef(scene.mobileBgs[0].fileName, pfx) + '\n';
+    } else if (scene.mobileBgs.length > 1) {
+      yaml += '  backgrounds:\n';
+      scene.mobileBgs.forEach(bg => {
+        yaml += '    - image: ' + imgRef(bg.fileName, pfx) + '\n';
+        if (bg.x !== 0)       yaml += '      x: '     + (Math.round(bg.x     * 10) / 10) + '\n';
+        if (bg.y !== 0)       yaml += '      y: '     + (Math.round(bg.y     * 10) / 10) + '\n';
+        if (bg.scale !== 100) yaml += '      scale: ' + (Math.round(bg.scale * 10) / 10) + '\n';
+      });
+    }
   }
 
   if (scene.elements.length === 0) return '```scene-nav\n' + yaml + '```';
@@ -146,105 +200,166 @@ function generateCodeFence(scene) {
     if (el.glowIntensity !== 1) yaml += '    glowIntensity: ' + el.glowIntensity + '\n';
     yaml += '    action: ' + el.actionType + '\n';
     if (el.actionValue)         yaml += '    value: "' + el.actionValue + '"\n';
+    if (el.onlyShowOn)          yaml += '    onlyShowOn: ' + el.onlyShowOn + '\n';
+    // Per-element mobile override block
+    if (scene.mobileEnabled && el.mobileOverride && Object.keys(el.mobileOverride).length > 0) {
+      yaml += '    mobile:\n';
+      const mo = el.mobileOverride;
+      if (mo.x        !== undefined) yaml += '      x: '        + (Math.round(mo.x        * 10) / 10) + '\n';
+      if (mo.y        !== undefined) yaml += '      y: '        + (Math.round(mo.y        * 10) / 10) + '\n';
+      if (mo.scale    !== undefined) yaml += '      scale: '    + (Math.round(mo.scale    * 10) / 10) + '\n';
+      if (mo.rotation !== undefined) yaml += '      rotation: ' + mo.rotation + '\n';
+      if (mo.fileName)               yaml += '      image: '   + imgRef(mo.fileName, pfx) + '\n';
+      if (mo.actionType)             yaml += '      action: '  + mo.actionType + '\n';
+      if (mo.actionValue !== undefined) yaml += '      value: "' + mo.actionValue + '"\n';
+    }
   });
   return '```scene-nav\n' + yaml + '```';
 }
 
+function buildEmbedElement(el, pfx) {
+  return {
+    src:                 pfx + (el.fileName || ''),
+    x:                   Math.round(el.x     * 10) / 10,
+    y:                   Math.round(el.y     * 10) / 10,
+    scale:               Math.round(el.scale * 10) / 10,
+    rotation:            el.rotation    || 0,
+    resetRotationOnHover: el.resetRotationOnHover !== false,
+    label:               el.label       || null,
+    glow:                el.glowColor,
+    glowIntensity:       el.glowIntensity,
+    action:              el.actionType,
+    value:               el.actionValue || null,
+  };
+}
+
+// Shared IIFE body — renders backgrounds + elements into a container by id
+const EMBED_RENDER_FN = [
+  'function renderScene(cId, bgs, els) {',
+  '  var c = document.getElementById(cId); if (!c) return;',
+  '  bgs.forEach(function(bg) {',
+  '    var d = document.createElement(\'div\');',
+  '    d.style.cssText = \'position:absolute;pointer-events:none;left:\'+(bg.x||0)+\'%;top:\'+(bg.y||0)+\'%;width:\'+(bg.scale||100)+\'%\';',
+  '    var img = document.createElement(\'img\');',
+  '    img.src = bg.src; img.draggable = false; img.style.cssText = \'width:100%;height:auto;display:block\';',
+  '    d.appendChild(img); c.appendChild(d);',
+  '  });',
+  '  els.forEach(function(el) {',
+  '    var d = document.createElement(\'div\');',
+  '    d.style.cssText = \'position:absolute;cursor:pointer;transition:filter 0.35s ease,transform 0.25s ease;left:\'+el.x+\'%;top:\'+el.y+\'%;width:\'+el.scale+\'%;transform:rotate(\'+(el.rotation||0)+\'deg)\';',
+  '    var gI = el.glowIntensity || 1;',
+  '    var g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);',
+  '    var baseRot = \'rotate(\'+(el.rotation||0)+\'deg)\';',
+  '    d.onmouseenter = function() {',
+  '      d.style.filter = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
+  '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : baseRot+\' \') + \'scale(1.06)\';',
+  '    };',
+  '    d.onmouseleave = function() { d.style.filter=\'none\'; d.style.transform=baseRot; };',
+  '    d.onclick = function() {',
+  '      if (el.action===\'link\'   && el.value) { window.open(el.value,\'_blank\'); return; }',
+  '      if (el.action===\'anchor\' && el.value) {',
+  '        var t = document.getElementById(el.value)||document.querySelector(\'[name="\'+el.value+\'"]\');',
+  '        if (t) t.scrollIntoView({behavior:\'smooth\'}); return;',
+  '      }',
+  '      if (el.action===\'filter\' && el.value) {',
+  '        window.dispatchEvent(new CustomEvent(\'bloob:filter\',{detail:{tag:el.value}}));',
+  '        var p = window.location.pathname;',
+  '        if (p.indexOf(\'/collections/\')>-1) window.location.href=p.split(\'?\')[0]+\'?filter.p.tag=\'+encodeURIComponent(el.value);',
+  '      }',
+  '    };',
+  '    var img = document.createElement(\'img\');',
+  '    img.src=el.src; img.alt=el.label||\'\'; img.draggable=false;',
+  '    img.style.cssText=\'width:100%;height:auto;display:block;pointer-events:none;user-select:none\';',
+  '    d.appendChild(img);',
+  '    if (el.label) {',
+  '      var lbl=document.createElement(\'span\');',
+  '      lbl.style.cssText=\'position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:3px 11px;border-radius:12px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity 0.25s;pointer-events:none;letter-spacing:0.02em;font-family:system-ui,sans-serif\';',
+  '      lbl.textContent=el.label; d.appendChild(lbl);',
+  '      d.onmouseenter=(function(fn,l){return function(){fn.call(this);l.style.opacity=1};})(d.onmouseenter,lbl);',
+  '      d.onmouseleave=(function(fn,l){return function(){fn.call(this);l.style.opacity=0};})(d.onmouseleave,lbl);',
+  '    }',
+  '    c.appendChild(d);',
+  '  });',
+  '}',
+].join('\n');
+
 function generateEmbed(scene) {
-  const pfx = scene.imagePrefix || '';
+  const pfx  = scene.imagePrefix || '';
+  const bgColor = scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '';
+  const sceneStyle = 'position:relative;max-width:900px;margin:0 auto;overflow:hidden;';
+
+  if (!scene.mobileEnabled) {
+    // ── Single-layout embed (original behaviour) ──────────────────────────────
+    const config = {
+      backgrounds: scene.backgrounds.map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 })),
+      elements:    scene.elements.map(el => buildEmbedElement(el, pfx)),
+    };
+    return [
+      '<!-- Scene Nav — generated by Bloob Haus builder -->',
+      '<!-- Replace image src values with hosted URLs before deploying -->',
+      '<div id="bloob-scene-nav" style="' + sceneStyle + 'aspect-ratio:' + scene.aspectRatio + ';' + bgColor + '">',
+      '<script>',
+      '(function(){',
+      EMBED_RENDER_FN,
+      '  var C = ' + JSON.stringify(config, null, 2) + ';',
+      '  renderScene(\'bloob-scene-nav\', C.backgrounds, C.elements);',
+      '})();',
+      SCRIPT_CLOSE,
+      '</div>',
+    ].join('\n');
+  }
+
+  // ── Two-layout embed (mobile enabled) ────────────────────────────────────────
+  const bp = scene.mobileBreakpoint;
+
+  const desktopEls = scene.elements
+    .filter(el => !el.onlyShowOn || el.onlyShowOn === 'desktop')
+    .map(el => buildEmbedElement(el, pfx));
+
+  const mobileEls = scene.elements
+    .filter(el => !el.onlyShowOn || el.onlyShowOn === 'mobile')
+    .map(el => {
+      const base = buildEmbedElement(el, pfx);
+      const mo   = el.mobileOverride || {};
+      return {
+        ...base,
+        src:                 pfx + (mo.fileName || el.fileName || ''),
+        x:                   mo.x        !== undefined ? Math.round(mo.x        * 10) / 10 : base.x,
+        y:                   mo.y        !== undefined ? Math.round(mo.y        * 10) / 10 : base.y,
+        scale:               mo.scale    !== undefined ? Math.round(mo.scale    * 10) / 10 : base.scale,
+        rotation:            mo.rotation !== undefined ? mo.rotation : base.rotation,
+        action:              mo.actionType  || base.action,
+        value:               mo.actionValue !== undefined ? mo.actionValue : base.value,
+      };
+    });
+
+  const mobileBgSrcs = (scene.mobileBgs.length > 0 ? scene.mobileBgs : scene.backgrounds)
+    .map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 }));
+
   const config = {
-    aspectRatio: scene.aspectRatio,
-    backgrounds: scene.backgrounds.map(bg => ({
-      src:   pfx + bg.fileName,
-      x:     Math.round(bg.x     * 10) / 10,
-      y:     Math.round(bg.y     * 10) / 10,
-      scale: Math.round(bg.scale * 10) / 10,
-    })),
-    elements: scene.elements.map(el => ({
-      image:         pfx + el.fileName,
-      src:           pfx + el.fileName,
-      x:             Math.round(el.x     * 10) / 10,
-      y:             Math.round(el.y     * 10) / 10,
-      scale:         Math.round(el.scale * 10) / 10,
-      rotation:             el.rotation    || 0,
-      resetRotationOnHover: el.resetRotationOnHover !== false,
-      label:         el.label       || null,
-      glow:          el.glowColor,
-      glowIntensity: el.glowIntensity,
-      action:        el.actionType,
-      value:         el.actionValue || null,
-    })),
+    desktopBgs:  scene.backgrounds.map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 })),
+    desktopEls,
+    mobileBgs:   mobileBgSrcs,
+    mobileEls,
   };
 
-  // Build as array — the closing tag must not appear literally in this source file.
   return [
     '<!-- Scene Nav — generated by Bloob Haus builder -->',
-    '<!-- Replace filename src values with hosted image URLs before deploying -->',
-    '<div id="bloob-scene-nav" style="position:relative;max-width:900px;margin:0 auto;aspect-ratio:' + scene.aspectRatio + ';overflow:hidden;' + (scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '') + '">',
+    '<!-- Replace image src values with hosted URLs before deploying -->',
     '<style>',
-    '  #bloob-scene-nav { font-family: system-ui, sans-serif; }',
-    '  .sn-bg-layer { position:absolute; pointer-events:none; }',
-    '  .sn-bg-layer img { width:100%; height:auto; display:block; }',
-    '  .sn-el { position:absolute; cursor:pointer; transition: filter 0.35s ease, transform 0.25s ease; }',
-    '  .sn-el img { width:100%; height:auto; display:block; pointer-events:none; user-select:none; }',
-    '  .sn-label {',
-    '    position:absolute; bottom:-26px; left:50%; transform:translateX(-50%);',
-    '    background:rgba(0,0,0,0.8); color:#fff; padding:3px 11px; border-radius:12px;',
-    '    font-size:12px; white-space:nowrap; opacity:0; transition:opacity 0.25s;',
-    '    pointer-events:none; letter-spacing:0.02em;',
-    '  }',
-    '  .sn-el:hover .sn-label { opacity:1; }',
+    '  @media (max-width:' + bp + 'px){#sn-desktop{display:none}}',
+    '  @media (min-width:' + (bp+1) + 'px){#sn-mobile{display:none}}',
     '</style>',
+    '<div id="sn-desktop" style="' + sceneStyle + 'aspect-ratio:' + scene.aspectRatio + ';' + bgColor + '"></div>',
+    '<div id="sn-mobile"  style="' + sceneStyle + 'aspect-ratio:' + scene.mobileAspectRatio + ';' + bgColor + '"></div>',
     '<script>',
     '(function(){',
-    '  var S = ' + JSON.stringify(config, null, 2) + ';',
-    '  var c = document.getElementById(\'bloob-scene-nav\');',
-    '  (S.backgrounds || []).forEach(function(bg) {',
-    '    var d = document.createElement(\'div\');',
-    '    d.className = \'sn-bg-layer\';',
-    '    d.style.left = (bg.x || 0) + \'%\'; d.style.top = (bg.y || 0) + \'%\'; d.style.width = (bg.scale || 100) + \'%\';',
-    '    var img = document.createElement(\'img\');',
-    '    img.src = bg.src; img.draggable = false;',
-    '    d.appendChild(img); c.appendChild(d);',
-    '  });',
-    '  S.elements.forEach(function(el) {',
-    '    var d = document.createElement(\'div\');',
-    '    d.className = \'sn-el\';',
-    '    d.style.left = el.x + \'%\'; d.style.top = el.y + \'%\'; d.style.width = el.scale + \'%\'; d.style.transform = \'rotate(\' + (el.rotation || 0) + \'deg)\';',
-    '    var gI = el.glowIntensity || 1;',
-    '    var g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);',
-    '    var baseRot = \'rotate(\' + (el.rotation || 0) + \'deg)\';',
-    '    d.onmouseenter = function() {',
-    '      d.style.filter = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
-    '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : baseRot + \' \') + \'scale(1.06)\';',
-    '    };',
-    '    d.onmouseleave = function() { d.style.filter = \'none\'; d.style.transform = baseRot; };',
-    '    d.onclick = function() {',
-    '      if (el.action === \'link\' && el.value) { window.open(el.value, \'_blank\'); return; }',
-    '      if (el.action === \'anchor\' && el.value) {',
-    '        var t = document.getElementById(el.value) || document.querySelector(\'[name="\'+el.value+\'"]\');',
-    '        if (t) t.scrollIntoView({ behavior: \'smooth\' }); return;',
-    '      }',
-    '      if (el.action === \'filter\' && el.value) {',
-    '        window.dispatchEvent(new CustomEvent(\'bloob:filter\', { detail: { tag: el.value } }));',
-    '        var p = window.location.pathname;',
-    '        if (p.indexOf(\'/collections/\') > -1)',
-    '          window.location.href = p.split(\'?\')[0] + \'?filter.p.tag=\' + encodeURIComponent(el.value);',
-    '      }',
-    '    };',
-    '    var img = document.createElement(\'img\');',
-    '    img.src = el.src; img.alt = el.label || \'\'; img.draggable = false;',
-    '    d.appendChild(img);',
-    '    if (el.label) {',
-    '      var lbl = document.createElement(\'span\');',
-    '      lbl.className = \'sn-label\'; lbl.textContent = el.label;',
-    '      d.appendChild(lbl);',
-    '    }',
-    '    c.appendChild(d);',
-    '  });',
+    EMBED_RENDER_FN,
+    '  var C = ' + JSON.stringify(config, null, 2) + ';',
+    '  renderScene(\'sn-desktop\', C.desktopBgs, C.desktopEls);',
+    '  renderScene(\'sn-mobile\',  C.mobileBgs,  C.mobileEls);',
     '})();',
     SCRIPT_CLOSE,
-    '</div>',
   ].join('\n');
 }
 
@@ -256,39 +371,71 @@ function generateEmbed(scene) {
 function parseCodeFence(text) {
   const match = text.match(/```scene-nav\n([\s\S]*?)```/);
   const yaml  = match ? match[1] : text;
-  const result = { aspectRatio: null, backgrounds: [], elements: [] };
-  let section = null, item = null;
+  const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null };
+  let section = null, item = null, mobileItem = null, inMobileBlock = false, inElementMobileBlock = false;
 
-  // Strip Obsidian image syntax: ![]( path ) → path
   const stripImg = (v) => { const m = v.match(/!\[\]\((.+)\)/); return m ? m[1] : v; };
 
   const pushItem = () => {
     if (!item) return;
     if (section === 'backgrounds') result.backgrounds.push(item);
     else if (section === 'elements') result.elements.push(item);
-    item = null;
+    item = null; mobileItem = null; inElementMobileBlock = false;
   };
 
   for (const rawLine of yaml.split('\n')) {
     const trimmed = rawLine.trim(); if (!trimmed) continue;
     const indent = rawLine.match(/^(\s*)/)[1].length;
+
     if (indent === 0) {
-      pushItem();
+      pushItem(); inMobileBlock = false;
       if (trimmed.startsWith('aspectRatio:')) {
         result.aspectRatio = trimmed.split(':').slice(1).join(':').trim().replace(/^"|"$/g, '');
       } else if (trimmed.startsWith('background:')) {
         result.backgrounds = [{ fileName: stripImg(trimmed.split(':').slice(1).join(':').trim()), x: 0, y: 0, scale: 100 }];
       } else if (trimmed === 'backgrounds:') { section = 'backgrounds'; }
-        else if (trimmed === 'elements:')    { section = 'elements'; }
-    } else {
-      if (trimmed.startsWith('- ')) {
-        pushItem(); item = {};
-        if (trimmed.startsWith('- image:')) item.fileName = stripImg(trimmed.replace(/^-\s*image:\s*/, ''));
-      } else if (item && trimmed.includes(':')) {
+      else if (trimmed === 'elements:')      { section = 'elements'; }
+      else if (trimmed === 'mobile:')        { inMobileBlock = true; result.mobile = {}; section = null; }
+    } else if (inMobileBlock && indent === 2) {
+      // Top-level mobile block fields
+      if (trimmed.startsWith('background:')) {
+        result.mobile.backgrounds = [{ fileName: stripImg(trimmed.split(':').slice(1).join(':').trim()), x: 0, y: 0, scale: 100 }];
+      } else if (trimmed === 'backgrounds:') { result.mobile._bgSection = true; }
+      else if (trimmed.includes(':')) {
         const ci = trimmed.indexOf(':');
         const k  = trimmed.slice(0, ci).trim();
         const v  = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
-        if (k === 'image') item.fileName = stripImg(v); else item[k] = v;
+        if (k === 'breakpoint')  result.mobile.breakpoint  = parseFloat(v) || 768;
+        if (k === 'aspectRatio') result.mobile.aspectRatio = v;
+      }
+    } else if (section === 'backgrounds' || section === 'elements') {
+      if (trimmed.startsWith('- ')) {
+        pushItem(); item = {};
+        if (trimmed.startsWith('- image:')) item.fileName = stripImg(trimmed.replace(/^-\s*image:\s*/, ''));
+      } else if (item) {
+        // Check for element-level mobile: block (indent 4) or mobile block fields (indent 6)
+        if (trimmed === 'mobile:' && section === 'elements' && indent === 4) {
+          inElementMobileBlock = true; item.mobileOverride = {};
+        } else if (inElementMobileBlock && indent >= 6) {
+          const ci = trimmed.indexOf(':');
+          if (ci > -1) {
+            const k = trimmed.slice(0, ci).trim();
+            const v = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
+            if (k === 'image')  item.mobileOverride.fileName   = stripImg(v);
+            if (k === 'x')      item.mobileOverride.x          = parseFloat(v) || 0;
+            if (k === 'y')      item.mobileOverride.y          = parseFloat(v) || 0;
+            if (k === 'scale')  item.mobileOverride.scale      = parseFloat(v) || 18;
+            if (k === 'rotation') item.mobileOverride.rotation = parseFloat(v) || 0;
+            if (k === 'action') item.mobileOverride.actionType = v;
+            if (k === 'value')  item.mobileOverride.actionValue = v;
+          }
+        } else if (!inElementMobileBlock && trimmed.includes(':')) {
+          inElementMobileBlock = false;
+          const ci = trimmed.indexOf(':');
+          const k  = trimmed.slice(0, ci).trim();
+          const v  = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
+          if (k === 'image')  item.fileName = stripImg(v); else item[k] = v;
+        }
       }
     }
   }
@@ -300,6 +447,13 @@ function applyImport(parsed) {
   let appliedEl = 0, appliedBg = 0;
   const basename = (p) => (p || '').split('/').pop();
   if (parsed.aspectRatio) S.aspectRatio = parsed.aspectRatio;
+
+  // Mobile top-level block
+  if (parsed.mobile) {
+    S.mobileEnabled = true;
+    if (parsed.mobile.breakpoint)  S.mobileBreakpoint  = parsed.mobile.breakpoint;
+    if (parsed.mobile.aspectRatio) S.mobileAspectRatio = parsed.mobile.aspectRatio;
+  }
 
   // Auto-detect prefix from the first image path that contains a directory
   const allPaths = [...parsed.backgrounds, ...parsed.elements].map(i => i.fileName).filter(Boolean);
@@ -325,6 +479,8 @@ function applyImport(parsed) {
     if (imp.action               !== undefined) el.actionType           = imp.action;
     if (imp.value                !== undefined) el.actionValue          = imp.value;
     if (imp.resetRotationOnHover !== undefined) el.resetRotationOnHover = imp.resetRotationOnHover !== 'false' && imp.resetRotationOnHover !== false;
+    if (imp.onlyShowOn           !== undefined) el.onlyShowOn           = imp.onlyShowOn || null;
+    if (imp.mobileOverride)                     el.mobileOverride       = imp.mobileOverride;
     appliedEl++;
   });
   return { appliedEl, appliedBg };
@@ -351,8 +507,10 @@ function removeBg(id) {
 // ── Canvas: mount draggable background layers ──────────────────────────────────
 function mountBackgroundLayers(container) {
   container.querySelectorAll('.sn-bg-layer').forEach(n => n.remove());
+  // In mobile canvas mode use mobileBgs, falling back to desktop bgs if none uploaded
+  const bgsToShow = (S.canvasMode === 'mobile' && S.mobileBgs.length > 0) ? S.mobileBgs : S.backgrounds;
 
-  S.backgrounds.forEach(bg => {
+  bgsToShow.forEach(bg => {
     const div = document.createElement('div');
     div.className  = 'sn-bg-layer';
     div.dataset.bgid = bg.id;
@@ -423,22 +581,23 @@ function mountBackgroundLayers(container) {
 function mountSceneElements(container) {
   container.querySelectorAll('.sn-builder-el').forEach(n => n.remove());
 
-  S.elements.forEach(el => {
+  S.elements.filter(visibleOnCanvas).forEach(el => {
     const div = document.createElement('div');
     div.className  = 'sn-builder-el';
     div.dataset.id = el.id;
 
     const isSelected = S.selectedId === el.id;
     const isPreview  = S.mode === 'preview';
+    const pos        = getElOnCanvas(el);
 
     Object.assign(div.style, {
       position:      'absolute',
-      left:          el.x + '%',
-      top:           el.y + '%',
-      width:         el.scale + '%',
+      left:          pos.x + '%',
+      top:           pos.y + '%',
+      width:         pos.scale + '%',
       cursor:        isPreview ? 'pointer' : 'grab',
       transition:    'filter 0.35s ease, transform 0.25s ease',
-      transform:     'rotate(' + (el.rotation || 0) + 'deg)',
+      transform:     'rotate(' + (pos.rotation || 0) + 'deg)',
       zIndex:        isSelected ? 50 : 10,
       outline:       (!isPreview && isSelected) ? '2px dashed ' + el.glowColor : 'none',
       outlineOffset: '4px',
@@ -507,21 +666,35 @@ function mountSceneElements(container) {
     if (!isPreview) {
       div.addEventListener('mousedown', (e) => {
         e.preventDefault(); e.stopPropagation();
-        const rect    = container.getBoundingClientRect();
-        const startMx = e.clientX, startMy = e.clientY;
-        const startEx = el.x,      startEy = el.y;
+        const rect     = container.getBoundingClientRect();
+        const startMx  = e.clientX, startMy = e.clientY;
+        const curPos   = getElOnCanvas(el);
+        const startEx  = curPos.x, startEy = curPos.y;
+        // In mobile mode, mobileOnly elements write to el.x/y directly;
+        // shared elements write to mobileOverride
+        const writesToOverride = S.canvasMode === 'mobile' && el.onlyShowOn !== 'mobile';
         div.style.cursor = 'grabbing'; div.style.zIndex = 100; div.style.transition = 'none';
 
         const onMove = (ev) => {
-          el.x = startEx + ((ev.clientX - startMx) / rect.width)  * 100;
-          el.y = startEy + ((ev.clientY - startMy) / rect.height) * 100;
-          div.style.left = el.x + '%'; div.style.top = el.y + '%';
+          const newX = startEx + ((ev.clientX - startMx) / rect.width)  * 100;
+          const newY = startEy + ((ev.clientY - startMy) / rect.height) * 100;
+          if (writesToOverride) {
+            if (!el.mobileOverride) el.mobileOverride = {};
+            el.mobileOverride.x = newX; el.mobileOverride.y = newY;
+          } else {
+            el.x = newX; el.y = newY;
+          }
+          div.style.left = newX + '%'; div.style.top = newY + '%';
         };
         const onUp = () => {
           div.style.cursor     = 'grab';
           div.style.zIndex     = S.selectedId === el.id ? 50 : 10;
           div.style.transition = 'filter 0.35s ease, transform 0.25s ease';
-          updateEl(el.id, { x: el.x, y: el.y });
+          if (writesToOverride) {
+            updateEl(el.id, { mobileOverride: { ...el.mobileOverride } });
+          } else {
+            updateEl(el.id, { x: el.x, y: el.y });
+          }
           window.removeEventListener('mousemove', onMove);
           window.removeEventListener('mouseup',   onUp);
         };
@@ -546,9 +719,30 @@ function renderCanvas() {
     : '#08080e';
 
   // Canvas dimensions + background color
-  container.style.aspectRatio = S.aspectRatio;
+  const activeAR = (S.mobileEnabled && S.canvasMode === 'mobile') ? S.mobileAspectRatio : S.aspectRatio;
+  container.style.aspectRatio = activeAR;
   container.style.minHeight   = '280px';
   container.style.background  = isPreview ? S.previewBgColor : S.editBgColor;
+
+  // Canvas mode toggle (only in edit mode, only when mobile is enabled)
+  let modeToggle = document.getElementById('canvas-mode-toggle');
+  if (S.mobileEnabled && !isPreview) {
+    if (!modeToggle) {
+      modeToggle = document.createElement('div');
+      modeToggle.id = 'canvas-mode-toggle';
+      Object.assign(modeToggle.style, { display:'flex', gap:'4px', marginBottom:'10px', background:'#0c0c16', borderRadius:'8px', padding:'3px', border:'1px solid #141422' });
+      canvasArea.insertBefore(modeToggle, container);
+    }
+    const btnStyle = (active) => `padding:5px 14px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-family:'Space Mono',monospace;transition:all 0.15s;background:${active?'#1a1a2e':'transparent'};color:${active?'#FFD700':'#8888aa'};font-weight:${active?700:400};`;
+    modeToggle.innerHTML = `
+      <button id="cm-desktop" style="${btnStyle(S.canvasMode==='desktop')}">Desktop ${S.aspectRatio}</button>
+      <button id="cm-mobile"  style="${btnStyle(S.canvasMode==='mobile')}">Mobile ${S.mobileAspectRatio}</button>
+    `;
+    document.getElementById('cm-desktop').onclick = () => { S.canvasMode = 'desktop'; renderCanvas(); };
+    document.getElementById('cm-mobile').onclick  = () => { S.canvasMode = 'mobile';  renderCanvas(); };
+  } else if (modeToggle) {
+    modeToggle.remove();
+  }
 
   mountBackgroundLayers(container);
 
@@ -755,6 +949,21 @@ function renderLeftPanel() {
             outline:none;box-sizing:border-box;transition:border-color 0.15s;" />
         </div>
 
+        ${S.mobileEnabled ? `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Show on</div>
+          <div style="display:flex;gap:4px;">
+            ${[{v:null,l:'Both'},{v:'desktop',l:'Desktop only'},{v:'mobile',l:'Mobile only'}].map(o=>`
+              <button class="osos-btn" data-osos="${o.v===null?'':o.v}" style="flex:1;padding:5px 4px;border-radius:5px;border:1px solid ${sel.onlyShowOn===o.v?sel.glowColor:' #1e1e30'};background:${sel.onlyShowOn===o.v?sel.glowColor+'12':'transparent'};color:${sel.onlyShowOn===o.v?sel.glowColor:'#8888aa'};cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;transition:all 0.12s;">${o.l}</button>
+            `).join('')}
+          </div>
+          ${sel.mobileOverride && Object.keys(sel.mobileOverride).length > 0 ? `
+          <div style="font-size:9px;color:#69F0AE;font-family:'Space Mono',monospace;margin-top:4px;">
+            Mobile pos: ${Math.round((sel.mobileOverride.x??sel.x)*10)/10}%, ${Math.round((sel.mobileOverride.y??sel.y)*10)/10}%
+          </div>` : (S.canvasMode==='mobile' && !sel.onlyShowOn ? '<div style="font-size:9px;color:#505070;font-family:\'Space Mono\',monospace;margin-top:4px;">Drag in mobile canvas to set mobile position.</div>' : '')}
+        </div>
+        ` : ''}
+
         <button id="remove-btn" style="
             width:100%;padding:7px;border-radius:6px;border:1px solid #552222;
             background:transparent;color:#aa4444;cursor:pointer;font-size:11px;
@@ -791,6 +1000,31 @@ function renderLeftPanel() {
       <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
                   margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Canvas size</div>
       <div style="display:flex;gap:4px;">${arBtns}</div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;">Mobile Layout</div>
+        <button id="mobile-toggle" style="padding:3px 10px;border-radius:5px;border:1px solid ${S.mobileEnabled?'#69F0AE':'#1e1e30'};background:${S.mobileEnabled?'#69F0AE14':'transparent'};color:${S.mobileEnabled?'#69F0AE':'#8888aa'};font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;">${S.mobileEnabled?'ON':'OFF'}</button>
+      </div>
+      ${S.mobileEnabled ? `
+      <div style="padding:10px;border-radius:7px;background:#0c0c18;border:1px solid #69F0AE14;">
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:3px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Breakpoint (px)</div>
+          <input id="mobile-bp" type="number" value="${S.mobileBreakpoint}" min="320" max="1200" style="width:100%;padding:5px 8px;border-radius:5px;border:1px solid #1e1e30;background:#0c0c18;color:#ccc;font-size:12px;font-family:'Space Mono',monospace;outline:none;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Mobile aspect ratio</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${MOBILE_ASPECT_RATIOS.map(ar => `<button class="mar-btn" data-ar="${esc(ar.value)}" style="padding:4px 6px;border-radius:5px;border:1px solid ${S.mobileAspectRatio===ar.value?'#69F0AE':'#1e1e30'};background:${S.mobileAspectRatio===ar.value?'#69F0AE14':'transparent'};color:${S.mobileAspectRatio===ar.value?'#69F0AE':'#8888aa'};cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;transition:all 0.12s;">${esc(ar.label)}</button>`).join('')}
+          </div>
+        </div>
+        <button id="mobile-bg-btn" style="width:100%;padding:7px;border-radius:6px;border:1px dashed #1e1e30;background:transparent;color:#8888aa;cursor:pointer;font-size:11px;transition:all 0.15s;">
+          ＋ Add mobile backgrounds ${S.mobileBgs.length > 0 ? '('+S.mobileBgs.length+')' : ''}
+        </button>
+        <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:4px;line-height:1.4;">Use Desktop/Mobile toggle above canvas to reposition elements for mobile.</div>
+      </div>
+      ` : ''}
     </div>
 
     <div style="margin-bottom:14px;">
@@ -844,6 +1078,8 @@ function renderLeftPanel() {
     ${bgPropsHtml}
     ${propsHtml}
   `;
+
+  wireMobileControls();
 
   // Set thumbnail srcs via JS (data-URIs safe via property, not HTML attribute)
   panel.querySelectorAll('.bg-thumb').forEach(img => {
@@ -1015,13 +1251,50 @@ function renderLeftPanel() {
   removeBtn.onclick      = () => { removeEl(sel.id); renderLeftPanel(); renderCanvas(); };
   removeBtn.onmouseenter = () => removeBtn.style.background = '#221111';
   removeBtn.onmouseleave = () => removeBtn.style.background = 'transparent';
+
+  // onlyShowOn buttons
+  panel.querySelectorAll('.osos-btn').forEach(btn => {
+    btn.onclick = () => {
+      const v = btn.dataset.osos === '' ? null : btn.dataset.osos;
+      updateEl(sel.id, { onlyShowOn: v });
+      renderLeftPanel(); renderCanvas();
+    };
+  });
+}
+
+// Wire mobile layout controls — called at end of renderLeftPanel
+function wireMobileControls() {
+  const toggleBtn = document.getElementById('mobile-toggle'); if (!toggleBtn) return;
+  toggleBtn.onclick = () => {
+    S.mobileEnabled = !S.mobileEnabled;
+    if (!S.mobileEnabled) S.canvasMode = 'desktop';
+    renderLeftPanel(); renderCanvas();
+  };
+
+  const bpInput = document.getElementById('mobile-bp');
+  if (bpInput) {
+    bpInput.addEventListener('input', () => { S.mobileBreakpoint = parseInt(bpInput.value, 10) || 768; });
+    bpInput.onfocus = e => e.target.style.borderColor = '#444';
+    bpInput.onblur  = e => e.target.style.borderColor = '#1e1e30';
+  }
+
+  document.querySelectorAll('.mar-btn').forEach(btn => {
+    btn.onclick = () => { S.mobileAspectRatio = btn.dataset.ar; renderLeftPanel(); renderCanvas(); };
+  });
+
+  const mobileBgBtn = document.getElementById('mobile-bg-btn');
+  if (mobileBgBtn) {
+    mobileBgBtn.onclick      = () => document.getElementById('mobile-bg-input').click();
+    mobileBgBtn.onmouseenter = () => { mobileBgBtn.style.borderColor = '#69F0AE'; mobileBgBtn.style.color = '#69F0AE'; };
+    mobileBgBtn.onmouseleave = () => { mobileBgBtn.style.borderColor = '#1e1e30'; mobileBgBtn.style.color = '#8888aa'; };
+  }
 }
 
 // ── Render: code panel ─────────────────────────────────────────────────────────
 function renderCodePanel() {
   const panel = document.getElementById('code-panel'); if (!panel) return;
 
-  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix };
+  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix, mobileEnabled: S.mobileEnabled, mobileBreakpoint: S.mobileBreakpoint, mobileAspectRatio: S.mobileAspectRatio, mobileBgs: S.mobileBgs };
   const fenceCode = generateCodeFence(scene);
   const embedCode = generateEmbed(scene);
   const code      = S.elements.length > 0 || S.backgrounds.length > 0
@@ -1168,10 +1441,26 @@ document.getElementById('el-input').addEventListener('change', (e) => {
           label:        f.name.replace(/\.[^.]+$/, ''),
           glowColor:    GLOW_PRESETS[(S.elements.length + i) % GLOW_PRESETS.length].color,
           glowIntensity: 1, actionType: 'filter', actionValue: '', rotation: 0, resetRotationOnHover: true,
+          onlyShowOn: null, mobileOverride: null,
         });
         if (++loaded === files.length) { renderLeftPanel(); renderCanvas(); }
       };
       img.src = ev.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+// Mobile background upload
+document.getElementById('mobile-bg-input').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files); if (!files.length) return;
+  let loaded = 0;
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => {
+      S.mobileBgs.push({ id: nextId(), src: ev.target.result, fileName: f.name, x: 0, y: 0, scale: 100 });
+      if (++loaded === files.length) { renderLeftPanel(); renderCanvas(); }
     };
     r.readAsDataURL(f);
   });

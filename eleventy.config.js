@@ -65,6 +65,11 @@ export default async function (eleventyConfig) {
     "src/apple-touch-icon.png": "apple-touch-icon.png",
   });
 
+  // Magic machines — static HTML tools served under /tools/
+  eleventyConfig.addPassthroughCopy({
+    "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
+  });
+
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");
   eleventyConfig.addWatchTarget("lib/");

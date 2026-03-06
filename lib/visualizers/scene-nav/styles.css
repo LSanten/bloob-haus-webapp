@@ -1,5 +1,10 @@
 /* Scene Nav Visualizer */
 
+/* Wrapper used when a mobile layout is present — transparent to layout */
+.scene-nav-wrapper {
+  display: contents;
+}
+
 .scene-nav-container {
   position: relative;
   margin: 0 auto;

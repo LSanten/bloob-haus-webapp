@@ -23,6 +23,7 @@ Tracked items with severity, impact, and target resolution phase.
 | 17 | buffbaby: image links broken site-wide | High | All images missing on live site | Investigate and fix image path/passthrough config | ⬜ Open |
 | 18 | marbles: compressed/resized images not found (404) | Medium | Missing images on leons.bloob.haus for any optimized image | Debug image optimizer output path vs Eleventy passthrough | ⬜ Open |
 | 19 | warm-kitchen: inline search widget + redundant mobile CSS | Low | Diverges from code-fence standard; mobile fix duplicated in main.css | Migrate warm-kitchen to index.md code-fence approach (see notes) | ⬜ Open |
+| 20 | scene-nav magic machine duplicates visualizer logic | Medium | Changes to parser/renderer/browser.js must be manually mirrored in index.html | Unify by making visualizer files IIFE-compatible for direct `<script>` include, or add a build step for the magic machine | ⬜ Open |
 
 ## Notes
 

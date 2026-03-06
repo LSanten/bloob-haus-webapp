@@ -65,8 +65,10 @@ export default async function (eleventyConfig) {
     "src/apple-touch-icon.png": "apple-touch-icon.png",
   });
 
-  // Magic machines — assemble-src.js copies tools into src/tools/, passed through as-is
-  eleventyConfig.addPassthroughCopy({ "src/tools": "tools" });
+  // Magic machines — static HTML tools served under /tools/
+  eleventyConfig.addPassthroughCopy({
+    "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
+  });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget("src/assets/");

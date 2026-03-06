@@ -169,17 +169,6 @@ export async function assembleSrc(config, contentDir = null) {
   console.log("[assemble] Generating bloob-object icons...");
   await generateBloobIcons({ contentDir, srcDir: SRC_DIR });
 
-  // Step 11: Copy magic machine tools into src/tools/ for Eleventy passthrough
-  console.log("[assemble] Copying magic machine tools...");
-  const MAGIC_MACHINES_DIR = path.join(ROOT_DIR, "lib", "magic-machines");
-  const toolsDestDir = path.join(SRC_DIR, "tools");
-  await fs.ensureDir(toolsDestDir);
-  await fs.copy(
-    path.join(MAGIC_MACHINES_DIR, "scene-nav-builder", "app", "index.html"),
-    path.join(toolsDestDir, "scene-nav-builder", "index.html"),
-    { overwrite: true },
-  );
-
   console.log("[assemble] Done! src/ is ready.\n");
 }
 
@@ -194,9 +183,6 @@ async function cleanGeneratedFiles() {
   // Clean layouts and partials
   await fs.remove(path.join(SRC_DIR, "_includes", "layouts"));
   await fs.remove(path.join(SRC_DIR, "_includes", "partials"));
-
-  // Clean generated tools (re-copied from lib/magic-machines each build)
-  await fs.remove(path.join(SRC_DIR, "tools"));
 
   // Clean generated site data (but not tagIndex.json, visualizers.json, or eleventyComputed.js)
   const dataDir = path.join(SRC_DIR, "_data");

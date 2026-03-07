@@ -134,7 +134,11 @@ warm-kitchen nav uses `.site-nav__logo` with `height: 40px; width: auto`.
 
 ## Build-Time Object Images
 
-Bloob-object icons are generated at build time by `scripts/generate-bloob-icons.js` (Step 10 in `assemble-src.js`). Each type declared in `_bloob-objects.md` with a real image (not `none` or `default`) gets a 24×24 PNG at `src/assets/objects/bloob-icons/[type]-icon.png`. Source images are read from `src/assets/objects/` (copied there by Step 6 from the theme). Transparency is preserved via `sharp`'s PNG output with transparent `contain` padding.
+Bloob-object icons are generated at build time by `scripts/generate-bloob-icons.js`. It runs twice during a full build:
+- **Step 10 in `assemble-src.js`** — handles types whose images come from theme assets (`src/assets/objects/`), which are already in place after Step 6.
+- **Step 5.7 in `build-site.js`** — re-runs after preprocessing copies content-repo media to `src/media/`. This catches types like `studio-bloob-art` whose images live in `media/` and would be skipped in the first pass. The built-in mtime cache skips already-generated icons.
+
+Each type declared in `_bloob-objects.md` with a real image (not `none` or `default`) gets a 24×24 PNG at `src/assets/objects/bloob-icons/[type]-icon.png`. Transparency is preserved via `sharp`'s PNG output with transparent `contain` padding.
 
 Types with `image: default` are not resized — `preprocess-content.js` stores `/favicon.png` as their `bloobIcon` directly. Types with `image: none` get no icon at all.
 

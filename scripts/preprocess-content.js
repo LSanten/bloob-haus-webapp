@@ -378,11 +378,27 @@ export async function preprocessContent({
   }
 
   // Step 8.5: Write bloobObjects.json
+  // Resolve raw image fields to root-relative URL paths for direct use in templates.
+  // The `imageUrl` field is what templates should use for <img src>; `image` keeps the raw value.
   console.log("\n--- Step 8.5: Writing bloobObjects.json ---");
   const bloobObjectsPath = path.join(outputDir, "_data", "bloobObjects.json");
-  await fs.writeJson(bloobObjectsPath, bloobObjectsRegistry, { spaces: 2 });
+  const resolvedRegistry = {};
+  for (const [type, data] of Object.entries(bloobObjectsRegistry)) {
+    let imageUrl = null;
+    if (data.image === "default") {
+      imageUrl = "/favicon.png";
+    } else {
+      const relPath = parseObjectImageField(data.image);
+      if (relPath) {
+        // Convert decoded filesystem path to root-relative URL (encode each segment)
+        imageUrl = "/" + relPath.split("/").map((p) => encodeURIComponent(p)).join("/");
+      }
+    }
+    resolvedRegistry[type] = { ...data, imageUrl };
+  }
+  await fs.writeJson(bloobObjectsPath, resolvedRegistry, { spaces: 2 });
   console.log(
-    `[bloob-objects] Wrote ${Object.keys(bloobObjectsRegistry).length} object types to bloobObjects.json`,
+    `[bloob-objects] Wrote ${Object.keys(resolvedRegistry).length} object types to bloobObjects.json`,
   );
 
   // Step 9: Copy attachments

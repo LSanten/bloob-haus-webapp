@@ -10,10 +10,10 @@
 {% set objType = bloob_object %}
 {% set objData = bloobObjects[objType] if objType and bloobObjects[objType] %}
 
-{# Resolve banner image: _bloob-objects.md path → theme asset → marble.png fallback #}
-{# "default" in image column means "use theme default" — treat as unset #}
-{% if objData and objData.image and objData.image != "default" %}
-  {% set bannerImage = objData.image %}
+{# Resolve banner image: use pre-resolved imageUrl from bloobObjects.json → theme asset → marble.png fallback #}
+{# imageUrl is set by preprocess-content.js from the raw image field in _bloob-objects.md #}
+{% if objData and objData.imageUrl %}
+  {% set bannerImage = objData.imageUrl %}
 {% elif objType %}
   {% set bannerImage = "/assets/objects/" + objType + ".png" %}
 {% else %}

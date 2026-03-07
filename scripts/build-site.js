@@ -19,6 +19,7 @@ import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
 import { generateFavicons } from "./generate-favicons.js";
+import { generateBloobIcons } from "./generate-bloob-icons.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -117,6 +118,11 @@ async function buildSite() {
     // Step 5.6: Generate favicons from site logo (runs after preprocessing copies attachments)
     console.log("\n--- Step 5.6: Generating favicons ---");
     await generateFavicons({ config });
+
+    // Step 5.7: Generate bloob-object icons (needs src/media/ populated by preprocessing)
+    // assemble-src Step 10 ran too early for content-repo images; this catches them.
+    console.log("\n--- Step 5.7: Generating bloob-object icons ---");
+    await generateBloobIcons({ contentDir, srcDir: path.join(ROOT_DIR, "src") });
 
     // Step 6: Bundle visualizers
     console.log("\n--- Step 6: Bundling visualizers ---");

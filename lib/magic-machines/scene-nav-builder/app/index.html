@@ -28,14 +28,19 @@
       background: var(--range-color, #FFD700);
     }
     button { font-family: inherit; }
+
+    /* Label edge repositioning for builder canvas */
+    .sn-builder-el.label-above .sn-builder-label { bottom: auto !important; top: -30px !important; }
+    .sn-builder-el.label-left  .sn-builder-label { left: 0 !important; transform: none !important; }
+    .sn-builder-el.label-right .sn-builder-label { left: auto !important; right: 0 !important; transform: none !important; }
   </style>
 </head>
 <body>
 
 <div id="app" style="height:100vh;display:flex;flex-direction:column;"></div>
-<input id="bg-input"        type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
-<input id="mobile-bg-input" type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
-<input id="el-input"        type="file" accept="image/png,image/svg+xml,image/webp" multiple style="display:none" />
+<input id="bg-input"        type="file" accept="image/*" multiple style="display:none" />
+<input id="mobile-bg-input" type="file" accept="image/*" multiple style="display:none" />
+<input id="el-input"        type="file" accept="image/*" multiple style="display:none" />
 
 <script>
 /* =============================================================================
@@ -108,6 +113,9 @@ const S = {
   mobileBreakpoint:  768,
   mobileAspectRatio: '9/16',
   canvasMode:        'desktop', // 'desktop' | 'mobile'
+  filterMode:        'or',      // 'or' (any selected) | 'and' (all selected)
+  edgeFade:          0,         // 0 = off, 0–0.5 controls fade start from edge
+  previewActiveFilters: [],     // tags active in preview mode
 };
 let _idN = 0;
 const nextId = () => 'el_' + Date.now() + '_' + (_idN++);
@@ -178,6 +186,8 @@ function imgRef(fileName, pfx) {
 function generateCodeFence(scene) {
   const pfx  = scene.imagePrefix || '';
   let yaml = 'aspectRatio: "' + scene.aspectRatio + '"\n';
+  if (scene.filterMode && scene.filterMode !== 'or') yaml += 'filterMode: ' + scene.filterMode + '\n';
+  if (scene.edgeFade) yaml += 'edgeFade: ' + scene.edgeFade + '\n';
 
   const bgHasMobileOverride = scene.backgrounds.some(bg => bg.mobileOverride && Object.keys(bg.mobileOverride).length > 0);
   const bgSimple = scene.backgrounds.length === 1 && scene.backgrounds[0].x === 0 && scene.backgrounds[0].y === 0 && scene.backgrounds[0].scale === 100 && !scene.backgrounds[0].rotation && !bgHasMobileOverride;
@@ -229,6 +239,8 @@ function generateCodeFence(scene) {
     yaml += '    y: '     + (Math.round(el.y     * 10) / 10) + '\n';
     yaml += '    scale: ' + (Math.round(el.scale * 10) / 10) + '\n';
     if (el.rotation)                       yaml += '    rotation: ' + el.rotation + '\n';
+    if (el.flipH)                          yaml += '    flipH: true\n';
+    if (el.flipV)                          yaml += '    flipV: true\n';
     if (el.resetRotationOnHover === false) yaml += '    resetRotationOnHover: false\n';
     if (el.label)               yaml += '    label: "' + el.label + '"\n';
     yaml += '    glow: "' + el.glowColor + '"\n';
@@ -265,11 +277,26 @@ function buildEmbedElement(el, pfx) {
     glowIntensity:       el.glowIntensity,
     action:              el.actionType,
     value:               el.actionValue || null,
+    flipH:               el.flipH || false,
+    flipV:               el.flipV || false,
   };
 }
 
 // Shared IIFE body — renders backgrounds + elements into a container by id
 const EMBED_RENDER_FN = [
+  'var activeFilters = [];',
+  'function applyFilter() {',
+  '  var mode = C.filterMode || \'or\';',
+  '  var items = document.querySelectorAll(\'[data-tags]\');',
+  '  items.forEach(function(item) {',
+  '    if (activeFilters.length === 0) { item.style.display = \'\'; return; }',
+  '    var tags = item.getAttribute(\'data-tags\').split(\',\').map(function(t){ return t.trim(); });',
+  '    var match = mode === \'and\'',
+  '      ? activeFilters.every(function(f){ return tags.indexOf(f) > -1; })',
+  '      : activeFilters.some(function(f){ return tags.indexOf(f) > -1; });',
+  '    item.style.display = match ? \'\' : \'none\';',
+  '  });',
+  '}',
   'function renderScene(cId, bgs, els) {',
   '  var c = document.getElementById(cId); if (!c) return;',
   '  bgs.forEach(function(bg) {',
@@ -281,15 +308,20 @@ const EMBED_RENDER_FN = [
   '  });',
   '  els.forEach(function(el) {',
   '    var d = document.createElement(\'div\');',
-  '    d.style.cssText = \'position:absolute;cursor:pointer;transition:filter 0.35s ease,transform 0.25s ease;left:\'+el.x+\'%;top:\'+el.y+\'%;width:\'+el.scale+\'%;transform:rotate(\'+(el.rotation||0)+\'deg)\';',
   '    var gI = el.glowIntensity || 1;',
   '    var g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);',
-  '    var baseRot = \'rotate(\'+(el.rotation||0)+\'deg)\';',
+  '    var flipT = (el.flipH?\' scaleX(-1)\':\'\')+(el.flipV?\' scaleY(-1)\':\'\');',
+  '    var baseRot = \'rotate(\'+(el.rotation||0)+\'deg)\'+flipT;',
+  '    var glowCss = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
+  '    d.style.cssText = \'position:absolute;cursor:pointer;transition:filter 0.35s ease,transform 0.25s ease;left:\'+el.x+\'%;top:\'+el.y+\'%;width:\'+el.scale+\'%;transform:\'+baseRot;',
   '    d.onmouseenter = function() {',
-  '      d.style.filter = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
-  '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : baseRot+\' \') + \'scale(1.06)\';',
+  '      d.style.filter = glowCss;',
+  '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : \'rotate(\'+(el.rotation||0)+\'deg) \') + \'scale(1.06)\'+flipT;',
   '    };',
-  '    d.onmouseleave = function() { d.style.filter=\'none\'; d.style.transform=baseRot; };',
+  '    d.onmouseleave = function() {',
+  '      d.style.filter = (el.action===\'filter\' && activeFilters.indexOf(el.value) > -1) ? glowCss : \'none\';',
+  '      d.style.transform = baseRot;',
+  '    };',
   '    d.onclick = function() {',
   '      if (el.action===\'link\'   && el.value) { window.open(el.value,\'_blank\'); return; }',
   '      if (el.action===\'anchor\' && el.value) {',
@@ -297,9 +329,17 @@ const EMBED_RENDER_FN = [
   '        if (t) t.scrollIntoView({behavior:\'smooth\'}); return;',
   '      }',
   '      if (el.action===\'filter\' && el.value) {',
-  '        window.dispatchEvent(new CustomEvent(\'bloob:filter\',{detail:{tag:el.value}}));',
-  '        var p = window.location.pathname;',
-  '        if (p.indexOf(\'/collections/\')>-1) window.location.href=p.split(\'?\')[0]+\'?filter.p.tag=\'+encodeURIComponent(el.value);',
+  '        var idx = activeFilters.indexOf(el.value);',
+  '        if (idx > -1) {',
+  '          activeFilters.splice(idx, 1);',
+  '          d.style.filter = \'none\';',
+  '          d.style.transform = baseRot;',
+  '        } else {',
+  '          activeFilters.push(el.value);',
+  '          d.style.filter = glowCss;',
+  '        }',
+  '        applyFilter();',
+  '        window.dispatchEvent(new CustomEvent(\'bloob:filter\',{detail:{tags:activeFilters.slice(),mode:C.filterMode||\'or\'}}));',
   '      }',
   '    };',
   '    var img = document.createElement(\'img\');',
@@ -321,13 +361,17 @@ const EMBED_RENDER_FN = [
 function generateEmbed(scene) {
   const pfx  = scene.imagePrefix || '';
   const bgColor = scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '';
-  const sceneStyle = 'position:relative;max-width:900px;margin:0 auto;overflow:hidden;';
+  const fade = scene.edgeFade || 0;
+  const fadeStart = fade > 0 ? Math.round((1 - fade) * 100) : null;
+  const fadeCss = fadeStart !== null ? 'mask-image:radial-gradient(ellipse at center,black ' + fadeStart + '%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse at center,black ' + fadeStart + '%,transparent 100%);' : '';
+  const sceneStyle = 'position:relative;max-width:900px;margin:0 auto;overflow:' + (fade > 0 ? 'visible' : 'hidden') + ';' + fadeCss;
 
   if (!scene.mobileEnabled) {
     // ── Single-layout embed (original behaviour) ──────────────────────────────
     const config = {
-      backgrounds: scene.backgrounds.map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 })),
-      elements:    scene.elements.map(el => buildEmbedElement(el, pfx)),
+      backgrounds:  scene.backgrounds.map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 })),
+      elements:     scene.elements.map(el => buildEmbedElement(el, pfx)),
+      filterMode:   scene.filterMode || 'or',
     };
     return [
       '<!-- Scene Nav — generated by Bloob Haus builder -->',
@@ -376,6 +420,7 @@ function generateEmbed(scene) {
     desktopEls,
     mobileBgs:   mobileBgSrcs,
     mobileEls,
+    filterMode:  scene.filterMode || 'or',
   };
 
   return [
@@ -406,7 +451,7 @@ function generateEmbed(scene) {
 function parseCodeFence(text) {
   const match = text.match(/```scene-nav\n([\s\S]*?)```/);
   const yaml  = match ? match[1] : text;
-  const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null };
+  const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null, filterMode: null, edgeFade: null };
   let section = null, item = null, mobileItem = null, inMobileBlock = false, inElementMobileBlock = false, inBgMobileBlock = false;
 
   const stripImg = (v) => { const m = v.match(/!\[\]\((.+)\)/); return m ? m[1] : v; };
@@ -426,6 +471,10 @@ function parseCodeFence(text) {
       pushItem(); inMobileBlock = false; inBgMobileBlock = false;
       if (trimmed.startsWith('aspectRatio:')) {
         result.aspectRatio = trimmed.split(':').slice(1).join(':').trim().replace(/^"|"$/g, '');
+      } else if (trimmed.startsWith('filterMode:')) {
+        result.filterMode = trimmed.split(':')[1].trim();
+      } else if (trimmed.startsWith('edgeFade:')) {
+        result.edgeFade = parseFloat(trimmed.split(':')[1].trim()) || 0;
       } else if (trimmed.startsWith('background:')) {
         result.backgrounds = [{ fileName: stripImg(trimmed.split(':').slice(1).join(':').trim()), x: 0, y: 0, scale: 100 }];
       } else if (trimmed === 'backgrounds:') { section = 'backgrounds'; }
@@ -482,7 +531,10 @@ function parseCodeFence(text) {
           const ci = trimmed.indexOf(':');
           const k  = trimmed.slice(0, ci).trim();
           const v  = trimmed.slice(ci + 1).trim().replace(/^"|"$/g, '');
-          if (k === 'image') item.fileName = stripImg(v); else item[k] = v;
+          if (k === 'image') item.fileName = stripImg(v);
+          else if (k === 'flipH') item.flipH = v === 'true';
+          else if (k === 'flipV') item.flipV = v === 'true';
+          else item[k] = v;
         }
       }
     }
@@ -494,7 +546,9 @@ function parseCodeFence(text) {
 function applyImport(parsed) {
   let appliedEl = 0, appliedBg = 0;
   const basename = (p) => (p || '').split('/').pop();
-  if (parsed.aspectRatio) S.aspectRatio = parsed.aspectRatio;
+  if (parsed.aspectRatio)    S.aspectRatio = parsed.aspectRatio;
+  if (parsed.filterMode)     S.filterMode  = parsed.filterMode;
+  if (parsed.edgeFade != null) S.edgeFade  = parsed.edgeFade;
 
   // Mobile top-level block
   if (parsed.mobile) {
@@ -529,6 +583,8 @@ function applyImport(parsed) {
     if (imp.action               !== undefined) el.actionType           = imp.action;
     if (imp.value                !== undefined) el.actionValue          = imp.value;
     if (imp.resetRotationOnHover !== undefined) el.resetRotationOnHover = imp.resetRotationOnHover !== 'false' && imp.resetRotationOnHover !== false;
+    if (imp.flipH                !== undefined) el.flipH                = imp.flipH === true || imp.flipH === 'true';
+    if (imp.flipV                !== undefined) el.flipV                = imp.flipV === true || imp.flipV === 'true';
     if (imp.onlyShowOn           !== undefined) el.onlyShowOn           = imp.onlyShowOn || null;
     if (imp.mobileOverride)                     el.mobileOverride       = imp.mobileOverride;
     appliedEl++;
@@ -562,7 +618,19 @@ function removeBg(id) {
 
 // ── Canvas: mount draggable background layers ──────────────────────────────────
 function mountBackgroundLayers(container) {
-  container.querySelectorAll('.sn-bg-layer').forEach(n => n.remove());
+  // Ensure bg-clip wrapper exists (clips backgrounds to artboard, separate from element overflow)
+  let bgClip = container.querySelector('.sn-bg-clip');
+  if (!bgClip) {
+    bgClip = document.createElement('div');
+    bgClip.className = 'sn-bg-clip';
+    Object.assign(bgClip.style, {
+      position: 'absolute', inset: '0', overflow: 'hidden',
+      borderRadius: '10px', zIndex: '1',
+    });
+    container.insertBefore(bgClip, container.firstChild);
+  }
+  bgClip.querySelectorAll('.sn-bg-layer').forEach(n => n.remove());
+
   // In mobile canvas mode use mobileBgs, falling back to desktop bgs if none uploaded
   const bgsToShow = (S.canvasMode === 'mobile' && S.mobileBgs.length > 0) ? S.mobileBgs : S.backgrounds;
 
@@ -645,7 +713,7 @@ function mountBackgroundLayers(container) {
       });
     }
 
-    container.insertBefore(div, container.firstChild);
+    bgClip.appendChild(div);
   });
 }
 
@@ -655,13 +723,21 @@ function mountSceneElements(container) {
 
   S.elements.filter(visibleOnCanvas).forEach(el => {
     const div = document.createElement('div');
-    div.className  = 'sn-builder-el';
-    div.dataset.id = el.id;
-
     const isSelected = S.selectedId === el.id;
     const isPreview  = S.mode === 'preview';
     const pos        = getElOnCanvas(el);
 
+    // Label edge classes
+    const edgeClasses = [];
+    if (el.label) {
+      if (pos.y + pos.scale > 80) edgeClasses.push('label-above');
+      if (pos.x < 10)             edgeClasses.push('label-left');
+      if (pos.x + pos.scale > 82) edgeClasses.push('label-right');
+    }
+    div.className  = ['sn-builder-el', ...edgeClasses].join(' ');
+    div.dataset.id = el.id;
+
+    const flipT = (el.flipH ? ' scaleX(-1)' : '') + (el.flipV ? ' scaleY(-1)' : '');
     Object.assign(div.style, {
       position:      'absolute',
       left:          pos.x + '%',
@@ -669,7 +745,7 @@ function mountSceneElements(container) {
       width:         pos.scale + '%',
       cursor:        isPreview ? 'pointer' : 'grab',
       transition:    'filter 0.35s ease, transform 0.25s ease',
-      transform:     'rotate(' + (pos.rotation || 0) + 'deg)',
+      transform:     'rotate(' + (pos.rotation || 0) + 'deg)' + flipT,
       zIndex:        isSelected ? 50 : 10,
       outline:       (!isPreview && isSelected) ? '2px dashed ' + el.glowColor : 'none',
       outlineOffset: '4px',
@@ -697,16 +773,26 @@ function mountSceneElements(container) {
       const cur = S.elements.find(e => e.id === el.id); if (!cur) return;
       const gI = cur.glowIntensity || 1;
       const g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);
+      const curFlipT = (cur.flipH ? ' scaleX(-1)' : '') + (cur.flipV ? ' scaleY(-1)' : '');
       div.style.filter    = `drop-shadow(0 0 ${g1}px ${cur.glowColor}) drop-shadow(0 0 ${g2}px ${cur.glowColor}) drop-shadow(0 0 ${g3}px ${cur.glowColor}80)`;
       const keepRot = !isPreview || cur.resetRotationOnHover === false;
-      div.style.transform = (keepRot ? 'rotate(' + (cur.rotation || 0) + 'deg) ' : '') + 'scale(1.06)';
+      div.style.transform = (keepRot ? 'rotate(' + (cur.rotation || 0) + 'deg) ' : '') + 'scale(1.06)' + curFlipT;
       const lbl = div.querySelector('.sn-builder-label');
       if (lbl) lbl.style.opacity = 1;
     });
     div.addEventListener('mouseleave', () => {
       const cur = S.elements.find(e => e.id === el.id);
-      div.style.filter    = 'none';
-      div.style.transform = 'rotate(' + ((cur && cur.rotation) || 0) + 'deg)';
+      const curFlipT = cur ? ((cur.flipH ? ' scaleX(-1)' : '') + (cur.flipV ? ' scaleY(-1)' : '')) : '';
+      const isActive = isPreview && el.actionType === 'filter' && S.previewActiveFilters.indexOf(el.actionValue) > -1;
+      if (isActive) {
+        const gI = (cur && cur.glowIntensity) || 1;
+        const g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);
+        const gc = (cur && cur.glowColor) || el.glowColor;
+        div.style.filter = `drop-shadow(0 0 ${g1}px ${gc}) drop-shadow(0 0 ${g2}px ${gc}) drop-shadow(0 0 ${g3}px ${gc}80)`;
+      } else {
+        div.style.filter = 'none';
+      }
+      div.style.transform = 'rotate(' + ((cur && cur.rotation) || 0) + 'deg)' + curFlipT;
       const lbl = div.querySelector('.sn-builder-label');
       if (lbl) lbl.style.opacity = 0;
     });
@@ -719,7 +805,21 @@ function mountSceneElements(container) {
           const t = document.getElementById(el.actionValue);
           if (t) t.scrollIntoView({ behavior: 'smooth' }); return;
         }
-        if (el.actionType === 'filter') { alert('Filter → ' + (el.actionValue || '(no tag set)')); return; }
+        if (el.actionType === 'filter' && el.actionValue) {
+          const idx = S.previewActiveFilters.indexOf(el.actionValue);
+          const cur = S.elements.find(e => e.id === el.id);
+          const gI = (cur && cur.glowIntensity) || 1;
+          const g1 = Math.round(8*gI), g2 = Math.round(20*gI), g3 = Math.round(40*gI);
+          const gc = (cur && cur.glowColor) || el.glowColor;
+          if (idx > -1) {
+            S.previewActiveFilters.splice(idx, 1);
+            div.style.filter = 'none';
+          } else {
+            S.previewActiveFilters.push(el.actionValue);
+            div.style.filter = `drop-shadow(0 0 ${g1}px ${gc}) drop-shadow(0 0 ${g2}px ${gc}) drop-shadow(0 0 ${g3}px ${gc}80)`;
+          }
+          return;
+        }
         return;
       }
       e.stopPropagation();
@@ -808,6 +908,19 @@ function renderCanvas() {
     container.style.minHeight = '280px';
   }
   container.style.background  = isPreview ? S.previewBgColor : S.editBgColor;
+  container.style.overflow    = 'visible';
+
+  // Edge fade mask
+  const fadeVal = S.edgeFade || 0;
+  if (fadeVal > 0) {
+    const fadeStart = Math.round((1 - fadeVal) * 100);
+    const grad = `radial-gradient(ellipse at center, black ${fadeStart}%, transparent 100%)`;
+    container.style.maskImage = grad;
+    container.style.webkitMaskImage = grad;
+  } else {
+    container.style.maskImage = '';
+    container.style.webkitMaskImage = '';
+  }
 
   // Canvas mode toggle (only in edit mode, only when mobile is enabled)
   let modeToggle = document.getElementById('canvas-mode-toggle');
@@ -1010,6 +1123,14 @@ function renderLeftPanel() {
                  style="--range-color:${sel.glowColor}" />
         </div>
 
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#8888aa;margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Flip</div>
+          <div style="display:flex;gap:4px;">
+            <button class="flip-btn" data-flip="H" style="flex:1;padding:5px 4px;border-radius:5px;border:1px solid ${sel.flipH ? sel.glowColor : '#1e1e30'};background:${sel.flipH ? sel.glowColor+'12' : 'transparent'};color:${sel.flipH ? sel.glowColor : '#8888aa'};cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;transition:all 0.12s;">↔ Horizontal</button>
+            <button class="flip-btn" data-flip="V" style="flex:1;padding:5px 4px;border-radius:5px;border:1px solid ${sel.flipV ? sel.glowColor : '#1e1e30'};background:${sel.flipV ? sel.glowColor+'12' : 'transparent'};color:${sel.flipV ? sel.glowColor : '#8888aa'};cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;transition:all 0.12s;">↕ Vertical</button>
+          </div>
+        </div>
+
         <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
           <input id="prop-reset-rot" type="checkbox" ${sel.resetRotationOnHover !== false ? 'checked' : ''}
                  style="cursor:pointer;accent-color:${sel.glowColor};width:14px;height:14px;" />
@@ -1021,6 +1142,11 @@ function renderLeftPanel() {
         <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#8888aa;margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">Glow color</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;">${swatches}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <input id="glow-color-picker" type="color" value="${sel.glowColor}"
+                   style="width:32px;height:22px;border:1px solid #1e1e30;border-radius:4px;background:transparent;cursor:pointer;padding:1px;" />
+            <span style="font-size:10px;color:#505070;font-family:'Space Mono',monospace;">custom color</span>
+          </div>
         </div>
 
         <div style="margin-bottom:12px;">
@@ -1071,11 +1197,11 @@ function renderLeftPanel() {
     <div style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px;">
       <button id="bg-btn" style="width:100%;padding:9px;border-radius:7px;border:1px dashed #1e1e30;
           background:transparent;color:#8888aa;cursor:pointer;font-size:12px;transition:all 0.15s;">
-        ＋ Add background PNGs
+        ＋ Add backgrounds (PNG, JPG, GIF…)
       </button>
       <button id="el-btn" style="width:100%;padding:9px;border-radius:7px;border:1px dashed #1e1e30;
           background:transparent;color:#8888aa;cursor:pointer;font-size:12px;transition:all 0.15s;">
-        ＋ Add element PNGs
+        ＋ Add elements (PNG, JPG, GIF…)
       </button>
     </div>
 
@@ -1096,6 +1222,30 @@ function renderLeftPanel() {
       <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
                   margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Canvas size</div>
       <div style="display:flex;gap:4px;">${arBtns}</div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">
+        Edge fade · <span id="edge-fade-display">${S.edgeFade > 0 ? Math.round(S.edgeFade * 100) + '%' : 'off'}</span>
+      </div>
+      <input id="edge-fade" type="range" min="0" max="0.5" step="0.05" value="${S.edgeFade}"
+             style="--range-color:#8888aa" />
+      <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:3px;line-height:1.4;">
+        Softly fades artboard edges to transparent. Glows bleed freely outside.
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;
+                  margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Filter mode</div>
+      <div style="display:flex;gap:4px;">
+        <button id="fm-or"  data-fm="or"  style="flex:1;padding:5px 8px;border-radius:5px;border:1px solid ${S.filterMode==='or' ?'#69F0AE':'#1e1e30'};background:${S.filterMode==='or' ?'#69F0AE14':'transparent'};color:${S.filterMode==='or' ?'#69F0AE':'#8888aa'};font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.12s;">OR — any</button>
+        <button id="fm-and" data-fm="and" style="flex:1;padding:5px 8px;border-radius:5px;border:1px solid ${S.filterMode==='and'?'#69F0AE':'#1e1e30'};background:${S.filterMode==='and'?'#69F0AE14':'transparent'};color:${S.filterMode==='and'?'#69F0AE':'#8888aa'};font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.12s;">AND — all</button>
+      </div>
+      <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:3px;line-height:1.4;">
+        OR: show products matching <em>any</em> selected character.<br>AND: show only products matching <em>all</em> selected.
+      </div>
     </div>
 
     <div style="margin-bottom:14px;">
@@ -1212,6 +1362,22 @@ function renderLeftPanel() {
       if (container) container.style.aspectRatio = S.aspectRatio;
       renderLeftPanel();
     };
+  });
+
+  // Edge fade slider
+  const edgeFadeInput = document.getElementById('edge-fade');
+  if (edgeFadeInput) {
+    edgeFadeInput.addEventListener('input', () => {
+      S.edgeFade = Number(edgeFadeInput.value);
+      const display = document.getElementById('edge-fade-display');
+      if (display) display.textContent = S.edgeFade > 0 ? Math.round(S.edgeFade * 100) + '%' : 'off';
+      renderCanvas();
+    });
+  }
+
+  // Filter mode buttons
+  panel.querySelectorAll('[data-fm]').forEach(btn => {
+    btn.onclick = () => { S.filterMode = btn.dataset.fm; renderLeftPanel(); };
   });
 
   // Canvas background color handlers
@@ -1337,7 +1503,10 @@ function renderLeftPanel() {
     }
     document.getElementById('rotation-display').textContent = v + '°';
     const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
-    if (canvasEl) canvasEl.style.transform = 'rotate(' + v + 'deg)';
+    if (canvasEl) {
+      const ft = (sel.flipH ? ' scaleX(-1)' : '') + (sel.flipV ? ' scaleY(-1)' : '');
+      canvasEl.style.transform = 'rotate(' + v + 'deg)' + ft;
+    }
   });
 
   const resetRotInput = document.getElementById('prop-reset-rot');
@@ -1353,9 +1522,38 @@ function renderLeftPanel() {
   panel.querySelectorAll('.glow-swatch').forEach(sw => {
     sw.onclick = () => {
       updateEl(sel.id, { glowColor: sw.dataset.color });
+      const picker = document.getElementById('glow-color-picker');
+      if (picker) picker.value = sw.dataset.color;
       renderLeftPanel();
       const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
       if (canvasEl) canvasEl.style.outline = '2px dashed ' + sw.dataset.color;
+    };
+  });
+
+  const glowPicker = document.getElementById('glow-color-picker');
+  if (glowPicker) {
+    glowPicker.addEventListener('input', () => {
+      updateEl(sel.id, { glowColor: glowPicker.value });
+      renderLeftPanel();
+      const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+      if (canvasEl) canvasEl.style.outline = '2px dashed ' + glowPicker.value;
+    });
+  }
+
+  panel.querySelectorAll('.flip-btn').forEach(btn => {
+    btn.onclick = () => {
+      const isH = btn.dataset.flip === 'H';
+      const patch = isH ? { flipH: !sel.flipH } : { flipV: !sel.flipV };
+      updateEl(sel.id, patch);
+      renderLeftPanel();
+      const canvasEl = document.querySelector('.sn-builder-el[data-id="' + sel.id + '"]');
+      if (canvasEl) {
+        const cur = S.elements.find(e => e.id === sel.id);
+        if (cur) {
+          const ft = (cur.flipH ? ' scaleX(-1)' : '') + (cur.flipV ? ' scaleY(-1)' : '');
+          canvasEl.style.transform = 'rotate(' + (getElOnCanvas(cur).rotation || 0) + 'deg)' + ft;
+        }
+      }
     };
   });
 
@@ -1415,7 +1613,7 @@ function wireMobileControls() {
 function renderCodePanel() {
   const panel = document.getElementById('code-panel'); if (!panel) return;
 
-  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix, mobileEnabled: S.mobileEnabled, mobileBreakpoint: S.mobileBreakpoint, mobileAspectRatio: S.mobileAspectRatio, mobileBgs: S.mobileBgs };
+  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix, mobileEnabled: S.mobileEnabled, mobileBreakpoint: S.mobileBreakpoint, mobileAspectRatio: S.mobileAspectRatio, mobileBgs: S.mobileBgs, filterMode: S.filterMode, edgeFade: S.edgeFade };
   const fenceCode = generateCodeFence(scene);
   const embedCode = generateEmbed(scene);
   const code      = S.elements.length > 0 || S.backgrounds.length > 0
@@ -1562,6 +1760,7 @@ document.getElementById('el-input').addEventListener('change', (e) => {
           label:        f.name.replace(/\.[^.]+$/, ''),
           glowColor:    GLOW_PRESETS[(S.elements.length + i) % GLOW_PRESETS.length].color,
           glowIntensity: 1, actionType: 'filter', actionValue: '', rotation: 0, resetRotationOnHover: true,
+          flipH: false, flipV: false,
           onlyShowOn: null, mobileOverride: null,
         });
         if (++loaded === files.length) { renderLeftPanel(); renderCanvas(); }
@@ -1590,12 +1789,41 @@ document.getElementById('mobile-bg-input').addEventListener('change', (e) => {
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────────
 window.addEventListener('keydown', (e) => {
-  if ((e.key === 'Delete' || e.key === 'Backspace') && S.selectedId && !['INPUT','TEXTAREA'].includes(e.target.tagName)) {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && S.selectedId) {
     const { el, bg } = getSelected();
     if (el) { removeEl(S.selectedId); renderLeftPanel(); renderCanvas(); }
     if (bg) { removeBg(S.selectedId); renderLeftPanel(); renderCanvas(); }
   }
   if (e.key === 'Escape') { S.selectedId = null; renderLeftPanel(); renderCanvas(); }
+
+  // Arrow key nudge for selected elements (0.5% step, 2% with Shift)
+  if (S.mode === 'edit' && S.selectedId && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+    const { el: keyEl } = getSelected();
+    if (!keyEl) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 2 : 0.5;
+    const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+    const dy = e.key === 'ArrowUp'   ? -step : e.key === 'ArrowDown'  ? step : 0;
+    const writesToOverride = S.canvasMode === 'mobile' && keyEl.onlyShowOn !== 'mobile';
+    if (writesToOverride) {
+      if (!keyEl.mobileOverride) keyEl.mobileOverride = {};
+      const curPos = getElOnCanvas(keyEl);
+      keyEl.mobileOverride.x = curPos.x + dx;
+      keyEl.mobileOverride.y = curPos.y + dy;
+      updateEl(keyEl.id, { mobileOverride: { ...keyEl.mobileOverride } });
+    } else {
+      keyEl.x += dx;
+      keyEl.y += dy;
+    }
+    const canvasEl = document.querySelector('.sn-builder-el[data-id="' + keyEl.id + '"]');
+    if (canvasEl) {
+      const pos = getElOnCanvas(keyEl);
+      canvasEl.style.left = pos.x + '%';
+      canvasEl.style.top  = pos.y + '%';
+    }
+  }
 });
 
 // ── Init: DOM skeleton ─────────────────────────────────────────────────────────
@@ -1622,7 +1850,7 @@ function init() {
       </div>
 
       <div id="canvas-area" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px;overflow:auto;background:#08080e;">
-        <div id="scene-container" style="position:relative;width:100%;max-width:800px;aspect-ratio:16/9;min-height:280px;border-radius:10px;overflow:hidden;border:1px solid #141422;background:repeating-conic-gradient(#111118 0% 25%, #0d0d14 0% 50%) 50% / 18px 18px;"></div>
+        <div id="scene-container" style="position:relative;width:100%;max-width:800px;aspect-ratio:16/9;min-height:280px;border-radius:10px;overflow:visible;border:1px solid #141422;background:repeating-conic-gradient(#111118 0% 25%, #0d0d14 0% 50%) 50% / 18px 18px;"></div>
       </div>
 
       <div id="code-panel" style="flex:1;display:none;flex-direction:column;background:#0a0a14;"></div>

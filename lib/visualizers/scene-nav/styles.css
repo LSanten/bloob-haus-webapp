@@ -11,6 +11,14 @@
   /* max-width and aspect-ratio set inline by renderer.js */
 }
 
+/* Background clip — contains bg layers within artboard bounds */
+.scene-nav-bg-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* Background layers — absolutely positioned, stacked behind elements */
 .scene-nav-bg-layer {
   position: absolute;
@@ -58,4 +66,21 @@
 
 .scene-nav-el:hover .scene-nav-label {
   opacity: 1;
+}
+
+/* Label edge repositioning — prevents labels from clipping outside the artboard */
+.scene-nav-el.label-above .scene-nav-label {
+  bottom: auto;
+  top: -30px;
+}
+
+.scene-nav-el.label-left .scene-nav-label {
+  left: 0;
+  transform: none;
+}
+
+.scene-nav-el.label-right .scene-nav-label {
+  left: auto;
+  right: 0;
+  transform: none;
 }

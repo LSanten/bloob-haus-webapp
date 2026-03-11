@@ -73,6 +73,9 @@
       // Respect opt-out containers
       if (link.closest("[data-no-pills]")) continue;
 
+      // Only pill inline links (inside a paragraph) — skip card/nav/structural links
+      if (!link.closest("p")) continue;
+
       var href = link.getAttribute("href");
       if (!href || href.charAt(0) === "#") continue;
 

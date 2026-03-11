@@ -315,6 +315,30 @@ export default async function (eleventyConfig) {
         const inputPath = join("src", decodeURIComponent(src));
         if (!existsSync(inputPath)) continue;
 
+        // Banner/UI images (no-lightbox): optimize to reasonable display size, no PhotoSwipe.
+        // Used for bloob-object banner images — full quality but no lightbox wrapper.
+        if ((before + after).includes("no-lightbox")) {
+          const ext = src.toLowerCase().split(".").pop();
+          if (ext === "gif") continue;
+          try {
+            const optimizedDir = join(outputDir, "media/optimized");
+            mkdirSync(optimizedDir, { recursive: true });
+            const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
+            const outFile = join(optimizedDir, `${baseName}-banner.webp`);
+            const outUrl = `/media/optimized/${baseName}-banner.webp`;
+            if (!existsSync(outFile)) {
+              await sharp(inputPath)
+                .resize({ width: 400, withoutEnlargement: true })
+                .webp({ quality: 85 })
+                .toFile(outFile);
+            }
+            result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
+          } catch (e) {
+            console.warn(`[image] Failed to optimize banner image ${src}: ${e.message}`);
+          }
+          continue;
+        }
+
         // UI images (no-zoom): optimize to a small webp but keep the <img> tag intact.
         // No PhotoSwipe wrapper — these are logos, icons, decorative shapes, not content.
         // Output: 80px tall (2× retina for 40px CSS display), aspect ratio preserved.

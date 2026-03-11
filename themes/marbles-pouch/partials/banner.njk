@@ -43,7 +43,7 @@
 
     {% if bannerImage %}
     <img
-      class="site-banner__image no-zoom"
+      class="site-banner__image no-lightbox"
       src="{{ bannerImage | url }}"
       alt="{{ objLabel }} image"
       width="200"
@@ -55,7 +55,7 @@
     {% endif %}
 
     {% if bannerText %}
-    <p class="site-banner__text">{{ bannerText }}</p>
+    <p class="site-banner__text">{{ bannerText | mdLinks | safe }}</p>
     {% endif %}
 
     {% if page.url != "/" %}

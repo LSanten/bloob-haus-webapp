@@ -939,13 +939,12 @@ function renderCanvas() {
       document.body.appendChild(fadeSvgEl);
     }
     fadeSvgEl.innerHTML = `<defs><filter id="snav-builder-filt" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="${blur}"/></filter><mask id="snav-builder-mask" maskContentUnits="objectBoundingBox"><rect x="${inset}" y="${inset}" width="${rw}" height="${rw}" fill="white" filter="url(#snav-builder-filt)"/></mask></defs>`;
-    container.style.mask = 'url(#snav-builder-mask)';
-    container.style.webkitMask = 'url(#snav-builder-mask)';
   } else {
     if (fadeSvgEl) fadeSvgEl.remove();
-    container.style.mask = '';
-    container.style.webkitMask = '';
   }
+  // Always clear mask from container (mask now lives on bg-clip only)
+  container.style.mask = '';
+  container.style.webkitMask = '';
 
   // Canvas mode toggle (only in edit mode, only when mobile is enabled)
   let modeToggle = document.getElementById('canvas-mode-toggle');
@@ -968,6 +967,17 @@ function renderCanvas() {
   }
 
   mountBackgroundLayers(container);
+  // Apply edge fade mask to bg-clip only (so elements and their glows are unaffected)
+  const bgClip = container.querySelector('.sn-bg-clip');
+  if (bgClip) {
+    if (fadeVal > 0) {
+      bgClip.style.mask = 'url(#snav-builder-mask)';
+      bgClip.style.webkitMask = 'url(#snav-builder-mask)';
+    } else {
+      bgClip.style.mask = '';
+      bgClip.style.webkitMask = '';
+    }
+  }
 
   // Empty state placeholder
   let ph = container.querySelector('.sn-placeholder');

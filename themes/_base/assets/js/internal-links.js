@@ -48,7 +48,8 @@
   }
 
   function applyPill(link, bloobIconUrl) {
-    link.classList.add("internal-link");
+    var inHeading = !!link.closest("h1, h2, h3, h4, h5, h6");
+    if (!inHeading) link.classList.add("internal-link");
     if (bloobIconUrl && !link.querySelector(".internal-link__icon")) {
       var img = document.createElement("img");
       img.src = bloobIconUrl;
@@ -75,7 +76,8 @@
 
       // Only pill inline links — skip card/nav/structural links.
       // p: prose wiki-links. li: list items (tight lists have no <p> wrapper). td: table cells.
-      if (!link.closest("p, li, td")) continue;
+      // h1-h6: headings get icon only (no pill style).
+      if (!link.closest("p, li, td, h1, h2, h3, h4, h5, h6")) continue;
 
       var href = link.getAttribute("href");
       if (!href || href.charAt(0) === "#") continue;

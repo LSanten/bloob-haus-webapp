@@ -54,6 +54,12 @@ GUI builders that write the code for you. Open the **Scene Nav Builder**, drag i
 
 The point is that you shouldn't have to hand-write YAML to build something that looks and feels custom. The machine writes it; you shape it.
 
+QUESTION: still a little bit open what a magic machine exactly is. I currenlty have one working magic machine but it is more like a *Builder* for a *Visualizer*, which feels a little bit different. 
+
+INSIGHT: some core piece around magic machines is that I want to find a place and container for small apps. 
+
+Check this magic machine out: [Interface Builder](https://leons.bloob.haus/tools/scene-nav-builder/)
+
 ---
 
 ## What this is (for non-technical readers)

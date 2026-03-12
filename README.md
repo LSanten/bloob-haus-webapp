@@ -12,6 +12,7 @@
 Bloob Haus is a personal web-home builder and an experiment in making **visual interfaces easy to create, share, and reproduce**.
 
 The deeper vision: what if building a beautiful, interactive page was as easy as writing a few lines in a text file? What if you could hand someone a visualizer — a scene, a graph, a custom layout — and they could drop it into their own site and start shaping it immediately, with a live GUI, no code required?
+(the vision goes deeper than this, but I am keeping myself short here)
 
 The name comes from *Bauhaus* the idea that design and daily life should be integrated, not kept separate, and *Bloob*, which is my partner's design language for cute things and characters. A "haus" is your home on the web. In this context, a "bloob" is a real object on the web: asoft, shapeable thing — not a brand, not a product, just a place.
 
@@ -41,6 +42,11 @@ elements:
 And the site renders a full interactive scene with draggable elements, glow shadows, mobile/desktop positioning, and clickable links. Each visualizer is a self-contained package — its own parser, renderer, browser-side logic, styles, and tests. Same parser code runs at build time, in the browser preview, and (eventually) as an Obsidian plugin.
 
 Current visualizers: interactive link graph, tag cloud, scene navigator.
+
+#### GOOD EXAMPLES OF WORKING AND INTEGRATED VISUALIZERS ARE:
+
+- [Fridge Magnets Visualization](https://leons.bloob.haus/marbles/FRIDGE-MAGNETS-FOR-GAS-BURNER-AWARENESS/)
+- [PNG based interface that is highly customizable](https://leons.bloob.haus/say-hello-to/the-core-family-of-studio-bloob/)
 
 ### Magic Machines
 

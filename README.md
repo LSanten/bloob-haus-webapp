@@ -1,6 +1,6 @@
 # Bloob Haus
 
-**Live sites:**
+**Live sites built with Obsidian to Webpage builder (still under construction but good for getting the idea):**
 - [buffbaby.bloob.haus](https://buffbaby.bloob.haus) — Buff Baby Kitchen (recipes)
 - [leons.bloob.haus](https://leons.bloob.haus) — Leon's Marbles (notes, thoughts, creative work)
 
@@ -9,13 +9,16 @@
 
 ## What this is
 
-Bloob Haus is a personal web-home builder — and more than that, an experiment in making **visual interfaces easy to create, share, and reproduce**.
-
-The name comes from *Bauhaus* — the idea that design and daily life should be integrated, not kept separate, and *Bloob*, which is my partner's design language for cute things and characters. A "haus" is your home on the web. In this context, a "bloob" is a real object on the web: asoft, shapeable thing — not a brand, not a product, just a place.
+Bloob Haus is a personal web-home builder and an experiment in making **visual interfaces easy to create, share, and reproduce**.
 
 The deeper vision: what if building a beautiful, interactive page was as easy as writing a few lines in a text file? What if you could hand someone a visualizer — a scene, a graph, a custom layout — and they could drop it into their own site and start shaping it immediately, with a live GUI, no code required?
 
-That's what this is building toward. The current architecture has two core concepts:
+The name comes from *Bauhaus* the idea that design and daily life should be integrated, not kept separate, and *Bloob*, which is my partner's design language for cute things and characters. A "haus" is your home on the web. In this context, a "bloob" is a real object on the web: asoft, shapeable thing — not a brand, not a product, just a place.
+
+That's what this is building toward. The current architecture has three core concepts:
+
+### Marbles
+In my world, a marble is a metaphorical container for a note that I want to share and shape with you. It can be a sketchy idea, an insight, a piece of knowledge, or a question that I consider valuable for my life's ongoing dialogue. These marbles are never perfect and always a snapshot of a given moment.  [leons.bloob.haus/marbles](https://leons.bloob.haus)  as an example of my "marbles" collection. 
 
 ### Visualizers
 

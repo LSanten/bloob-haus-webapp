@@ -65,9 +65,14 @@ export default async function (eleventyConfig) {
     "src/apple-touch-icon.png": "apple-touch-icon.png",
   });
 
-  // Magic machines — static HTML tools served under /tools/
+  // Magic machines — static HTML tools
+  // scene-nav-builder: kept at legacy /tools/ path for backwards compatibility
   eleventyConfig.addPassthroughCopy({
     "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
+  });
+  // New machines served under /magic-machine/<name>/
+  eleventyConfig.addPassthroughCopy({
+    "lib/magic-machines/youtube-non-addictive-interface/app/index.html": "magic-machine/youtube-non-addictive-interface/index.html",
   });
 
   // Watch for changes during development

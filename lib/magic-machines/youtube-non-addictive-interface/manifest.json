@@ -1,0 +1,16 @@
+{
+  "name": "youtube-non-addictive-interface",
+  "type": "gui",
+  "version": "1.0.0",
+  "description": "Distraction-free YouTube search and playback. One-time API key setup, stored in localStorage.",
+  "author": {
+    "name": "Adrian Botran",
+    "url": "https://adrianfbotran.wixsite.com/portfolio"
+  },
+  "route": "/magic-machine/youtube-non-addictive-interface/",
+  "app": {
+    "entry": "app/index.html",
+    "standalone": true,
+    "description": "Open in any browser — no build step, no server required."
+  }
+}

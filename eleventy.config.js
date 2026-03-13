@@ -9,6 +9,23 @@ import {
   resolveSiteName,
 } from "./scripts/utils/config-loader.js";
 
+// Auto-discover magic machines from lib/magic-machines/
+// Each machine needs a manifest.json with a "route" field and an app.entry path.
+function loadMagicMachines() {
+  const dir = "lib/magic-machines";
+  if (!existsSync(dir)) return [];
+
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => {
+      const manifestPath = join(dir, d.name, "manifest.json");
+      if (!existsSync(manifestPath)) return null;
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+      return { dirName: d.name, ...manifest };
+    })
+    .filter((m) => m && m.route && m.app?.entry);
+}
+
 // Auto-discover visualizer packages from lib/visualizers/
 async function loadVisualizers() {
   const dir = "lib/visualizers";
@@ -65,14 +82,18 @@ export default async function (eleventyConfig) {
     "src/apple-touch-icon.png": "apple-touch-icon.png",
   });
 
-  // Magic machines — static HTML tools
-  // scene-nav-builder: kept at legacy /tools/ path for backwards compatibility
+  // Magic machines — auto-discovered from lib/magic-machines/*/manifest.json
+  // Add a "route" field to a manifest to make the machine public at that URL.
+  const magicMachines = loadMagicMachines();
+  for (const machine of magicMachines) {
+    const src = `lib/magic-machines/${machine.dirName}/${machine.app.entry}`;
+    const dest = machine.route.replace(/^\//, "") + "index.html";
+    eleventyConfig.addPassthroughCopy({ [src]: dest });
+  }
+  // Legacy alias — scene-nav-builder was previously served at /tools/ before
+  // the /magic-machine/ convention was established. Keep old URL working.
   eleventyConfig.addPassthroughCopy({
     "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
-  });
-  // New machines served under /magic-machine/<name>/
-  eleventyConfig.addPassthroughCopy({
-    "lib/magic-machines/youtube-non-addictive-interface/app/index.html": "magic-machine/youtube-non-addictive-interface/index.html",
   });
 
   // Watch for changes during development

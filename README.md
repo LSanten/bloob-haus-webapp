@@ -50,15 +50,15 @@ Current visualizers: interactive link graph, tag cloud, scene navigator.
 
 ### Magic Machines
 
-GUI builders that write the code for you. Open the **Scene Nav Builder**, drag images onto a canvas, set glow colors and link targets, toggle between desktop and mobile layouts — then copy the generated code fence into your Obsidian file. The site picks it up automatically on the next build.
+Standalone browser tools — small apps that live at `/magic-machine/<name>/`. Some are builders that write code for you (the scene nav builder generates code fences you paste into Obsidian). Others are just useful interfaces that belong in a personal haus rather than a third-party app (the YouTube interface keeps you off the recommendation feed).
 
-The point is that you shouldn't have to hand-write YAML to build something that looks and feels custom. The machine writes it; you shape it.
+The point is that you shouldn't have to hand-write YAML to build something that looks and feels custom, and you shouldn't have to use addictive third-party interfaces to do simple things.
 
-QUESTION: still a little bit open what a magic machine exactly is. I currenlty have one working magic machine but it is more like a *Builder* for a *Visualizer*, which feels a little bit different. 
+Adding a new magic machine is just: drop a folder in `lib/magic-machines/`, add a `manifest.json` with a `route` field, and the build pipeline picks it up automatically.
 
-INSIGHT: some core piece around magic machines is that I want to find a place and container for small apps. 
-
-Check this magic machine out: [Interface Builder](https://leons.bloob.haus/tools/scene-nav-builder/)
+**Live magic machines:**
+- [Scene Nav Builder](https://leons.bloob.haus/magic-machine/scene-nav-builder/) — drag-and-drop builder for the scene-nav visualizer
+- [YouTube Non-Addictive Interface](https://leons.bloob.haus/magic-machine/youtube-non-addictive-interface/) — distraction-free YouTube search and playback, your API key stays in your browser. Developed by [Adrian Botran](https://adrianfbotran.wixsite.com/portfolio).
 
 ---
 
@@ -95,7 +95,7 @@ Since then:
 - **Multi-site builder** — One codebase, multiple sites. Each site has its own YAML config, its own theme, its own content repo.
 - **`marbles-pouch` theme** — Leon's personal theme: white banner, sky-blue body, organic wave separator, bloob-object type system. Each page declares what kind of thing it is (a marble, a note, a letter) and gets a matching visual identity.
 - **Visualizers** — Modular interactive components that live inside your markdown as code fences. Currently: an interactive link graph, a tag cloud, and the scene navigator.
-- **Scene Navigator** — Place images at positions on a canvas, give them glow effects and labels, link them to pages or URLs. Works on both desktop and mobile with independent positioning. Comes with a drag-and-drop GUI builder.
+- **Scene Navigator** — Place images at positions on a canvas, give them glow effects and labels, link them to pages or URLs. Works on both desktop and mobile with independent positioning. Comes with a [drag-and-drop GUI builder](https://leons.bloob.haus/magic-machine/scene-nav-builder/).
 - **Internal link pills** — Wiki-links and markdown links in your content are automatically styled as pills with the target page's bloob-object icon, so you can see at a glance what kind of thing you're linking to.
 - **Bloob objects** — A registry (`_bloob-objects.md`) that maps object types (marble, note, letter, pouch…) to images, banner text, and descriptions. Declares what kinds of things exist in your haus.
 - **Image pipeline** — Banner images, OG images, inline icons, favicon — all generated and optimized from one source image per object type.

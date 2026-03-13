@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Visual builder for scene-nav image maps. Positions transparent PNGs over a background, configures hover glow effects and click actions, and outputs a ```scene-nav``` code fence or standalone embed HTML.",
   "pairs_with": "scene-nav",
+  "route": "/magic-machine/scene-nav-builder/",
   "app": {
     "entry": "app/index.html",
     "standalone": true,

@@ -201,17 +201,53 @@
     }
     .btn-sign-in:hover { border-color: var(--accent); }
     .btn-sign-in.signed-in { color: var(--accent); border-color: rgba(212,168,71,0.3); }
-    .btn-settings {
-      padding: 7px 10px;
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .filter-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-right: 2px;
+    }
+    .filter-pill {
+      padding: 4px 10px;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
       color: var(--muted);
       cursor: pointer;
-      font-size: 14px;
-      transition: color 0.15s, border-color 0.15s;
+      transition: all 0.15s;
     }
-    .btn-settings:hover { color: var(--text); border-color: var(--muted); }
+    .filter-pill:hover { border-color: var(--muted2); color: var(--text); }
+    .filter-pill.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+    .btn-filter {
+      padding: 9px 10px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-filter:hover { color: var(--text); }
+    .btn-filter.active { color: var(--accent); }
 
     .main-content { flex: 1; padding: 28px 20px; }
     .empty-state {
@@ -416,8 +452,11 @@
       }
       .player-channel { display: none; }
 
+      /* iOS Safari zooms on focus if font-size < 16px */
+      .search-input, .field-input { font-size: 16px; }
       .app-footer { padding: 8px 12px; }
       .footer-credit { font-size: 9px; }
+      .filter-bar { padding: 8px 12px; gap: 12px; }
     }
   </style>
 </head>
@@ -440,41 +479,17 @@
       });
     }
 
-    // Validates the API key by making a cheap, zero-quota search probe
-    async function validateKey(key) {
-      const url = new URL('https://www.googleapis.com/youtube/v3/search');
-      url.searchParams.set('part', 'snippet');
-      url.searchParams.set('q', 'test');
-      url.searchParams.set('maxResults', '1');
-      url.searchParams.set('type', 'video');
-      url.searchParams.set('key', key);
-      const res = await fetch(url.toString());
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      return true;
-    }
-
     function SetupScreen({ onSave }) {
       const [apiKey, setApiKey] = useState('');
       const [clientId, setClientId] = useState('');
       const [error, setError] = useState('');
-      const [validating, setValidating] = useState(false);
 
-      const handleSave = async () => {
+      const handleSave = () => {
         const key = apiKey.trim();
         if (!key) { setError('API key is required to search.'); return; }
-        setError('');
-        setValidating(true);
-        try {
-          await validateKey(key);
-          localStorage.setItem(LS_KEY, key);
-          if (clientId.trim()) localStorage.setItem(LS_CLIENT, clientId.trim());
-          onSave(key, clientId.trim());
-        } catch (e) {
-          setError('Key rejected by YouTube: ' + e.message);
-        } finally {
-          setValidating(false);
-        }
+        localStorage.setItem(LS_KEY, key);
+        if (clientId.trim()) localStorage.setItem(LS_CLIENT, clientId.trim());
+        onSave(key, clientId.trim());
       };
 
       return (
@@ -553,8 +568,8 @@
             {error && <div className="error-msg">{error}</div>}
 
             <div style={{ marginTop: 28 }}>
-              <button className="btn-primary" onClick={handleSave} disabled={validating}>
-                {validating ? 'Checking key…' : 'Open YouTube →'}
+              <button className="btn-primary" onClick={handleSave}>
+                Open YouTube →
               </button>
             </div>
           </div>
@@ -617,6 +632,7 @@
       );
     }
 
+    // PlayerScreen doesn't have a settings handler — reset key is enough there
     function App() {
       const savedKey = localStorage.getItem(LS_KEY) || '';
       const savedClientId = localStorage.getItem(LS_CLIENT) || '';
@@ -632,6 +648,10 @@
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState('');
       const [selectedVideo, setSelectedVideo] = useState(null);
+      const [showFilters, setShowFilters] = useState(false);
+      const [filterOrder, setFilterOrder] = useState('relevance');
+      const [filterDuration, setFilterDuration] = useState('');
+      const [filterUpload, setFilterUpload] = useState('');
       const tokenClientRef = useRef(null);
 
       const handleSaveSetup = (key, cid) => {
@@ -700,6 +720,14 @@
           url.searchParams.set('q', q);
           url.searchParams.set('maxResults', '18');
           url.searchParams.set('type', 'video');
+          url.searchParams.set('order', filterOrder);
+          if (filterDuration) url.searchParams.set('videoDuration', filterDuration);
+          if (filterUpload) {
+            const now = new Date();
+            const days = { today: 1, week: 7, month: 30, year: 365 }[filterUpload];
+            const after = new Date(now - days * 864e5);
+            url.searchParams.set('publishedAfter', after.toISOString());
+          }
           if (!accessToken) url.searchParams.set('key', apiKey);
 
           const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -739,6 +767,13 @@
                 />
                 <button className="search-btn" type="submit">⌕</button>
               </form>
+              <button
+                className={`btn-filter${showFilters ? ' active' : ''}`}
+                type="button"
+                onClick={() => setShowFilters(f => !f)}
+              >
+                {(filterOrder !== 'relevance' || filterDuration || filterUpload) ? '⊞ filter ·' : '⊞ filter'}
+              </button>
             </div>
             <div className="topbar-right">
               {clientId && (
@@ -758,15 +793,46 @@
                       {userInfo.name}
                     </>
                   ) : (
-                    <><span>G</span> Sign in with YouTube</>
+                    <><span>G</span> sign in</>
                   )}
                 </button>
               )}
-              <button className="btn-settings" title="Change keys" onClick={() => setSetup(true)}>
-                ⚙
-              </button>
             </div>
           </div>
+
+          {showFilters && (
+            <div className="filter-bar">
+              <div className="filter-group">
+                <span className="filter-label">sort</span>
+                {[['relevance','relevant'],['date','newest'],['rating','top rated'],['viewCount','most viewed']].map(([val, label]) => (
+                  <button key={val} className={`filter-pill${filterOrder === val ? ' active' : ''}`} onClick={() => setFilterOrder(val)}>{label}</button>
+                ))}
+              </div>
+              <div className="filter-group">
+                <span className="filter-label">length</span>
+                {[
+                  ['','any'],
+                  ['short','< 4 min'],
+                  ['medium','4–20 min'],
+                  ['long','> 20 min'],
+                ].map(([val, label]) => (
+                  <button key={val} className={`filter-pill${filterDuration === val ? ' active' : ''}`} onClick={() => setFilterDuration(val)}>{label}</button>
+                ))}
+              </div>
+              <div className="filter-group">
+                <span className="filter-label">uploaded</span>
+                {[
+                  ['','any time'],
+                  ['today','today'],
+                  ['week','this week'],
+                  ['month','this month'],
+                  ['year','this year'],
+                ].map(([val, label]) => (
+                  <button key={val} className={`filter-pill${filterUpload === val ? ' active' : ''}`} onClick={() => setFilterUpload(val)}>{label}</button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="main-content">
             {loading && (
@@ -823,12 +889,12 @@
             )}
           </div>
 
-          <Footer onReset={handleResetKey} />
+          <Footer onSettings={() => setSetup(true)} onReset={handleResetKey} />
         </div>
       );
     }
 
-    const Footer = ({ onReset }) => (
+    const Footer = ({ onReset, onSettings }) => (
       <div className="app-footer">
         <div className="footer-credit">
           developed by{' '}
@@ -837,9 +903,14 @@
           </a>
           , who struggles to not be distracted on the youtube interface
         </div>
-        {onReset && (
-          <button className="btn-reset-key" onClick={onReset}>reset key</button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onSettings && (
+            <button className="btn-reset-key" onClick={onSettings}>settings</button>
+          )}
+          {onReset && (
+            <button className="btn-reset-key" onClick={onReset}>reset key</button>
+          )}
+        </div>
       </div>
     );
 

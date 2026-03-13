@@ -37,57 +37,29 @@
       padding: 24px;
       background: var(--bg);
     }
-    .setup-card { width: 100%; max-width: 520px; }
-    .setup-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
+    .setup-card { width: 100%; max-width: 480px; }
     .setup-title {
-      font-size: 26px;
+      font-size: 38px;
       font-weight: 500;
       color: var(--text);
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
     }
     .setup-subtitle {
       font-size: 14px;
       color: var(--muted);
       line-height: 1.6;
-      margin-bottom: 36px;
+      margin-bottom: 32px;
     }
-    .field-group { margin-bottom: 20px; }
-    .field-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .field-badge {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      background: var(--surface2);
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
-    .field-badge.optional { color: var(--muted2); }
     .field-input {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 14px;
+      padding: 14px 16px;
       font-family: 'DM Mono', monospace;
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text);
       outline: none;
       transition: border-color 0.15s;
@@ -95,14 +67,14 @@
     .field-input:focus { border-color: var(--accent); }
     .field-input::placeholder { color: var(--muted2); }
     .field-hint {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
+      margin-top: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted2);
+      line-height: 1.7;
     }
-    .field-hint a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(212,168,71,0.3); }
-    .field-hint a:hover { border-color: var(--accent); }
-    .divider { height: 1px; background: var(--border); margin: 28px 0; }
+    .field-hint a { color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(122,112,96,0.4); }
+    .field-hint a:hover { color: var(--accent); border-color: var(--accent); }
     .btn-primary {
       width: 100%;
       padding: 13px;
@@ -184,23 +156,6 @@
     }
     .search-btn:hover { color: var(--accent); }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .btn-sign-in {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 13px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      color: var(--text);
-      cursor: pointer;
-      transition: border-color 0.15s;
-      white-space: nowrap;
-    }
-    .btn-sign-in:hover { border-color: var(--accent); }
-    .btn-sign-in.signed-in { color: var(--accent); border-color: rgba(212,168,71,0.3); }
     /* FILTER BAR */
     .filter-bar {
       display: flex;
@@ -419,7 +374,7 @@
 
     /* setup screen: column layout so footer sits at bottom */
     .setup-wrap { flex-direction: column; justify-content: flex-start; padding: 0; }
-    .setup-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; width: 100%; }
+    .setup-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; width: 100%; }
 
     /* MOBILE */
     @media (max-width: 600px) {
@@ -435,7 +390,6 @@
       .topbar-logo { display: none; }
       .search-form { width: 100%; flex: 1; }
       .topbar-right { margin-left: auto; }
-      .btn-sign-in span:not(:first-child) { display: none; }
 
       .main-content { padding: 16px 12px; }
       .results-grid {
@@ -464,50 +418,30 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef, useCallback } = React;
+    const { useState, useEffect, useRef } = React;
 
     const LS_KEY = 'yt_bloob_api_key';
-    const LS_CLIENT = 'yt_bloob_client_id';
-
-    function loadGIS() {
-      return new Promise((resolve) => {
-        if (window.google?.accounts) return resolve(window.google);
-        const s = document.createElement('script');
-        s.src = 'https://accounts.google.com/gsi/client';
-        s.onload = () => resolve(window.google);
-        document.head.appendChild(s);
-      });
-    }
 
     function SetupScreen({ onSave }) {
       const [apiKey, setApiKey] = useState('');
-      const [clientId, setClientId] = useState('');
       const [error, setError] = useState('');
 
       const handleSave = () => {
         const key = apiKey.trim();
         if (!key) { setError('API key is required to search.'); return; }
         localStorage.setItem(LS_KEY, key);
-        if (clientId.trim()) localStorage.setItem(LS_CLIENT, clientId.trim());
-        onSave(key, clientId.trim());
+        onSave(key);
       };
 
       return (
         <div className="setup-wrap">
           <div className="setup-body">
-          <div className="setup-card">
-            <div className="setup-eyebrow">▸ bloob.haus / youtube</div>
-            <h1 className="setup-title">Your keys. Your searches.</h1>
-            <p className="setup-subtitle">
-              This interface calls YouTube directly from your browser.
-              No backend, no tracking — your API key never leaves your device.
-            </p>
+            <div className="setup-card">
+              <h1 className="setup-title">one-time setup</h1>
+              <p className="setup-subtitle">
+                your key is saved in this browser. you'll never see this screen again.
+              </p>
 
-            <div className="field-group">
-              <div className="field-label">
-                YouTube API Key
-                <span className="field-badge">required</span>
-              </div>
               <input
                 className="field-input"
                 type="password"
@@ -518,61 +452,33 @@
                 autoFocus
               />
               <p className="field-hint">
-                Three steps:{' '}
-                <strong>1.</strong>{' '}
+                1.{' '}
                 <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">
                   Create a Google Cloud project
                 </a>
-                {' '}→{' '}
-                <strong>2.</strong>{' '}
+                {'  →  '}
+                2.{' '}
                 <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer">
                   Enable YouTube Data API v3
                 </a>
-                {' '}→{' '}
-                <strong>3.</strong>{' '}
+                {'  →  '}
+                3.{' '}
                 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">
                   Create an API key
-                </a>{' '}
-                (Credentials → Create Credentials → API Key). Free quota: ~100 searches/day. Key never leaves your browser.
-              </p>
-            </div>
-
-            <div className="divider" />
-
-            <div className="field-group">
-              <div className="field-label">
-                OAuth 2.0 Client ID
-                <span className="field-badge optional">optional — for YouTube sign-in</span>
-              </div>
-              <input
-                className="field-input"
-                type="text"
-                placeholder="xxxxxx.apps.googleusercontent.com"
-                value={clientId}
-                onChange={e => setClientId(e.target.value)}
-              />
-              <p className="field-hint">
-                Same console →{' '}
-                <a
-                  href="https://console.cloud.google.com/apis/credentials"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Create OAuth 2.0 Client ID → Web application
                 </a>
-                . Add this page's URL as an <strong>Authorized JavaScript origin</strong>.
-                Lets you search your liked videos, subscriptions, and history.
+                {' '}(Credentials → Create Credentials → API Key)
+                <br />
+                free quota: ~100 searches/day. key never leaves your browser.
               </p>
-            </div>
 
-            {error && <div className="error-msg">{error}</div>}
+              {error && <div className="error-msg" style={{ marginTop: 16 }}>{error}</div>}
 
-            <div style={{ marginTop: 28 }}>
-              <button className="btn-primary" onClick={handleSave}>
-                Open YouTube →
-              </button>
+              <div style={{ marginTop: 28 }}>
+                <button className="btn-primary" onClick={handleSave}>
+                  save &amp; open →
+                </button>
+              </div>
             </div>
-          </div>
           </div>
           <Footer />
         </div>
@@ -632,16 +538,11 @@
       );
     }
 
-    // PlayerScreen doesn't have a settings handler — reset key is enough there
     function App() {
       const savedKey = localStorage.getItem(LS_KEY) || '';
-      const savedClientId = localStorage.getItem(LS_CLIENT) || '';
 
       const [setup, setSetup] = useState(!savedKey);
       const [apiKey, setApiKey] = useState(savedKey);
-      const [clientId, setClientId] = useState(savedClientId);
-      const [accessToken, setAccessToken] = useState(null);
-      const [userInfo, setUserInfo] = useState(null);
       const [draftQuery, setDraftQuery] = useState('');
       const [query, setQuery] = useState('');
       const [results, setResults] = useState([]);
@@ -652,58 +553,18 @@
       const [filterOrder, setFilterOrder] = useState('relevance');
       const [filterDuration, setFilterDuration] = useState('');
       const [filterUpload, setFilterUpload] = useState('');
-      const tokenClientRef = useRef(null);
 
-      const handleSaveSetup = (key, cid) => {
+      const handleSaveSetup = (key) => {
         setApiKey(key);
-        setClientId(cid);
         setSetup(false);
       };
 
       const handleResetKey = () => {
         localStorage.removeItem(LS_KEY);
-        localStorage.removeItem(LS_CLIENT);
         setApiKey('');
-        setClientId('');
-        setAccessToken(null);
-        setUserInfo(null);
         setResults([]);
         setSetup(true);
       };
-
-      const initOAuth = useCallback(async () => {
-        if (!clientId) return;
-        try {
-          const google = await loadGIS();
-          tokenClientRef.current = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: [
-              'https://www.googleapis.com/auth/youtube.readonly',
-              'https://www.googleapis.com/auth/userinfo.profile',
-            ].join(' '),
-            callback: async (response) => {
-              if (response.error) {
-                setError('Sign-in failed: ' + response.error);
-                return;
-              }
-              setAccessToken(response.access_token);
-              try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                  headers: { Authorization: `Bearer ${response.access_token}` },
-                });
-                const info = await res.json();
-                setUserInfo(info);
-              } catch {}
-            },
-          });
-        } catch (e) {
-          console.error('GIS init failed:', e);
-        }
-      }, [clientId]);
-
-      useEffect(() => {
-        if (!setup && clientId) initOAuth();
-      }, [setup, clientId, initOAuth]);
 
       const handleSearch = async (e) => {
         e?.preventDefault();
@@ -728,10 +589,9 @@
             const after = new Date(now - days * 864e5);
             url.searchParams.set('publishedAfter', after.toISOString());
           }
-          if (!accessToken) url.searchParams.set('key', apiKey);
+          url.searchParams.set('key', apiKey);
 
-          const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-          const res = await fetch(url.toString(), { headers });
+          const res = await fetch(url.toString());
           const data = await res.json();
 
           if (data.error) {
@@ -775,29 +635,7 @@
                 {(filterOrder !== 'relevance' || filterDuration || filterUpload) ? '⊞ filter ·' : '⊞ filter'}
               </button>
             </div>
-            <div className="topbar-right">
-              {clientId && (
-                <button
-                  className={`btn-sign-in${userInfo ? ' signed-in' : ''}`}
-                  onClick={() => tokenClientRef.current?.requestAccessToken()}
-                >
-                  {userInfo ? (
-                    <>
-                      {userInfo.picture && (
-                        <img
-                          src={userInfo.picture}
-                          alt=""
-                          style={{ width: 18, height: 18, borderRadius: '50%' }}
-                        />
-                      )}
-                      {userInfo.name}
-                    </>
-                  ) : (
-                    <><span>G</span> sign in</>
-                  )}
-                </button>
-              )}
-            </div>
+            <div className="topbar-right" />
           </div>
 
           {showFilters && (
@@ -880,11 +718,7 @@
               <div className="empty-state">
                 <div className="empty-icon">▶</div>
                 <div className="empty-title">search anything</div>
-                <div className="empty-sub">
-                  {accessToken
-                    ? 'signed in — searching with your YouTube account'
-                    : 'your key stays in this browser, nothing is tracked'}
-                </div>
+                <div className="empty-sub">your key stays in this browser, nothing is tracked</div>
               </div>
             )}
           </div>

@@ -115,6 +115,8 @@ const S = {
   canvasMode:        'desktop', // 'desktop' | 'mobile'
   filterMode:        'or',      // 'or' (any selected) | 'and' (all selected)
   edgeFade:          0,         // 0 = off, 0–0.5 controls fade start from edge
+  draggable:         false,     // allow visitors to drag elements around
+  hintPulse:         false,     // pulse elements on load to hint they're clickable
   previewActiveFilters: [],     // tags active in preview mode
 };
 let _idN = 0;
@@ -188,6 +190,8 @@ function generateCodeFence(scene) {
   let yaml = 'aspectRatio: "' + scene.aspectRatio + '"\n';
   if (scene.filterMode && scene.filterMode !== 'or') yaml += 'filterMode: ' + scene.filterMode + '\n';
   if (scene.edgeFade) yaml += 'edgeFade: ' + scene.edgeFade + '\n';
+  if (scene.draggable)  yaml += 'draggable: true\n';
+  if (scene.hintPulse)  yaml += 'hintPulse: true\n';
 
   const bgHasMobileOverride = scene.backgrounds.some(bg => bg.mobileOverride && Object.keys(bg.mobileOverride).length > 0);
   const bgSimple = scene.backgrounds.length === 1 && scene.backgrounds[0].x === 0 && scene.backgrounds[0].y === 0 && scene.backgrounds[0].scale === 100 && !scene.backgrounds[0].rotation && !bgHasMobileOverride;
@@ -299,13 +303,34 @@ const EMBED_RENDER_FN = [
   '}',
   'function renderScene(cId, bgs, els) {',
   '  var c = document.getElementById(cId); if (!c) return;',
+  '  // bgClip: clips background images to the container bounds (overflow:hidden)',
+  '  var bgClip = document.createElement(\'div\');',
+  '  bgClip.className = \'sn-bgclip\';',
+  '  bgClip.style.cssText = \'position:absolute;top:0;right:0;bottom:0;left:0;overflow:hidden;pointer-events:none\';',
   '  bgs.forEach(function(bg) {',
   '    var d = document.createElement(\'div\');',
   '    d.style.cssText = \'position:absolute;pointer-events:none;left:\'+(bg.x||0)+\'%;top:\'+(bg.y||0)+\'%;width:\'+(bg.scale||100)+\'%\';',
   '    var img = document.createElement(\'img\');',
   '    img.src = bg.src; img.draggable = false; img.style.cssText = \'width:100%;height:auto;display:block\';',
-  '    d.appendChild(img); c.appendChild(d);',
+  '    d.appendChild(img); bgClip.appendChild(d);',
   '  });',
+  '  // Edge fade: two linear-gradient masks (H + V) intersected — fades only the edges by pixel width',
+  '  // bgWrap has no overflow:hidden to avoid WebKit mask conflict; bgClip inside clips images',
+  '  if (C.edgeFadePx && C.edgeFadePx > 0 && !C.fadeBgColor) {',
+  '    var bgWrap = document.createElement(\'div\');',
+  '    bgWrap.style.cssText = \'position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none\';',
+  '    var fp = C.edgeFadePx + \'px\';',
+  '    var _mh = \'linear-gradient(to right, transparent, white \'+fp+\', white calc(100% - \'+fp+\'), transparent)\';',
+  '    var _mv = \'linear-gradient(to bottom, transparent, white \'+fp+\', white calc(100% - \'+fp+\'), transparent)\';',
+  '    bgWrap.style.webkitMaskImage = _mh + \',\' + _mv;',
+  '    bgWrap.style.maskImage = _mh + \',\' + _mv;',
+  '    bgWrap.style.webkitMaskComposite = \'destination-in\';',
+  '    bgWrap.style.maskComposite = \'intersect\';',
+  '    bgWrap.appendChild(bgClip);',
+  '    c.appendChild(bgWrap);',
+  '  } else {',
+  '    c.appendChild(bgClip);',
+  '  }',
   '  els.forEach(function(el) {',
   '    var d = document.createElement(\'div\');',
   '    var gI = el.glowIntensity || 1;',
@@ -313,16 +338,23 @@ const EMBED_RENDER_FN = [
   '    var flipT = (el.flipH?\' scaleX(-1)\':\'\')+(el.flipV?\' scaleY(-1)\':\'\');',
   '    var baseRot = \'rotate(\'+(el.rotation||0)+\'deg)\'+flipT;',
   '    var glowCss = \'drop-shadow(0 0 \'+g1+\'px \'+el.glow+\') drop-shadow(0 0 \'+g2+\'px \'+el.glow+\') drop-shadow(0 0 \'+g3+\'px \'+el.glow+\'80)\';',
-  '    d.style.cssText = \'position:absolute;cursor:pointer;transition:filter 0.35s ease,transform 0.25s ease;left:\'+el.x+\'%;top:\'+el.y+\'%;width:\'+el.scale+\'%;transform:\'+baseRot;',
+  '    var noGlow = \'drop-shadow(0 0 0px transparent)\';',
+  '    // will-change + translateZ pre-promote to GPU layer — prevents white flash on iOS Safari',
+  '    // when filter transitions away from none (compositing layer creation/destruction)',
+  '    d.style.cssText = \'position:absolute;cursor:pointer;will-change:filter;transition:filter 0.35s ease,transform 0.25s ease;left:\'+el.x+\'%;top:\'+el.y+\'%;width:\'+el.scale+\'%;transform:\'+baseRot+\' translateZ(0);filter:\'+noGlow;',
+  '    d.setAttribute(\'data-gcss\', glowCss);',
+  '    d.setAttribute(\'data-base-t\', baseRot+\' translateZ(0)\');',
   '    d.onmouseenter = function() {',
   '      d.style.filter = glowCss;',
-  '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : \'rotate(\'+(el.rotation||0)+\'deg) \') + \'scale(1.06)\'+flipT;',
+  '      d.style.transform = (el.resetRotationOnHover !== false ? \'\' : \'rotate(\'+(el.rotation||0)+\'deg) \') + \'scale(1.06) translateZ(0)\'+flipT;',
   '    };',
   '    d.onmouseleave = function() {',
-  '      d.style.filter = (el.action===\'filter\' && activeFilters.indexOf(el.value) > -1) ? glowCss : \'none\';',
-  '      d.style.transform = baseRot;',
+  '      d.style.filter = (el.action===\'filter\' && activeFilters.indexOf(el.value) > -1) ? glowCss : noGlow;',
+  '      d.style.transform = baseRot+\' translateZ(0)\';',
   '    };',
+  '    var wasDragged = false;',
   '    d.onclick = function() {',
+  '      if (wasDragged) { wasDragged = false; return; }',
   '      if (el.action===\'link\'   && el.value) { window.open(el.value,\'_blank\'); return; }',
   '      if (el.action===\'anchor\' && el.value) {',
   '        var t = document.getElementById(el.value)||document.querySelector(\'[name="\'+el.value+\'"]\');',
@@ -332,8 +364,8 @@ const EMBED_RENDER_FN = [
   '        var idx = activeFilters.indexOf(el.value);',
   '        if (idx > -1) {',
   '          activeFilters.splice(idx, 1);',
-  '          d.style.filter = \'none\';',
-  '          d.style.transform = baseRot;',
+  '          d.style.filter = noGlow;',
+  '          d.style.transform = baseRot+\' translateZ(0)\';',
   '        } else {',
   '          activeFilters.push(el.value);',
   '          d.style.filter = glowCss;',
@@ -342,19 +374,57 @@ const EMBED_RENDER_FN = [
   '        window.dispatchEvent(new CustomEvent(\'bloob:filter\',{detail:{tags:activeFilters.slice(),mode:C.filterMode||\'or\'}}));',
   '      }',
   '    };',
+  '    if (C.draggable) {',
+  '      // Desktop: mousedown → drag immediately',
+  '      d.addEventListener(\'mousedown\',function(ev){',
+  '        var sx=ev.clientX,sy=ev.clientY,sl=el.x,st=el.y; wasDragged=false;',
+  '        d.style.cursor=\'grabbing\';',
+  '        function mv(e2){if(Math.abs(e2.clientX-sx)>3||Math.abs(e2.clientY-sy)>3)wasDragged=true; var r=c.getBoundingClientRect(); el.x=sl+(e2.clientX-sx)/r.width*100; el.y=st+(e2.clientY-sy)/r.height*100; d.style.left=el.x+\'%\'; d.style.top=el.y+\'%\';}',
+  '        function mu(){d.style.cursor=\'pointer\'; sl=el.x; st=el.y; document.removeEventListener(\'mousemove\',mv); document.removeEventListener(\'mouseup\',mu);}',
+  '        document.addEventListener(\'mousemove\',mv); document.addEventListener(\'mouseup\',mu);',
+  '        ev.preventDefault();',
+  '      });',
+  '      // Mobile: long-press 400ms → drag; short tap still fires click',
+  '      var _lpT=null,_lpDrag=false,_sx=0,_sy=0,_sl=0,_st=0;',
+  '      d.addEventListener(\'touchstart\',function(e){',
+  '        var t=e.touches[0]; _sx=t.clientX; _sy=t.clientY; _sl=el.x; _st=el.y; _lpDrag=false; wasDragged=false;',
+  '        _lpT=setTimeout(function(){_lpDrag=true; d.style.transform=baseRot+\' scale(1.08) translateZ(0)\';},400);',
+  '      },{passive:true});',
+  '      d.addEventListener(\'touchmove\',function(e){',
+  '        var t=e.touches[0];',
+  '        if(!_lpDrag){if(Math.abs(t.clientX-_sx)>10||Math.abs(t.clientY-_sy)>10){clearTimeout(_lpT);_lpT=null;} return;}',
+  '        wasDragged=true; e.preventDefault();',
+  '        var r=c.getBoundingClientRect(); el.x=_sl+(t.clientX-_sx)/r.width*100; el.y=_st+(t.clientY-_sy)/r.height*100;',
+  '        d.style.left=el.x+\'%\'; d.style.top=el.y+\'%\';',
+  '      },{passive:false});',
+  '      d.addEventListener(\'touchend\',function(){',
+  '        clearTimeout(_lpT); _lpT=null;',
+  '        if(_lpDrag){_lpDrag=false; d.style.transform=baseRot+\' translateZ(0)\'; _sl=el.x; _st=el.y;}',
+  '      });',
+  '    }',
   '    var img = document.createElement(\'img\');',
   '    img.src=el.src; img.alt=el.label||\'\'; img.draggable=false;',
   '    img.style.cssText=\'width:100%;height:auto;display:block;pointer-events:none;user-select:none\';',
   '    d.appendChild(img);',
   '    if (el.label) {',
   '      var lbl=document.createElement(\'span\');',
-  '      lbl.style.cssText=\'position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:3px 11px;border-radius:12px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity 0.25s;pointer-events:none;letter-spacing:0.02em;font-family:system-ui,sans-serif\';',
+  '      var lblV=(el.y||0)+(el.scale||0)>80 ? \'top:-30px;\' : \'bottom:-26px;\';',
+  '      var lblH=(el.x||0)<10 ? \'left:0;\' : (el.x||0)+(el.scale||0)>82 ? \'right:0;left:auto;\' : \'left:50%;transform:translateX(-50%);\';',
+  '      lbl.style.cssText=\'position:absolute;\'+lblV+lblH+\'background:rgba(0,0,0,0.8);color:#fff;padding:3px 11px;border-radius:12px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity 0.25s;pointer-events:none;letter-spacing:0.02em;font-family:system-ui,sans-serif\';',
   '      lbl.textContent=el.label; d.appendChild(lbl);',
   '      d.onmouseenter=(function(fn,l){return function(){fn.call(this);l.style.opacity=1};})(d.onmouseenter,lbl);',
   '      d.onmouseleave=(function(fn,l){return function(){fn.call(this);l.style.opacity=0};})(d.onmouseleave,lbl);',
   '    }',
   '    c.appendChild(d);',
   '  });',
+  '  // Edge fade: overlay div with radial-gradient (more reliable than mask-image in 3rd-party embeds)',
+  '  if (C.fadeBgColor) {',
+  '    var ov = document.createElement(\'div\');',
+  '    var fs = 70;',
+  '    var gc = \'radial-gradient(ellipse at center,transparent \'+fs+\'%,\'+C.fadeBgColor+\' 100%)\';',
+  '    ov.style.cssText = \'position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;background:\'+gc;',
+  '    c.appendChild(ov);',
+  '  }',
   '}',
 ].join('\n');
 
@@ -362,21 +432,11 @@ function generateEmbed(scene) {
   const pfx  = scene.imagePrefix || '';
   const bgColor = scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '';
   const fade = scene.edgeFade || 0;
-  let fadeSvg = '';
-  let fadeCss = '';
-  if (fade > 0) {
-    const inset = +(fade * 0.5).toFixed(5);
-    const blur  = +(fade * 0.15).toFixed(5);
-    const rw    = +(1 - 2 * inset).toFixed(5);
-    fadeSvg = '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">'
-      + '<defs>'
-      + '<filter id="bloob-snav-filt" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="' + blur + '"/></filter>'
-      + '<mask id="bloob-snav-mask" maskContentUnits="objectBoundingBox">'
-      + '<rect x="' + inset + '" y="' + inset + '" width="' + rw + '" height="' + rw + '" fill="white" filter="url(#bloob-snav-filt)"/>'
-      + '</mask></defs></svg>';
-    fadeCss = 'mask:url(#bloob-snav-mask);-webkit-mask:url(#bloob-snav-mask);';
-  }
-  const sceneStyle = 'position:relative;max-width:900px;margin:0 auto;overflow:visible;' + fadeCss;
+  const edgeFadePx = fade > 0 ? Math.round(fade * 100) : 0;
+  // Fade to specific color: overlay div approach (when exportBgColor is set)
+  const fadeBgColor = (fade > 0 && scene.exportBgColor && scene.exportBgColor !== 'transparent')
+    ? scene.exportBgColor : null;
+  const sceneStyle = 'position:relative;max-width:900px;margin:0 auto;overflow:visible;';
 
   if (!scene.mobileEnabled) {
     // ── Single-layout embed (original behaviour) ──────────────────────────────
@@ -384,17 +444,33 @@ function generateEmbed(scene) {
       backgrounds:  scene.backgrounds.map(bg => ({ src: pfx + bg.fileName, x: Math.round(bg.x*10)/10, y: Math.round(bg.y*10)/10, scale: Math.round(bg.scale*10)/10 })),
       elements:     scene.elements.map(el => buildEmbedElement(el, pfx)),
       filterMode:   scene.filterMode || 'or',
+      draggable:    !!scene.draggable,
+      hintPulse:    !!scene.hintPulse,
+      fadeBgColor,
+      edgeFadePx,
     };
     return [
       '<!-- Scene Nav — generated by Bloob Haus builder -->',
       '<!-- Replace image src values with hosted URLs before deploying -->',
-      fadeSvg,
       '<div id="bloob-scene-nav" style="' + sceneStyle + 'aspect-ratio:' + scene.aspectRatio + ';' + bgColor + '">',
       '<script>',
       '(function(){',
       EMBED_RENDER_FN,
       '  var C = ' + JSON.stringify(config, null, 2) + ';',
       '  renderScene(\'bloob-scene-nav\', C.backgrounds, C.elements);',
+      '  var _e=document.getElementById(\'bloob-scene-nav\');if(_e){var _p=_e.parentElement;for(var _i=0;_i<4&&_p&&_p!==document.documentElement;_i++){if(getComputedStyle(_p).overflow===\'hidden\')_p.style.overflow=\'visible\';_p=_p.parentElement;}}',
+      '  if (C.hintPulse) { setTimeout(function(){',
+      '    var ds=[].slice.call(document.querySelectorAll(\'#bloob-scene-nav [data-gcss]\'));',
+      '    for(var i=ds.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=ds[i];ds[i]=ds[j];ds[j]=tmp;}',
+      '    ds.forEach(function(el,i){setTimeout(function(){',
+      '      var gc=el.getAttribute(\'data-gcss\'),bt=el.getAttribute(\'data-base-t\');',
+      '      el.style.transition=\'filter 0.3s ease,transform 0.3s ease\';',
+      '      el.style.filter=gc; el.style.transform=bt.replace(\'translateZ(0)\',\'scale(1.12) translateZ(0)\');',
+      '      setTimeout(function(){el.style.filter=\'drop-shadow(0 0 0px transparent)\'; el.style.transform=bt;',
+      '        setTimeout(function(){el.style.transition=\'filter 0.35s ease,transform 0.25s ease\';},350);',
+      '      },350);',
+      '    },i*160);});',
+      '  },1000); }',
       '})();',
       SCRIPT_CLOSE,
       '</div>',
@@ -434,24 +510,47 @@ function generateEmbed(scene) {
     mobileBgs:   mobileBgSrcs,
     mobileEls,
     filterMode:  scene.filterMode || 'or',
+    draggable:   !!scene.draggable,
+    hintPulse:   !!scene.hintPulse,
+    bp,
+    fadeBgColor,
+    edgeFadePx,
   };
 
   return [
     '<!-- Scene Nav — generated by Bloob Haus builder -->',
     '<!-- Replace image src values with hosted URLs before deploying -->',
-    fadeSvg,
     '<style>',
-    '  @media (max-width:' + bp + 'px){#sn-desktop{display:none}}',
-    '  @media (min-width:' + (bp+1) + 'px){#sn-mobile{display:none}}',
+    '  *:has(>#sn-desktop),*:has(>#sn-mobile){overflow:visible!important}',
     '</style>',
     '<div id="sn-desktop" style="' + sceneStyle + 'aspect-ratio:' + scene.aspectRatio + ';' + bgColor + '"></div>',
-    '<div id="sn-mobile"  style="' + sceneStyle + 'aspect-ratio:' + scene.mobileAspectRatio + ';' + bgColor + '"></div>',
+    '<div id="sn-mobile"  style="' + sceneStyle + 'aspect-ratio:' + scene.mobileAspectRatio + ';' + bgColor + 'display:none"></div>',
     '<script>',
     '(function(){',
     EMBED_RENDER_FN,
     '  var C = ' + JSON.stringify(config, null, 2) + ';',
     '  renderScene(\'sn-desktop\', C.desktopBgs, C.desktopEls);',
     '  renderScene(\'sn-mobile\',  C.mobileBgs,  C.mobileEls);',
+    '  // Use visualViewport.width so the breakpoint fires correctly on real mobile devices',
+    '  // even when the host page lacks <meta name="viewport"> (layout viewport ≠ device width)',
+    '  function _snApply(){var w=(window.visualViewport||window).width;var d=document.getElementById(\'sn-desktop\'),m=document.getElementById(\'sn-mobile\');if(d)d.style.display=w<=C.bp?\'none\':\'\';if(m)m.style.display=w<=C.bp?\'\':\'none\';}',
+    '  _snApply();',
+    '  (window.visualViewport||window).addEventListener(\'resize\',_snApply);',
+    '  // Fallback: walk up DOM and un-hide overflow:hidden that clips glow (e.g. Shopify section wrappers)',
+    '  [\'sn-desktop\',\'sn-mobile\'].forEach(function(id){var e=document.getElementById(id);if(!e)return;var p=e.parentElement;for(var i=0;i<4&&p&&p!==document.documentElement;i++){if(getComputedStyle(p).overflow===\'hidden\')p.style.overflow=\'visible\';p=p.parentElement;}});',
+    '  if (C.hintPulse) { setTimeout(function(){',
+    '    var vis = document.getElementById(\'sn-mobile\') && getComputedStyle(document.getElementById(\'sn-mobile\')).display!==\'none\' ? \'#sn-mobile\' : \'#sn-desktop\';',
+    '    var ds=[].slice.call(document.querySelectorAll(vis+\' [data-gcss]\'));',
+    '    for(var i=ds.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=ds[i];ds[i]=ds[j];ds[j]=tmp;}',
+    '    ds.forEach(function(el,i){setTimeout(function(){',
+    '      var gc=el.getAttribute(\'data-gcss\'),bt=el.getAttribute(\'data-base-t\');',
+    '      el.style.transition=\'filter 0.3s ease,transform 0.3s ease\';',
+    '      el.style.filter=gc; el.style.transform=bt.replace(\'translateZ(0)\',\'scale(1.12) translateZ(0)\');',
+    '      setTimeout(function(){el.style.filter=\'drop-shadow(0 0 0px transparent)\'; el.style.transform=bt;',
+    '        setTimeout(function(){el.style.transition=\'filter 0.35s ease,transform 0.25s ease\';},350);',
+    '      },350);',
+    '    },i*160);});',
+    '  },1000); }',
     '})();',
     SCRIPT_CLOSE,
   ].join('\n');
@@ -465,7 +564,7 @@ function generateEmbed(scene) {
 function parseCodeFence(text) {
   const match = text.match(/```scene-nav\n([\s\S]*?)```/);
   const yaml  = match ? match[1] : text;
-  const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null, filterMode: null, edgeFade: null };
+  const result = { aspectRatio: null, backgrounds: [], elements: [], mobile: null, filterMode: null, edgeFade: null, draggable: null, hintPulse: null };
   let section = null, item = null, mobileItem = null, inMobileBlock = false, inElementMobileBlock = false, inBgMobileBlock = false;
 
   const stripImg = (v) => { const m = v.match(/!\[\]\((.+)\)/); return m ? m[1] : v; };
@@ -489,6 +588,10 @@ function parseCodeFence(text) {
         result.filterMode = trimmed.split(':')[1].trim();
       } else if (trimmed.startsWith('edgeFade:')) {
         result.edgeFade = parseFloat(trimmed.split(':')[1].trim()) || 0;
+      } else if (trimmed.startsWith('draggable:')) {
+        result.draggable = trimmed.split(':')[1].trim() === 'true';
+      } else if (trimmed.startsWith('hintPulse:')) {
+        result.hintPulse = trimmed.split(':')[1].trim() === 'true';
       } else if (trimmed.startsWith('background:')) {
         result.backgrounds = [{ fileName: stripImg(trimmed.split(':').slice(1).join(':').trim()), x: 0, y: 0, scale: 100 }];
       } else if (trimmed === 'backgrounds:') { section = 'backgrounds'; }
@@ -562,7 +665,9 @@ function applyImport(parsed) {
   const basename = (p) => (p || '').split('/').pop();
   if (parsed.aspectRatio)    S.aspectRatio = parsed.aspectRatio;
   if (parsed.filterMode)     S.filterMode  = parsed.filterMode;
-  if (parsed.edgeFade != null) S.edgeFade  = parsed.edgeFade;
+  if (parsed.edgeFade  != null) S.edgeFade  = parsed.edgeFade;
+  if (parsed.draggable != null) S.draggable = parsed.draggable;
+  if (parsed.hintPulse != null) S.hintPulse = parsed.hintPulse;
 
   // Mobile top-level block
   if (parsed.mobile) {
@@ -924,25 +1029,8 @@ function renderCanvas() {
   container.style.background  = isPreview ? S.previewBgColor : S.editBgColor;
   container.style.overflow    = 'visible';
 
-  // Edge fade mask — Gaussian soft edges (same technique as Word's "Soft Edges")
+  // Edge fade — same linear-gradient mask as the embed output
   const fadeVal = S.edgeFade || 0;
-  let fadeSvgEl = document.getElementById('snav-builder-fade-svg');
-  if (fadeVal > 0) {
-    const inset = +(fadeVal * 0.5).toFixed(5);
-    const blur  = +(fadeVal * 0.15).toFixed(5);
-    const rw    = +(1 - 2 * inset).toFixed(5);
-    if (!fadeSvgEl) {
-      fadeSvgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      fadeSvgEl.id = 'snav-builder-fade-svg';
-      fadeSvgEl.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden');
-      fadeSvgEl.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(fadeSvgEl);
-    }
-    fadeSvgEl.innerHTML = `<defs><filter id="snav-builder-filt" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="${blur}"/></filter><mask id="snav-builder-mask" maskContentUnits="objectBoundingBox"><rect x="${inset}" y="${inset}" width="${rw}" height="${rw}" fill="white" filter="url(#snav-builder-filt)"/></mask></defs>`;
-  } else {
-    if (fadeSvgEl) fadeSvgEl.remove();
-  }
-  // Always clear mask from container (mask now lives on bg-clip only)
   container.style.mask = '';
   container.style.webkitMask = '';
 
@@ -971,11 +1059,18 @@ function renderCanvas() {
   const bgClip = container.querySelector('.sn-bg-clip');
   if (bgClip) {
     if (fadeVal > 0) {
-      bgClip.style.mask = 'url(#snav-builder-mask)';
-      bgClip.style.webkitMask = 'url(#snav-builder-mask)';
+      const fp = Math.round(fadeVal * 100) + 'px';
+      const mh = 'linear-gradient(to right, transparent, white ' + fp + ', white calc(100% - ' + fp + '), transparent)';
+      const mv = 'linear-gradient(to bottom, transparent, white ' + fp + ', white calc(100% - ' + fp + '), transparent)';
+      bgClip.style.webkitMaskImage = mh + ',' + mv;
+      bgClip.style.maskImage       = mh + ',' + mv;
+      bgClip.style.webkitMaskComposite = 'destination-in';
+      bgClip.style.maskComposite       = 'intersect';
     } else {
-      bgClip.style.mask = '';
-      bgClip.style.webkitMask = '';
+      bgClip.style.webkitMaskImage = '';
+      bgClip.style.maskImage       = '';
+      bgClip.style.webkitMaskComposite = '';
+      bgClip.style.maskComposite       = '';
     }
   }
 
@@ -1267,7 +1362,7 @@ function renderLeftPanel() {
       <input id="edge-fade" type="range" min="0" max="0.5" step="0.05" value="${S.edgeFade}"
              style="--range-color:#8888aa" />
       <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:3px;line-height:1.4;">
-        Softly fades artboard edges to transparent. Glows bleed freely outside.
+        Fades edges into page background. Set Export bg color (below) to your page's background color — the embed uses it to blend the fade.
       </div>
     </div>
 
@@ -1281,6 +1376,19 @@ function renderLeftPanel() {
       <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-top:3px;line-height:1.4;">
         OR: show products matching <em>any</em> selected character.<br>AND: show only products matching <em>all</em> selected.
       </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;">Draggable elements</div>
+        <button id="draggable-toggle" style="padding:3px 10px;border-radius:5px;border:1px solid ${S.draggable?'#69F0AE':'#1e1e30'};background:${S.draggable?'#69F0AE14':'transparent'};color:${S.draggable?'#69F0AE':'#8888aa'};font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;">${S.draggable?'ON':'OFF'}</button>
+      </div>
+      <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-bottom:10px;line-height:1.4;">Hold to drag on mobile · click/tap still fires action</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:10px;color:#7a7a9a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;">Hint pulse on load</div>
+        <button id="hintpulse-toggle" style="padding:3px 10px;border-radius:5px;border:1px solid ${S.hintPulse?'#69F0AE':'#1e1e30'};background:${S.hintPulse?'#69F0AE14':'transparent'};color:${S.hintPulse?'#69F0AE':'#8888aa'};font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;">${S.hintPulse?'ON':'OFF'}</button>
+      </div>
+      <div style="font-size:9px;color:#505070;font-family:'Space Mono',monospace;margin-bottom:10px;line-height:1.4;">Pulses elements 1s after load to hint they're clickable</div>
     </div>
 
     <div style="margin-bottom:14px;">
@@ -1618,6 +1726,15 @@ function renderLeftPanel() {
 
 // Wire mobile layout controls — called at end of renderLeftPanel
 function wireMobileControls() {
+  const draggableBtn = document.getElementById('draggable-toggle');
+  if (draggableBtn) {
+    draggableBtn.onclick = () => { S.draggable = !S.draggable; renderLeftPanel(); };
+  }
+  const hintPulseBtn = document.getElementById('hintpulse-toggle');
+  if (hintPulseBtn) {
+    hintPulseBtn.onclick = () => { S.hintPulse = !S.hintPulse; renderLeftPanel(); };
+  }
+
   const toggleBtn = document.getElementById('mobile-toggle'); if (!toggleBtn) return;
   toggleBtn.onclick = () => {
     S.mobileEnabled = !S.mobileEnabled;
@@ -1648,7 +1765,7 @@ function wireMobileControls() {
 function renderCodePanel() {
   const panel = document.getElementById('code-panel'); if (!panel) return;
 
-  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix, mobileEnabled: S.mobileEnabled, mobileBreakpoint: S.mobileBreakpoint, mobileAspectRatio: S.mobileAspectRatio, mobileBgs: S.mobileBgs, filterMode: S.filterMode, edgeFade: S.edgeFade };
+  const scene     = { elements: S.elements, backgrounds: S.backgrounds, aspectRatio: S.aspectRatio, exportBgColor: S.exportBgColor, imagePrefix: S.imagePrefix, mobileEnabled: S.mobileEnabled, mobileBreakpoint: S.mobileBreakpoint, mobileAspectRatio: S.mobileAspectRatio, mobileBgs: S.mobileBgs, filterMode: S.filterMode, edgeFade: S.edgeFade, draggable: S.draggable, hintPulse: S.hintPulse };
   const fenceCode = generateCodeFence(scene);
   const embedCode = generateEmbed(scene);
   const code      = S.elements.length > 0 || S.backgrounds.length > 0

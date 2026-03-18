@@ -6,6 +6,83 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 22 - March 18, 2026
+**Worked on:** Banner image fix, search/tags polish, footer search, tag cloud shuffle, image cache, single line breaks, embed sizing, folder index pages
+
+**Bug fixes**
+- Banner image pixelated when `image: default` in `_bloob-objects.md` — was resolving to `/favicon.png` (tiny icon); now resolves to `null` so `banner.njk` falls back to the full-res `marble.png` (`preprocess-content.js`)
+- Wave hairline gap between banner and page body on some screens — fixed with `margin-bottom: -1px` on `.site-banner__wave-container`
+
+**Search bar**
+- Tags (filter panel) now hidden by default in all search widgets; results always render above filters (was mobile-only)
+- New `show_tags: true` code-fence option reveals the filter panel per widget
+- Removed `openFilters: ["tag"]` default from visualizer (`lib/visualizers/search/browser.js`)
+- `footer_searchbar` setting now wired through `bloob-settings-reader.js` → `assemble-src.js` → `site.footer_searchbar`
+
+**Footer redesign** (`themes/marbles-pouch/partials/footer.njk`)
+- Centered column layout: tagline → search toggle → nav links
+- Search icon button lazily mounts a Pagefind widget on first click (no JS cost until opened)
+- Shares all Pagefind CSS theming with inline search widget
+
+**Tag cloud** (`lib/visualizers/tags/browser.js`)
+- Fisher-Yates shuffle after limiting so large tags are scattered, not front-loaded
+- Random `translateY` drift (±6px) per tag for organic floating appearance
+- `justify-content: center` on cloud container
+
+**Pill links** (`main.css`)
+- Background and border now transparent at rest; pill shape only appears on hover
+
+**Embed responsive sizing** (`main.css`)
+- `iframe`, `video`, `embed` inside `.marble-content` get `max-width: 100%` — prevents horizontal overflow on mobile
+
+**Single line break rendering** (`eleventy.config.js`)
+- `mdLib.set({ breaks: true })` is now the default — single `\n` renders as `<br>`, matching Obsidian behavior
+- Opt out per-site with `features: { soft_breaks: false }` in `_bloob-settings.md`
+
+**Image build cache** (`eleventy.config.js`)
+- Optimized images now written to `src/media/optimized/` (persists across builds) instead of `_site/media/optimized/` (cleaned on every production build)
+- All three image paths (no-lightbox, no-zoom, main lightbox) check cache first; only run sharp if file is missing
+- Subsequent builds: passthrough copies cache → `_site/`, transforms skip sharp entirely
+- No config change needed — `src/media/` is already gitignored and passthrough-copied
+
+**Folder index pages** (new feature)
+- `preprocess-content.js` Step 9.5: auto-generates `index.md` stub for any top-level content subfolder that doesn't have one
+- Stub uses `templateEngineOverride: njk,md` + `{{ folder_display }}` heading + ` ```folder-preview ``` ` code fence
+- New `folder-preview` visualizer (`lib/visualizers/folder-preview/`): client-side, reads `graph.json`, filters by `node.section`, renders linked list; supports `sort` and `limit` settings
+- User override: add `index.md` to any vault folder — Step 6 processes it normally, Step 9.5 skips stub generation
+- User template saved at `themes/marbles-pouch/_templates/folder-index.md`
+
+---
+
+### Session 21 - March 16, 2026
+**Worked on:** scene-nav edge fade — replaced SVG/radial-gradient mask with CSS linear-gradient approach; confirmed working on iOS Safari, desktop, and Shopify embeds
+
+**Bug: background image not fading in Shopify embed**
+- Previous approach used `radial-gradient(ellipse at center, black X%, transparent 100%)` — broke in luminance mask mode (black = invisible)
+- Fixed `black` → `white` in gradient (white = fully visible in both luminance and alpha mask modes)
+- Discovered a deeper issue: `mask-image` on an element with `overflow:hidden` silently fails on WebKit (iOS Safari) — introduced `bgWrap` pattern: a wrapper div with `mask-image` (no overflow), containing `bgClip` (overflow:hidden, no mask)
+- Radial-gradient approach made the whole center visible and faded out toward edges — wrong visual; user wanted only a tight edge fade (30–100px)
+
+**New approach: two intersected linear gradients**
+- Proof-of-concept tested directly in Shopify dev environment
+- `mask-image: linear-gradient(to right, ...), linear-gradient(to bottom, ...)` combined with `mask-composite: intersect` / `-webkit-mask-composite: destination-in`
+- Fades only the edges (pixel-width, not percentage of radius) — confirmed working on desktop and iOS Safari
+- `edgeFadePx` config key replaces `fadeStop`; mapping: `edgeFade * 100` → pixels (e.g. slider at 0.3 → 30px)
+
+**scene-nav-builder (`app/index.html`)**
+- `EMBED_RENDER_FN`: replaced radial-gradient bgWrap with linear-gradient + mask-composite approach
+- `generateEmbed()`: `fadeStop` removed, `edgeFadePx` introduced in both single-layout and two-layout configs
+- Canvas preview (`renderCanvas`): replaced SVG Gaussian blur mask with same CSS linear-gradient mask so preview matches embed output exactly
+- Fixed JS crash: `fadeStop` was still referenced as undeclared variable in two-layout config after renaming, breaking the Embed HTML tab
+
+**scene-nav visualizer (`lib/visualizers/scene-nav/renderer.js`)**
+- `buildContainer()`: replaced SVG `<feGaussianBlur>` mask with same CSS linear-gradient mask approach
+- Removed inline SVG element from HTML output entirely
+- Test updated: `scene-nav.test.js` now asserts `mask-image`, `linear-gradient`, `mask-composite:intersect` instead of SVG attributes
+- All 27 tests pass
+
+---
+
 ### Session 20 - March 5, 2026
 **Worked on:** Favicon delivery fix, private content safety, dev/prod pipeline unification
 

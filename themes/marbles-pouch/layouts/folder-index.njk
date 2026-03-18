@@ -1,0 +1,27 @@
+---
+layout: layouts/base.njk
+---
+<article class="marble-page folder-index" data-pagefind-ignore>
+  <h1 class="folder-index__title">{{ folder_display }}</h1>
+
+  {% set folderPages = collections[collection_name] %}
+  {% if folderPages and folderPages.length %}
+  <ul class="folder-index__list">
+    {% for item in folderPages %}
+    <li class="folder-index__item">
+      <a href="{{ item.url }}" class="folder-index__link">
+        {{ item.data.title or item.fileSlug }}
+      </a>
+      {% if item.date %}
+      <span class="recent-marbles__date">{{ item.date | dateFormat }}</span>
+      {% endif %}
+      {% if item.data.description %}
+      <p class="folder-index__excerpt">{{ item.data.description }}</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="folder-index__empty">Nothing here yet.</p>
+  {% endif %}
+</article>

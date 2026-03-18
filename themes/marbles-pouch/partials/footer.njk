@@ -5,18 +5,8 @@
   </svg>
 
   <div class="site-footer__inner">
-    <ul class="site-footer__links">
-      <li><a href="{{ "/" | url }}">home</a></li>
-      {% if site.author and site.author.email %}
-      <li><a href="mailto:{{ site.author.email }}">email</a></li>
-      {% endif %}
-      {% if site.author and site.author.linkedin %}
-      <li><a href="{{ site.author.linkedin }}" target="_blank" rel="noopener">linkedin</a></li>
-      {% endif %}
-      <li><a href="{{ "/feed.xml" | url }}">rss</a></li>
-    </ul>
 
-    <div class="site-footer__license">
+    <div class="site-footer__tagline">
       {% if site.footer_text %}
         {{ site.footer_text }}
       {% else %}
@@ -26,5 +16,58 @@
         CC BY-NC-SA 4.0
       {% endif %}
     </div>
+
+    {% if site.footer_searchbar and site.features.search != false %}
+    <div class="footer-search" data-pagefind-ignore>
+      <button class="footer-search__toggle" aria-expanded="false" aria-controls="footer-search-panel">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" width="16" height="16">
+          <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/>
+        </svg>
+        Search
+      </button>
+      <div class="footer-search__panel" id="footer-search-panel" hidden>
+        <div id="footer-search-widget"></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var btn = document.querySelector('.footer-search__toggle');
+        var panel = document.getElementById('footer-search-panel');
+        var mounted = false;
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () {
+          var open = panel.hidden;
+          panel.hidden = !open;
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if (open && !mounted) {
+            mounted = true;
+            function initSearch() {
+              new PagefindUI({ element: '#footer-search-widget', showSubResults: false, resetStyles: false });
+            }
+            if (window.PagefindUI) {
+              initSearch();
+            } else {
+              var s = document.createElement('script');
+              s.src = '/pagefind/pagefind-ui.js';
+              s.onload = initSearch;
+              document.head.appendChild(s);
+            }
+          }
+        });
+      })();
+    </script>
+    {% endif %}
+
+    <nav class="site-footer__links">
+      {% if site.author and site.author.email %}
+      <a href="mailto:{{ site.author.email }}">email</a>
+      {% endif %}
+      {% if site.author and site.author.linkedin %}
+      <a href="{{ site.author.linkedin }}" target="_blank" rel="noopener">linkedin</a>
+      {% endif %}
+      <a href="{{ "/feed.xml" | url }}" class="site-footer__rss" aria-label="RSS feed">rss</a>
+      <a href="{{ "/" | url }}" class="site-footer__home">home</a>
+    </nav>
+
   </div>
 </footer>

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, mkdirSync } from "fs";
+import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
 import sharp from "sharp";
 import { join } from "path";
 import taskLists from "markdown-it-task-lists";
@@ -105,8 +105,12 @@ export default async function (eleventyConfig) {
   eleventyConfig.watchIgnores.add("src/og/**");
   eleventyConfig.watchIgnores.add(".cache/**");
 
-  // Enable task list checkboxes in markdown (- [ ] and - [x] syntax)
+  // Single line breaks → <br> by default (matches Obsidian behavior).
+  // Opt out per-site with features: { soft_breaks: false } in _bloob-settings.md.
   eleventyConfig.amendLibrary("md", (mdLib) => {
+    if (siteConfig.features?.soft_breaks !== false) {
+      mdLib.set({ breaks: true });
+    }
     mdLib.use(taskLists, { enabled: false, label: true });
   });
 
@@ -326,6 +330,12 @@ export default async function (eleventyConfig) {
   // Only /media/ paths are optimized — everything in /media/ is user content
   // (including nested folders). OG images live at /og/ and are never touched.
   const mediaConfig = siteConfig.media || {};
+  // Persistent image cache: write optimized images to src/media/optimized/ so they survive
+  // _site/ being cleaned between builds. The { "src/media": "media" } passthrough copy handles
+  // serving them. On first encounter sharp processes the image; subsequent builds skip sharp
+  // entirely (passthrough already copied the cached file to _site/media/optimized/).
+  const MEDIA_CACHE_DIR = "src/media/optimized";
+
   if (mediaConfig.optimize !== false)
     eleventyConfig.addTransform("optimizeImages", async function (content) {
       if (!this.page.outputPath?.endsWith(".html")) return content;
@@ -347,17 +357,20 @@ export default async function (eleventyConfig) {
           const ext = src.toLowerCase().split(".").pop();
           if (ext === "gif") continue;
           try {
-            const optimizedDir = join(outputDir, "media/optimized");
-            mkdirSync(optimizedDir, { recursive: true });
+            const siteOptDir = join(outputDir, "media/optimized");
+            mkdirSync(siteOptDir, { recursive: true });
+            mkdirSync(MEDIA_CACHE_DIR, { recursive: true });
             const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
-            const outFile = join(optimizedDir, `${baseName}-banner.webp`);
+            const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-banner.webp`);
+            const outFile = join(siteOptDir, `${baseName}-banner.webp`);
             const outUrl = `/media/optimized/${baseName}-banner.webp`;
-            if (!existsSync(outFile)) {
+            if (!existsSync(cacheFile)) {
               await sharp(inputPath)
                 .resize({ width: 400, withoutEnlargement: true })
                 .webp({ quality: 85 })
-                .toFile(outFile);
+                .toFile(cacheFile);
             }
+            if (!existsSync(outFile)) copyFileSync(cacheFile, outFile);
             result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
           } catch (e) {
             console.warn(`[image] Failed to optimize banner image ${src}: ${e.message}`);
@@ -372,17 +385,20 @@ export default async function (eleventyConfig) {
           const ext = src.toLowerCase().split(".").pop();
           if (ext === "gif") continue;
           try {
-            const optimizedDir = join(outputDir, "media/optimized");
-            mkdirSync(optimizedDir, { recursive: true });
+            const siteOptDir = join(outputDir, "media/optimized");
+            mkdirSync(siteOptDir, { recursive: true });
+            mkdirSync(MEDIA_CACHE_DIR, { recursive: true });
             const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
-            const outFile = join(optimizedDir, `${baseName}-nav.webp`);
+            const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-nav.webp`);
+            const outFile = join(siteOptDir, `${baseName}-nav.webp`);
             const outUrl = `/media/optimized/${baseName}-nav.webp`;
-            if (!existsSync(outFile)) {
+            if (!existsSync(cacheFile)) {
               await sharp(inputPath)
                 .resize({ height: 80, withoutEnlargement: true })
                 .webp({ quality: 85 })
-                .toFile(outFile);
+                .toFile(cacheFile);
             }
+            if (!existsSync(outFile)) copyFileSync(cacheFile, outFile);
             result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
           } catch (e) {
             console.warn(`[image] Failed to optimize UI image ${src}: ${e.message}`);
@@ -403,16 +419,29 @@ export default async function (eleventyConfig) {
           // No JPEG — JPEG has no alpha channel and would make transparency black.
           const formats = mediaConfig.formats || ["webp", "png"];
 
+          mkdirSync(MEDIA_CACHE_DIR, { recursive: true });
           const metadata = await Image(inputPath, {
             widths: mediaConfig.widths || [600, 1200],
             formats,
-            outputDir: join(outputDir, "media/optimized"),
+            outputDir: MEDIA_CACHE_DIR,
             urlPath: "/media/optimized/",
             filenameFormat: function (id, src, width, format) {
               const name = src.split("/").pop().split(".")[0];
               return `${name}-${width}w.${format}`;
             },
           });
+
+          // Ensure generated files are also in _site/ for the current build.
+          // (The passthrough copy runs before transforms, so new cache files need this.)
+          const siteOptDir = join(outputDir, "media/optimized");
+          mkdirSync(siteOptDir, { recursive: true });
+          for (const images of Object.values(metadata)) {
+            for (const img of images) {
+              const basename = img.url.split("/").pop();
+              const siteFile = join(siteOptDir, basename);
+              if (!existsSync(siteFile)) copyFileSync(join(MEDIA_CACHE_DIR, basename), siteFile);
+            }
+          }
 
           const pictureHtml = Image.generateHTML(metadata, {
             alt,

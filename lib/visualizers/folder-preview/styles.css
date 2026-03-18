@@ -1,0 +1,46 @@
+/* Folder Preview Visualizer — Styles */
+
+.folder-preview-visualizer {
+  margin-bottom: var(--spacing-xl, 2rem);
+}
+
+.folder-preview__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+
+.folder-preview__item {
+  border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.08));
+}
+
+.folder-preview__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.55em 0.25em;
+  text-decoration: none;
+  color: var(--link-color, #914c9a);
+  font-weight: 500;
+  transition: color 0.12s;
+}
+
+.folder-preview__link:hover {
+  color: var(--accent-dark, #6b2f75);
+}
+
+.folder-preview__icon {
+  width: 1.1em;
+  height: 1.1em;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.folder-preview__empty {
+  color: var(--text-light);
+  font-style: italic;
+}

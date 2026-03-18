@@ -386,7 +386,7 @@ export async function preprocessContent({
   for (const [type, data] of Object.entries(bloobObjectsRegistry)) {
     let imageUrl = null;
     if (data.image === "default") {
-      imageUrl = "/favicon.png";
+      imageUrl = null; // banner.njk falls back to /assets/objects/[type].png (marble.png)
     } else {
       const relPath = parseObjectImageField(data.image);
       if (relPath) {
@@ -410,6 +410,60 @@ export async function preprocessContent({
     mediaOutputDir,
   );
   stats.attachmentsCopied = copied.length;
+
+  // Step 9.5: Auto-generate folder index stubs
+  // For each top-level content subdirectory that has pages but no user-provided index.md,
+  // write a stub that renders the folder-index layout (lists all pages in that collection).
+  // If the user's vault has an index.md in a folder, that file was already written in Step 6
+  // and takes priority — we skip stub generation for that folder.
+  console.log("\n--- Step 9.5: Generating folder index stubs ---");
+  const SKIP_DIRS = new Set(["media", "assets", "tags", "pagefind", "og", "search"]);
+  try {
+    const entries = await fs.readdir(outputDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name.startsWith("_") || entry.name.startsWith(".")) continue;
+      if (SKIP_DIRS.has(entry.name)) continue;
+
+      const folderSlug = entry.name;
+      const indexPath = path.join(outputDir, folderSlug, "index.md");
+
+      // Skip if user provided their own index.md (written during Step 6)
+      if (await fs.pathExists(indexPath)) continue;
+
+      // camelCase the folder name (e.g. "lists-of-favorites" → "listsOfFavorites")
+      const collectionName = folderSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      // Display name: capitalise each word
+      const folderDisplay = folderSlug
+        .split(/[-_]/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+      // Stub uses the same format as themes/marbles-pouch/_templates/folder-index.md
+      // so users see exactly this pattern when they browse the auto-generated file.
+      const stub = [
+        "---",
+        `layout: layouts/base.njk`,
+        `templateEngineOverride: njk,md`,
+        `permalink: /${folderSlug}/`,
+        `eleventyExcludeFromCollections: true`,
+        `folder: ${folderSlug}`,
+        `folder_display: ${folderDisplay}`,
+        "---",
+        "",
+        `# {{ folder_display }}`,
+        "",
+        "```folder-preview",
+        "```",
+        "",
+      ].join("\n");
+
+      await fs.writeFile(indexPath, stub, "utf-8");
+      console.log(`[folder-index] Generated stub for /${folderSlug}/`);
+    }
+  } catch (e) {
+    console.warn(`[folder-index] Stub generation failed: ${e.message}`);
+  }
 
   // Validation report: broken links
   if (brokenLinkDetails.length > 0) {

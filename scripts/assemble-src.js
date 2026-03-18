@@ -271,6 +271,7 @@ export default {
   author: ${JSON.stringify(config.site.author)},
   languageCode: ${JSON.stringify(config.site.language)},
   footer_text: ${JSON.stringify(config.site.footer_text || "")},
+  footer_searchbar: ${JSON.stringify(config.site.footer_searchbar || false)},
   logo: ${JSON.stringify(logoUrl)},
   year: new Date().getFullYear(),
   permalinks: {

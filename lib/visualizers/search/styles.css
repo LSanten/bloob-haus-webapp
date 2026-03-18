@@ -3,22 +3,32 @@
  * Loaded automatically in head.njk for all themes via the visualizer CSS
  * auto-include system (bundle-visualizers.js → assets/css/visualizers/search.css).
  *
- * Standard mobile behavior: show search results above tag filters.
- * PagefindUI renders filters and results side-by-side in .pagefind-ui__drawer;
- * on mobile we stack them and move filters below results using CSS order.
+ * Results always appear above the filter panel.
+ * Filters (tags) are hidden by default; opt-in with `show_tags: true` in the code fence.
  */
 
-@media (max-width: 768px) {
-  .pagefind-ui .pagefind-ui__drawer {
-    flex-direction: column !important;
-  }
+/* Results always first, filters below */
+.pagefind-ui .pagefind-ui__drawer {
+  flex-direction: column;
+}
 
-  .pagefind-ui .pagefind-ui__results-area {
-    order: 1 !important;
-  }
+.pagefind-ui .pagefind-ui__results-area {
+  order: 1;
+}
 
-  .pagefind-ui .pagefind-ui__filter-panel {
-    width: 100% !important;
-    order: 2 !important;
-  }
+.pagefind-ui .pagefind-ui__filter-panel {
+  order: 2;
+  width: 100%;
+}
+
+/* Hide filter panel by default on all search widgets */
+.search-visualizer .pagefind-ui__filter-panel,
+.home-search .pagefind-ui__filter-panel,
+.footer-search__panel .pagefind-ui__filter-panel {
+  display: none !important;
+}
+
+/* Opt-in: show_tags: true in code fence adds this class */
+.search-visualizer--show-tags .pagefind-ui__filter-panel {
+  display: block !important;
 }

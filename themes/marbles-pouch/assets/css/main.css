@@ -251,6 +251,7 @@ th {
   display: block;
   line-height: 0;
   font-size: 0;
+  margin-bottom: -1px;  /* prevent sub-pixel gap on some screens */
 }
 
 .site-banner__wave-container svg {
@@ -431,39 +432,80 @@ th {
   max-width: var(--max-width);
   margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: var(--spacing-md);
-  align-items: flex-start;
-  justify-content: space-between;
 }
 
-.site-footer__links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-}
-
-.site-footer__links a {
-  color: var(--text-light);
-  font-size: 0.9rem;
-}
-
-.site-footer__links a:hover {
-  color: var(--accent-color);
-}
-
-.site-footer__license {
+.site-footer__tagline {
   font-size: 0.85rem;
   color: var(--text-light);
 }
 
-.site-footer__license img {
+.site-footer__tagline img {
   border-radius: 0;
   vertical-align: middle;
   width: 80px;
+}
+
+/* Footer search toggle */
+.footer-search {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.footer-search__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  padding: 0.35em 1em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.footer-search__toggle:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.footer-search__panel {
+  width: 100%;
+  margin-top: var(--spacing-sm);
+}
+
+.site-footer__links {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  list-style: none;
+}
+
+.site-footer__links a,
+.site-footer__links > a,
+.site-footer__home,
+.site-footer__rss {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.site-footer__links a:hover,
+.site-footer__home:hover,
+.site-footer__rss:hover {
+  color: var(--accent-color);
 }
 
 /* ================================
@@ -472,6 +514,13 @@ th {
 
 article.marble-page {
   padding: var(--spacing-sm) 0;
+}
+
+/* Prevent embeds (Spotify, YouTube, etc.) from overflowing on mobile */
+.marble-content iframe,
+.marble-content video,
+.marble-content embed {
+  max-width: 100%;
 }
 
 /* THEME STANDARD: date created pill */
@@ -496,8 +545,8 @@ a.internal-link {
   align-items: center;
   gap: 0.25em;
   padding: 0.05em 0.55em 0.05em 0.35em;
-  background: rgba(145, 76, 154, 0.06);
-  border: 1px solid var(--border-color);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 999px;
   color: var(--link-color);
   text-decoration: none;
@@ -525,6 +574,53 @@ a.internal-link:hover {
   font-size: 1.6rem;
   margin-bottom: var(--spacing-md);
   color: var(--accent-dark);
+}
+
+/* Folder index page */
+.folder-index__title {
+  font-size: 1.6rem;
+  color: var(--accent-dark);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.folder-index__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.folder-index__item {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.folder-index__link {
+  font-weight: 600;
+  color: var(--link-color);
+}
+
+.folder-index__link:hover {
+  color: var(--accent-dark);
+}
+
+.folder-index__excerpt {
+  width: 100%;
+  margin: 0.25em 0 0;
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.folder-index__empty {
+  color: var(--text-light);
+  text-align: center;
 }
 
 /* Tag badges */
@@ -734,6 +830,13 @@ details > *:not(summary) {
   flex-wrap: wrap;
   gap: 0.5em 0.6em;
   align-items: center;
+}
+
+.tags-visualizer--cloud {
+  justify-content: center;
+  gap: 0.6em 0.75em;
+  /* Extra vertical padding absorbs the random translateY drift without clipping */
+  padding: 0.5em 0;
 }
 
 .tags-visualizer--list {

@@ -18,6 +18,10 @@
   --footer-bg: #ffffff;          /* footer: white */
   --zoom-overlay-bg: rgba(0, 0, 0, 0.85);
 
+  /* Shape */
+  --border-radius: 12px;         /* cards, modals, inputs */
+  --border-radius-sm: 6px;       /* tags, pills, small elements */
+
   /* Typography */
   --font-body: "Nunito Sans", sans-serif;
   --font-heading: "Nunito Sans", sans-serif;
@@ -48,6 +52,22 @@
   margin: 0;
   padding: 0;
 }
+
+/* ================================
+   Section containers (:::)
+   Authors write: ::: section bg-muted
+   Theme maps semantic names to tokens.
+   ================================ */
+
+section[class] {
+  background: var(--section-bg, transparent);
+  color: var(--section-text, inherit);
+}
+
+.bg-white  { --section-bg: #ffffff;             --section-text: var(--text-color); }
+.bg-muted  { --section-bg: var(--bg-color);     --section-text: var(--text-color); }
+.bg-dark   { --section-bg: var(--accent-dark);  --section-text: #ffffff; }
+.bg-accent { --section-bg: var(--accent-color); --section-text: #ffffff; }
 
 /* ================================
    Base

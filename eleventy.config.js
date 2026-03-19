@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "
 import sharp from "sharp";
 import { join } from "path";
 import taskLists from "markdown-it-task-lists";
+import markdownItContainer from "markdown-it-container";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import Image from "@11ty/eleventy-img";
 import {
@@ -112,6 +113,19 @@ export default async function (eleventyConfig) {
       mdLib.set({ breaks: true });
     }
     mdLib.use(taskLists, { enabled: false, label: true });
+
+    // ::: section bg-dark / ::: bg-white etc. → <section class="...">
+    // Authors write semantic color names; themes map them to CSS tokens.
+    // Degrades gracefully in Obsidian — renders as plain text lines.
+    mdLib.use(markdownItContainer, "section", {
+      validate: () => true,
+      render(tokens, idx) {
+        const cls = tokens[idx].info.trim();
+        return tokens[idx].nesting === 1
+          ? `<section class="${cls}">\n`
+          : `</section>\n`;
+      },
+    });
   });
 
   // Date formatting filter

@@ -6,6 +6,23 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 23 - March 19, 2026
+**Worked on:** Design token contract — `--border-radius` + theme-standards formalization
+
+**Theme architecture**
+- Added `--border-radius` and `--border-radius-sm` to both existing themes: marbles-pouch (12px/6px), warm-kitchen (8px/4px)
+- Formalized the full design token contract in `docs/architecture/theme-standards.md`: colors, shape, typography, spacing, layout — with usage rules and a per-theme reference table
+- Rule: visualizers must use `var(--token, fallback)` exclusively — no hardcoded colors, radii, or font stacks. Themes own their visual identity; visualizers inherit it automatically.
+- Motivated by alter-engineers site planning (0px sharp edges) — setting `--border-radius: 0px` in a theme will propagate to all visualizers with zero per-theme CSS overrides needed
+
+**Alter Engineers site planning** (content repo, not webapp)
+- Created `alter-website-content/index.md` with real content extracted from the live WordPress site snapshot: hero text, all 7 projects (wiki-link order), about/solutions sections, 17 services, 1 testimonial, 5 team members, 4 musings quotes, articles section
+- Created `alter-website-content/_bloob-settings.md` — minimal config for a public site (no private content filtering, search off, backlinks off)
+- Defined visualizer code-fence API for: `projects-preview`, `slideshow` (dual-row partners), `testimonials`, `team-grid`, `musings`, `folder-preview`
+- Key decision: `folder-preview` is the keystone visualizer — handles projects, articles, and resources sections from a single implementation; supports curated wiki-link order or auto-from-folder
+
+---
+
 ### Session 22 - March 18, 2026
 **Worked on:** Banner image fix, search/tags polish, footer search, tag cloud shuffle, image cache, single line breaks, embed sizing, folder index pages
 

@@ -2,6 +2,90 @@
 
 Every Bloob Haus theme must implement these patterns. They are not optional. A new theme author should use this as a checklist.
 
+---
+
+## Design Token Contract
+
+Every theme **must** define these CSS custom properties in its `:root`. Visualizers use only these tokens (never hardcoded values) so they automatically inherit the theme's visual identity.
+
+```css
+:root {
+  /* --- Colors --- */
+  --bg-color         /* page background */
+  --text-color       /* primary body text */
+  --text-light       /* secondary / muted text */
+  --accent-color     /* primary brand color */
+  --accent-dark      /* darker variant for hover/active states */
+  --link-color       /* hyperlink color */
+  --link-hover       /* hyperlink hover color */
+  --border-color     /* dividers, card borders */
+  --card-bg          /* card / surface background */
+  --footer-bg        /* footer background */
+
+  /* --- Shape --- */
+  --border-radius    /* cards, modals, inputs — e.g. 0px (sharp) or 12px (rounded) */
+  --border-radius-sm /* tags, pills, small elements */
+
+  /* --- Typography --- */
+  --font-body        /* body text font stack */
+  --font-heading     /* heading font stack */
+
+  /* --- Spacing --- */
+  --spacing-xs       /* 0.5rem */
+  --spacing-sm       /* 1rem */
+  --spacing-md       /* 1.5rem */
+  --spacing-lg       /* 2rem */
+  --spacing-xl       /* 3rem */
+
+  /* --- Layout --- */
+  --max-width        /* content column width */
+}
+```
+
+### Token usage rules
+
+1. **Visualizers use only tokens** — no hardcoded colors, border-radii, or font stacks. Always `var(--token, fallback)` with a sensible fallback so the visualizer degrades gracefully on themes that are missing a token.
+2. **Themes own their identity** — a theme's `:root` is the single source of truth for all visual decisions. Setting `--border-radius: 0px` makes every visualizer sharp-edged on that theme. Setting `--accent-color: green` propagates to all buttons, highlights, and interactive states.
+3. **Fallbacks preserve existing behavior** — when retrofitting an existing visualizer, use `var(--border-radius, 8px)` so themes that don't define the token yet are unaffected.
+
+### Section containers
+
+Content can be wrapped in colored sections using the `:::` fenced container syntax:
+
+```markdown
+::: section bg-dark
+## Our Services
+Content here...
+:::
+```
+
+This renders as `<section class="bg-dark">`. Every theme must define these four semantic classes using the `--section-bg` / `--section-text` local variables:
+
+```css
+section[class] {
+  background: var(--section-bg, transparent);
+  color: var(--section-text, inherit);
+}
+
+.bg-white  { --section-bg: #ffffff;             --section-text: var(--text-color); }
+.bg-muted  { --section-bg: /* light surface */; --section-text: var(--text-color); }
+.bg-dark   { --section-bg: /* dark surface */;  --section-text: #ffffff; }
+.bg-accent { --section-bg: var(--accent-color); --section-text: #ffffff; }
+```
+
+Themes can add additional classes (e.g. `bg-green`, `bg-hero`) as needed. The four above are the minimum contract.
+
+### Quick reference: theme personalities
+
+| Token | warm-kitchen | marbles-pouch | alter-engineers (planned) |
+|---|---|---|---|
+| `--border-radius` | `8px` | `12px` | `0px` |
+| `--border-radius-sm` | `4px` | `6px` | `0px` |
+| `--accent-color` | `#d2691e` (orange) | `#914c9a` (purple) | TBD (green) |
+| `--font-body` | Crimson Pro (serif) | Nunito Sans | TBD |
+
+---
+
 ## Required CSS Patterns
 
 ### 1. Table horizontal scroll

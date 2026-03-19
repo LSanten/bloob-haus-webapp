@@ -15,6 +15,10 @@
     --card-bg: #ffffff;
     --footer-bg: #f5ebe0;
 
+    /* Shape */
+    --border-radius: 8px;          /* cards, modals, inputs */
+    --border-radius-sm: 4px;       /* tags, pills, small elements */
+
     /* Typography */
     --font-body: "Crimson Pro", Georgia, serif;
     --font-heading: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -44,6 +48,22 @@
     margin: 0;
     padding: 0;
 }
+
+/* ================================
+   Section containers (:::)
+   Authors write: ::: section bg-muted
+   Theme maps semantic names to tokens.
+   ================================ */
+
+section[class] {
+    background: var(--section-bg, transparent);
+    color: var(--section-text, inherit);
+}
+
+.bg-white  { --section-bg: #ffffff;                --section-text: var(--text-color); }
+.bg-muted  { --section-bg: var(--footer-bg);       --section-text: var(--text-color); }
+.bg-dark   { --section-bg: #2a1f14;                --section-text: #f5ebe0; }
+.bg-accent { --section-bg: var(--accent-color);    --section-text: #ffffff; }
 
 /* ================================
    Base Styles

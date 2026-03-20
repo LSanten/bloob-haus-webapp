@@ -212,7 +212,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   // Simple test - scan all md files directly
   (async () => {
-    const pattern = path.join(contentDir, "**/*.md");
+    const pattern = contentDir.replace(/\\/g, "/") + "/**/*.md";
     const files = await glob(pattern, { nodir: true });
 
     const publishedFiles = files

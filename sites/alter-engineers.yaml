@@ -1,0 +1,12 @@
+# Bloob Haus Site Config — alter-engineers
+# Infrastructure settings only. Author settings live in _bloob-settings.md in the vault.
+
+site:
+  url: "https://alterengineers.com"
+
+content:
+  repo: "LSanten/alter-website-content"
+  branch: "main"
+
+features:
+  search: false

@@ -17,6 +17,14 @@ The product vision, values, room concepts, and engineering reports live in a sep
 4. **Feature flags** — every toggleable feature uses `sites/*.yaml` `features:` section
 5. **Build time is a first-class metric** — investigate if it crosses 30s, alarm at 60s
 
+## Multi-Site / Holistic Change Rule
+**Any change to shared infrastructure affects ALL sites.** Before touching `scripts/`, `eleventy.config.js`, `lib/`, or `themes/_base/`, explicitly ask: "does this change break or degrade any existing site (marbles, buffbaby, or any future theme)?"
+
+- Changes to `preprocess-content.js`, `assemble-src.js`, `publish-filter.js`, or any pipeline script must be **backwards compatible** — new behavior should only activate when a site/theme opts in
+- Theme-specific work (new layouts, partials, assets) goes in `themes/[theme-name]/` — never in `themes/_base/` unless it is genuinely universal
+- If a fix is needed for one theme, check whether the same bug affects other themes and fix it once at the right level
+- Do not hardcode site names, URLs, or content paths in shared scripts — use `process.env.SITE_NAME`, `siteConfig`, or CLI args
+
 ## Session Checklist (start of session)
 - [ ] Read `docs/CLAUDE_CONTEXT.md` for current status
 - [ ] Check `docs/TECH-DEBT.md` for outstanding items

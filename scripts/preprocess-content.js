@@ -299,14 +299,23 @@ export async function preprocessContent({
     }
 
     // Add layout for Eleventy.
-    // Preserve layout only if it's already an Eleventy-style path (starts with "layouts/").
-    // Old Jekyll-style values like "default" or "page" don't exist in Eleventy and must
-    // be overridden. Vault authors can use layouts/base.njk to opt out of page.njk.
+    // Priority order (highest → lowest):
+    //   1. Explicit `layout: layouts/…` in the file's own frontmatter
+    //   2. Layout declared on the bloob-object type in _bloob-objects.md
+    //   3. Default: layouts/page.njk
+    const hasEleventyLayout =
+      frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
+
+    // Resolve a layout from the bloob-object registry (optional `layout` column).
+    // Value in the table should be just the filename, e.g. "project.njk" — we
+    // prepend "layouts/" automatically. Empty / absent → no injection.
+    const objLayout = objData?.layout?.trim();
+    const bloobObjectLayout =
+      objLayout ? `layouts/${objLayout.replace(/^layouts\//, "")}` : null;
+
     if (BUILD_TARGET === "eleventy") {
-      const hasEleventyLayout =
-        frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = "layouts/page.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? "layouts/page.njk";
       }
     }
 
@@ -320,7 +329,9 @@ export async function preprocessContent({
       const permalink =
         dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
       outputFrontmatter.permalink = permalink;
-      outputFrontmatter.layout = "layouts/base.njk";
+      if (!hasEleventyLayout) {
+        outputFrontmatter.layout = "layouts/base.njk";
+      }
       outputFrontmatter.eleventyExcludeFromCollections = true;
       outputFrontmatter.templateEngineOverride = "njk,md";
     }

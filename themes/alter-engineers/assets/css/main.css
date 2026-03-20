@@ -1,0 +1,61 @@
+/* ============================================================
+   ALTER ENGINEERS — DESIGN TOKENS
+   ============================================================ */
+:root {
+  --accent-color: #3d4fcc;
+  --accent-dark:  #2a38a8;
+  --bg-color:     #ffffff;
+  --text-color:   #1a1a1a;
+  --text-light:   #555555;
+  --border-color: rgba(61, 79, 204, 0.15);
+  --card-bg:      #ffffff;
+  --border-radius:    0px;
+  --border-radius-sm: 0px;
+  --font-body:    'Open Sans', sans-serif;
+  --font-heading: 'Oswald', sans-serif;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 8rem;
+  --max-width: 1200px;
+}
+
+/* ============================================================
+   SECTION CONTAINERS  (for ::: markdown fences)
+   Only apply to sections that explicitly opt in with a bg-* class.
+   Do NOT use section[class] — it would override theme.min.css backgrounds
+   on .hero-block, .projects, .image-text, etc.
+   ============================================================ */
+.bg-white  { background: #ffffff !important;             color: var(--text-color); }
+.bg-muted  { background: #f5f5f5 !important;             color: var(--text-color); }
+.bg-dark   { background: #1a1a1a !important;             color: #ffffff; }
+.bg-accent { background: var(--accent-color) !important; color: #ffffff; }
+
+/* ============================================================
+   HOMEPAGE BODY BACKGROUND
+   The .hero-block is position: fixed; z-index: -1 — it stays fixed
+   while sections scroll over it. body.home needs the matching
+   purple background so the hero area appears correctly.
+   ============================================================ */
+body.home {
+  background-color: #5b5dd3;
+}
+
+/* ============================================================
+   STRIP WORDPRESS ARTIFACTS
+   ============================================================ */
+html { margin-top: 0 !important; }
+
+/* Logo sizing (matches original site custom CSS) */
+.custom-logo {
+  width: auto !important;
+  height: 60px !important;
+  max-width: none !important;
+}
+@media (max-width: 768px) {
+  .custom-logo { height: 40px !important; }
+}
+@media (max-width: 480px) {
+  .custom-logo { width: 241px !important; height: 46px !important; }
+}

@@ -1,0 +1,12 @@
+# alter-engineers theme
+# Visual theme for the Alter Engineers website (alterengineers.com)
+# Ported directly from the original WordPress theme CSS/JS
+
+name: alter-engineers
+version: "1.0.0"
+description: "Alter Engineers MEP engineering consultancy — Bay Area"
+
+feature_defaults:
+  image_zoom: false
+  search: false
+  external_links_new_tab: false

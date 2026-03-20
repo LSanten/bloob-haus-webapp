@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en-US" class="wf-active">
+    {% include "partials/head.njk" %}
+    <body class="wp-theme-alter-engineers{% if body_class %} {{ body_class }}{% endif %}">
+        <div id="page" class="site">
+            {% if not hide_nav %}{% include "partials/nav.njk" %}{% endif %}
+
+            <main id="primary" class="site-main">
+                <article class="hentry">
+                    <div class="entry-content">
+                        {% block main %}{{ content | safe }}{% endblock %}
+                    </div>
+                </article>
+            </main>
+
+            {% if not hide_footer %}{% include "partials/footer.njk" %}{% endif %}
+        </div>
+        {% include "partials/scripts.njk" %}
+    </body>
+</html>

@@ -1,0 +1,35 @@
+---
+layout: layouts/base.njk
+body_class: "single single-projects wp-singular wp-custom-logo no-sidebar"
+---
+<div id="primary" class="content-area">
+  <main id="main" class="site-main">
+    <article class="hentry type-project status-publish">
+
+      <header class="entry-header">
+        <h1 class="entry-title">{{ title }}</h1>
+      </header>
+
+      <div class="entry-content">
+
+        {% if Role or Owner or Target or sqft or photo_credit %}
+        <div class="project-meta-block" style="background:#f5f5f5; padding:1.5rem 2rem; margin-bottom:2rem; border-left:4px solid var(--accent-color);">
+          {% if Role %}<p style="margin:0 0 0.4rem;"><strong>Role:</strong> {{ Role }}</p>{% endif %}
+          {% if Owner %}<p style="margin:0 0 0.4rem;"><strong>Owner:</strong> {{ Owner }}</p>{% endif %}
+          {% if sqft %}<p style="margin:0 0 0.4rem;"><strong>Building Area:</strong> {{ sqft }}</p>{% endif %}
+          {% if Target %}<p style="margin:0 0 0.4rem;"><strong>Target:</strong> {{ Target }}</p>{% endif %}
+          {% if photo_credit %}<p style="margin:0;"><strong>Photo Credit:</strong> {{ photo_credit }}</p>{% endif %}
+        </div>
+        {% endif %}
+
+        {{ content | safe }}
+
+      </div>
+
+      <footer class="entry-footer">
+        <a href="/projects/" class="button-1" style="margin-top:2rem; display:inline-block;">← All Projects</a>
+      </footer>
+
+    </article>
+  </main>
+</div>

@@ -66,9 +66,11 @@ async function devLocal() {
 
   // Step 4: Serve with Eleventy + watch themes concurrently
   console.log("\n--- Starting Eleventy dev server ---\n");
+  // SITE_NAME is already set in process.env above — child processes inherit it.
+  // Use cross-env-style env passing via execSync env option instead of inline syntax (Windows compat).
   execSync(
-    `npx concurrently -n watch,eleventy -c blue,green "node scripts/watch-themes.js --site=${siteName}" "SITE_NAME=${siteName} npx @11ty/eleventy --serve"`,
-    { cwd: ROOT_DIR, stdio: "inherit" },
+    `npx concurrently -n watch,eleventy -c blue,green "node scripts/watch-themes.js --site=${siteName}" "npx @11ty/eleventy --serve"`,
+    { cwd: ROOT_DIR, stdio: "inherit", env: { ...process.env, SITE_NAME: siteName } },
   );
 }
 

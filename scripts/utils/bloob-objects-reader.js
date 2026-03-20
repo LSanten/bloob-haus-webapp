@@ -113,6 +113,8 @@ export async function readBloobObjects(contentDir) {
       image: row.image || "",
       banner_text: row.banner_text || "",
       description: row.description || "",
+      // Optional layout column — gracefully absent if column not in table
+      layout: row.layout || "",
     };
   }
 

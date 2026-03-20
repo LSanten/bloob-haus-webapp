@@ -85,8 +85,8 @@ export async function filterPublishableFiles(contentDir, options = {}) {
     );
   }
 
-  // Find all markdown files
-  const pattern = path.join(contentDir, "**/*.md");
+  // Find all markdown files (use forward slashes for glob compatibility on Windows)
+  const pattern = contentDir.replace(/\\/g, "/") + "/**/*.md";
   const files = await glob(pattern, { nodir: true });
 
   if (config.excludeFiles.length > 0) {

@@ -1,0 +1,13 @@
+<!-- jQuery (required by theme.min.js) -->
+<script src="{{ "/assets/js/jquery.min.js" | url }}"></script>
+<!-- Swiper carousel -->
+<script src="{{ "/assets/js/swiper-bundle.min.js" | url }}"></script>
+<!-- Theme JS (GSAP scroll animations, mobile nav, carousels) -->
+<script src="{{ "/assets/js/theme.min.js" | url }}"></script>
+
+<!-- Bloob Haus: internal link pills -->
+<script src="{{ "/assets/js/internal-links.js" | url }}"></script>
+<!-- Visualizer JS (auto-generated) -->
+{% for vis in visualizers %}{% if vis.hasJs %}
+<script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
+{% endif %}{% endfor %}

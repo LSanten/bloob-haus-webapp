@@ -9,6 +9,7 @@
     "dev": "npm run dev:marbles",
     "dev:buffbaby": "SITE_NAME=buffbaby node scripts/dev-local.js --content=../buffbaby",
     "dev:marbles": "SITE_NAME=marbles node scripts/dev-local.js --content=../bloob-haus-marbles",
+    "dev:alter-engineers": "SITE_NAME=alter-engineers node scripts/dev-local.js --content=../alter-website-content",
     "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site",

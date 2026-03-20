@@ -46,6 +46,12 @@ src/graph.json
 src/_bloob-settings.md
 src/_bloob-objects.md
 src/marbles/
+src/README.md
+src/index.md
+src/projects/
+src/assets/images/
+src/assets/css/swiper-bundle.min.css
+src/assets/css/theme.min.css
 
 # Next.js (for future phases)
 .next/

@@ -6,6 +6,20 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 24 - March 19, 2026
+**Worked on:** First content-driven sections on the alter-engineers homepage
+
+- Built `image-grid` visualizer (`lib/visualizers/image-grid/`) — `:::image-grid` table in `index.md` → styled `.team` section. First `:::` container visualizer.
+- Created `hero.njk` partial — reads hero fields from frontmatter; inline JS offsets first content section below the fixed-position hero
+- `homepage.njk` now content-driven: hero partial + `{{ content | safe }}`; unimplemented sections are `{# 🔲 TODO #}` comments; `homepage-legacy.njk` kept as reference
+- `markdownItContainer` updated to parse `key=value` settings → `data-vis-settings` JSON; added `| md` / `| mdinline` Nunjucks filters
+- Fixed brand color (`--accent-color: #5b5dd3`) and font — theme uses **Satoshi**, loaded via Fontshare CDN (font files were missing from repo)
+- Added CSS Token Standard to `docs/architecture/visualizers.md`
+- Team photos copied to `alter-website-content/media/people/`
+- **Next:** `card-preview` visualizer (projects section)
+
+---
+
 ### Session 23 - March 19, 2026
 **Worked on:** Design token contract — `--border-radius` + theme-standards formalization
 

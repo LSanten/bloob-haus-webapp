@@ -1,0 +1,29 @@
+/*
+ * Image Grid Visualizer — styles supplement
+ *
+ * Core layout (.team, .team__members, .team__member-image, etc.) is already
+ * in theme.min.css. This file adds any overrides that need CSS custom properties
+ * from main.css (which theme.min.css cannot reference).
+ *
+ * All color values MUST use var(--...) tokens — never hardcode hex values.
+ */
+
+.team {
+  color: var(--accent-color);
+  background-color: var(--bg-color);
+}
+
+.team__title {
+  color: var(--accent-color);
+  font-family: var(--font-heading);
+}
+
+.team__member-name {
+  font-family: var(--font-heading);
+  color: var(--text-color);
+}
+
+.team__member-position {
+  color: var(--text-light);
+  font-family: var(--font-body);
+}

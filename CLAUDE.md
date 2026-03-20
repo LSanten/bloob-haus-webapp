@@ -2,10 +2,21 @@
 
 This file is read automatically by Claude Code at session start. It contains development rules and practices.
 
+## IMPORTANT: Read these files before doing any work
+
+**These are NOT optional — read them before writing or modifying any code:**
+
+1. **`docs/CLAUDE_CONTEXT.md`** — architecture overview, graph.json schema, build pipeline, what's working. May be outdated; check the "Last Updated" date and ask the user if the status section looks stale.
+2. **`docs/TECH-DEBT.md`** — known debt to avoid making worse
+3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/` or any code fence behavior
+4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens
+
+The session checklists below are a reminder for the END of the session.
+
 ## Project Quick Start
-- Read `docs/CLAUDE_CONTEXT.md` for project status and architecture overview
-- Read `docs/TECH-DEBT.md` for outstanding technical debt
 - This file (CLAUDE.md) contains development rules and practices
+- `docs/CLAUDE_CONTEXT.md` — current project status and architecture overview (read it!)
+- `docs/TECH-DEBT.md` — outstanding technical debt
 
 ## Sibling Repo: Planning Vault
 The product vision, values, room concepts, and engineering reports live in a separate Obsidian vault at `../bloobhaus-notes/` (see its `CLAUDE.md`). If you need context on *why* things are designed a certain way, check there. This repo is the source of truth for *how* — technical architecture, build pipeline, and implementation plans.

@@ -1,8 +1,8 @@
 # Bloob Haus - Claude Code Context
 
-**Purpose:** Share this file at the start of each Claude Code session.  
-**Last Updated:** February 19, 2026
-**Current Phase:** Multi-site operational — marbles site built, build isolation working.
+**Purpose:** Share this file at the start of each Claude Code session.
+**Last Updated:** 2026-03-19
+**Current Phase:** alter-engineers theme under active development. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
 
@@ -36,6 +36,9 @@
 - https://buffbaby.bloob.haus (Buff Baby Kitchen)
 - marbles.bloob.haus (Leon's Marbles — not yet deployed)
 
+**IN DEVELOPMENT:**
+- alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — `image-grid` visualizer live (team section content-driven from `index.md`). Hero reads from frontmatter. All other sections are `{# 🔲 TODO #}` comments in `homepage.njk`; see `homepage-legacy.njk` for reference HTML. Content repo at `C:/ae-dev/alter-website-content/` (separate git repo). Dev command: `npm run dev:alter-engineers`
+
 ---
 
 ## What This Project Is
@@ -68,6 +71,10 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Custom 404 page
 - Image optimization (WebP + JPEG at 600w/1200w, lazy loading)
 - Modular visualizer architecture with auto-discovery
+- `:::` container visualizers (image-grid live; `markdownItContainer` parses key=value settings → `data-vis-settings`)
+- CSS Token Standard: all visualizer `styles.css` use `var(--accent-color)` etc. from `main.css` — documented in `docs/architecture/visualizers.md`
+- `| md` and `| mdinline` Nunjucks filters for rendering markdown frontmatter strings
+- alter-engineers theme: hero partial, Satoshi font via Fontshare CDN, correct brand color tokens
 - Templatized builder: themes in `themes/`, site config in `sites/*.yaml`
 - Config-driven builds with `--site=` flag
 - Configurable URL slug strategy per site ("slugify" or "preserve-case")
@@ -136,12 +143,18 @@ bloob-haus-webapp/
 ├── lib/visualizers/             ← Visualizer source packages
 │   ├── checkbox-tracker/        ✅ Runtime: localStorage checkbox persistence
 │   ├── page-preview/            ✅ Runtime: hover/click preview modal
+│   ├── folder-preview/          ✅ Hybrid: lists pages in a folder (reads graph.json at runtime)
+│   ├── fridge-magnets/          ✅ (see visualizers.md)
+│   ├── scene-nav/               ✅ Hybrid: interactive image scene navigator with builder
+│   ├── tags/                    ✅ Build-time: tag cloud
+│   ├── search/                  ✅ (Pagefind integration)
+│   ├── latex/                   ✅ Runtime: LaTeX math rendering
 │   └── graph/                   ✅ Hybrid: force-directed link graph
-│       ├── manifest.json        ✅ Settings schema + TODO positioning note
+│       ├── manifest.json        ✅ Settings schema
 │       ├── index.js             ✅ Build-time: ```graph fence → container div
 │       ├── browser.js           ✅ Runtime: force-graph CDN, BFS filter, modal
 │       ├── styles.css           ✅ CSS variable-based styles
-│       └── graph.test.js        ✅ Co-located tests (15 tests)
+│       └── graph.test.js        ✅ Co-located tests
 │
 ├── scripts/
 │   ├── assemble-src.js          ✅ Assembles src/ from theme + config
@@ -208,10 +221,15 @@ bloob-haus-webapp/
 
 ### Graph API
 - `/graph.json` — always generated at build time regardless of visualizer activation
-  - `nodes: [{ id, title, section, type, image? }]` where `id` is the page URL; `image` is the OG image URL (present only when the page has one)
+  - `nodes: [{ id, title, section, type, image?, bloobIcon? }]`
+    - `id` — page URL path (e.g. `/projects/campbell-library/`)
+    - `image` — OG image URL, only present if page body contains an image (auto-extracted from first image in markdown body, NOT from frontmatter)
+    - `bloobIcon` — 24×24 icon path for the page's bloob-object type; absent if no bloob-object
+    - `excerpt` / `description` — NOT in graph.json nodes; only in tag index (`_data/tagIndex.json`)
   - `links: [{ source, target }]` — bidirectional, deduplicated, anchors stripped
 - `/graph-settings.json` — vault-wide settings from `.bloob/graph.yaml`, defaults applied
 - Graph **differs from backlinks**: backlinks = incoming-only static list per page; graph.json = full bidirectional site map served as a public JSON endpoint
+- **`folder-preview` uses graph.json**: its browser.js reads all nodes, filters by `node.section`, renders a list. Currently renders plain `<ul>` list only — no card/image support yet.
 
 ### Graph Hover Tooltip
 - Hovering a node shows a floating card (150px) above the cursor: OG preview image (if page has one) + page title
@@ -353,12 +371,21 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
-Multi-site is **OPERATIONAL**. Marbles site builds successfully with preserve-case URLs.
+Multi-site is **OPERATIONAL**. alter-engineers theme homepage renders at localhost:8080 but all content is hardcoded in `homepage.njk`.
 
-**Current priorities:**
+**Current priorities (alter-engineers):**
+1. Make homepage content-driven: replace hardcoded HTML in `themes/alter-engineers/layouts/homepage.njk` with data from content repo
+2. Extend `folder-preview` visualizer with `style: cards` option (renders image + title cards using `node.image` from graph.json) — benefits all sites
+3. Build `projects-preview` hybrid visualizer (explicit ordered wikilink list → cards from graph.json)
+4. Build build-time visualizers for `team-grid`, `musings`, `testimonials`, `slideshow` (all data is inline YAML in code fence — no graph.json needed)
+5. Add images to project `.md` files (then `node.image` is auto-populated in graph.json)
+6. Deploy pipeline (GitHub Actions + Cloudflare Pages for alter-engineers)
+
+**Other sites:**
 - Deploy marbles to Cloudflare Pages (create project + workflow)
-- Test buffbaby build still works after all changes (verify tomorrow)
-- Recipe scaling visualizer (`lib/visualizers/recipe-scaler/`)
+
+**Transclusion (`![[file.md]]`):**
+`scripts/utils/transclusion-handler.js` exists but only renders a placeholder div. True content transclusion (inline the referenced page's markdown body) is a planned but not-yet-built feature.
 
 See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
 

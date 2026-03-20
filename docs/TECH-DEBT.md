@@ -24,6 +24,9 @@ Tracked items with severity, impact, and target resolution phase.
 | 18 | marbles: compressed/resized images not found (404) | Medium | Missing images on leons.bloob.haus for any optimized image | Debug image optimizer output path vs Eleventy passthrough | ⬜ Open |
 | 19 | warm-kitchen: inline search widget + redundant mobile CSS | Low | Diverges from code-fence standard; mobile fix duplicated in main.css | Migrate warm-kitchen to index.md code-fence approach (see notes) | ⬜ Open |
 | 20 | scene-nav magic machine duplicates visualizer logic | Medium | Changes to parser/renderer/browser.js must be manually mirrored in index.html | Unify by making visualizer files IIFE-compatible for direct `<script>` include, or add a build step for the magic machine | ⬜ Open |
+| 21 | alter-engineers: Satoshi font loaded from Fontshare CDN | Low | External dependency; fails offline | Self-host by downloading `.ttf` files → `themes/alter-engineers/assets/fonts/`; `@font-face` in `theme.min.css` already references that path | ⬜ Open |
+| 22 | alter-engineers: `theme.min.css` contains hardcoded hex colors (e.g. `#5b5dd3`) | Low | Visualizers that rely solely on `var(--accent-color)` match; any new sections built against `theme.min.css` classes may drift | Eventually extract token values from `theme.min.css` into `main.css` and rebuild; for now, keep `main.css` in sync manually | ⬜ Open |
+| 23 | `publish-filter.test.js`: 2 tests fail on Windows (path separator `\` vs `/`) | Low | Tests pass on Mac/Linux CI; local Windows dev shows failures | Normalize paths in test fixtures with `path.normalize` or platform-aware assertion | ⬜ Open |
 
 ## Notes
 

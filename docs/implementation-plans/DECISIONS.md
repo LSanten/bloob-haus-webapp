@@ -54,6 +54,8 @@ Track major architectural and technical decisions with their rationale.
 | 2026-03-05 | Pill icons sourced from graph.json (not injected at preprocess time) | graph.json is already fetched once for pills; adding `bloobIcon` per node adds no extra network request and makes icons available to the connections graph too |
 | 2026-03-05 | bloob-object `default` image → favicon.png as pill icon | `default` means "use the theme's built-in rendering", not "no image". Favicon is always present and site-branded, making it a clean universal fallback |
 | 2026-03-05 | Shared client-side JS in `_base/assets/js/` (not per-theme) | One file, zero duplication. Assembler copies it to `src/assets/js/` before theme assets so themes can override if needed. New themes just add one `<script>` tag. |
+| 2026-03-19 | CSS Token Standard: visualizer `styles.css` must use `var(--token)` from `main.css` | `main.css` declares design tokens (colors, fonts, spacing); visualizer CSS inherits them via custom properties so any theme rebrand propagates automatically. No hardcoded hex or font names in visualizer code. |
+| 2026-03-19 | `:::` containers as standard activation for content-restructuring visualizers | Author writes data inline (images, tables, links) inside the fence; Obsidian renders it natively; `![[wikilink]]` syntax works. Code fences reserved for data-fetching visualizers (YAML config pointing at external data). |
 
 ---
 
@@ -248,3 +250,24 @@ For now, putting content in folders within one repo works. But this doesn't scal
 2. **Haus landing pages** — need a way to generate a root page that lists all mounted rooms
 3. **Cross-room linking** — links between rooms (separate repos) need special handling
 4. **Reserved paths:** System paths (`/assets/`, `/tags/`, `/search/`) at root must not conflict with room names
+
+
+---
+
+## 2026-03-19 — `:::` Container Activation for Content-Restructuring Visualizers
+
+**Decision:** Content-restructuring visualizers (image-grid, card-preview, musings, slideshow) use `:::` fenced container syntax rather than code fences.
+
+**Rationale:**
+- Inside `:::` containers, authors write native markdown — `![[image.jpg]]` shows a real preview in Obsidian, `[[wiki-link]]` is clickable and tracked in the backlink graph. Inside code fences, content is raw text with no Obsidian rendering.
+- For visualizers where the author IS the data (writing team members, project links, quotes), Obsidian-native syntax is worth gold for the editing experience.
+- `markdownItContainer` is already configured in `eleventy.config.js` with `validate: () => true`, so any `:::` fence already works with zero additional infrastructure.
+
+**The `data-vis-raw` contract:**
+To keep parser/renderer logic shareable across web build, Obsidian plugin, and webapp live editor, the `preprocess-hook.js` for container visualizers must extract the raw markdown content of the `:::` block BEFORE markdown-it renders it, and store it as `data-vis-raw` on the section element. The build-time transform reads `data-vis-raw`, not the rendered HTML. This ensures the parser always works on the same raw text regardless of context.
+
+**Exception — `card-preview`:** Uses `:::` despite being data-fetching, because the project wikilinks should appear in Obsidian's backlink graph and be clickable in the editor. The enricher (graph.json lookup) is the only web-specific part.
+
+**Rejected alternative:** Obsidian callout syntax (`> [!type]`) — constrained, Obsidian-specific, no standard markdown support.
+
+**See:** `docs/architecture/visualizers.md` — Container Visualizers section.

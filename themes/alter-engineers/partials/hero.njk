@@ -1,0 +1,43 @@
+{# =====================================================================
+   HERO PARTIAL — alter-engineers theme
+   Reads from page frontmatter. Reusable on any page that sets these fields:
+     hero_title       (markdown string, bold supported e.g. "Fostering **healthy** spaces")
+     hero_description (markdown string, rendered as a paragraph)
+     hero_cta_text    (optional button label, e.g. "CONTACT US")
+     hero_cta_url     (optional button href, e.g. "#footer")
+   ===================================================================== #}
+<section class="hero-block">
+    <div class="hero-block__wrapper maxwidth">
+        {% if hero_title %}
+        <h1 class="hero-block__text">{{ hero_title | mdinline | safe }}</h1>
+        {% endif %}
+        {% if hero_description %}
+        <h4>{{ hero_description | mdinline | safe }}</h4>
+        {% endif %}
+        {% if hero_cta_text %}
+        <a class="button-1 hero-block__link" href="{{ hero_cta_url | default('#') }}">{{ hero_cta_text }}</a>
+        {% endif %}
+    </div>
+</section>
+<script>
+(function () {
+  function setHeroOffset() {
+    var hero = document.querySelector(".hero-block");
+    var nav  = document.querySelector(".header-navigation-bar");
+    if (!hero) return;
+    var offset = hero.offsetHeight + (nav ? nav.offsetHeight : 0);
+    // Target the first content section that follows the hero in the flow.
+    // .projects is the legacy selector; .entry-content > section catches the
+    // content-driven sections (card-preview, team, etc.).
+    var first = document.querySelector(
+      ".projects, .entry-content > section:not(.hero-block)"
+    );
+    if (first) first.style.marginTop = offset + "px";
+  }
+  document.addEventListener("DOMContentLoaded", setHeroOffset);
+  window.addEventListener("load", setHeroOffset);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(setHeroOffset);
+  }
+})();
+</script>

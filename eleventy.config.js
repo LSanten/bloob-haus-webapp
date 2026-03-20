@@ -106,6 +106,16 @@ export default async function (eleventyConfig) {
   eleventyConfig.watchIgnores.add("src/og/**");
   eleventyConfig.watchIgnores.add(".cache/**");
 
+  // Capture md library reference for use in filters below.
+  let mdLib;
+  eleventyConfig.amendLibrary("md", (lib) => { mdLib = lib; });
+
+  // | md — render a frontmatter string as a markdown block (wraps in <p>)
+  // | mdinline — render inline markdown without the <p> wrapper (for use inside headings etc.)
+  // Both are safe for use with | safe in templates.
+  eleventyConfig.addFilter("md", (str) => mdLib ? mdLib.render(String(str || "")) : str);
+  eleventyConfig.addFilter("mdinline", (str) => mdLib ? mdLib.renderInline(String(str || "")) : str);
+
   // Single line breaks → <br> by default (matches Obsidian behavior).
   // Opt out per-site with features: { soft_breaks: false } in _bloob-settings.md.
   eleventyConfig.amendLibrary("md", (mdLib) => {
@@ -114,16 +124,33 @@ export default async function (eleventyConfig) {
     }
     mdLib.use(taskLists, { enabled: false, label: true });
 
-    // ::: section bg-dark / ::: bg-white etc. → <section class="...">
-    // Authors write semantic color names; themes map them to CSS tokens.
-    // Degrades gracefully in Obsidian — renders as plain text lines.
+    // ::: name [key=value ...] — section containers for styling and visualizers.
+    // First word = CSS class. Additional key=value pairs → data-vis-settings JSON.
+    // Examples:
+    //   ::: bg-dark                        → <section class="bg-dark">
+    //   ::: image-grid title="Our Team"    → <section class="image-grid" data-vis-settings='{"title":"Our Team"}'>
+    // Backwards compatible — single-word fences are unchanged.
     mdLib.use(markdownItContainer, "section", {
       validate: () => true,
       render(tokens, idx) {
-        const cls = tokens[idx].info.trim();
-        return tokens[idx].nesting === 1
-          ? `<section class="${cls}">\n`
-          : `</section>\n`;
+        if (tokens[idx].nesting !== 1) return `</section>\n`;
+        const info = tokens[idx].info.trim();
+        const spaceIdx = info.indexOf(" ");
+        if (spaceIdx === -1) {
+          return `<section class="${info}">\n`;
+        }
+        const cls = info.slice(0, spaceIdx);
+        const settingsStr = info.slice(spaceIdx + 1).trim();
+        const settings = {};
+        const kvPattern = /(\w+)=(?:"([^"]*)"|([\S]*))/g;
+        let m;
+        while ((m = kvPattern.exec(settingsStr)) !== null) {
+          settings[m[1]] = m[2] !== undefined ? m[2] : m[3];
+        }
+        const settingsAttr = Object.keys(settings).length
+          ? ` data-vis-settings='${JSON.stringify(settings)}'`
+          : "";
+        return `<section class="${cls}"${settingsAttr}>\n`;
       },
     });
   });

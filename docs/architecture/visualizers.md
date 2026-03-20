@@ -1,8 +1,8 @@
 # Visualizer Architecture
 
-**Status:** Modular architecture with auto-discovery. Three visualizers: checkbox-tracker (runtime), page-preview (runtime), graph (hybrid).
+**Status:** Modular architecture with auto-discovery. Four activation methods including `:::` containers (2026-03-19).
 **Location:** `docs/architecture/`
-**Updated:** 2026-02-18
+**Updated:** 2026-03-19
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
 
@@ -98,6 +98,89 @@ interactive experience
 
 **When to use:** When you need client-side interactivity, state persistence, or dynamic behavior. Standard markdown syntax (like `- [ ]` for checkboxes) is handled by markdown-it plugins, not by visualizers.
 
+### Container (`:::`) Visualizers
+
+**Status: Planned — first implementations are `image-grid`, `card-preview`, `musings`, `slideshow`.**
+
+Container visualizers are activated by `:::` fenced divs (via `markdownItContainer`, already configured). Unlike code fences which contain YAML config, `:::` containers contain **actual authored content** — images, links, tables, blockquotes. This makes them Obsidian-native: `![[image.jpg]]` shows a real preview, `[[wiki-link]]` is clickable and tracked in the backlink graph.
+
+```markdown
+::: image-grid
+| Photo               | Name            | Title                    |
+| ------------------- | --------------- | ------------------------ |
+| ![[865A2882.jpg]]   | Shannon Allison | Principal, Mech. Design  |
+| ![[865A2833-5.jpg]] | Stefan Gracik   | Principal, Bldg. Perf.   |
+:::
+
+::: card-preview limit=4 show_more=true
+[[project-a]]
+[[project-b]]
+:::
+```
+
+**The critical pattern: `data-vis-raw`**
+
+For the parser/renderer to be shareable across web, Obsidian plugin, and webapp (see Design Principle above), the `preprocess-hook.js` for container visualizers **must extract the raw markdown content of the container BEFORE markdown-it runs** and store it as a `data-vis-raw` JSON attribute on the section element. The build-time transform then reads from `data-vis-raw` — not from the rendered inner HTML.
+
+```
+Raw markdown with ::: card-preview
+  ↓
+  preprocess-hook.js extracts raw block content FIRST
+  stores: data-vis-raw='{"slugs":["project-a","project-b"],"settings":{"limit":4}}'
+  ↓
+  preprocessor resolves [[wiki-links]] → <a href="...">
+  ↓
+  markdownItContainer renders ::: as:
+    <section class="card-preview" data-vis-raw='...'>
+      <a href="/projects/project-a/">Project A Title</a>
+      ...
+    </section>
+  ↓
+  build-time transform (index.js):
+    reads data-vis-raw (NOT the rendered <a> tags)
+    enricher: looks up slugs in graph.json → title, image, url
+    renderer: generates card HTML
+```
+
+**Why `data-vis-raw` matters — shared code contract:**
+
+| Context | What the parser receives |
+|---------|--------------------------|
+| Web build | `data-vis-raw` extracted from raw markdown before markdown-it |
+| Obsidian plugin | Raw markdown content of the `:::` block (direct vault read) |
+| Webapp live editor | Raw markdown typed by the user |
+
+The enricher is the only context-specific part:
+- **Web build / webapp:** enricher looks up slugs in `graph.json` (always available)
+- **Obsidian plugin:** enricher reads files directly from the vault — simpler, richer
+
+**Settings** go on the opening line, parsed from the info string (everything after `:::`):
+
+```markdown
+::: card-preview limit=4 show_more=true style=rotate-sides
+```
+
+Parsed as `{ limit: 4, show_more: true, style: "rotate-sides" }`.
+
+For color sequences (e.g. musings card colors), declare as a comma-separated value:
+
+```markdown
+::: musings colors=red,white,green,white
+```
+
+If no colors declared, the theme CSS cycles through a default palette via `nth-child`. The color sequence is a theme-level CSS custom property — authors only override when they want a specific sequence.
+
+**When to use `:::` containers vs code fences:**
+
+| Use `:::` container | Use code fence |
+|---------------------|----------------|
+| Content IS the data (images, links, quotes) | Config/settings are the data (YAML options) |
+| Obsidian preview of content is valuable | Content is purely structural or references |
+| Author writes items inline with native syntax | Visualizer fetches data from graph.json/external |
+| `![[images]]` and `[[links]]` should be live | YAML or structured config is natural |
+
+Note: `card-preview` uses `:::` despite being data-fetching, because the project links are native Obsidian wikilinks that appear in the vault graph. The deciding factor is always: **does the author benefit from Obsidian rendering this inline?**
+
 ### Hybrid Visualizers
 Some need both: build-time generates data or detects code fences, runtime renders interactively.
 
@@ -173,6 +256,64 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 **Adding a new visualizer = adding a new folder in `lib/visualizers/`.** No changes to any other file needed — the bundler auto-discovers folders, writes a manifest, and templates auto-include from that manifest. If the visualizer needs preprocessing, it exports `preprocessHook` from `preprocess-hook.js` and it is called automatically.
 
 > **Dev workflow note:** `bundle-visualizers.js` only runs as part of the full build (`build-site.js`). After adding a new visualizer during a dev session, run `node scripts/bundle-visualizers.js` manually before expecting the JS bundle and `visualizers.json` manifest to be updated.
+
+---
+
+## CSS Token Standard
+
+**Visualizer `styles.css` files must use CSS custom properties from the theme's `main.css` — never hardcode hex values or font names.**
+
+`main.css` is loaded before visualizer stylesheets. It declares the site's design tokens as `:root` custom properties. Visualizers inherit these automatically, so a single change to `main.css` rebrands all visualizers at once.
+
+### Standard tokens (defined in every theme's `main.css`)
+
+| Token | Role | Example value |
+|-------|------|---------------|
+| `--accent-color` | Primary brand color — headings, links, highlights | `#5b5dd3` |
+| `--accent-dark` | Darker variant for hover/active states | `#3d4fcc` |
+| `--bg-color` | Default section background | `#ffffff` |
+| `--text-color` | Body text | `#1a1a1a` |
+| `--text-light` | Secondary/muted text | `#555555` |
+| `--border-color` | Subtle borders | `rgba(91,93,211,0.15)` |
+| `--card-bg` | Card/panel background | `#ffffff` |
+| `--font-heading` | Heading typeface | `'Satoshi', sans-serif` |
+| `--font-body` | Body typeface | `'Satoshi', sans-serif` |
+| `--spacing-xs … --spacing-xl` | Spacing scale | `0.5rem … 8rem` |
+| `--max-width` | Content column max width | `1200px` |
+
+### Rules
+
+1. **Never hardcode hex values** in `styles.css` — always use `var(--accent-color)` etc.
+2. **Never hardcode font names** — always use `var(--font-heading)` or `var(--font-body)`.
+3. `theme.min.css` may contain hardcoded values (it is a legacy/vendor file) — do not add to it.
+4. If a visualizer needs a color not in the standard tokens, add the token to `main.css` first (with a sensible default), then use it in `styles.css`.
+5. `browser.js` that reads colors at runtime should read from `getComputedStyle(document.documentElement).getPropertyValue('--accent-color')` — same source of truth.
+
+### Example
+
+```css
+/* ✅ correct */
+.team__title {
+  color: var(--accent-color);
+  font-family: var(--font-heading);
+}
+
+/* ❌ wrong — breaks when theme color changes */
+.team__title {
+  color: #5b5dd3;
+  font-family: 'Oswald', sans-serif;
+}
+```
+
+### Load order
+
+```
+theme.min.css          ← legacy theme base (may contain hardcoded values)
+main.css               ← :root { --accent-color: ...; --font-heading: ...; }
+visualizers/image-grid.css  ← uses var(--accent-color), var(--font-heading)
+visualizers/card-preview.css
+...
+```
 
 ---
 
@@ -338,13 +479,16 @@ Visualizers can be activated in five ways. These serve different purposes and co
 
 | Precedence | Method | Scope | Purpose | Example |
 |------------|--------|-------|---------|---------|
-| 1 (highest) | **Code fence** | Exact position in content | "Place this widget here with this config" | `` ```tag-cloud `` in markdown body |
+| 1 (highest) | **Code fence** | Exact position in content | Config-driven widget at a specific location | `` ```tag-cloud `` — YAML settings inside |
+| 1 (highest) | **`:::` container** | Exact position in content | Content-restructuring widget — author writes data inline | `::: image-grid` — table/images/links inside |
 | 2 | **Page frontmatter** | Single page | "This page uses these visualizers" | `visualizers: [timeline, graph]` |
 | 3 | **Folder config** | All pages in folder | "All recipes get recipe-scaler" | `.bloob/visualizers.json` |
 | 4 | **Auto-detection** | Pages matching pattern | "Any page with checkboxes gets tracker" | Checkbox tracker detects `- [ ]` |
 | 5 (lowest) | **Global config** | Entire site | "Every page gets page-preview" | Webapp settings or site config |
 
-**Code fences vs. other methods:** Code fences provide *placement control* — they say exactly where in the content a widget appears and what config it uses. The other methods are *activation without placement* — they say "this visualizer is active on this page" but the visualizer decides where/how it manifests (e.g., checkbox-tracker enhances existing checkboxes, page-preview adds buttons to links).
+**Code fences vs. `:::` containers:** Both provide exact placement. The difference is what goes inside: code fences contain YAML config (the visualizer fetches/generates its own data), `:::` containers contain the actual authored content (the visualizer restructures it). See the Container section above for the full decision table.
+
+**Both vs. other methods:** Placement methods (1) say exactly where in the content a widget appears. Activation methods (2–5) say "this visualizer is active on this page" but the visualizer decides where/how it manifests.
 
 **Example frontmatter:**
 ```yaml
@@ -435,20 +579,19 @@ Auto-detection activates visualizers based on content patterns, without explicit
 
 ---
 
-## Future Consideration: Obsidian Callouts as Activation
+## `:::` Container Activation (Decided 2026-03-19)
 
-Obsidian's callout syntax (`> [!type]`) is another potential way to embed visualizers:
+`:::` fenced containers are the standard activation method for **content-restructuring visualizers** — those where the author writes the data inline (images, links, quotes) rather than referencing it via YAML config.
 
-```markdown
-> [!search-bar]
+`markdownItContainer` is already configured with `validate: () => true`, so any `:::` fence renders as `<section class="name">`. No changes needed to add a new container visualizer.
 
-> [!tag-cloud]
-> style: bubbles
-```
+**The Obsidian callout alternative** (`> [!type]`) was considered and rejected in favor of `:::` because:
+- `:::` is standard markdown (CommonMark fenced container), not Obsidian-specific
+- `:::` renders as a visible block in Obsidian without plugin support
+- `:::` allows full markdown inside (tables, images, lists) — callouts are more constrained
+- `:::` aligns with the existing `markdownItContainer` infrastructure already in use for `::: bg-dark` section styling
 
-**Pros:** Native Obsidian syntax, renders as a styled block in the editor, supports content inside the blockquote. **Cons:** Limited parameter passing, stretches the intended semantics of callouts.
-
-This approach could complement code fences for cases where visual feedback in Obsidian is important. Not currently planned for implementation, but noted as a viable future option. The build pipeline would detect `<blockquote>` elements with `data-callout="visualizer-name"` and replace them with widget HTML.
+**See "Container (`:::`) Visualizers"** section above for the full `data-vis-raw` pattern and design rationale.
 
 ---
 
@@ -522,12 +665,14 @@ GRAPH_DEFAULTS (preprocess-hook.js)
 | Phase 2 ✓ | Graph visualizer — hybrid type; force-graph CDN; local + global; code fence positioning; settings ladder |
 | Phase 2 ✓ | `preprocess-hook.js` convention — visualizer-owned build-time logic, auto-discovered, zero shared-script changes |
 | Phase 2 ✓ | Graph hover tooltip — `position:fixed` mouse-following card with OG image preview + title; image field in `graph.json` nodes |
+| **Next** | `:::` container visualizers: `image-grid`, `card-preview`, `musings`, `slideshow` (alter-engineers theme) |
+| Next | `preprocess-hook.js` pattern extended to `:::` containers — extract raw block content → `data-vis-raw` before markdown-it |
+| Next | `folder-preview` extended with `style: slider-cards` (uses `node.image` from graph.json) |
 | Next | Per-page visualizer activation via frontmatter `visualizers:` field |
 | Next | Folder config (`.bloob/visualizers.json`) |
-| Next | First build-time visualizer code fence (tag-cloud or search-bar) |
 | Future | Per-page CSS/JS inclusion (vs. all-on-every-page) |
 | Future | Webapp visualizer library, user uploads, UI configuration |
-| Future | Obsidian plugin to render code fence visualizer previews |
+| Future | Obsidian plugin — for `:::` containers: apply layout CSS to Obsidian-rendered content; for code fences: share parser logic directly (same as Mermaid pattern) |
 
 ---
 

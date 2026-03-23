@@ -431,6 +431,15 @@ export async function preprocessContent({
   const SKIP_DIRS = new Set(["media", "assets", "tags", "pagefind", "og", "search"]);
   try {
     const entries = await fs.readdir(outputDir, { withFileTypes: true });
+
+    // Build a set of slugs claimed by root-level .md files (e.g. "Notes.md" → "notes").
+    // If a root file's slug matches a folder name, that file likely owns the permalink — skip stub.
+    const rootFileSlugs = new Set(
+      entries
+        .filter((e) => !e.isDirectory() && e.name.endsWith(".md"))
+        .map((e) => e.name.slice(0, -3).toLowerCase().replace(/\s+/g, "-"))
+    );
+
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       if (entry.name.startsWith("_") || entry.name.startsWith(".")) continue;
@@ -441,6 +450,12 @@ export async function preprocessContent({
 
       // Skip if user provided their own index.md (written during Step 6)
       if (await fs.pathExists(indexPath)) continue;
+
+      // Skip if a root-level file claims the same permalink slug (e.g. Notes.md → /notes/)
+      if (rootFileSlugs.has(folderSlug.toLowerCase())) {
+        console.log(`[folder-index] Skipping stub for /${folderSlug}/ — root file claims this slug`);
+        continue;
+      }
 
       // camelCase the folder name (e.g. "lists-of-favorites" → "listsOfFavorites")
       const collectionName = folderSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());

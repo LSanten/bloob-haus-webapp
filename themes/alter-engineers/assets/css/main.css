@@ -72,3 +72,59 @@ html { margin-top: 0 !important; }
 @media (max-width: 480px) {
   .custom-logo { width: 241px !important; height: 46px !important; }
 }
+
+/* ============================================================
+   PROJECT SINGLE — BODY TEXT & IMAGES
+   ============================================================ */
+
+/* Paragraph text: compact reading size */
+.projects-single__text p {
+  font-size: 0.65rem;
+}
+
+/* Headings inside body text keep theme.min.css sizing but scale down a tier */
+.projects-single__text h2 { font-size: 1rem; }
+.projects-single__text h3 { font-size: 0.85rem; }
+.projects-single__text h4 { font-size: 0.75rem; }
+
+/* Body images (below title): 30% width, left-aligned, block so text flows above/below */
+.projects-single__text img,
+.projects-single__text picture {
+  display: block;
+  width: 30%;
+  max-width: 30%;
+  height: auto;
+  margin: 1rem 0;
+}
+
+/* PhotoSwipe wrapper around body images should match the picture sizing */
+.projects-single__text .pswp-gallery__item {
+  display: inline-block;
+  width: 30%;
+  max-width: 30%;
+  margin: 1rem 0;
+}
+.projects-single__text .pswp-gallery__item picture,
+.projects-single__text .pswp-gallery__item img {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ============================================================
+   PROJECT SINGLE — METADATA TABLE
+   Reduce padding/margin on each detail row by ~60%
+   ============================================================ */
+.projects-single__project-detail {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+
+/* ============================================================
+   MORE PROJECTS — BOTTOM PADDING
+   Reduce by 80%
+   ============================================================ */
+.articles.more-projects {
+  padding-bottom: 0.8rem !important;
+}

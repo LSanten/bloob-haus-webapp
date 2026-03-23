@@ -6,6 +6,31 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 28 - March 23, 2026
+**Worked on:** project page polish, hero/body image split, settings registry
+
+**Image handling for project pages**
+- New `extractHeroImages` / `stripHeroImages` filters in `eleventy.config.js`: position-aware — only operate on images that appear BEFORE the first `<h1>` in the rendered content. Images after the title stay in the body as normal PhotoSwipe-linked inline images.
+- `project.njk` updated to use these filters. Hero Swiper gets only pre-title images; body images render at 30% width, left-aligned, block-level.
+
+**`project.njk` changes**
+- `hide_more_projects: true` frontmatter hides the "More Projects" carousel
+- Hero Swiper autoplay: 3-second interval initialized via `window.load` (fires after theme.min.js Swiper init)
+
+**`themes/alter-engineers/assets/css/main.css`**
+- `.projects-single__text p`: 0.65rem font size (paragraphs only; headings styled separately)
+- `.projects-single__text img/picture`: 30% width, block-level, left-aligned
+- `.projects-single__project-detail`: ~60% less vertical padding/margin
+- `.articles.more-projects`: 80% less bottom padding
+
+**`docs/architecture/settings-registry.md` — NEW FILE**
+- Developer-facing reference for all settings: universal (all themes) and per-theme
+- Separates per-page frontmatter settings from site-wide `features:` settings
+- Documents alter-engineers `hide_more_projects`, marbles-pouch `theme_settings.*`
+- Includes instructions for adding new settings
+
+---
+
 ### Session 27 - March 23, 2026
 **Worked on:** project profile layout (proper Eleventy approach), no-pswp image flag, musings `infinite_scroll` setting
 

@@ -311,6 +311,31 @@ export default async function (eleventyConfig) {
       .replace(/<p>\s*<\/p>/gi, "");
   });
 
+  // Position-aware variants: only operate on images that appear BEFORE the first <h1>.
+  // Use these in layouts that want to separate hero images (above the title) from
+  // body images (below the title, rendered as normal inline content).
+
+  // Returns an array of raw <img> HTML strings found BEFORE the first <h1>.
+  eleventyConfig.addFilter("extractHeroImages", function (content) {
+    if (!content) return [];
+    const h1Index = content.search(/<h1[\s>]/i);
+    const region = h1Index >= 0 ? content.slice(0, h1Index) : content;
+    return region.match(/<img[^>]*>/gi) || [];
+  });
+
+  // Returns content with pre-<h1> <img> tags removed (and empty <p> wrappers cleaned up).
+  // Images that appear AFTER the first <h1> are left intact for inline body rendering.
+  eleventyConfig.addFilter("stripHeroImages", function (content) {
+    if (!content) return "";
+    const h1Index = content.search(/<h1[\s>]/i);
+    if (h1Index < 0) return content;
+    const before = content
+      .slice(0, h1Index)
+      .replace(/<img[^>]*>/gi, "")
+      .replace(/<p>\s*<\/p>/gi, "");
+    return before + content.slice(h1Index);
+  });
+
   // Collection of all unique tags (for tag page pagination)
   eleventyConfig.addCollection("tagList", function (collectionApi) {
     const tagSet = new Set();

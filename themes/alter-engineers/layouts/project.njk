@@ -6,9 +6,9 @@ body_class: "single single-projects"
   project.njk — Layout for bloob-object: project-profile pages.
 
   Build-time data extraction (no JavaScript DOM manipulation):
-  - extractFirstH1  → pulls the <h1> out of rendered content for the title slot
-  - extractImages   → pulls <img> tags for the hero Swiper slides
-  - stripFirstH1 | stripImages → remaining body text, clean of heading and images
+  - extractFirstH1      → pulls the <h1> out of rendered content for the title slot
+  - extractHeroImages   → pulls <img> tags that appear BEFORE the first <h1> for the hero Swiper
+  - stripFirstH1 | stripHeroImages → remaining body text; images after the title stay inline
 
   Hero Swiper and "More Projects" Swiper are both initialized by theme.min.js.
   Images use the no-pswp class so the image optimizer produces <picture> without
@@ -16,22 +16,22 @@ body_class: "single single-projects"
 
   "More Projects" uses collections.projects (auto-generated per-section collection)
   to list all other project pages at build time.
+  Set hide_more_projects: true in page frontmatter to suppress the carousel.
 #}
 
-{% set images = content | extractImages %}
-{% set bodyContent = content | stripFirstH1 | stripImages %}
+{% set heroImages = content | extractHeroImages %}
+{% set bodyContent = content | stripFirstH1 | stripHeroImages %}
 {% set titleHtml = content | extractFirstH1 %}
 
 <div class="projects-single">
   <div class="projects-single__wrapper">
 
-    {# ── Hero image gallery ── #}
-    {% if images.length %}
+    {# Hero image gallery — images that appear BEFORE the title heading #}
+    {% if heroImages.length %}
     <div class="swiper projects-single__images" id="projects-single-swiper">
       <div class="swiper-wrapper projects-single__images-content">
-        {% for img in images %}
+        {% for img in heroImages %}
         <div class="swiper-slide projects-single__image-container">
-          {# no-pswp: optimizer wraps in <picture> without PhotoSwipe <a> #}
           {{ img | replace("<img ", '<img class="no-pswp" ') | safe }}
         </div>
         {% endfor %}
@@ -46,10 +46,9 @@ body_class: "single single-projects"
     </div>
     {% endif %}
 
-    {# ── Main content ── #}
+    {# Main content #}
     <div class="projects-single__main-content maxwidth">
 
-      {# Title from first heading in markdown body #}
       {% if titleHtml %}
       {{ titleHtml | replace("<h1", '<h1 class="projects-single__title"') | safe }}
       {% endif %}
@@ -64,7 +63,6 @@ body_class: "single single-projects"
           <a class="button-1">READ MORE </a>
         </div>
 
-        {# Metadata grid from frontmatter fields #}
         {% if Role or Owner or sqft or Target or photo_credit %}
         <div class="projects-single__project-info">
           {% if Role %}
@@ -103,7 +101,8 @@ body_class: "single single-projects"
       </div>
     </div>
 
-    {# ── More Projects carousel ── #}
+    {# More Projects carousel — opt out with hide_more_projects: true in frontmatter #}
+    {% if not hide_more_projects %}
     <section class="articles more-projects">
       <div class="articles__wrapper">
         <div class="articles__top-section maxwidth">
@@ -132,6 +131,17 @@ body_class: "single single-projects"
         </div>
       </div>
     </section>
+    {% endif %}
 
   </div>
 </div>
+
+<script>
+// Autoplay for hero image Swiper — must run after theme.min.js initializes Swiper
+window.addEventListener('load', function () {
+  var el = document.getElementById('projects-single-swiper');
+  if (!el || !el.swiper) return;
+  el.swiper.params.autoplay = { delay: 3000, disableOnInteraction: false };
+  el.swiper.autoplay.start();
+});
+</script>

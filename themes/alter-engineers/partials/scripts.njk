@@ -9,18 +9,35 @@
 <script src="{{ "/assets/js/internal-links.js" | url }}"></script>
 
 {# Image zoom — PhotoSwipe 5, on by default (opt-out via features.image_zoom: false) #}
-{# Part of the universal Bloob Haus theme contract — see docs/architecture/settings-registry.md #}
+{# CSS is loaded in head.njk. JS uses ES modules (no build step needed). #}
 {% if site.features.image_zoom != false %}
 <script type="module">
-import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
-const lightbox = new PhotoSwipeLightbox({
-  gallery: 'body',
-  children: 'a.pswp-gallery__item',
-  pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
-  wheelToZoom: true,
-  bgOpacity: 0.88,
-});
-lightbox.init();
+  import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
+
+  const lightbox = new PhotoSwipeLightbox({
+    gallery: 'article',
+    children: 'a.pswp-gallery__item',
+    pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
+    wheelToZoom: true,       // scroll to zoom (no Ctrl needed)
+    bgOpacity: 0.88,
+  });
+
+  {# Custom button: open original full-resolution image in new tab #}
+  lightbox.on('uiRegister', function () {
+    lightbox.pswp.ui.registerElement({
+      name: 'open-original',
+      title: 'Open full resolution image',
+      order: 9,
+      isButton: true,
+      html: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+      onClick: (event, el, pswp) => {
+        const original = pswp.currSlide.data.element?.dataset?.original;
+        if (original) window.open(original, '_blank');
+      }
+    });
+  });
+
+  lightbox.init();
 </script>
 {% endif %}
 <!-- Visualizer JS (auto-generated) -->

@@ -7,17 +7,21 @@ Development session history and completed work.
 ## Session Log
 
 ### Session 27 - March 23, 2026
-**Worked on:** project profile layout, musings `infinite_scroll` setting
+**Worked on:** project profile layout (proper Eleventy approach), no-pswp image flag, musings `infinite_scroll` setting
 
-**`themes/alter-engineers/layouts/project.njk` — rebuilt 1:1 with WordPress reference**
-- Full `.projects-single` structure: hero Swiper, main content, metadata grid, "More Projects" Swiper
-- Inline init script (runs before `theme.min.js` jQuery.ready, so Swiper initializes with slides already in place):
-  - Extracts `<h1>` from rendered body, moves it above `.projects-single__main-container` with `projects-single__title` class
-  - Extracts `<img>` tags from body text, wraps each in `.swiper-slide.projects-single__image-container`, moves to `#projects-single-swiper`
-  - Fetches `/graph.json` at runtime, filters `section === 'projects'` (excluding current page), populates `#more-projects-swiper` slides, then initializes Swiper
-- "More Projects" uses `id="more-projects-swiper"` (not `articles-swiper`) to avoid conflict with `theme.min.js` initialization
-- All metadata fields (Role, Owner, sqft, Target, photo_credit) render in `.projects-single__project-info` grid with correct label classes
-- "READ MORE" toggle already handled by `theme.min.js` (`.projects-single__read-more` click → `active` on `.projects-single__text`)
+**`themes/alter-engineers/layouts/project.njk` — rebuilt with proper Eleventy build-time approach**
+- Full `.projects-single` structure: hero Swiper, main content, metadata grid, "More Projects" Swiper — all rendered at build time, no JS DOM manipulation
+- Four new Nunjucks filters added to `eleventy.config.js` (general utility, all sites):
+  - `extractFirstH1` / `stripFirstH1` — extract or remove the first `<h1>` from rendered HTML
+  - `extractImages` / `stripImages` — extract array of `<img>` strings or strip them from content
+- Hero Swiper: images from `extractImages`, tagged with `no-pswp` class (see below)
+- Title: `extractFirstH1` + `replace("<h1", '<h1 class="projects-single__title"')` at build time
+- Body: `stripFirstH1 | stripImages` — description text only
+- "More Projects": `collections.projects` (per-section Eleventy collection) at build time; `project.data.image` + `project.data.title` from preprocessed frontmatter
+- CSS added to `main.css`: `.projects-single__image-container picture/img` fill rules (theme.min.css targets the old `.projects-single__image` class which doesn't apply to our generated `<picture>` elements)
+
+**`eleventy.config.js` — `no-pswp` image optimization flag**
+- Add `class="no-pswp"` to any `<img>` to get full-size WebP+PNG optimization WITHOUT the PhotoSwipe `<a>` wrapper — for images inside Swipers or other carousels
 
 **`lib/visualizers/musings/` — `infinite_scroll` setting**
 - `parser.js`: added `infinite_scroll: false` support in Format B (object). Returns `infiniteScroll: boolean` in parsed result.

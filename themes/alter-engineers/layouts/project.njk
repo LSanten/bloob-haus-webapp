@@ -2,12 +2,40 @@
 layout: layouts/base.njk
 body_class: "single single-projects"
 ---
+{#
+  project.njk — Layout for bloob-object: project-profile pages.
+
+  Build-time data extraction (no JavaScript DOM manipulation):
+  - extractFirstH1  → pulls the <h1> out of rendered content for the title slot
+  - extractImages   → pulls <img> tags for the hero Swiper slides
+  - stripFirstH1 | stripImages → remaining body text, clean of heading and images
+
+  Hero Swiper and "More Projects" Swiper are both initialized by theme.min.js.
+  Images use the no-pswp class so the image optimizer produces <picture> without
+  the PhotoSwipe <a> wrapper (images inside a Swiper don't need a lightbox).
+
+  "More Projects" uses collections.projects (auto-generated per-section collection)
+  to list all other project pages at build time.
+#}
+
+{% set images = content | extractImages %}
+{% set bodyContent = content | stripFirstH1 | stripImages %}
+{% set titleHtml = content | extractFirstH1 %}
+
 <div class="projects-single">
   <div class="projects-single__wrapper">
 
-    {# Hero image gallery — slides populated from body images by init script #}
+    {# ── Hero image gallery ── #}
+    {% if images.length %}
     <div class="swiper projects-single__images" id="projects-single-swiper">
-      <div class="swiper-wrapper projects-single__images-content"></div>
+      <div class="swiper-wrapper projects-single__images-content">
+        {% for img in images %}
+        <div class="swiper-slide projects-single__image-container">
+          {# no-pswp: optimizer wraps in <picture> without PhotoSwipe <a> #}
+          {{ img | replace("<img ", '<img class="no-pswp" ') | safe }}
+        </div>
+        {% endfor %}
+      </div>
     </div>
     <div class="projects-single__buttons-container maxwidth">
       <div class="projects-single__buttons">
@@ -16,16 +44,27 @@ body_class: "single single-projects"
       </div>
       <h2 class="h2-medium projects-single__counter"></h2>
     </div>
+    {% endif %}
 
-    {# Main content — h1 extracted from body and inserted before main-container by init script #}
+    {# ── Main content ── #}
     <div class="projects-single__main-content maxwidth">
+
+      {# Title from first heading in markdown body #}
+      {% if titleHtml %}
+      {{ titleHtml | replace("<h1", '<h1 class="projects-single__title"') | safe }}
+      {% endif %}
+
       <div class="projects-single__main-container">
-        <div class="projects-single__text js-project-body">
-          {{ content | safe }}
+
+        <div class="projects-single__text">
+          {{ bodyContent | safe }}
         </div>
+
         <div class="projects-single__read-more">
           <a class="button-1">READ MORE </a>
         </div>
+
+        {# Metadata grid from frontmatter fields #}
         {% if Role or Owner or sqft or Target or photo_credit %}
         <div class="projects-single__project-info">
           {% if Role %}
@@ -60,10 +99,11 @@ body_class: "single single-projects"
           {% endif %}
         </div>
         {% endif %}
+
       </div>
     </div>
 
-    {# More Projects carousel — slides populated from graph.json by init script #}
+    {# ── More Projects carousel ── #}
     <section class="articles more-projects">
       <div class="articles__wrapper">
         <div class="articles__top-section maxwidth">
@@ -73,108 +113,25 @@ body_class: "single single-projects"
             <div class="articles__next-button" tabindex="0" role="button" aria-label="Next slide"></div>
           </div>
         </div>
-        <div class="swiper articles__repeater" id="more-projects-swiper">
-          <div class="swiper-wrapper articles__repeater-wrapper"></div>
+        <div class="swiper articles__repeater" id="articles-swiper">
+          <div class="swiper-wrapper articles__repeater-wrapper">
+            {% for project in collections.projects %}
+            {% if project.url !== page.url %}
+            <a href="{{ project.url }}" class="swiper-slide articles__content">
+              {% if project.data.image %}
+              <img class="articles__image no-zoom" src="{{ project.data.image }}" alt="{{ project.data.title }}">
+              {% endif %}
+              <div class="articles__inner-content">
+                <h3 class="articles__title">{{ project.data.title }}</h3>
+              </div>
+              <div class="articles__read-more button-1">READ MORE</div>
+            </a>
+            {% endif %}
+            {% endfor %}
+          </div>
         </div>
       </div>
     </section>
 
   </div>
 </div>
-
-<script>
-(function () {
-  var MORE_PROJECTS_CONFIG = {
-    grabCursor: true,
-    speed: 500,
-    spaceBetween: 10,
-    loop: true,
-    slidesPerView: 1.6,
-    navigation: { nextEl: '.articles__next-button', prevEl: '.articles__prev-button' },
-    breakpoints: {
-      768:  { slidesPerView: 1.63, spaceBetween: 20 },
-      1366: { slidesPerView: 2.46, spaceBetween: 130 },
-      2560: { slidesPerView: 2.45, spaceBetween: 248 }
-    }
-  };
-
-  // Runs before theme.min.js jQuery.ready callbacks, so images are in place when Swiper inits.
-  document.addEventListener('DOMContentLoaded', function () {
-    var mainContent   = document.querySelector('.projects-single__main-content');
-    var mainContainer = document.querySelector('.projects-single__main-container');
-    var body          = document.querySelector('.js-project-body');
-    var swiperWrapper = document.querySelector('.projects-single__images .swiper-wrapper');
-
-    // 1. Extract <h1> from rendered body and insert above the main container
-    if (body && mainContent && mainContainer) {
-      var h1 = body.querySelector('h1');
-      if (h1) {
-        h1.className = 'projects-single__title';
-        mainContent.insertBefore(h1, mainContainer);
-      }
-    }
-
-    // 2. Move inline images from body text into the hero Swiper
-    if (body && swiperWrapper) {
-      var imgs = Array.prototype.slice.call(body.querySelectorAll('img'));
-      imgs.forEach(function (img) {
-        var slide = document.createElement('div');
-        slide.className = 'swiper-slide projects-single__image-container';
-        var newImg = document.createElement('img');
-        newImg.className = 'projects-single__image';
-        newImg.src = img.src;
-        newImg.alt = img.alt || '';
-        slide.appendChild(newImg);
-        swiperWrapper.appendChild(slide);
-        // Remove the original img; clean up empty <p> wrappers
-        var parent = img.parentElement;
-        img.remove();
-        if (parent && parent.tagName === 'P' && !parent.textContent.trim()) {
-          parent.remove();
-        }
-      });
-    }
-
-    // 3. Populate "More Projects" from graph.json, then init its own Swiper
-    var articlesWrapper = document.querySelector('#more-projects-swiper .swiper-wrapper');
-    if (articlesWrapper) {
-      var currentPath = window.location.pathname;
-      // Normalise trailing slash so comparison is consistent
-      if (currentPath.slice(-1) !== '/') currentPath += '/';
-
-      fetch('/graph.json')
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          var nodes = Array.isArray(data) ? data : (data.nodes || []);
-          var projects = nodes.filter(function (n) {
-            return n.section === 'projects' && n.id !== currentPath;
-          });
-
-          projects.forEach(function (p) {
-            var a = document.createElement('a');
-            a.href = p.id;
-            a.className = 'swiper-slide articles__content';
-            var html = '';
-            if (p.image) {
-              html += '<img class="articles__image" src="' + p.image + '" alt="">';
-            }
-            html += '<div class="articles__inner-content">'
-                  + '<h3 class="articles__title">' + p.title + '</h3>'
-                  + '</div>';
-            html += '<div class="articles__read-more button-1">READ MORE</div>';
-            a.innerHTML = html;
-            articlesWrapper.appendChild(a);
-          });
-
-          if (projects.length >= 1 && typeof Swiper !== 'undefined') {
-            new Swiper('#more-projects-swiper', MORE_PROJECTS_CONFIG);
-          }
-        })
-        .catch(function () {
-          var section = document.querySelector('.more-projects');
-          if (section) section.style.display = 'none';
-        });
-    }
-  });
-})();
-</script>

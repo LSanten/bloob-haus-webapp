@@ -280,6 +280,37 @@ export default async function (eleventyConfig) {
       .replace(/^-|-$/g, "");
   });
 
+  // HTML content extraction filters — useful for themes that need to separate
+  // heading, images, and body text into distinct layout regions at build time.
+
+  // Returns the raw HTML of the first <h1> element in a rendered content string.
+  eleventyConfig.addFilter("extractFirstH1", function (content) {
+    if (!content) return "";
+    const match = content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    return match ? match[0] : "";
+  });
+
+  // Returns content with the first <h1> element removed.
+  eleventyConfig.addFilter("stripFirstH1", function (content) {
+    if (!content) return "";
+    return content.replace(/<h1[^>]*>[\s\S]*?<\/h1>/i, "");
+  });
+
+  // Returns an array of raw <img> HTML strings found in a rendered content string.
+  eleventyConfig.addFilter("extractImages", function (content) {
+    if (!content) return [];
+    const matches = content.match(/<img[^>]*>/gi) || [];
+    return matches;
+  });
+
+  // Returns content with all <img> tags removed, plus any now-empty <p> wrappers.
+  eleventyConfig.addFilter("stripImages", function (content) {
+    if (!content) return "";
+    return content
+      .replace(/<img[^>]*>/gi, "")
+      .replace(/<p>\s*<\/p>/gi, "");
+  });
+
   // Collection of all unique tags (for tag page pagination)
   eleventyConfig.addCollection("tagList", function (collectionApi) {
     const tagSet = new Set();
@@ -501,6 +532,12 @@ export default async function (eleventyConfig) {
             loading: "lazy",
             decoding: "async",
           });
+
+          // no-pswp: optimize but skip PhotoSwipe wrapper (e.g., images inside a Swiper gallery)
+          if ((before + after).includes("no-pswp")) {
+            result = result.replace(originalTag, pictureHtml);
+            continue;
+          }
 
           // Wrap in <a> for PhotoSwipe: dimensions from metadata, original path for full-res button
           const webpImages = metadata.webp || [];

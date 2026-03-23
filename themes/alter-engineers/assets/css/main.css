@@ -47,6 +47,19 @@ body.home {
    ============================================================ */
 html { margin-top: 0 !important; }
 
+/* ============================================================
+   PROJECT SINGLE PAGE
+   theme.min.css targets .projects-single__image directly; our
+   <picture> elements inside the Swiper need equivalent fill rules.
+   ============================================================ */
+.projects-single__image-container picture,
+.projects-single__image-container img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Logo sizing (matches original site custom CSS) */
 .custom-logo {
   width: auto !important;

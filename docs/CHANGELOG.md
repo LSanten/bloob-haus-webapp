@@ -6,6 +6,25 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 27 - March 23, 2026
+**Worked on:** project profile layout, musings `infinite_scroll` setting
+
+**`themes/alter-engineers/layouts/project.njk` — rebuilt 1:1 with WordPress reference**
+- Full `.projects-single` structure: hero Swiper, main content, metadata grid, "More Projects" Swiper
+- Inline init script (runs before `theme.min.js` jQuery.ready, so Swiper initializes with slides already in place):
+  - Extracts `<h1>` from rendered body, moves it above `.projects-single__main-container` with `projects-single__title` class
+  - Extracts `<img>` tags from body text, wraps each in `.swiper-slide.projects-single__image-container`, moves to `#projects-single-swiper`
+  - Fetches `/graph.json` at runtime, filters `section === 'projects'` (excluding current page), populates `#more-projects-swiper` slides, then initializes Swiper
+- "More Projects" uses `id="more-projects-swiper"` (not `articles-swiper`) to avoid conflict with `theme.min.js` initialization
+- All metadata fields (Role, Owner, sqft, Target, photo_credit) render in `.projects-single__project-info` grid with correct label classes
+- "READ MORE" toggle already handled by `theme.min.js` (`.projects-single__read-more` click → `active` on `.projects-single__text`)
+
+**`lib/visualizers/musings/` — `infinite_scroll` setting**
+- `parser.js`: added `infinite_scroll: false` support in Format B (object). Returns `infiniteScroll: boolean` in parsed result.
+- `renderer.js`: when `infiniteScroll === false`, renders desktop container as `.musings__container-desktop--static` plain div (no `id="musings-swiper"`, no `swiper` class) — `theme.min.js` does not initialize it; cards displayed as static stack
+
+---
+
 ### Session 26 - March 23, 2026
 **Worked on:** card-preview + musings visualizers, OG image pipeline fix, title markdown stripping
 

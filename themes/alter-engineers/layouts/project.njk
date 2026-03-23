@@ -1,35 +1,180 @@
 ---
 layout: layouts/base.njk
-body_class: "single single-projects wp-singular wp-custom-logo no-sidebar"
+body_class: "single single-projects"
 ---
-<div id="primary" class="content-area">
-  <main id="main" class="site-main">
-    <article class="hentry type-project status-publish">
+<div class="projects-single">
+  <div class="projects-single__wrapper">
 
-      <header class="entry-header">
-        <h1 class="entry-title">{{ title }}</h1>
-      </header>
+    {# Hero image gallery — slides populated from body images by init script #}
+    <div class="swiper projects-single__images" id="projects-single-swiper">
+      <div class="swiper-wrapper projects-single__images-content"></div>
+    </div>
+    <div class="projects-single__buttons-container maxwidth">
+      <div class="projects-single__buttons">
+        <div class="projects-single__prev-button" tabindex="0" role="button" aria-label="Previous slide"></div>
+        <div class="projects-single__next-button" tabindex="0" role="button" aria-label="Next slide"></div>
+      </div>
+      <h2 class="h2-medium projects-single__counter"></h2>
+    </div>
 
-      <div class="entry-content">
-
-        {% if Role or Owner or Target or sqft or photo_credit %}
-        <div class="project-meta-block" style="background:#f5f5f5; padding:1.5rem 2rem; margin-bottom:2rem; border-left:4px solid var(--accent-color);">
-          {% if Role %}<p style="margin:0 0 0.4rem;"><strong>Role:</strong> {{ Role }}</p>{% endif %}
-          {% if Owner %}<p style="margin:0 0 0.4rem;"><strong>Owner:</strong> {{ Owner }}</p>{% endif %}
-          {% if sqft %}<p style="margin:0 0 0.4rem;"><strong>Building Area:</strong> {{ sqft }}</p>{% endif %}
-          {% if Target %}<p style="margin:0 0 0.4rem;"><strong>Target:</strong> {{ Target }}</p>{% endif %}
-          {% if photo_credit %}<p style="margin:0;"><strong>Photo Credit:</strong> {{ photo_credit }}</p>{% endif %}
+    {# Main content — h1 extracted from body and inserted before main-container by init script #}
+    <div class="projects-single__main-content maxwidth">
+      <div class="projects-single__main-container">
+        <div class="projects-single__text js-project-body">
+          {{ content | safe }}
+        </div>
+        <div class="projects-single__read-more">
+          <a class="button-1">READ MORE </a>
+        </div>
+        {% if Role or Owner or sqft or Target or photo_credit %}
+        <div class="projects-single__project-info">
+          {% if Role %}
+          <div class="projects-single__project-detail">
+            <div class="projects-single__label"><p class="label">ROLE</p></div>
+            <p class="projects-single__detail-info">{{ Role }}</p>
+          </div>
+          {% endif %}
+          {% if Owner %}
+          <div class="projects-single__project-detail">
+            <div class="projects-single__label"><p class="label">OWNER</p></div>
+            <p class="projects-single__detail-info">{{ Owner }}</p>
+          </div>
+          {% endif %}
+          {% if sqft %}
+          <div class="projects-single__project-detail">
+            <div class="projects-single__label"><p class="label">BUILDING SQUARE FOOTAGE</p></div>
+            <p class="projects-single__detail-info">{{ sqft }}</p>
+          </div>
+          {% endif %}
+          {% if Target %}
+          <div class="projects-single__project-detail">
+            <div class="projects-single__label"><p class="label">TARGET EXISTING BUILDING EUI REDUCTION</p></div>
+            <p class="projects-single__detail-info">{{ Target }}</p>
+          </div>
+          {% endif %}
+          {% if photo_credit %}
+          <div class="projects-single__project-detail">
+            <div class="projects-single__label"><p class="label">PHOTO CREDIT</p></div>
+            <p class="projects-single__detail-info">{{ photo_credit }}</p>
+          </div>
+          {% endif %}
         </div>
         {% endif %}
-
-        {{ content | safe }}
-
       </div>
+    </div>
 
-      <footer class="entry-footer">
-        <a href="/projects/" class="button-1" style="margin-top:2rem; display:inline-block;">← All Projects</a>
-      </footer>
+    {# More Projects carousel — slides populated from graph.json by init script #}
+    <section class="articles more-projects">
+      <div class="articles__wrapper">
+        <div class="articles__top-section maxwidth">
+          <h1 class="h1-medium articles__main-title">More <span> Projects </span></h1>
+          <div class="articles__buttons">
+            <div class="articles__prev-button" tabindex="0" role="button" aria-label="Previous slide"></div>
+            <div class="articles__next-button" tabindex="0" role="button" aria-label="Next slide"></div>
+          </div>
+        </div>
+        <div class="swiper articles__repeater" id="more-projects-swiper">
+          <div class="swiper-wrapper articles__repeater-wrapper"></div>
+        </div>
+      </div>
+    </section>
 
-    </article>
-  </main>
+  </div>
 </div>
+
+<script>
+(function () {
+  var MORE_PROJECTS_CONFIG = {
+    grabCursor: true,
+    speed: 500,
+    spaceBetween: 10,
+    loop: true,
+    slidesPerView: 1.6,
+    navigation: { nextEl: '.articles__next-button', prevEl: '.articles__prev-button' },
+    breakpoints: {
+      768:  { slidesPerView: 1.63, spaceBetween: 20 },
+      1366: { slidesPerView: 2.46, spaceBetween: 130 },
+      2560: { slidesPerView: 2.45, spaceBetween: 248 }
+    }
+  };
+
+  // Runs before theme.min.js jQuery.ready callbacks, so images are in place when Swiper inits.
+  document.addEventListener('DOMContentLoaded', function () {
+    var mainContent   = document.querySelector('.projects-single__main-content');
+    var mainContainer = document.querySelector('.projects-single__main-container');
+    var body          = document.querySelector('.js-project-body');
+    var swiperWrapper = document.querySelector('.projects-single__images .swiper-wrapper');
+
+    // 1. Extract <h1> from rendered body and insert above the main container
+    if (body && mainContent && mainContainer) {
+      var h1 = body.querySelector('h1');
+      if (h1) {
+        h1.className = 'projects-single__title';
+        mainContent.insertBefore(h1, mainContainer);
+      }
+    }
+
+    // 2. Move inline images from body text into the hero Swiper
+    if (body && swiperWrapper) {
+      var imgs = Array.prototype.slice.call(body.querySelectorAll('img'));
+      imgs.forEach(function (img) {
+        var slide = document.createElement('div');
+        slide.className = 'swiper-slide projects-single__image-container';
+        var newImg = document.createElement('img');
+        newImg.className = 'projects-single__image';
+        newImg.src = img.src;
+        newImg.alt = img.alt || '';
+        slide.appendChild(newImg);
+        swiperWrapper.appendChild(slide);
+        // Remove the original img; clean up empty <p> wrappers
+        var parent = img.parentElement;
+        img.remove();
+        if (parent && parent.tagName === 'P' && !parent.textContent.trim()) {
+          parent.remove();
+        }
+      });
+    }
+
+    // 3. Populate "More Projects" from graph.json, then init its own Swiper
+    var articlesWrapper = document.querySelector('#more-projects-swiper .swiper-wrapper');
+    if (articlesWrapper) {
+      var currentPath = window.location.pathname;
+      // Normalise trailing slash so comparison is consistent
+      if (currentPath.slice(-1) !== '/') currentPath += '/';
+
+      fetch('/graph.json')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var nodes = Array.isArray(data) ? data : (data.nodes || []);
+          var projects = nodes.filter(function (n) {
+            return n.section === 'projects' && n.id !== currentPath;
+          });
+
+          projects.forEach(function (p) {
+            var a = document.createElement('a');
+            a.href = p.id;
+            a.className = 'swiper-slide articles__content';
+            var html = '';
+            if (p.image) {
+              html += '<img class="articles__image" src="' + p.image + '" alt="">';
+            }
+            html += '<div class="articles__inner-content">'
+                  + '<h3 class="articles__title">' + p.title + '</h3>'
+                  + '</div>';
+            html += '<div class="articles__read-more button-1">READ MORE</div>';
+            a.innerHTML = html;
+            articlesWrapper.appendChild(a);
+          });
+
+          if (projects.length >= 1 && typeof Swiper !== 'undefined') {
+            new Swiper('#more-projects-swiper', MORE_PROJECTS_CONFIG);
+          }
+        })
+        .catch(function () {
+          var section = document.querySelector('.more-projects');
+          if (section) section.style.display = 'none';
+        });
+    }
+  });
+})();
+</script>

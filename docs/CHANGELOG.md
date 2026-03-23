@@ -6,6 +6,54 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 26 - March 23, 2026
+**Worked on:** card-preview + musings visualizers, OG image pipeline fix, title markdown stripping
+
+**New visualizers**
+- `card-preview` — build-time `:::` container; reads `[[wiki-links]]` from `data-vis-raw`, enriches from `graph.json` at build time, renders `.projects` card grid; `limit=N show_more=true` hides extras with `no-visible hidden` (toggled by `theme.min.js`); no `browser.js` needed
+- `musings` — build-time code fence; YAML input (flat array or `{limit, quotes}` object); dual layout: mobile card stack + desktop vertical Swiper; colors: red/white/green; `no-active hidden` extras toggled by `theme.min.js`
+
+**Bug fixes (shared infrastructure)**
+- `scripts/utils/file-index-builder.js`: strip inline markdown from extracted titles (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`) — raw `**` was appearing in `<title>` tags, graph.json, nav, and card titles across all sites
+- `scripts/dev-local.js`: add `generateOgImages()` call gated by `config.features?.og_images` — dev pipeline was missing this step, causing broken card images (graph.json had `/og/...` paths but files were never generated)
+- `sites/alter-engineers.yaml`: added `og_images: true` to features
+
+**Content activated**
+- `alter-website-content/index.md`: card-preview (projects, 4 visible + show more) + musings (3 visible + show more) sections activated
+
+---
+
+### Session 25 - March 23, 2026
+**Worked on:** `data-vis-raw` pipeline implementation + testimonials visualizer
+
+**Core architecture: `data-vis-raw` pipeline (fully implemented)**
+- Created `scripts/utils/inject-container-raw.js` — scans processed markdown for `:::` blocks, extracts inner content, base64-encodes it, injects `_raw="<base64>"` onto each opener's info string before markdown-it runs
+- Updated `preprocess-content.js` to call `injectContainerRaw()` after link resolution (step 6e.5)
+- Updated `markdownItContainer` renderer in `eleventy.config.js` to extract `_raw` from parsed settings, delete it from `data-vis-settings`, and emit as separate `data-vis-raw` attribute on `<section>`
+- This enables `parser.js` files to always receive raw markdown — same code works in Eleventy, browser preview, and future Obsidian plugin
+
+**`image-grid` visualizer refactored**
+- Rewrote `index.js` to use `data-vis-raw` instead of parsing rendered HTML (`<tbody>/<tr>`)
+- Created `parser.js` (pure: pipe table markdown → `[{src, alt, name, role}]`) — handles both `![[wikilink]]` and resolved `![alt](/media/...)` syntax
+- Separated `renderer.js` (pure: data + settings → `.team` HTML)
+
+**`testimonials` visualizer (new hybrid)**
+- `parser.js` — pure: blockquote markdown → `[{quote, name, role}]`; `~ name:` / `~ role:` lines as metadata
+- `renderer.js` — pure: data + settings → Swiper carousel HTML; `parseSlideTime()` handles `3s`, `500ms`, bare `3000`; bakes `data-slide-time` onto container
+- `index.js` — build-time transform using `data-vis-raw` + `data-vis-settings`
+- `browser.js` — destroys `theme.min.js` Swiper instance, re-initializes with full config including autoplay from `data-slide-time`
+- `manifest.json` + `schema.md` — hybrid type, container activation
+
+**`alter-website-content/index.md`**
+- Activated testimonials section (removed `%% %%` wrapper)
+- Syntax: `::: testimonials time=3s` with two blockquote slides
+
+**Documentation**
+- Updated `docs/architecture/visualizers.md` — container visualizer status, `inject-container-raw.js`, `browser.js` ownership convention, settings flow, current implementation inventory
+- Updated `docs/implementation-plans/DECISIONS.md` — four 2026-03-23 decisions added
+
+---
+
 ### Session 24 - March 19, 2026
 **Worked on:** First content-driven sections on the alter-engineers homepage
 

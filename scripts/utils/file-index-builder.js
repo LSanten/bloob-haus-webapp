@@ -29,7 +29,15 @@ function extractTitle(frontmatter, content, filename) {
     let title = headingMatch[1];
     // Strip heading ID syntax like {#anchor-id}
     title = title.replace(/\s*\{#[^}]+\}\s*$/, "");
-    // Keep bold/italic formatting in titles
+    // Strip inline markdown (bold, italic, code, links) — titles are plain text
+    // used in <title> tags, graph.json, nav, tooltips, etc. Raw ** would render as literals.
+    title = title
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/__(.+?)__/g, "$1")
+      .replace(/_(.+?)_/g, "$1")
+      .replace(/`(.+?)`/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
     return title.trim();
   }
 

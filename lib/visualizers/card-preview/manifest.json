@@ -1,0 +1,7 @@
+{
+  "name": "card-preview",
+  "type": "build-time",
+  "activation": "container",
+  "trigger": "card-preview",
+  "description": "Transforms a ::: card-preview container of [[wiki-links]] into a grid of project cards. Reads title and image from graph.json at build time. limit=N shows N cards initially; show_more=true adds a 'MORE PROJECTS' toggle (handled by theme.min.js)."
+}

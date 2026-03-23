@@ -10,3 +10,4 @@ content:
 
 features:
   search: false
+  og_images: true

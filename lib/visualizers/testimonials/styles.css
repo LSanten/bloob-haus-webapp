@@ -1,0 +1,11 @@
+/*
+ * Testimonials Visualizer — styles
+ *
+ * The base .testimonials layout (section background, typography, Swiper
+ * initialization) is handled entirely by theme.min.css. This file is a
+ * placeholder for any overrides needed in custom themes that don't include
+ * the original WP theme CSS.
+ *
+ * If visualizer-specific tokens are needed, add them to main.css first
+ * (as --token-name custom properties) and reference them here.
+ */

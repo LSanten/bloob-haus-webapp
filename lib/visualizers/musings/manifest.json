@@ -1,0 +1,7 @@
+{
+  "name": "musings",
+  "type": "build-time",
+  "activation": "code-fence",
+  "trigger": "musings",
+  "description": "Renders a grid of quote cards from YAML inside a ```musings fence. Each card has a quote, name, date, and color (red/white/green). Dual layout: mobile stack + desktop vertical Swiper carousel. theme.min.js handles cursor and show-more toggle."
+}

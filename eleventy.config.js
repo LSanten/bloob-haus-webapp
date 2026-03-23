@@ -142,15 +142,26 @@ export default async function (eleventyConfig) {
         const cls = info.slice(0, spaceIdx);
         const settingsStr = info.slice(spaceIdx + 1).trim();
         const settings = {};
-        const kvPattern = /(\w+)=(?:"([^"]*)"|([\S]*))/g;
+        const kvPattern = /([\w-]+)=(?:"([^"]*)"|([\S]*))/g;
         let m;
         while ((m = kvPattern.exec(settingsStr)) !== null) {
           settings[m[1]] = m[2] !== undefined ? m[2] : m[3];
         }
+
+        // _raw is injected by inject-container-raw.js during preprocessing.
+        // Decode it and emit as data-vis-raw so build-time visualizer transforms
+        // can parse raw markdown instead of rendered HTML — keeping parser.js
+        // shareable across Eleventy, browser preview, and Obsidian plugin.
+        const rawBase64 = settings._raw;
+        delete settings._raw;
+        const rawAttr = rawBase64
+          ? ` data-vis-raw="${rawBase64}"`
+          : "";
+
         const settingsAttr = Object.keys(settings).length
           ? ` data-vis-settings='${JSON.stringify(settings)}'`
           : "";
-        return `<section class="${cls}"${settingsAttr}>\n`;
+        return `<section class="${cls}"${settingsAttr}${rawAttr}>\n`;
       },
     });
   });

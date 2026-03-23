@@ -1,0 +1,7 @@
+{
+  "name": "testimonials",
+  "type": "hybrid",
+  "activation": "container",
+  "trigger": "testimonials",
+  "description": "Transforms a ::: testimonials container of blockquotes into a Swiper carousel. Each blockquote is one slide — quote text + ~ name / ~ role metadata lines."
+}

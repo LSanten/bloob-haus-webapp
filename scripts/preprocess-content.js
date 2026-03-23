@@ -31,6 +31,7 @@ import {
 } from "./utils/attachment-resolver.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
+import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
@@ -205,6 +206,15 @@ export async function preprocessContent({
     for (const b of mdLinkResult.broken) {
       brokenLinkDetails.push({ source: file.relativePath, type: "markdown-link", target: b.target });
     }
+
+    // 6e.5: Inject data-vis-raw into ::: container blocks
+    // Must run AFTER all link resolution (attachments, wiki-links, markdown-links)
+    // so the raw content captured reflects resolved paths.
+    // Must run BEFORE markdown-it (i.e. before Eleventy processes src/) so
+    // markdownItContainer can emit it as a data-vis-raw HTML attribute.
+    // This is what enables visualizer parser.js to be shared across Eleventy,
+    // browser live preview, and future Obsidian plugin.
+    processedContent = injectContainerRaw(processedContent);
 
     // 6f: Extract and normalize tags from frontmatter + inline content
     const pageTags = extractTags(frontmatter, processedContent);

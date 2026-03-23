@@ -8,7 +8,7 @@ This file is read automatically by Claude Code at session start. It contains dev
 
 1. **`docs/CLAUDE_CONTEXT.md`** — architecture overview, graph.json schema, build pipeline, what's working. May be outdated; check the "Last Updated" date and ask the user if the status section looks stale.
 2. **`docs/TECH-DEBT.md`** — known debt to avoid making worse
-3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/` or any code fence behavior
+3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/`, `scripts/utils/inject-container-raw.js`, or any `:::` container / code fence behavior. Pay special attention to: `data-vis-raw` pipeline, `browser.js` ownership convention, settings flow, and `inject-container-raw.js` utility.
 4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens
 
 The session checklists below are a reminder for the END of the session.

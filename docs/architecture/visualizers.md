@@ -1,8 +1,8 @@
 # Visualizer Architecture
 
-**Status:** Modular architecture with auto-discovery. Four activation methods including `:::` containers (2026-03-19).
+**Status:** Modular architecture with auto-discovery. Four activation methods including `:::` containers. `data-vis-raw` pipeline fully implemented (2026-03-23).
 **Location:** `docs/architecture/`
-**Updated:** 2026-03-19
+**Updated:** 2026-03-23
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
 
@@ -100,7 +100,7 @@ interactive experience
 
 ### Container (`:::`) Visualizers
 
-**Status: Planned — first implementations are `image-grid`, `card-preview`, `musings`, `slideshow`.**
+**Status: Implemented — `image-grid` and `testimonials` are live. `card-preview`, `musings`, `slideshow` are next.**
 
 Container visualizers are activated by `:::` fenced divs (via `markdownItContainer`, already configured). Unlike code fences which contain YAML config, `:::` containers contain **actual authored content** — images, links, tables, blockquotes. This makes them Obsidian-native: `![[image.jpg]]` shows a real preview, `[[wiki-link]]` is clickable and tracked in the backlink graph.
 
@@ -120,26 +120,35 @@ Container visualizers are activated by `:::` fenced divs (via `markdownItContain
 
 **The critical pattern: `data-vis-raw`**
 
-For the parser/renderer to be shareable across web, Obsidian plugin, and webapp (see Design Principle above), the `preprocess-hook.js` for container visualizers **must extract the raw markdown content of the container BEFORE markdown-it runs** and store it as a `data-vis-raw` JSON attribute on the section element. The build-time transform then reads from `data-vis-raw` — not from the rendered inner HTML.
+For the parser/renderer to be shareable across web, Obsidian plugin, and webapp (see Design Principle above), the raw markdown content of the `:::` block must be extracted **BEFORE markdown-it runs** and stored as a `data-vis-raw` attribute on the section element. The build-time transform then reads from `data-vis-raw` — not from the rendered inner HTML.
+
+**How it is implemented (fully working as of 2026-03-23):**
+
+1. **`scripts/utils/inject-container-raw.js`** — called from `preprocess-content.js` after link resolution. Scans processed markdown line-by-line for `:::` blocks, extracts the inner content, base64-encodes it, and injects `_raw="<base64>"` onto the `:::` opener info string.
+
+2. **`eleventy.config.js` `markdownItContainer` renderer** — parses the info string (including `_raw`), deletes it from `data-vis-settings`, and emits it as a separate `data-vis-raw` attribute on the `<section>`.
+
+3. **`lib/visualizers/[name]/index.js`** — reads `data-vis-raw`, base64-decodes to raw markdown, passes to `parser.js`.
 
 ```
-Raw markdown with ::: card-preview
+Raw markdown with ::: testimonials time=3s
   ↓
-  preprocess-hook.js extracts raw block content FIRST
-  stores: data-vis-raw='{"slugs":["project-a","project-b"],"settings":{"limit":4}}'
+  inject-container-raw.js (called from preprocess-content.js)
+    scans for ::: blocks, extracts inner content
+    injects _raw="base64..." onto opener info string
   ↓
-  preprocessor resolves [[wiki-links]] → <a href="...">
+  preprocessor resolves [[wiki-links]] → absolute paths
   ↓
-  markdownItContainer renders ::: as:
-    <section class="card-preview" data-vis-raw='...'>
-      <a href="/projects/project-a/">Project A Title</a>
-      ...
+  markdown-it + markdownItContainer renders ::: as:
+    <section class="testimonials" data-vis-settings='{"time":"3s"}' data-vis-raw="base64...">
+      (rendered inner HTML — ignored by build-time transform)
     </section>
   ↓
-  build-time transform (index.js):
-    reads data-vis-raw (NOT the rendered <a> tags)
-    enricher: looks up slugs in graph.json → title, image, url
-    renderer: generates card HTML
+  Eleventy addTransform → index.js build-time transform:
+    reads data-vis-raw, base64-decodes to raw markdown
+    parser.js(raw) → [{quote, name, role}, ...]
+    renderer.js(data, settings) → Swiper carousel HTML
+    (replaces the entire <section>)
 ```
 
 **Why `data-vis-raw` matters — shared code contract:**
@@ -182,9 +191,21 @@ If no colors declared, the theme CSS cycles through a default palette via `nth-c
 Note: `card-preview` uses `:::` despite being data-fetching, because the project links are native Obsidian wikilinks that appear in the vault graph. The deciding factor is always: **does the author benefit from Obsidian rendering this inline?**
 
 ### Hybrid Visualizers
-Some need both: build-time generates data or detects code fences, runtime renders interactively.
+Some need both: build-time generates data or detects code fences/containers, runtime renders interactively.
 
-A hybrid visualizer may have a **code fence transform** (replaces ` ```graph ` blocks with a positioned container div) *and* a **`preprocess-hook.js`** (reads vault settings at build time) *and* a **`browser.js`** (renders the visualization at runtime). All three are auto-discovered — no changes needed to any other file.
+A hybrid visualizer may have a **build-time transform** (`index.js`) *and* a **`preprocess-hook.js`** (reads vault settings at build time) *and* a **`browser.js`** (renders the visualization or adds interactivity at runtime). All three are auto-discovered — no changes needed to any other file.
+
+**`browser.js` ownership convention:** If a hybrid visualizer uses a third-party library (e.g., Swiper), `browser.js` must own the initialization entirely. If `theme.min.js` already initialized the same library on the same element, `browser.js` must **destroy** that instance and **re-initialize** with the full config (including any options like autoplay). Attempting to reconfigure an already-initialized instance is fragile — reinitialize cleanly.
+
+**Settings flow for `:::` container hybrid visualizers:**
+Container settings (e.g., `time=3s`) are parsed at build time by `renderer.js` and baked into the DOM as `data-*` attributes (e.g., `data-slide-time="3000"`). `browser.js` reads these DOM attributes at runtime — this avoids duplicating settings parsing across the build/runtime boundary. Example:
+
+```
+::: testimonials time=3s
+  → data-vis-settings='{"time":"3s"}' on <section>
+  → renderer.js reads settings.time → data-slide-time="3000" on .testimonials__container
+  → browser.js reads container.dataset.slideTime → Swiper autoplay.delay
+```
 
 **Current example — graph:**
 - `preprocess-hook.js` reads `.bloob/graph.yaml` → writes `graph-settings.json`
@@ -595,7 +616,7 @@ Auto-detection activates visualizers based on content patterns, without explicit
 
 ---
 
-## Current Implementation (Phase 2 Complete)
+## Current Implementation (Phase 2 + container visualizers)
 
 ```
 lib/visualizers/
@@ -616,7 +637,23 @@ lib/visualizers/
 │   ├── browser.js          ← Runtime: loads force-graph (CDN), BFS local graph filter, full-graph modal, CSS var colors, settings ladder
 │   ├── styles.css          ← Graph container, full-graph modal overlay, CSS variable color inheritance
 │   └── graph.test.js       ← 25 tests: manifest shape, transform behavior, GRAPH_DEFAULTS, mergeGraphSettings deep merge
+├── image-grid/             ← ::: container visualizer (alter-engineers theme)
+│   ├── manifest.json       ← type: "build-time", activation: "container", trigger: "image-grid"
+│   ├── schema.md           ← Pipe table syntax: | Photo | Name | Title |
+│   ├── index.js            ← Build-time transform: reads data-vis-raw → parser → renderer
+│   ├── parser.js           ← Pure: raw markdown pipe table → [{src, alt, name, role}]
+│   └── renderer.js         ← Pure: [{src, alt, name, role}] + settings → .team section HTML
+├── testimonials/           ← ::: container hybrid visualizer (alter-engineers theme)
+│   ├── manifest.json       ← type: "hybrid", activation: "container", trigger: "testimonials"
+│   ├── schema.md           ← Blockquote syntax: > quote\n> ~ name: ...\n> ~ role: ...
+│   ├── index.js            ← Build-time transform: reads data-vis-raw + data-vis-settings → parser → renderer
+│   ├── parser.js           ← Pure: raw markdown blockquotes → [{quote, name, role}]
+│   ├── renderer.js         ← Pure: data + settings (time=Xs) → Swiper carousel HTML with data-slide-time
+│   └── browser.js          ← Runtime: destroys theme.min.js Swiper, re-initializes with autoplay from data-slide-time
 ```
+
+**`inject-container-raw.js` utility** (`scripts/utils/inject-container-raw.js`):
+Called from `preprocess-content.js` (step 6e.5) after link resolution. Scans all processed markdown for `:::` blocks, extracts inner raw content, base64-encodes it, and appends `_raw="<base64>"` to each opener's info string. This is what makes `data-vis-raw` available on every `<section>` — the contract that all container visualizer parsers depend on.
 
 **Settings ladder (lowest → highest precedence):**
 ```
@@ -665,8 +702,12 @@ GRAPH_DEFAULTS (preprocess-hook.js)
 | Phase 2 ✓ | Graph visualizer — hybrid type; force-graph CDN; local + global; code fence positioning; settings ladder |
 | Phase 2 ✓ | `preprocess-hook.js` convention — visualizer-owned build-time logic, auto-discovered, zero shared-script changes |
 | Phase 2 ✓ | Graph hover tooltip — `position:fixed` mouse-following card with OG image preview + title; image field in `graph.json` nodes |
-| **Next** | `:::` container visualizers: `image-grid`, `card-preview`, `musings`, `slideshow` (alter-engineers theme) |
-| Next | `preprocess-hook.js` pattern extended to `:::` containers — extract raw block content → `data-vis-raw` before markdown-it |
+| ✓ | `:::` container visualizers: `image-grid` (team section) + `testimonials` (Swiper carousel with autoplay) |
+| ✓ | `inject-container-raw.js` utility — extracts raw `:::` block content → `data-vis-raw` before markdown-it; enables shared parser/renderer code across Eleventy, browser, and Obsidian plugin |
+| ✓ | `browser.js` ownership convention — hybrid visualizers destroy + reinitialize third-party lib instances |
+| ✓ | Settings flow: container settings → `data-vis-settings` → renderer bakes `data-*` attrs → browser.js reads at runtime |
+| **Next** | `card-preview` visualizer (alter-engineers projects section) |
+| Next | `musings` and `slideshow` container visualizers |
 | Next | `folder-preview` extended with `style: slider-cards` (uses `node.image` from graph.json) |
 | Next | Per-page visualizer activation via frontmatter `visualizers:` field |
 | Next | Folder config (`.bloob/visualizers.json`) |

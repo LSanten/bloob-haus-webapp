@@ -15,6 +15,7 @@ import { fileURLToPath } from "url";
 import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
 import { assembleSrc } from "./assemble-src.js";
 import { preprocessContent } from "./preprocess-content.js";
+import { generateOgImages } from "./generate-og-images.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -53,6 +54,11 @@ async function devLocal() {
 
   // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
   await preprocessContent({ contentDir });
+
+  // Step 1.5: Generate OG preview images (same gate as prod pipeline)
+  if (config.features?.og_images) {
+    await generateOgImages();
+  }
 
   // Step 2: Assemble theme (favicon generation reads from src/media/ populated in step 1)
   await assembleSrc(config, contentDir);

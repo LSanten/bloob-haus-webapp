@@ -110,6 +110,23 @@ async function buildSite() {
       );
     }
 
+    // Step 5.1: Remove any theme index.njk files that now conflict with content index.md files.
+    // Assemble runs before preprocess, so it can't always predict what stubs preprocess will generate.
+    // This cleanup pass resolves any remaining index.md + index.njk permalink collisions in src/.
+    {
+      const srcDir = path.join(ROOT_DIR, "src");
+      const subdirs = (await fs.readdir(srcDir, { withFileTypes: true }))
+        .filter((e) => e.isDirectory() && !e.name.startsWith("_") && !e.name.startsWith("."));
+      for (const dir of subdirs) {
+        const njk = path.join(srcDir, dir.name, "index.njk");
+        const md = path.join(srcDir, dir.name, "index.md");
+        if ((await fs.pathExists(njk)) && (await fs.pathExists(md))) {
+          await fs.remove(njk);
+          console.log(`[build] Removed conflicting ${dir.name}/index.njk (index.md takes precedence)`);
+        }
+      }
+    }
+
     // Step 5.5: Generate OG preview images
     if (config.features?.og_images) {
       await generateOgImages();

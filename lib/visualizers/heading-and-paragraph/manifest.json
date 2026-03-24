@@ -1,0 +1,7 @@
+{
+  "name": "heading-and-paragraph",
+  "type": "build-time",
+  "activation": "container",
+  "trigger": "heading-and-paragraph",
+  "description": "Transforms a ::: heading-and-paragraph block into the theme's two-column heading+body section (green background, .heading-and-paragraph CSS class). First ## heading becomes the section title; remaining text becomes the paragraph."
+}

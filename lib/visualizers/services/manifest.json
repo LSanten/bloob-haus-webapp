@@ -1,0 +1,7 @@
+{
+  "name": "services",
+  "type": "build-time",
+  "activation": "container",
+  "trigger": "services",
+  "description": "Transforms a ::: services block into the theme's two-column services section. First ## heading = section title; first paragraph = description text; bullet list items = service entries with arrow icons."
+}

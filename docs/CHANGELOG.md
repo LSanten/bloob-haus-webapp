@@ -6,6 +6,17 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 29 - March 23, 2026
+**Worked on:** color pair system, footer link, git push both repos
+
+- **Color pair CSS architecture:** `.bg-*` classes now declare `--pair-bg / --pair-title / --pair-text` CSS custom properties with a single universal apply block — background, body text, and heading cascade all driven by the same three vars
+- **`resolveBg()` shared utility** (`lib/visualizers/_utils/bg-color.js`): `heading-and-paragraph` and `services` renderers now import it instead of hand-building the class string; supports named tokens (`bg=dark`) and hex inline styles (`bg=#1a1a1a color=#fff`)
+- **Footer:** "Built with Bloob Haus" now links to https://bloob.haus/
+- **Docs:** color pair contract documented as Tier 1 in `themes.md`; full token table + fence syntax guide added to `settings-registry.md`
+- **Both repos pushed** to GitHub
+
+---
+
 ### Session 28 - March 23, 2026
 **Worked on:** project page polish, hero/body image split, settings registry
 

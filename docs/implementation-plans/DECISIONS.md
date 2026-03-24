@@ -28,6 +28,7 @@ Track major architectural and technical decisions with their rationale.
 | 2026-02-19 | Dynamic section collections | Replace hardcoded per-section collections with auto-generated ones from discovered sections — enables multi-site without touching eleventy.config.js |
 | 2026-02-19 | File identity: filename-based, UUIDs deferred | Filenames are stable identifiers for URLs. UUID-based tracking deferred to Phase 3+ when rename-tracking is needed |
 | 2026-02-19 | Dev workflow: concurrently-based file watcher | `npm run dev` runs assemble + theme watcher + Eleventy serve in parallel via `concurrently` |
+| 2026-03-23 | Color pair contract: `--pair-bg / --pair-title / --pair-text` per `.bg-*` class | Named tokens map to CSS custom properties (theme controls colors); hex values emit same var names as inline styles — renderers and cascade rules work identically for both paths. Single `resolveBg()` utility in `_utils/bg-color.js` is the only entry point for both. |
 | 2026-02-19 | Image cache outside _site/ | Use `.cache/eleventy-img/` so optimized images persist across builds (not destroyed when _site/ is cleaned) |
 | 2026-02-19 | Validation report + --strict flag | Broken links collected during preprocessing with structured report; --strict flag fails CI builds on broken links |
 | 2026-02-19 | CLAUDE.md for development practices | Auto-read by Claude Code; contains session checklists, code quality rules, documentation rules |

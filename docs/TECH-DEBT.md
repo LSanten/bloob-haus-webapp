@@ -27,6 +27,8 @@ Tracked items with severity, impact, and target resolution phase.
 | 21 | alter-engineers: Satoshi font loaded from Fontshare CDN | Low | External dependency; fails offline | Self-host by downloading `.ttf` files → `themes/alter-engineers/assets/fonts/`; `@font-face` in `theme.min.css` already references that path | ⬜ Open |
 | 22 | alter-engineers: `theme.min.css` contains hardcoded hex colors (e.g. `#5b5dd3`) | Low | Visualizers that rely solely on `var(--accent-color)` match; any new sections built against `theme.min.css` classes may drift | Eventually extract token values from `theme.min.css` into `main.css` and rebuild; for now, keep `main.css` in sync manually | ⬜ Open |
 | 23 | `publish-filter.test.js`: 2 tests fail on Windows (path separator `\` vs `/`) | Low | Tests pass on Mac/Linux CI; local Windows dev shows failures | Normalize paths in test fixtures with `path.normalize` or platform-aware assertion | ⬜ Open |
+| 24 | `warm-kitchen` + `marbles-pouch`: missing color pair CSS contract | Low | `bg=` on visualizers will have no effect until themes define `--pair-bg/--pair-title/--pair-text` for `.bg-*` classes and add the apply rules | Copy pattern from `alter-engineers/main.css`; adjust token colors per theme | ⬜ Open |
+| 25 | `warm-kitchen`: missing PhotoSwipe (head.njk + scripts.njk) | Low | Image zoom silently broken on warm-kitchen sites | Copy from alter-engineers following settings-registry.md wiring guide | ⬜ Open |
 
 ## Notes
 

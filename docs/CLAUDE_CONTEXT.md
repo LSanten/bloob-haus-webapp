@@ -37,7 +37,7 @@
 - marbles.bloob.haus (Leon's Marbles — not yet deployed)
 
 **IN DEVELOPMENT:**
-- alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — `image-grid` visualizer live (team section content-driven from `index.md`). Hero reads from frontmatter. All other sections are `{# 🔲 TODO #}` comments in `homepage.njk`; see `homepage-legacy.njk` for reference HTML. Content repo at `C:/ae-dev/alter-website-content/` (separate git repo). Dev command: `npm run dev:alter-engineers`
+- alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — Most homepage sections are now content-driven from `index.md`. Live: hero, team (image-grid), heading-and-paragraph, services, slideshow (partners logos), image-text (solutions), musings, testimonials, folder-preview (articles slider-cards). Remaining TODO: `card-preview` (projects grid). Content repo at `C:/ae-dev/alter-website-content/` (separate git repo). Dev command: `npm run dev:alter-engineers`
 
 ---
 

@@ -62,6 +62,8 @@ Track major architectural and technical decisions with their rationale.
 | 2026-03-23 | `browser.js` owns its library initialization entirely | For hybrid visualizers that use a third-party lib (e.g., Swiper): `browser.js` must destroy any instance created by `theme.min.js` and re-initialize with full config. Don't try to reconfigure after-the-fact — reinitialize. |
 | 2026-03-23 | Settings flow for `:::` containers: settings key → `data-*` DOM attr → browser.js | Container settings (e.g., `time=3s`) are parsed by renderer.js and baked into the DOM as `data-*` attributes (e.g., `data-slide-time="3000"`). `browser.js` reads them at runtime — no settings duplication across build/runtime boundary. |
 | 2026-03-23 | Use non-hyphenated key names for `:::` container settings | Hyphenated keys (e.g., `slide-time`) cause ambiguity in the `key=value` parser because `-` is also used as a separator in some edge cases. Use simple keys: `time`, `limit`, `style`. |
+| 2026-04-21 | `infinite_scroll: false` in musings = Swiper `loop: false`, not removing Swiper | The musings section uses a fixed-height container in theme.min.css. Rendering a static stack instead of Swiper causes card overflow that bleeds into adjacent sections. The correct behavior is always to render Swiper HTML; `infinite_scroll: false` only changes the `loop` option via `browser.js` reinit. |
+| 2026-04-21 | `CONTENT_DIR` env var threaded from orchestrators into `eleventy.config.js` | `loadSiteConfig()` needs the content dir path to find `_bloob-settings.md`. When called from `eleventy.config.js`, the `--content=` CLI arg is not available unless explicitly passed via env var. Both `dev-local.js` and `build-site.js` now set `process.env.CONTENT_DIR` so `eleventy.config.js` can read it. |
 
 ---
 

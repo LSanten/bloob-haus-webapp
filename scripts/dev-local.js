@@ -16,6 +16,7 @@ import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
 import { assembleSrc } from "./assemble-src.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
+import { guardSrcForSite } from "./utils/src-guard.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -52,6 +53,9 @@ async function devLocal() {
   process.env.BLOCKLIST_TAG = config.content.blocklist_tag;
   process.env.EXCLUDE_FILES = (config.content.exclude_files || []).join(",");
   process.env.SLUG_STRATEGY = config.permalinks?.strategy || "slugify";
+
+  // Step 0: Wipe src/ if switching sites to prevent stale file bleed-over
+  await guardSrcForSite(ROOT_DIR, siteName);
 
   // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
   await preprocessContent({ contentDir });

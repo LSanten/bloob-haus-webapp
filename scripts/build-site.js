@@ -20,6 +20,7 @@ import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
 import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
+import { guardSrcForSite } from "./utils/src-guard.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -85,6 +86,9 @@ async function buildSite() {
     config = await loadSiteConfig(siteName, { contentDir });
     console.log(`[config] Site: ${config.site?.name || siteName}`);
     console.log(`[config] Theme: ${config.theme}`);
+
+    // Step 3.5: Wipe src/ if switching sites to prevent stale file bleed-over
+    await guardSrcForSite(ROOT_DIR, siteName);
 
     // Step 4: Assemble src/ from theme
     // Pass contentDir so assemble-src can detect vault index.md

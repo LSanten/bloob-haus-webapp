@@ -19,20 +19,17 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
-const SRC_DIR = path.join(ROOT_DIR, "src");
-const MEDIA_DIR = path.join(SRC_DIR, "media");
-const OG_DIR = path.join(SRC_DIR, "og");
-const TRACKING_FILE = path.join(OG_DIR, ".og-tracking.json");
+const getSrcDirPath = () => process.env.SRC_DIR || path.join(ROOT_DIR, "src");
 const MAX_SIZE_BYTES = 300 * 1024; // 300KB target for WhatsApp
 const OG_WIDTH = 1200;
 
 /**
  * Load tracking data from previous run.
  */
-async function loadTracking() {
-  if (await fs.pathExists(TRACKING_FILE)) {
+async function loadTracking(trackingFile) {
+  if (await fs.pathExists(trackingFile)) {
     try {
-      return await fs.readJson(TRACKING_FILE);
+      return await fs.readJson(trackingFile);
     } catch {
       console.log("[og] Could not load tracking file, starting fresh");
     }
@@ -52,8 +49,8 @@ async function fileHash(filePath) {
  * Find the actual source file in src/media/ for a given base name.
  * Handles URL-encoded filenames and case variations.
  */
-async function findSourceFile(baseName) {
-  const mediaFiles = await fs.readdir(MEDIA_DIR);
+async function findSourceFile(baseName, mediaDir) {
+  const mediaFiles = await fs.readdir(mediaDir);
   for (const file of mediaFiles) {
     const ext = path.extname(file).toLowerCase();
     if (![".jpg", ".jpeg", ".png", ".gif"].includes(ext)) continue;
@@ -138,12 +135,17 @@ async function generateSingleOgImage(sourcePath, outputPath, format) {
  * Main: scan pages for image frontmatter, generate OG previews.
  */
 export async function generateOgImages() {
+  const SRC_DIR = getSrcDirPath();
+  const MEDIA_DIR = path.join(SRC_DIR, "media");
+  const OG_DIR = path.join(SRC_DIR, "og");
+  const TRACKING_FILE = path.join(OG_DIR, ".og-tracking.json");
+
   console.log("\n========================================");
   console.log("  GENERATING OG PREVIEW IMAGES");
   console.log("========================================\n");
 
   await fs.ensureDir(OG_DIR);
-  const previousTracking = await loadTracking();
+  const previousTracking = await loadTracking(TRACKING_FILE);
   const newTracking = {};
 
   // Find all markdown files with image frontmatter
@@ -163,7 +165,7 @@ export async function generateOgImages() {
     const baseName = decodeURIComponent(match[1]);
     if (imageSources.has(baseName)) continue;
 
-    const sourceFile = await findSourceFile(baseName);
+    const sourceFile = await findSourceFile(baseName, MEDIA_DIR);
     if (sourceFile) {
       imageSources.set(baseName, sourceFile);
     } else {

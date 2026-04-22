@@ -20,7 +20,7 @@ import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
 import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
-import { guardSrcForSite } from "./utils/src-guard.js";
+import { getSrcDir } from "./utils/get-src-dir.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -87,8 +87,10 @@ async function buildSite() {
     console.log(`[config] Site: ${config.site?.name || siteName}`);
     console.log(`[config] Theme: ${config.theme}`);
 
-    // Step 3.5: Wipe src/ if switching sites to prevent stale file bleed-over
-    await guardSrcForSite(ROOT_DIR, siteName);
+    // Derive per-site src/ directory and expose to all child scripts via env
+    const srcDir = getSrcDir(config.site?.url);
+    process.env.SRC_DIR = srcDir;
+    console.log(`[config] Src dir: ${srcDir}`);
 
     // Step 4: Assemble src/ from theme
     // Pass contentDir so assemble-src can detect vault index.md
@@ -119,7 +121,6 @@ async function buildSite() {
     // Assemble runs before preprocess, so it can't always predict what stubs preprocess will generate.
     // This cleanup pass resolves any remaining index.md + index.njk permalink collisions in src/.
     {
-      const srcDir = path.join(ROOT_DIR, "src");
       const subdirs = (await fs.readdir(srcDir, { withFileTypes: true }))
         .filter((e) => e.isDirectory() && !e.name.startsWith("_") && !e.name.startsWith("."));
       for (const dir of subdirs) {
@@ -144,7 +145,7 @@ async function buildSite() {
     // Step 5.7: Generate bloob-object icons (needs src/media/ populated by preprocessing)
     // assemble-src Step 10 ran too early for content-repo images; this catches them.
     console.log("\n--- Step 5.7: Generating bloob-object icons ---");
-    await generateBloobIcons({ contentDir, srcDir: path.join(ROOT_DIR, "src") });
+    await generateBloobIcons({ contentDir, srcDir });
 
     // Step 6: Bundle visualizers
     console.log("\n--- Step 6: Bundling visualizers ---");

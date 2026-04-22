@@ -19,7 +19,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
-const SRC_DIR = path.join(ROOT_DIR, "src");
+const getSrcDir = () => process.env.SRC_DIR || path.join(ROOT_DIR, "src");
 
 /**
  * Extracts a file path from supported YAML link formats:
@@ -57,7 +57,7 @@ function extractFilePath(value) {
  * @param {string} rawValue - Raw logo value from site config
  * @returns {string|null} Absolute path to the source image, or null if unresolvable
  */
-function resolveLogoPath(rawValue) {
+function resolveLogoPath(rawValue, srcDir) {
   if (!rawValue) return null;
 
   // Detect wiki-links before extracting — bare [[filename]] means Obsidian attachment
@@ -69,16 +69,16 @@ function resolveLogoPath(rawValue) {
 
   // Absolute URL path → resolve relative to src/
   if (filePath.startsWith("/")) {
-    return path.join(SRC_DIR, filePath.replace(/^\//, ""));
+    return path.join(srcDir, filePath.replace(/^\//, ""));
   }
 
   // Wiki-links are bare attachment filenames → look in src/media/
   if (isWikiLink && !filePath.includes("/")) {
-    return path.join(SRC_DIR, "media", filePath);
+    return path.join(srcDir, "media", filePath);
   }
 
   // Relative path (e.g. "media/icon.png") → resolve relative to src/
-  return path.join(SRC_DIR, filePath);
+  return path.join(srcDir, filePath);
 }
 
 /**
@@ -89,13 +89,14 @@ function resolveLogoPath(rawValue) {
  * @param {Object} options.config - Full site config (expects config.site.logo or config.site.favicon)
  */
 export async function generateFavicons({ config }) {
+  const SRC_DIR = getSrcDir();
   const rawLogo = config.site?.logo || config.site?.favicon;
   if (!rawLogo) {
     console.log("[favicon] No logo/favicon set in site config — skipping");
     return;
   }
 
-  const sourceImagePath = resolveLogoPath(rawLogo);
+  const sourceImagePath = resolveLogoPath(rawLogo, SRC_DIR);
   if (!sourceImagePath || !(await fs.pathExists(sourceImagePath))) {
     console.warn(
       `[favicon] Source image not found at: ${sourceImagePath} — skipping favicon generation`,

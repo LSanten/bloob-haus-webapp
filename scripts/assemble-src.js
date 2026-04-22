@@ -21,7 +21,7 @@ import { generateBloobIcons } from "./generate-bloob-icons.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SRC_DIR = path.join(ROOT_DIR, "src");
+const getActiveSrcDir = () => process.env.SRC_DIR || path.join(ROOT_DIR, "src");
 const THEMES_DIR = path.join(ROOT_DIR, "themes");
 
 /**
@@ -32,6 +32,7 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
  *   is skipped so there is no permalink collision at "/".
  */
 export async function assembleSrc(config, contentDir = null) {
+  const SRC_DIR = getActiveSrcDir();
   const themeName = config.theme;
   const themeDir = path.join(THEMES_DIR, themeName);
   const baseDir = path.join(THEMES_DIR, "_base");
@@ -166,10 +167,15 @@ export async function assembleSrc(config, contentDir = null) {
   console.log("[assemble] Generating site data...");
   await generateSiteData(config);
 
-  // Step 8: Copy eleventyComputed.js (shared infrastructure, not theme-specific)
-  // This file is checked into the repo root at src/_data/eleventyComputed.js
-  // but since we clean _data/site.js, we need to ensure eleventyComputed.js persists.
-  // It's NOT cleaned (we only clean site.js), so it stays in place.
+  // Step 8: Copy eleventyComputed.js into the per-site src dir.
+  // The source lives at src/_data/eleventyComputed.js (tracked in git).
+  // With per-site src dirs it won't be there automatically, so we copy it on every assemble.
+  const eleventyComputedSrc = path.join(ROOT_DIR, "src", "_data", "eleventyComputed.js");
+  const eleventyComputedDest = path.join(SRC_DIR, "_data", "eleventyComputed.js");
+  if (fs.existsSync(eleventyComputedSrc)) {
+    await fs.ensureDir(path.join(SRC_DIR, "_data"));
+    await fs.copy(eleventyComputedSrc, eleventyComputedDest, { overwrite: true });
+  }
 
   // Step 9: Generate favicons from site logo (must run after preprocessing copies attachments)
   console.log("[assemble] Generating favicons...");
@@ -188,6 +194,7 @@ export async function assembleSrc(config, contentDir = null) {
  * and generated data files (tagIndex.json, visualizers.json).
  */
 async function cleanGeneratedFiles() {
+  const SRC_DIR = getActiveSrcDir();
   console.log("[assemble] Cleaning generated theme files...");
 
   // Clean layouts and partials
@@ -268,6 +275,7 @@ function resolveLogoUrl(value) {
  * Generate src/_data/site.js from site config.
  */
 async function generateSiteData(config) {
+  const SRC_DIR = getActiveSrcDir();
   const dataDir = path.join(SRC_DIR, "_data");
   await fs.ensureDir(dataDir);
 

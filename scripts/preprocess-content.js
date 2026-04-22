@@ -51,8 +51,8 @@ const OUTPUT_DIRS = {
     static: path.join(ROOT_DIR, "hugo", "static"),
   },
   eleventy: {
-    content: path.join(ROOT_DIR, "src"),
-    static: path.join(ROOT_DIR, "src"),
+    get content() { return process.env.SRC_DIR || path.join(ROOT_DIR, "src"); },
+    get static() { return process.env.SRC_DIR || path.join(ROOT_DIR, "src"); },
   },
 };
 

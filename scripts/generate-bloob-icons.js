@@ -19,7 +19,6 @@ import { readBloobObjects, parseObjectImageField } from "./utils/bloob-objects-r
 import { ROOT_DIR } from "./utils/config-loader.js";
 
 const ICON_SIZE = 24;
-const SRC_DIR = path.join(ROOT_DIR, "src");
 const ICON_OUTPUT_SUBPATH = "assets/objects/bloob-icons";
 
 /**
@@ -32,7 +31,7 @@ const ICON_OUTPUT_SUBPATH = "assets/objects/bloob-icons";
  * @param {string} options.contentDir - Absolute path to the content repo root
  * @param {string} [options.srcDir] - Absolute path to src/ (defaults to ROOT_DIR/src)
  */
-export async function generateBloobIcons({ contentDir, srcDir = SRC_DIR }) {
+export async function generateBloobIcons({ contentDir, srcDir = process.env.SRC_DIR || path.join(ROOT_DIR, "src") }) {
   if (!contentDir) {
     console.log("[bloob-icons] No contentDir provided — skipping icon generation");
     return;

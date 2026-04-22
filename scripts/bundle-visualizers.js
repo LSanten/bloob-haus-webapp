@@ -20,9 +20,10 @@ import { join } from "path";
 import { build } from "esbuild";
 
 const VISUALIZERS_DIR = "lib/visualizers";
-const JS_OUT_DIR = "src/assets/js/visualizers";
-const CSS_OUT_DIR = "src/assets/css/visualizers";
-const DATA_OUT = "src/_data/visualizers.json";
+const SRC = process.env.SRC_DIR || "src";
+const JS_OUT_DIR = `${SRC}/assets/js/visualizers`;
+const CSS_OUT_DIR = `${SRC}/assets/css/visualizers`;
+const DATA_OUT = `${SRC}/_data/visualizers.json`;
 
 // Ensure output directories exist
 mkdirSync(JS_OUT_DIR, { recursive: true });

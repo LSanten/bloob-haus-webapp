@@ -1,7 +1,7 @@
 {
   "name": "image-grid",
-  "type": "build-time",
+  "type": "hybrid",
   "activation": "container",
   "trigger": "image-grid",
-  "description": "Transforms a ::: image-grid table into a styled team member grid. Each table row becomes a member card with photo, name, and title."
+  "description": "Transforms a ::: image-grid table into a styled team member grid. Each table row becomes a member card with photo, name, and title. Fades in on scroll via IntersectionObserver."
 }

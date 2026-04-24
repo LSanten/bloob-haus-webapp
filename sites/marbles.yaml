@@ -3,7 +3,7 @@
 
 # Deployed URL (webapp infra — Cloudflare)
 site:
-  url: "https://marbles.bloob.haus"
+  url: "https://leons.bloob.haus"
 
 # Content source (webapp infra — GitHub)
 content:

@@ -377,7 +377,7 @@ export default async function (eleventyConfig) {
   // Each section gets its own top-level addCollection call (Eleventy doesn't support
   // registering collections inside another collection callback — they resolve too late).
   // Collection names are camelCased from folder slugs (e.g., "lists-of-favorites" → "listsOfFavorites").
-  const srcDirs = readdirSync("src", { withFileTypes: true })
+  const srcDirs = readdirSync(SRC, { withFileTypes: true })
     .filter((d) => d.isDirectory() && !RESERVED_DIRS.has(d.name) && !d.name.startsWith("_"))
     .map((d) => d.name);
 

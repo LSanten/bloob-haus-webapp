@@ -1038,7 +1038,6 @@ function dbg(msg, level = 'info') {
   debugLogEl.scrollTop = debugLogEl.scrollHeight;
   debugCountEl.textContent = debugEntries.length;
   if (level === 'error') {
-    debugPanel.classList.add('open');
     debugToggleEl.classList.add('has-error');
   }
 }
@@ -1493,7 +1492,10 @@ function pad(n) { return String(n).padStart(4,' '); }
 // ─────────────────────────────────────────────
 // FFmpeg loading + video export
 // ─────────────────────────────────────────────
-const FFMPEG_CORE_BASE = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+const FFMPEG_CORE_BASE   = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+// Worker chunk is a webpack artifact tied to the pinned ffmpeg version.
+// Must be fetched as a blob URL so new Worker() treats it as same-origin.
+const FFMPEG_WORKER_URL  = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js';
 let ffmpeg = null;
 let ffmpegReady = false;
 
@@ -1556,23 +1558,29 @@ async function initFFmpeg() {
     loaderFill.style.width = '5%';
     loaderPct.textContent = '5%';
 
+    // Fetch all three files as blob URLs so Worker() treats them as same-origin.
+    // Cross-origin Worker URLs are blocked by browsers without COOP/COEP headers.
+    const classWorkerURL = await fetchWithProgress(FFMPEG_WORKER_URL, 'text/javascript');
+    loaderFill.style.width = '8%';
+    loaderPct.textContent = '8%';
+
     const coreURL = await fetchWithProgress(
       `${FFMPEG_CORE_BASE}/ffmpeg-core.js`, 'text/javascript'
     );
-    loaderFill.style.width = '10%';
-    loaderPct.textContent = '10%';
+    loaderFill.style.width = '12%';
+    loaderPct.textContent = '12%';
 
     const wasmURL = await fetchWithProgress(
       `${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm',
       pct => {
-        const total = 10 + Math.round(pct * 85);
+        const total = 12 + Math.round(pct * 83);
         loaderFill.style.width = total + '%';
         loaderPct.textContent = total + '%';
       }
     );
 
-    dbg('Calling ffmpeg.load({ coreURL, wasmURL })…');
-    await ffmpeg.load({ coreURL, wasmURL });
+    dbg('Calling ffmpeg.load({ classWorkerURL, coreURL, wasmURL })…');
+    await ffmpeg.load({ classWorkerURL, coreURL, wasmURL });
     dbg('ffmpeg.load() complete — video engine ready', 'ok');
 
     ffmpegReady = true;

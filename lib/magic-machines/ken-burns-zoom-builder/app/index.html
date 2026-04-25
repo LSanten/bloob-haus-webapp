@@ -1564,9 +1564,19 @@ async function initFFmpeg() {
     loaderFill.style.width = '8%';
     loaderPct.textContent = '8%';
 
-    const coreURL = await fetchWithProgress(
-      `${FFMPEG_CORE_BASE}/ffmpeg-core.js`, 'text/javascript'
-    );
+    // Fetch core JS as text and patch it: Emscripten UMD uses `var createFFmpegCore`
+    // which is scoped to the module in an ES module worker context (not globalThis).
+    // The @ffmpeg/ffmpeg worker checks globalThis.createFFmpegCore after import(),
+    // so we append an explicit global assignment to cover the module-worker case.
+    dbg('Fetching: ffmpeg-core.js (text/javascript)');
+    const coreRes = await fetch(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`);
+    if (!coreRes.ok) throw new Error(`HTTP ${coreRes.status} fetching ffmpeg-core.js`);
+    const coreText = await coreRes.text();
+    const patchedCore = coreText +
+      '\n;if(typeof createFFmpegCore!=="undefined"&&!globalThis.createFFmpegCore)' +
+      'globalThis.createFFmpegCore=createFFmpegCore;';
+    const coreURL = URL.createObjectURL(new Blob([patchedCore], { type: 'text/javascript' }));
+    dbg(`  fetched ${(coreText.length / 1024).toFixed(0)} KB → patched blob URL`, 'ok');
     loaderFill.style.width = '12%';
     loaderPct.textContent = '12%';
 

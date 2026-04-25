@@ -8,6 +8,6 @@
   "app": {
     "entry": "app/index.html",
     "standalone": false,
-    "description": "Must be served — requires COOP/COEP headers for FFmpeg.wasm video export."
+    "description": "Must be served — uses WebCodecs + self-hosted mp4-muxer for video export."
   }
 }

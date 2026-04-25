@@ -96,14 +96,15 @@ export default async function (eleventyConfig) {
   if (siteConfig.features?.magic_machines !== false) {
     const magicMachines = loadMagicMachines();
     for (const machine of magicMachines) {
-      const src = `lib/magic-machines/${machine.dirName}/${machine.app.entry}`;
-      const dest = machine.route.replace(/^\//, "") + "index.html";
-      eleventyConfig.addPassthroughCopy({ [src]: dest });
+      // Copy entire app/ directory so vendor assets and subdirs are included alongside index.html
+      const appDir = `lib/magic-machines/${machine.dirName}/app/`;
+      const destDir = machine.route.replace(/^\//, "");
+      eleventyConfig.addPassthroughCopy({ [appDir]: destDir });
     }
     // Legacy alias — scene-nav-builder was previously served at /tools/ before
     // the /magic-machine/ convention was established. Keep old URL working.
     eleventyConfig.addPassthroughCopy({
-      "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
+      "lib/magic-machines/scene-nav-builder/app/": "tools/scene-nav-builder/",
     });
     // Cloudflare Pages _headers — COOP/COEP for magic machines requiring SharedArrayBuffer
     if (existsSync("lib/magic-machines/_headers")) {

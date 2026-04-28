@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-04-25
+**Last Updated:** 2026-04-28
 **Current Phase:** alter-engineers theme under active development. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -37,7 +37,8 @@
 - https://leons.bloob.haus (Leon's Marbles — Cloudflare project name: `leons`, content repo: `LSanten/bloob-haus-marbles`)
 
 **IN DEVELOPMENT:**
-- alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — Most homepage sections are now content-driven from `index.md`. Live: hero, team (image-grid), heading-and-paragraph, services, slideshow (partners logos), image-text (solutions), musings, testimonials, folder-preview (articles slider-cards). Remaining TODO: `card-preview` (projects grid). Content repo at `C:/ae-dev/alter-website-content/` (separate git repo). Dev command: `npm run dev:alter-engineers`
+- alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — All homepage sections are content-driven from `index.md`. Live: hero, projects (`card-preview`), team (`image-grid`), heading-and-paragraph, services, slideshow (partners logos), image-text (solutions), `quotes-stack` (testimonials carousel), testimonials, folder-preview (articles slider-cards). Redirect support active. Content repo at live ACE Drive vault. Dev command: `npm run dev:alter-engineers`
+- Remaining for launch: deploy pipeline (Cloudflare Pages + GitHub Actions), project images, DNS cutover.
 - `ken-burns-zoom-builder` magic machine — working video export (WebCodecs + self-hosted mp4-muxer). Served at `/magic-machine/ken-burns-zoom-builder/` on sites with `features.magic_machines: true`. Disabled on alter-engineers.
 
 ---

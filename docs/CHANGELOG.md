@@ -6,6 +6,19 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 32 - April 28, 2026
+**Worked on:** AE launch polish — quotes-stack rename, redirect support, attachment scan fix, bug fixes
+
+- **Rename:** `lib/visualizers/musings/` → `lib/visualizers/quotes-stack/`; trigger changes from `musings` to `quotes-stack`; all rendered HTML/IDs unchanged (theme.min.js still targets `#musings-swiper`)
+- **Fix:** `quotes-stack/browser.js` adds `mousewheel.releaseOnEdges: true` when `loop: false` — scroll now escapes the carousel at boundaries instead of trapping the user
+- **Fix:** `folder-preview/browser.js` — removed `.swiper-button-prev/.next` from nav elements; Swiper's bundled CSS was positioning them relative to body, causing chevrons to float at the viewport edges
+- **Feature:** Redirect support (universal) — new `scripts/utils/redirect-resolver.js` resolves bare URLs, `[[wiki-links]]`, and `[text](url)` from `redirect:` frontmatter; propagated to graph.json and emitted as `<meta http-equiv="refresh">` in `themes/_base/partials/head.njk`; `folder-preview` cards use `node.redirect` as `href` with `target="_blank"`
+- **Fix:** Attachment resolution now scans the entire vault instead of only `attachmentFolder` — mirrors Obsidian's own behaviour
+- **Fix:** Solutions body text weight (`font-weight: 400` on `.image-text__text-container > p`)
+- **Fix:** Nav logo reads `site.logo` from config with fallback to hardcoded SVG path
+- **Tooling:** `dev:alter-engineers` now points to live ACE Drive content vault
+- **Docs:** Sprint plan at `docs/implementation-plans/phases/ae-launch/2026-04-28_ae-launch-sprint.md`
+
 ### Session 31 - April 25, 2026
 **Worked on:** ken-burns-zoom-builder video export fix, bounce export, dev tooling (magic machine server + single-page build filter)
 

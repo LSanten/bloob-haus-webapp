@@ -301,6 +301,17 @@ const EMBED_RENDER_FN = [
   '    item.style.display = match ? \'\' : \'none\';',
   '  });',
   '}',
+  '// bloob:clearFilter — external listener resets all active filters + visual state',
+  'var _bloobFilterEls = [];',
+  'if (!window.__bloobClearBound) {',
+  '  window.__bloobClearBound = true;',
+  '  window.addEventListener(\'bloob:clearFilter\', function() {',
+  '    activeFilters = [];',
+  '    _bloobFilterEls.forEach(function(fe) { fe.d.style.filter = fe.noGlow; fe.d.style.transform = fe.br; });',
+  '    applyFilter();',
+  '    window.dispatchEvent(new CustomEvent(\'bloob:filter\', { detail: { tags: [], mode: C.filterMode || \'or\' } }));',
+  '  });',
+  '}',
   'function renderScene(cId, bgs, els) {',
   '  var c = document.getElementById(cId); if (!c) return;',
   '  // bgClip: clips background images to the container bounds (overflow:hidden)',
@@ -374,6 +385,7 @@ const EMBED_RENDER_FN = [
   '        window.dispatchEvent(new CustomEvent(\'bloob:filter\',{detail:{tags:activeFilters.slice(),mode:C.filterMode||\'or\'}}));',
   '      }',
   '    };',
+  '    if (el.action === \'filter\') { _bloobFilterEls.push({ d: d, noGlow: noGlow, br: baseRot }); }',
   '    if (C.draggable) {',
   '      // Desktop: mousedown → drag immediately',
   '      d.addEventListener(\'mousedown\',function(ev){',
@@ -428,6 +440,66 @@ const EMBED_RENDER_FN = [
   '}',
 ].join('\n');
 
+// Filter pill — appended to every embed that uses filter actions.
+// Silently does nothing on pages without [data-tags] elements.
+const FILTER_PILL_JS = `(function(){
+var pill=null,scrollTarget=null,isFirstShow=true;
+var BB='rgba(214,234,255,0.72)',PB='rgba(255,210,225,0.80)',BC='rgba(100,160,230,0.25)',PC='rgba(220,120,150,0.28)';
+function gst(){return document.querySelector('[id^="collection-"]')||document.querySelector('.featured-collection');}
+function onScroll(e){e.stopPropagation();if(!scrollTarget)scrollTarget=gst();if(scrollTarget)scrollTarget.scrollIntoView({behavior:'smooth',block:'start'});}
+function onClear(e){e.stopPropagation();window.dispatchEvent(new CustomEvent('bloob:clearFilter'));document.querySelectorAll('[data-tags]').forEach(function(i){i.style.display='';});}
+function mkPill(){
+  if(pill)return;
+  var s=document.createElement('style');
+  s.textContent='@media(max-width:768px){#bloob-filter-pill{bottom:max(10px,env(safe-area-inset-bottom,10px))!important}}';
+  document.head.appendChild(s);
+  pill=document.createElement('div');
+  pill.id='bloob-filter-pill';
+  pill.setAttribute('role','status');pill.setAttribute('aria-live','polite');
+  pill.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:'+BB+';backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1.5px solid '+BC+';color:#111;padding:12px 24px;border-radius:9999px;font-family:var(--font-body-family,system-ui,sans-serif);font-size:14px;font-weight:600;letter-spacing:0.01em;z-index:9999;transition:transform 0.5s cubic-bezier(0.34,1.4,0.64,1),opacity 0.3s ease,background 0.5s ease,border-color 0.5s ease;opacity:0;pointer-events:none;display:flex;align-items:center;gap:12px;box-shadow:0 -2px 16px rgba(0,0,0,0.10),0 0 0 0.5px rgba(0,0,0,0.06);white-space:nowrap;user-select:none;-webkit-user-select:none';
+  document.body.appendChild(pill);
+}
+function rpc(count,mode){
+  var w=count===1?'match':'matches';
+  var t=count===0?(mode==='and'?'0 matches \u2014 try fewer filters':'0 matches'):count+'\u00a0'+w;
+  var b='background:none;border:none;cursor:pointer;font-family:inherit;font-weight:400;padding:0;';
+  pill.innerHTML='<span aria-hidden="true" style="font-size:15px">\uD83D\uDC3E</span><span>'+t+'</span><button style="'+b+'opacity:0.5;font-size:12px;color:inherit">\u2193\u00a0scroll down<\/button><span style="opacity:0.2">|<\/span><button style="'+b+'opacity:0.4;font-size:12px;color:inherit">\u2715\u00a0clear<\/button>';
+  pill.querySelectorAll('button')[0].addEventListener('click',onScroll);
+  pill.querySelectorAll('button')[1].addEventListener('click',onClear);
+}
+function showPill(count,mode){
+  mkPill();rpc(count,mode);
+  if(isFirstShow){
+    isFirstShow=false;
+    pill.style.transition='none';
+    pill.style.background=PB;pill.style.borderColor=PC;
+    pill.style.transform='translateX(-50%) translateY(100px) scale(1.18)';pill.style.opacity='0';
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      pill.style.transition='transform 0.55s cubic-bezier(0.34,1.4,0.64,1),opacity 0.25s ease,background 0.55s ease,border-color 0.55s ease';
+      pill.style.opacity='1';pill.style.transform='translateX(-50%) translateY(0) scale(1)';pill.style.pointerEvents='auto';
+      setTimeout(function(){pill.style.background=BB;pill.style.borderColor=BC;},320);
+    });});
+  } else {
+    requestAnimationFrame(function(){
+      pill.style.transition='transform 0.45s cubic-bezier(0.34,1.4,0.64,1),opacity 0.3s ease,background 0.5s ease,border-color 0.5s ease';
+      pill.style.opacity='1';pill.style.transform='translateX(-50%) translateY(0) scale(1)';pill.style.pointerEvents='auto';
+    });
+  }
+}
+function hidePill(){
+  if(!pill)return;
+  pill.style.opacity='0';pill.style.transform='translateX(-50%) translateY(100px) scale(1)';pill.style.pointerEvents='none';
+  isFirstShow=true;
+}
+function cv(){var c=0;document.querySelectorAll('[data-tags]').forEach(function(i){if(i.style.display!=='none')c++;});return c;}
+window.addEventListener('bloob:filter',function(e){
+  var tags=(e.detail&&e.detail.tags)?e.detail.tags:[];
+  var mode=(e.detail&&e.detail.mode)?e.detail.mode:'or';
+  if(tags.length===0){hidePill();return;}
+  requestAnimationFrame(function(){showPill(cv(),mode);});
+});
+})();`;
+
 function generateEmbed(scene) {
   const pfx  = scene.imagePrefix || '';
   const bgColor = scene.exportBgColor && scene.exportBgColor !== 'transparent' ? 'background:' + scene.exportBgColor + ';' : '';
@@ -472,6 +544,9 @@ function generateEmbed(scene) {
       '    },i*160);});',
       '  },1000); }',
       '})();',
+      SCRIPT_CLOSE,
+      '<script>',
+      FILTER_PILL_JS,
       SCRIPT_CLOSE,
       '</div>',
     ].join('\n');
@@ -552,6 +627,9 @@ function generateEmbed(scene) {
     '    },i*160);});',
     '  },1000); }',
     '})();',
+    SCRIPT_CLOSE,
+    '<script>',
+    FILTER_PILL_JS,
     SCRIPT_CLOSE,
   ].join('\n');
 }
@@ -661,8 +739,10 @@ function parseCodeFence(text) {
 }
 
 function applyImport(parsed) {
-  let appliedEl = 0, appliedBg = 0;
-  const basename = (p) => (p || '').split('/').pop();
+  let appliedEl = 0, appliedBg = 0; const unmatched = [];
+  const basename  = (p) => (p || '').split('/').pop();
+  const isAbsUrl  = (p) => /^https?:\/\//i.test(p || '');
+
   if (parsed.aspectRatio)    S.aspectRatio = parsed.aspectRatio;
   if (parsed.filterMode)     S.filterMode  = parsed.filterMode;
   if (parsed.edgeFade  != null) S.edgeFade  = parsed.edgeFade;
@@ -676,13 +756,25 @@ function applyImport(parsed) {
     if (parsed.mobile.aspectRatio) S.mobileAspectRatio = parsed.mobile.aspectRatio;
   }
 
-  // Auto-detect prefix from the first image path that contains a directory
+  // Auto-detect prefix from relative paths only (skip absolute URLs)
   const allPaths = [...parsed.backgrounds, ...parsed.elements].map(i => i.fileName).filter(Boolean);
-  const withDir  = allPaths.find(p => p.includes('/'));
+  const withDir  = allPaths.find(p => p.includes('/') && !isAbsUrl(p));
   if (withDir) S.imagePrefix = withDir.substring(0, withDir.lastIndexOf('/') + 1);
 
   parsed.backgrounds.forEach(imp => {
-    const bg = S.backgrounds.find(b => basename(b.fileName) === basename(imp.fileName)); if (!bg) return;
+    if (!imp.fileName) return;
+    let bg;
+    if (isAbsUrl(imp.fileName)) {
+      // Find existing entry with same URL, or create a new one
+      bg = S.backgrounds.find(b => b.fileName === imp.fileName);
+      if (!bg) {
+        bg = { id: nextId(), src: imp.fileName, fileName: imp.fileName, x: 0, y: 0, scale: 100, rotation: 0, mobileOverride: null };
+        S.backgrounds.push(bg);
+      }
+    } else {
+      bg = S.backgrounds.find(b => basename(b.fileName) === basename(imp.fileName));
+      if (!bg) { unmatched.push(basename(imp.fileName)); return; }
+    }
     if (imp.x            !== undefined) bg.x            = parseFloat(imp.x)        || 0;
     if (imp.y            !== undefined) bg.y            = parseFloat(imp.y)        || 0;
     if (imp.scale        !== undefined) bg.scale        = parseFloat(imp.scale)    || 100;
@@ -690,8 +782,29 @@ function applyImport(parsed) {
     if (imp.mobileOverride)             bg.mobileOverride = imp.mobileOverride;
     appliedBg++;
   });
-  parsed.elements.forEach(imp => {
-    const el = S.elements.find(e => basename(e.fileName) === basename(imp.fileName)); if (!el) return;
+
+  parsed.elements.forEach((imp, i) => {
+    if (!imp.fileName) return;
+    let el;
+    if (isAbsUrl(imp.fileName)) {
+      // Find existing entry with same URL, or create a new one
+      el = S.elements.find(e => e.fileName === imp.fileName);
+      if (!el) {
+        el = {
+          id: nextId(), src: imp.fileName, fileName: imp.fileName,
+          naturalW: 0, naturalH: 0,
+          x: 15, y: 15, scale: 18,
+          label: '', glowColor: GLOW_PRESETS[(S.elements.length + i) % GLOW_PRESETS.length].color,
+          glowIntensity: 1, actionType: 'filter', actionValue: '',
+          rotation: 0, resetRotationOnHover: true,
+          flipH: false, flipV: false, onlyShowOn: null, mobileOverride: null,
+        };
+        S.elements.push(el);
+      }
+    } else {
+      el = S.elements.find(e => basename(e.fileName) === basename(imp.fileName));
+      if (!el) { unmatched.push(basename(imp.fileName)); return; }
+    }
     if (imp.x             !== undefined) el.x             = parseFloat(imp.x)             || 0;
     if (imp.y             !== undefined) el.y             = parseFloat(imp.y)             || 0;
     if (imp.scale         !== undefined) el.scale         = parseFloat(imp.scale)         || 18;
@@ -708,7 +821,7 @@ function applyImport(parsed) {
     if (imp.mobileOverride)                     el.mobileOverride       = imp.mobileOverride;
     appliedEl++;
   });
-  return { appliedEl, appliedBg };
+  return { appliedEl, appliedBg, unmatched };
 }
 
 // ── State helpers ──────────────────────────────────────────────────────────────
@@ -1841,13 +1954,26 @@ function renderCodePanel() {
     document.getElementById('import-apply-btn').onclick = () => {
       const text = ta.value.trim(); if (!text) return;
       const parsed = parseCodeFence(text);
-      const { appliedEl, appliedBg } = applyImport(parsed);
+      const { appliedEl, appliedBg, unmatched } = applyImport(parsed);
       const status = document.getElementById('import-status');
       const parts = [];
       if (appliedEl) parts.push(appliedEl + ' element' + (appliedEl !== 1 ? 's' : ''));
       if (appliedBg) parts.push(appliedBg + ' background' + (appliedBg !== 1 ? 's' : ''));
-      status.textContent = parts.length ? '✓ Applied to ' + parts.join(', ') + '.' : 'No matching images found — upload images first, then import.';
-      status.style.color = parts.length ? '#69F0AE' : '#aa6644';
+      let msg = '', color = '#7a7a9a';
+      if (parts.length) {
+        msg = '✓ Applied to ' + parts.join(', ') + '.';
+        color = '#69F0AE';
+        if (unmatched.length) msg += '\n↑ Upload to replace: ' + unmatched.join(', ');
+      } else if (unmatched.length) {
+        msg = 'Upload these files to apply:\n' + unmatched.join(', ');
+        color = '#FFD700';
+      } else {
+        msg = 'Nothing to apply — paste a scene-nav YAML block above.';
+        color = '#aa6644';
+      }
+      status.style.whiteSpace = 'pre-wrap';
+      status.style.color = color;
+      status.textContent = msg;
       if (parts.length) { renderLeftPanel(); renderCanvas(); }
     };
   }

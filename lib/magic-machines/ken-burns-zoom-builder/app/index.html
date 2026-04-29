@@ -652,7 +652,7 @@
   /* ── CAPTION OVERLAY (on preview viewport) ── */
   .caption-overlay {
     position: absolute;
-    bottom: 10px;
+    bottom: 5%;
     left: 0;
     right: 0;
     pointer-events: none;
@@ -1043,6 +1043,22 @@
           <input type="range" id="caption-fade-slider" min="1" max="15" value="4" step="0.5">
         </div>
         <div class="field">
+          <div class="field-label" style="margin-bottom:6px;">
+            Position <span style="font-size:10px;color:var(--dim);font-weight:400;">— from bottom</span>
+          </div>
+          <div class="seg-group" id="caption-pos-presets" style="margin-bottom:8px;">
+            <button class="seg-btn active" data-pos="5">Low</button>
+            <button class="seg-btn" data-pos="22">Stories</button>
+            <button class="seg-btn" data-pos="40">Mid</button>
+          </div>
+          <div class="field-label">
+            <span style="color:var(--dim);font-size:11px;">Fine-tune</span>
+            <span class="field-label-val" id="caption-bottom-val">5%</span>
+          </div>
+          <input type="range" id="caption-bottom-slider" min="3" max="55" value="5" step="1">
+        </div>
+
+        <div class="field">
           <div class="field-label">Color</div>
           <div class="color-row">
             <div class="color-swatch" id="color-swatch" style="background:#ffffff;">
@@ -1167,7 +1183,7 @@ const state = {
   ar: '9:16', arW: 9, arH: 16, customArW: 4, customArH: 5,
   playback: 'bounce',  // 'loop' | 'hold' | 'bounce'
   direction: 'in',     // 'in' = start→end (zoom in), 'out' = end→start (zoom out)
-  caption: { enabled: false, subtitle: '', location: '', date: '', fadeOut: 4.0, color: '#ffffff' },
+  caption: { enabled: false, subtitle: '', location: '', date: '', fadeOut: 4.0, color: '#ffffff', bottomPct: 5 },
   rects: {
     start: JSON.parse(localStorage.getItem('kb-rect-start') || 'null') || { x: 8.87, y: 0.12,  w: 83.46, h: 98.92 },
     end:   JSON.parse(localStorage.getItem('kb-rect-end')   || 'null') || { x: 32.97, y: 40.87, w: 30.70, h: 36.38 }
@@ -1884,6 +1900,34 @@ document.getElementById('caption-date').addEventListener('input', e => {
   updateSummary();
 });
 
+// ── Caption position ──────────────────────────────────────────────────────────
+const captionBottomSlider = document.getElementById('caption-bottom-slider');
+const captionBottomVal    = document.getElementById('caption-bottom-val');
+const captionPosPresets   = document.getElementById('caption-pos-presets');
+
+function applyBottomPct(pct, skipSlider) {
+  state.caption.bottomPct = pct;
+  localStorage.setItem('kb-caption-bottom', pct);
+  captionBottomVal.textContent = pct + '%';
+  if (!skipSlider) captionBottomSlider.value = pct;
+  // Sync preset active state
+  captionPosPresets.querySelectorAll('.seg-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.pos) === pct));
+  syncCaptionOverlay();
+}
+
+captionPosPresets.addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn'); if (!btn) return;
+  applyBottomPct(parseInt(btn.dataset.pos));
+});
+
+captionBottomSlider.addEventListener('input', () => {
+  applyBottomPct(parseInt(captionBottomSlider.value), true);
+});
+
+const _savedBottom = localStorage.getItem('kb-caption-bottom');
+if (_savedBottom !== null) applyBottomPct(parseInt(_savedBottom));
+
 document.getElementById('caption-color-input').addEventListener('input', e => {
   const hex = e.target.value;
   state.caption.color = hex;
@@ -1920,6 +1964,7 @@ function syncCaptionOverlay(t) {
     return;
   }
 
+  captionOverlay.style.bottom = state.caption.bottomPct + '%';
   captionTextEl.textContent = text;
   captionTextEl.style.color = hexToRgba(state.caption.color, 0.92);
 
@@ -1983,6 +2028,81 @@ const EASING_FNS = {
   'ease-in-out': t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
 };
 
+// ─────────────────────────────────────────────
+// MP4 metadata injection — injects iTunes-style ©too + ©cmt into the moov atom.
+// Readable by ExifTool, ffprobe, VLC, and most AI video parsers.
+// Instagram transcodes on upload and strips this, but it lives in the local file.
+// ─────────────────────────────────────────────
+function injectMp4Metadata(buffer) {
+  const enc  = s => new TextEncoder().encode(s);
+  const be32 = (arr, off, val) => new DataView(arr.buffer, arr.byteOffset).setUint32(off, val, false);
+
+  // Build a standard MP4 box: [size:4BE][type:4][...payloads]
+  const mkBox = (typeBytes, ...payloads) => {
+    const total = 8 + payloads.reduce((n, p) => n + p.byteLength, 0);
+    const out = new Uint8Array(total);
+    be32(out, 0, total);
+    out.set(typeBytes.slice(0, 4), 4);
+    let pos = 8;
+    for (const p of payloads) { out.set(new Uint8Array(p), pos); pos += p.byteLength; }
+    return out;
+  };
+  const box  = (type, ...pls) => mkBox(enc(type), ...pls);
+
+  // iTunes data box: type_indicator(4=1 UTF-8) + locale(4=0) + text
+  const dataBox = text => {
+    const tb = enc(text);
+    const pl = new Uint8Array(8 + tb.length);
+    be32(pl, 0, 1); // type = 1 (UTF-8)
+    pl.set(tb, 8);
+    return box('data', pl);
+  };
+
+  // ©xxx atoms need the 0xA9 byte — build manually
+  const metaBox = (fourCC, text) => {
+    const inner = dataBox(text);
+    const key   = new Uint8Array([0xa9, ...enc(fourCC.slice(0, 3))]);
+    return mkBox(key, inner);
+  };
+
+  // hdlr box inside meta: mdir handler
+  const hdlrPl = new Uint8Array(25);
+  hdlrPl.set(enc('mdir'), 8); // handler_type
+
+  const udtaBox = box('udta',
+    box('meta',
+      new Uint8Array(4),           // version=0 flags=0
+      box('hdlr', hdlrPl),
+      box('ilst',
+        metaBox('too', 'Bloob Haus Ken Burns Builder'),
+        metaBox('cmt', 'Created with a Bloob Haus Magic Machine — http://bloob.haus/magic-machine/ken-burns-zoom-builder/')
+      )
+    )
+  );
+
+  // Locate moov atom and append udtaBox inside it (after all existing children)
+  const src  = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  let off = 0;
+  while (off + 8 <= src.length) {
+    const size = view.getUint32(off, false);
+    const type = String.fromCharCode(src[off+4], src[off+5], src[off+6], src[off+7]);
+    if (type === 'moov') {
+      const out = new Uint8Array(buffer.byteLength + udtaBox.byteLength);
+      out.set(src.subarray(0, off + size), 0);                               // up to moov end
+      out.set(udtaBox, off + size);                                           // inject udta
+      out.set(src.subarray(off + size), off + size + udtaBox.byteLength);    // rest of file
+      new DataView(out.buffer).setUint32(off, size + udtaBox.byteLength, false); // update moov size
+      dbg(`MP4 metadata injected — ©too + ©cmt (${udtaBox.byteLength} bytes added)`, 'ok');
+      return out.buffer;
+    }
+    if (size < 8) break;
+    off += size;
+  }
+  dbg('MP4 metadata: moov atom not found, skipping injection', 'warn');
+  return buffer;
+}
+
 function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
   ctx.save();
 
@@ -1991,7 +2111,7 @@ function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
   const fontSize  = Math.round(10 * scale);
   const subSize   = Math.round(8.5 * scale);
   const lineLen   = Math.round(38 * scale);
-  const bottomPx  = Math.round(10 * scale);
+  const bottomPx  = Math.round(h * state.caption.bottomPct / 100);
   const gap       = Math.round(3 * scale);
   const ruleGap   = Math.round(5 * scale);
   const subtitle  = state.caption.subtitle.trim();
@@ -2153,8 +2273,9 @@ async function exportVideo() {
     await encoder.flush();
     muxer.finalize();
 
-    const { buffer } = target;
-    dbg(`Encoded: ${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
+    const { buffer: rawBuffer } = target;
+    dbg(`Encoded: ${(rawBuffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
+    const buffer = injectMp4Metadata(rawBuffer);
 
     const url = URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' }));
     const rawName = document.getElementById('image-credit').textContent.split('·')[0].trim();

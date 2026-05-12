@@ -1,5 +1,7 @@
 # Bloob Haus
 
+> *Bloob Haus is the place where any markdown becomes an interactive, embeddable digital object — and where anyone can extend the catalog of what's possible.*
+
 **Live sites built with Obsidian to Webpage builder (still under construction but good for getting the idea):**
 - [buffbaby.bloob.haus](https://buffbaby.bloob.haus) — Buff Baby Kitchen (recipes)
 - [leons.bloob.haus](https://leons.bloob.haus) — Leon's Marbles (notes, thoughts, creative work)

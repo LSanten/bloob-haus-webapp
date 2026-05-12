@@ -68,8 +68,8 @@ async function devLocal() {
   // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
   await preprocessContent({ contentDir, ...(pageFilter && { pageFilter }) });
 
-  // Step 1.5: Generate OG preview images (same gate as prod pipeline)
-  if (config.features?.og_images) {
+  // Step 1.5: Generate OG preview images (skipped in single-page mode — cache is hash-based and unaffected)
+  if (config.features?.og_images && !pageFilter) {
     await generateOgImages();
   }
 

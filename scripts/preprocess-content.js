@@ -130,9 +130,11 @@ export async function preprocessContent({
   // Single-page mode: build only one file for fast dev/visualizer testing
   if (pageFilter) {
     const needle = pageFilter.replace(/\\/g, "/").replace(/^\//, "");
+    const needleBase = path.basename(needle, ".md");
     const match = published.find((f) => {
       const rel = f.relativePath.replace(/\\/g, "/");
-      return rel === needle || rel.endsWith("/" + needle) || path.basename(rel) === path.basename(needle);
+      const relBase = path.basename(rel, ".md");
+      return rel === needle || rel.endsWith("/" + needle) || relBase === needleBase;
     });
     if (match) {
       console.log(`\n[page-filter] ⚡ Single-page mode: ${match.relativePath}`);

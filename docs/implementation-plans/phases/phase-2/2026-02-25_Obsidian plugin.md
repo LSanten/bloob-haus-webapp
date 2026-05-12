@@ -1,8 +1,8 @@
-# Obsidian Plugin & Magic Machine Sync — Implementation Plan
+# Obsidian Plugin & Magic Machine Sync — Future Plan
 
-**Status:** Planning  
-**Created:** 2026-02-25  
-**Location:** `docs/implementation-plans/phases/phase-5/`
+**Status:** Deferred — not v1. See [v1 plan](../obsidian-plugin/2026-05-01_plugin-v1.md) for what's being built now.
+**Created:** 2026-02-25
+**Updated:** 2026-05-01 — downscoped to future. GitHub push + Magic Machine sync are real goals but too complex for v1. v1 focuses on notes workflow features (frontmatter, image zoom, date keywords, link encoder).
 
 ---
 

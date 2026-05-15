@@ -479,7 +479,7 @@ export default async function (eleventyConfig) {
 
         // ── Image opt-out flags (checked via class or attribute on the <img>) ──────
         // no-optimize  → skip entirely, serve original file at full resolution
-        // no-zoom      → optimize to 80px-tall webp, no PhotoSwipe (use for logos/nav)
+        // no-zoom      → optimize to 500px-tall webp, no PhotoSwipe (use for logos/nav)
         // no-lightbox  → optimize to display size, no PhotoSwipe (banner images)
         // no-pswp      → optimize normally, skip PhotoSwipe (inside Swiper etc.)
         // ─────────────────────────────────────────────────────────────────────────
@@ -522,9 +522,9 @@ export default async function (eleventyConfig) {
           continue;
         }
 
-        // UI images (no-zoom): optimize to a small webp but keep the <img> tag intact.
+        // UI images (no-zoom): optimize to a logo-appropriate webp but keep the <img> tag intact.
         // No PhotoSwipe wrapper — these are logos, icons, decorative shapes, not content.
-        // Output: 80px tall (2× retina for 40px CSS display), aspect ratio preserved.
+        // Output: 500px tall (2× retina for up to 250px CSS display), aspect ratio preserved.
         if ((before + after).includes("no-zoom")) {
           const ext = src.toLowerCase().split(".").pop();
           if (ext === "gif") continue;
@@ -538,7 +538,7 @@ export default async function (eleventyConfig) {
             const outUrl = `/media/optimized/${encodeURIComponent(baseName)}-nav.webp`;
             if (!existsSync(cacheFile)) {
               await sharp(inputPath)
-                .resize({ height: 120, withoutEnlargement: true })
+                .resize({ height: 500, withoutEnlargement: true })
                 .webp({ quality: 85 })
                 .toFile(cacheFile);
             }

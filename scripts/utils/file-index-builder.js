@@ -95,7 +95,12 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const slugifiedFolder = hasFolder
       ? folderPath.split(path.sep).map(slugFn).join("/")
       : "";
-    const url = hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`;
+    // index.md files use the folder URL (e.g. resources/index.md → /resources/)
+    // matching the Eleventy permalink injected by preprocess-content.js
+    const isIndex = filename === "index";
+    const url = isIndex
+      ? (hasFolder ? `/${slugifiedFolder}/` : "/")
+      : (hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`);
 
     // Create a unique key that includes folder path to avoid collisions
     const fullSlug = hasFolder ? `${slugifiedFolder}/${slug}` : slug;

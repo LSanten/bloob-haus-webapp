@@ -277,8 +277,8 @@ export async function preprocessContent({
       };
     }
 
-    // 6h: Normalize bloob-object type
-    const bloobObject = normalizeBloobObject(frontmatter["bloob-object"]);
+    // 6h: Normalize bloob-object/bloob-type (both accepted; bloob-type takes priority)
+    const bloobObject = normalizeBloobObject(frontmatter["bloob-type"] || frontmatter["bloob-object"]);
 
     // Resolve redirect frontmatter (supports bare URLs, [[wiki-links]], [text](url)).
     // Accept both `redirect:` and `Redirect:` (YAML is case-sensitive; vault authors may use either).

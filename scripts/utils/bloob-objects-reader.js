@@ -30,7 +30,9 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 
-const OBJECTS_FILENAME = "_bloob-objects.md";
+// Accepted filenames in priority order — _bloob-types.md is the preferred name,
+// _bloob-objects.md is the legacy alias kept for backwards compatibility.
+const TYPES_FILENAMES = ["_bloob-types.md", "_bloob-objects.md"];
 
 /**
  * Parses a Markdown table into an array of row objects.
@@ -80,12 +82,21 @@ function parseMarkdownTable(tableText) {
  * @returns {Object} Registry keyed by object_type. Empty object if file is missing.
  */
 export async function readBloobObjects(contentDir) {
-  const objectsFilePath = path.join(contentDir, OBJECTS_FILENAME);
+  // Try each accepted filename in priority order
+  let objectsFilePath = null;
+  let foundFilename = null;
+  for (const filename of TYPES_FILENAMES) {
+    const candidate = path.join(contentDir, filename);
+    if (await fs.pathExists(candidate)) {
+      objectsFilePath = candidate;
+      foundFilename = filename;
+      break;
+    }
+  }
 
-  // Graceful: if the file doesn't exist, return empty registry (no crash)
-  if (!(await fs.pathExists(objectsFilePath))) {
+  if (!objectsFilePath) {
     console.log(
-      `[bloob-objects] No ${OBJECTS_FILENAME} found in content repo — using empty object registry`,
+      `[bloob-objects] No ${TYPES_FILENAMES.join(" or ")} found in content repo — using empty object registry`,
     );
     return {};
   }
@@ -97,7 +108,7 @@ export async function readBloobObjects(contentDir) {
 
   if (rows.length === 0) {
     console.warn(
-      `[bloob-objects] ${OBJECTS_FILENAME} found but no valid table rows parsed`,
+      `[bloob-objects] ${foundFilename} found but no valid table rows parsed`,
     );
     return {};
   }
@@ -119,7 +130,7 @@ export async function readBloobObjects(contentDir) {
   }
 
   console.log(
-    `[bloob-objects] Loaded ${Object.keys(registry).length} object types: ${Object.keys(registry).join(", ")}`,
+    `[bloob-objects] Loaded ${Object.keys(registry).length} types from ${foundFilename}: ${Object.keys(registry).join(", ")}`,
   );
 
   return registry;

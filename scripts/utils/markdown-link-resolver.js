@@ -34,8 +34,9 @@ export function resolveMarkdownLinks(content, index) {
       .replace(/^.*\//, '')  // Remove path
       .replace(/\.md$/, ''); // Remove extension
 
-    // Try to resolve the link
-    const { url, found } = resolveLinkTarget(filename, index);
+    // Try to resolve the link (full path first to handle same filename in multiple folders)
+    const fullPath = trimmedPath.replace(/\.md$/, "");
+    const { url, found } = resolveLinkTarget(filename, index, fullPath);
 
     if (found) {
       const fullUrl = heading ? `${url}#${slugifyHeading(heading)}` : url;
@@ -55,9 +56,21 @@ export function resolveMarkdownLinks(content, index) {
  * Resolves a link target to a URL using the index.
  * @param {string} target - The filename (without extension)
  * @param {Object} index - The file index
+ * @param {string|null} fullPath - Full relative path without extension (e.g. "resources/index")
  * @returns {Object} { url, found }
  */
-function resolveLinkTarget(target, index) {
+function resolveLinkTarget(target, index, fullPath = null) {
+  // Try the full relative path first — handles same filename in multiple folders
+  // (e.g. resources/index.md vs playlists/index.md both named "index").
+  // Normalized with lowercase + forward slashes; no slug transformation applied,
+  // so folder names with spaces won't match — filename fallback handles that.
+  if (fullPath) {
+    const key = fullPath.toLowerCase().replace(/\\/g, "/");
+    if (index.pages[key]) {
+      return { url: index.pages[key].url, found: true };
+    }
+  }
+
   const normalized = target.toLowerCase();
 
   // Try filename lookup first

@@ -501,8 +501,12 @@ export async function preprocessContent({
       const folderSlug = entry.name;
       const indexPath = path.join(outputDir, folderSlug, "index.md");
 
-      // Skip if user provided their own index.md (written during Step 6)
+      // Skip if an index file already exists — either user-provided index.md (Step 6)
+      // or a theme-provided index.njk assembled into src by assemble-src.js.
+      // Both claim the same permalink so generating a stub would cause a conflict.
       if (await fs.pathExists(indexPath)) continue;
+      const folderContents = await fs.readdir(path.join(outputDir, folderSlug));
+      if (folderContents.some((f) => f.startsWith("index.") && f !== "index.md")) continue;
 
       // Skip if a root-level file claims the same permalink slug (e.g. Notes.md → /notes/)
       if (rootFileSlugs.has(folderSlug.toLowerCase())) {

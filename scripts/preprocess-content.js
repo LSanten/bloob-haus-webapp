@@ -354,8 +354,8 @@ export async function preprocessContent({
     // Add layout for Eleventy.
     // Priority order (highest → lowest):
     //   1. Explicit `layout: layouts/…` in the file's own frontmatter
-    //   2. Layout declared on the bloob-object type in _bloob-objects.md
-    //   3. Default: layouts/page.njk
+    //   2. Layout declared on the bloob-type in _bloob-types.md / _bloob-objects.md
+    //   3. Default: layouts/page.njk (layouts/base.njk for index.md files)
     const hasEleventyLayout =
       frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
 
@@ -383,7 +383,7 @@ export async function preprocessContent({
         dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = "layouts/base.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? "layouts/base.njk";
       }
       outputFrontmatter.eleventyExcludeFromCollections = true;
       outputFrontmatter.templateEngineOverride = "njk,md";

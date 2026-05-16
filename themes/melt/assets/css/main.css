@@ -30,13 +30,12 @@
 
   /* Gradient — used on html, body, and fixed-bg pseudo */
   --gradient: linear-gradient(
-    140deg,
-    #4a2d6e 0%,
-    #6a4090 20%,
-    #8a5590 45%,
-    #9a6080 65%,
-    #a07278 85%,
-    #a07878 100%
+    108deg,
+    #4a2272 0%,
+    #72388a 22%,
+    #9a4e80 48%,
+    #ba6455 75%,
+    #c07238 100%
   );
 }
 

@@ -25,44 +25,54 @@
   text-align: center;
   cursor: pointer;
   animation: cnav-float 3.6s ease-in-out infinite;
-  -webkit-mask-image: radial-gradient(circle, black 55%, transparent 82%);
-  mask-image: radial-gradient(circle, black 55%, transparent 82%);
 }
 
-/* Orbit bubbles — dark indigo with radial glow */
+/* Orbit bubbles — deep violet glow, fully faded before border-radius clips */
 .cnav__bubble--orbit {
-  background: radial-gradient(circle at 38% 32%, #5a3d9a 0%, #1a0838 65%, transparent 100%);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.45),
-    0 0 60px rgba(80, 40, 160, 0.25);
+  background: radial-gradient(circle,
+    rgba(90, 25, 185, 0.95) 0%,
+    rgba(70, 15, 155, 0.55) 35%,
+    rgba(50, 8, 120, 0.15) 55%,
+    rgba(50, 8, 120, 0) 65%
+  );
 }
 
 .cnav__bubble--orbit:hover {
-  -webkit-mask-image: radial-gradient(circle, black 65%, transparent 88%);
-  mask-image: radial-gradient(circle, black 65%, transparent 88%);
+  background: radial-gradient(circle,
+    rgba(115, 45, 220, 1) 0%,
+    rgba(90, 28, 185, 0.65) 35%,
+    rgba(65, 12, 145, 0.18) 55%,
+    rgba(65, 12, 145, 0) 65%
+  );
 }
 
-/* Center CTA bubble — rose/pink gradient */
+/* Center CTA bubble — slightly brighter violet glow */
 .cnav__bubble--cta {
-  background: radial-gradient(circle at 38% 32%, #d07898 0%, #7a2848 65%, transparent 100%);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 0 80px rgba(200, 80, 120, 0.2);
+  background: radial-gradient(circle,
+    rgba(110, 50, 210, 1) 0%,
+    rgba(85, 30, 178, 0.62) 35%,
+    rgba(62, 12, 140, 0.18) 55%,
+    rgba(62, 12, 140, 0) 65%
+  );
   animation-duration: 4.2s;
   animation-delay: 0.6s !important;
   z-index: 2;
 }
 
 .cnav__bubble--cta:hover {
-  -webkit-mask-image: radial-gradient(circle, black 65%, transparent 88%);
-  mask-image: radial-gradient(circle, black 65%, transparent 88%);
+  background: radial-gradient(circle,
+    rgba(135, 68, 235, 1) 0%,
+    rgba(108, 45, 205, 0.7) 35%,
+    rgba(78, 20, 165, 0.2) 55%,
+    rgba(78, 20, 165, 0) 65%
+  );
 }
 
 /* Labels */
 .cnav__label {
   color: white;
   font-family: var(--font-body, 'Quicksand', sans-serif);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 500;
   line-height: 1.35;
   padding: 0 12px;
@@ -72,7 +82,7 @@
 }
 
 .cnav__bubble--cta .cnav__label {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 

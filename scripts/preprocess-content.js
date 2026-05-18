@@ -31,6 +31,7 @@ import {
 } from "./utils/attachment-resolver.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
+import { stripLeadingTitleHeading } from "./utils/title-deduplicator.js";
 import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
@@ -400,18 +401,10 @@ export async function preprocessContent({
     // Strip leading H1 from content body if it duplicates the page title.
     // page.njk always renders <h1>{{ title }}</h1> from frontmatter — if the
     // markdown also starts with "# Same Title" that heading is redundant.
-    const leadingH1 = processedContent.match(/^\s*# (.+?)(?:\s*\{#[^}]+\})?\s*\n/);
-    if (leadingH1) {
-      const headingText = leadingH1[1]
-        .replace(/\*\*(.+?)\*\*/g, "$1")
-        .replace(/\*(.+?)\*/g, "$1")
-        .replace(/`(.+?)`/g, "$1")
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-        .trim();
-      if (headingText.toLowerCase() === pageTitle.toLowerCase()) {
-        processedContent = processedContent.replace(/^\s*# .+\n\n?/, "");
-        console.log(`[process]   Stripped leading H1 matching title: "${pageTitle}"`);
-      }
+    const deduped = stripLeadingTitleHeading(processedContent, pageTitle);
+    if (deduped !== processedContent) {
+      processedContent = deduped;
+      console.log(`[process]   Stripped leading H1 matching title: "${pageTitle}"`);
     }
 
     // Reconstruct the file with frontmatter

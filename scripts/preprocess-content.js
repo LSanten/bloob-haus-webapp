@@ -201,7 +201,9 @@ export async function preprocessContent({
     processedContent = stripComments(processedContent);
 
     // 6b: Handle transclusions first (before other ![[]] patterns)
-    const transclusionResult = handleTransclusions(processedContent);
+    const currentFilename = path.basename(file.relativePath, ".md");
+    const currentSlug = fileIndex.filenameLookup[currentFilename.toLowerCase()] || null;
+    const transclusionResult = handleTransclusions(processedContent, fileIndex, { sourceFile: currentSlug });
     processedContent = transclusionResult.content;
     stats.transclusions += transclusionResult.transclusions.length;
 

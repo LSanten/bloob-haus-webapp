@@ -30,6 +30,10 @@ Tracked items with severity, impact, and target resolution phase.
 | 24 | `warm-kitchen` + `marbles-pouch`: missing color pair CSS contract | Low | `bg=` on visualizers will have no effect until themes define `--pair-bg/--pair-title/--pair-text` for `.bg-*` classes and add the apply rules | Copy pattern from `alter-engineers/main.css`; adjust token colors per theme | ⬜ Open |
 | 25 | `warm-kitchen`: missing PhotoSwipe (head.njk + scripts.njk) | Low | Image zoom silently broken on warm-kitchen sites | Copy from alter-engineers following settings-registry.md wiring guide | ⬜ Open |
 | 26 | `theme.min.css` still contains `.team*` rules (dead code after image-grid migration) | Low | Duplicate rules; `styles.css` wins due to load order so no visual impact | Remove `.team*` block from `theme.min.css` once all visualizers are migrated; do it in one pass | ⬜ Open |
+| 27 | Transclusion: heading-level slice `![[note#heading]]` not yet supported | Medium | `![[note#Heading]]` embeds the full page and logs a warning; heading slice silently ignored | Phase 3: slice target AST from heading to next same-or-higher heading and embed that subtree only | ⬜ Open |
+| 28 | Transclusion: block-level slice `![[note#^blockid]]` not yet supported | Low | Same fallback as #27 — full page embedded | Phase 3+: pre-pass to build global `{blockId → {file, node}}` map; extract block at embed time | ⬜ Open |
+| 29 | Transclusion heading bump is fixed at +1 level; no context-aware depth | Low | If embedded note appears under an h3, its h1s become h2 (should be h4). Rare in practice. | Detect parent heading depth at embed site and bump by the correct delta | ⬜ Open |
+| 30 | `.transclusion-embed` / `.transclusion-placeholder` CSS only in `melt` theme | Low | Other themes render unstyled embed containers | Add styles to `marbles-pouch`, `warm-kitchen`, `alter-engineers` main.css following melt's pattern | ⬜ Open |
 
 ## Notes
 

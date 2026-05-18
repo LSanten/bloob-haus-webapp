@@ -435,6 +435,24 @@ body {
   color: var(--color-accent);
 }
 
+/* --- Transclusion embed --- */
+.transclusion-embed {
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 16px 20px;
+  margin: 2em 0;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.transclusion-placeholder {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin: 1.5em 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
 /* Required: internal link pills */
 a.internal-link {
   border-radius: 4px;

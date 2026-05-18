@@ -128,6 +128,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       relativePath: file.relativePath,
       url,
       frontmatter,
+      rawBody: body,
     };
 
     pages[fullSlug] = pageInfo;
@@ -214,23 +215,23 @@ export function resolveLink(target, index) {
   // Try title lookup
   if (index.titleLookup[normalized]) {
     const slug = index.titleLookup[normalized];
-    return { url: index.pages[slug].url, found: true };
+    return { url: index.pages[slug].url, fullSlug: slug, found: true };
   }
 
   // Try filename lookup
   if (index.filenameLookup[normalized]) {
     const slug = index.filenameLookup[normalized];
-    return { url: index.pages[slug].url, found: true };
+    return { url: index.pages[slug].url, fullSlug: slug, found: true };
   }
 
   // Try normalized (no special chars) filename lookup
   const normalizedNoSpecial = normalized.replace(/[^a-z0-9]/g, "");
   if (index.filenameLookup[normalizedNoSpecial]) {
     const slug = index.filenameLookup[normalizedNoSpecial];
-    return { url: index.pages[slug].url, found: true };
+    return { url: index.pages[slug].url, fullSlug: slug, found: true };
   }
 
-  return { url: null, found: false };
+  return { url: null, fullSlug: null, found: false };
 }
 
 // Run directly if this is the main module

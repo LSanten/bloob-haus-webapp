@@ -4,7 +4,7 @@ layout: layouts/base.njk
 <article class="marble-page" data-pagefind-body>
   {# Hidden image for OG/Pagefind indexing #}
   {% if image %}
-  <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden />
+  <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden style="display:none" />
   {% endif %}
 
   <header class="marble-header">

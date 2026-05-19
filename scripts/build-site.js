@@ -106,7 +106,7 @@ async function buildSite() {
     process.env.PUBLISH_MODE = config.content.publish_mode;
     process.env.BLOCKLIST_TAG = config.content.blocklist_tag;
     process.env.EXCLUDE_FILES = (config.content.exclude_files || []).join(",");
-    process.env.SLUG_STRATEGY = config.permalinks?.strategy || "slugify";
+    process.env.SLUG_STRATEGY = config.permalinks?.strategy || "preserve-case";
 
     const preprocessResult = await preprocessContent({ contentDir });
 

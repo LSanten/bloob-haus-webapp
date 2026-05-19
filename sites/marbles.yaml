@@ -10,6 +10,10 @@ content:
   repo: "LSanten/bloob-haus-marbles"
   branch: "main"
 
+# URL slug strategy: preserve-case keeps original filename casing, spaces → hyphens
+permalinks:
+  strategy: preserve-case
+
 # Build features
 features:
   search: true   # Pagefind search index — enables search bar on homepage

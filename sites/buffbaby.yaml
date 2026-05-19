@@ -5,6 +5,10 @@
 site:
   url: "https://buffbaby.bloob.haus"
 
+# URL slug strategy: slugify lowercases all filenames for consistent lowercase URLs
+permalinks:
+  strategy: slugify
+
 # Content source (webapp infra — GitHub)
 content:
   repo: "LSanten/buffbaby"

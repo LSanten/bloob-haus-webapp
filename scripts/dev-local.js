@@ -59,7 +59,7 @@ async function devLocal() {
   process.env.PUBLISH_MODE = config.content.publish_mode;
   process.env.BLOCKLIST_TAG = config.content.blocklist_tag;
   process.env.EXCLUDE_FILES = (config.content.exclude_files || []).join(",");
-  process.env.SLUG_STRATEGY = config.permalinks?.strategy || "slugify";
+  process.env.SLUG_STRATEGY = config.permalinks?.strategy || "preserve-case";
 
   // Derive per-site src/ directory and expose to all child scripts via env
   const srcDir = getSrcDir(config.site?.url);

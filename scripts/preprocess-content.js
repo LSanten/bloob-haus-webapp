@@ -410,8 +410,9 @@ export async function preprocessContent({
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 
-    // Determine output path (preserve folder structure)
-    const outputPath = path.join(outputDir, file.relativePath);
+    // Determine output path (preserve folder structure, sanitize spaces → hyphens)
+    const sanitizedRelPath = file.relativePath.split(path.sep).map(seg => seg.replace(/ /g, '-')).join(path.sep);
+    const outputPath = path.join(outputDir, sanitizedRelPath);
     await fs.ensureDir(path.dirname(outputPath));
     await fs.writeFile(outputPath, outputContent);
 

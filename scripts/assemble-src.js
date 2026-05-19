@@ -293,7 +293,7 @@ export default {
   logo: ${JSON.stringify(logoUrl)},
   year: new Date().getFullYear(),
   permalinks: {
-    strategy: ${JSON.stringify(config.permalinks?.strategy || "slugify")},
+    strategy: ${JSON.stringify(config.permalinks?.strategy || "preserve-case")},
   },
   features: ${JSON.stringify(config.features || {})},
   theme_settings: ${JSON.stringify(config.theme_settings || {})},

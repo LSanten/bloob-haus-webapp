@@ -6,6 +6,74 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 36 - May 18, 2026
+**Worked on:** URL slug defaults, filename sanitization, copy-link-button plugin, plugin plan docs
+
+**URL slug strategy: preserve-case now the default for all new vaults**
+- `scripts/preprocess-content.js` — sanitizes filenames when writing to `src/`: spaces replaced with hyphens per path segment. `coffee tutorials.md` → `coffee-tutorials.md` on disk → Eleventy generates `/marbles/coffee-tutorials/`
+- Default slug strategy changed from `"slugify"` (lowercase) → `"preserve-case"` (case kept, spaces→hyphens) in `build-site.js`, `dev-local.js`, `assemble-src.js`
+- `sites/marbles.yaml` and `sites/melt.yaml` — explicitly set `permalinks: strategy: preserve-case`
+- `sites/buffbaby.yaml` — explicitly pinned to `permalinks: strategy: slugify` (preserves existing lowercase URL behavior)
+- Pipeline is consistent: file-index-builder computes URLs from original filename (spaces→hyphens via slug strategy); eleventyComputed.js reads the sanitized filename from disk and applies same strategy — both arrive at the same URL
+
+**Obsidian copy-link-button plugin** (`bloob-haus-marbles/.obsidian/plugins/copy-link-button/`)
+- Fixed base URL: `leonsanten.info/marbles/` → `leons.bloob.haus/`
+- Now uses `file.path` (vault-relative) instead of `file.basename` — all subfolders (`marbles/`, `say-hello-to/`, `tender-fleck/`) work correctly
+- Applies same spaces→hyphens transformation as the build pipeline
+
+**Plugin implementation plan** (`docs/implementation-plans/phases/obsidian-plugin/2026-05-01_plugin-v1.md`)
+- Added "How Bloob Haus URLs Are Constructed" section: URL formula, key facts (case preserved, spaces→hyphens, no other transform), where `site.url` lives in the codebase, and three options for how a plugin reads it (plugin setting vs `_bloob-settings.md` vs GitHub API)
+
+---
+
+### Session 35 - May 17, 2026
+**Worked on:** MELT page layout features, transclusion expansion, H1 deduplication
+
+**Transclusion expansion** (`![[note]]` inline embed)
+- `scripts/utils/transclusion-handler.js` — resolves target pages from `fileIndex`, embeds content inline inside `.transclusion-embed`; bumps all ATX headings down one level (H1→H2, H2→H3, etc.); cycle detection via visited set to break A→B→A loops; heading/block specifier stripped before resolution with full-page fallback
+- `scripts/utils/file-index-builder.js` — adds `rawBody` to each page entry; `resolveLink` returns `fullSlug` alongside `url`
+- `scripts/preprocess-content.js` — passes `fileIndex` and `sourceFile` to transclusion handler
+- `themes/melt/` — `.transclusion-embed` and `.transclusion-placeholder` styles in `main.css`
+- 17 new tests covering: expansion, heading bump, cycle detection, specifier fallback, not-found fallback
+- `docs/TECH-DEBT.md` items 27–30: heading slice, block slice, context-aware depth, missing CSS on other themes
+
+**H1 deduplication fix**
+- When a markdown file opens with `# Title` matching the page title, the preprocessor strips the heading to prevent double `<h1>` rendering in the built site
+- `scripts/utils/title-deduplicator.js` — extracted utility with 19 unit tests (exact match, case-insensitivity, inline markdown stripping, anchor ID syntax, H2+ untouched, mid-doc H1 untouched)
+
+**MELT page layout**
+- `themes/melt/partials/share-bar.njk` — Web Share API button (mobile native sheet), copy-link button (clipboard fallback), heading anchor icons on h2/h3/h4
+- `themes/melt/layouts/page.njk` — share bar in header under author/byline; `date_created` pill from frontmatter
+- `docs/architecture/settings-registry.md` — `date_created` documented for both marbles-pouch and melt themes
+
+**Fixes**
+- `themes/melt/assets/css/main.css` — first/last-child margin reset inside `.transclusion-embed` removes extra spacing at top/bottom of embed blocks
+- `themes/melt/partials/share-bar.njk` — heading anchor icon swapped to checkmark on copy
+
+---
+
+### Session 34 - May 16, 2026
+**Worked on:** MELT visualizer polish, Deploy CI, folder-preview marbles layout
+
+**circular-nav visualizer polish**
+- Bubbles 1.4× larger; CTA gradient: deep saturated violet core with warm pink-purple glow; gradients driven by CSS vars so `:hover` rules work alongside JS
+- `lib/visualizers/circular-nav/index.js` — parses `key: value` settings from `:::circular-nav` block
+- `lib/visualizers/circular-nav/browser.js` — `orbit_radius`, center/orbit size, hue, text size, text wrap width all configurable; `debug: on` shows live sliders + copy-YAML panel
+- Soft radial gradient blobs (no hard edges, no mask), 35% larger bubbles, more vibrant violet colors
+
+**folder-preview: marbles layout**
+- `lib/visualizers/folder-preview/browser.js` — `renderMarbles()`: draggable marble spheres with float animation, circle collision detection, light-source rotation
+- Hover/drop glitch fixed: float frozen on hover enter, re-phased on hover leave and drag release for seamless resumption
+- `themes/melt/assets/marble.png` added
+
+**CI**
+- `.github/workflows/deploy-melt.yml` — Deploy Melt GitHub Actions workflow
+
+**Chore**
+- `package.json` `dev:melt` reverted to local `../melt-website` content path
+
+---
+
 ### Session 33 - May 14, 2026
 **Worked on:** MELT client site — new theme, content, and two new visualizers
 

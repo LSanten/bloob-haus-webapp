@@ -16,6 +16,7 @@ import crypto from "crypto";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import { glob } from "glob";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -57,7 +58,7 @@ function extractFilePath(value) {
  * @param {string} rawValue - Raw logo value from site config
  * @returns {string|null} Absolute path to the source image, or null if unresolvable
  */
-function resolveLogoPath(rawValue, srcDir) {
+async function resolveLogoPath(rawValue, srcDir) {
   if (!rawValue) return null;
 
   // Detect wiki-links before extracting — bare [[filename]] means Obsidian attachment
@@ -72,8 +73,17 @@ function resolveLogoPath(rawValue, srcDir) {
     return path.join(srcDir, filePath.replace(/^\//, ""));
   }
 
-  // Wiki-links are bare attachment filenames → look in src/media/
+  // Wiki-links are bare attachment filenames.
+  // Search the whole src/ tree (vault structure is preserved after preprocessing)
+  // so logos placed outside media/ are found correctly.
   if (isWikiLink && !filePath.includes("/")) {
+    const matches = await glob(`**/${filePath}`, {
+      cwd: srcDir,
+      nodir: true,
+      ignore: ["media/optimized/**", "og/**"],
+    });
+    if (matches.length > 0) return path.join(srcDir, matches[0]);
+    // Fallback: check src/media/ for backward compat
     return path.join(srcDir, "media", filePath);
   }
 
@@ -96,7 +106,7 @@ export async function generateFavicons({ config }) {
     return;
   }
 
-  const sourceImagePath = resolveLogoPath(rawLogo, SRC_DIR);
+  const sourceImagePath = await resolveLogoPath(rawLogo, SRC_DIR);
   if (!sourceImagePath || !(await fs.pathExists(sourceImagePath))) {
     console.warn(
       `[favicon] Source image not found at: ${sourceImagePath} — skipping favicon generation`,

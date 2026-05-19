@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { buildFileIndex, resolveLink } from '../../scripts/utils/file-index-builder.js';
+import { buildFileIndex, resolveLink, buildAttachmentIndex } from '../../scripts/utils/file-index-builder.js';
 
 describe('buildFileIndex', () => {
   let tmpDir;
@@ -188,5 +188,87 @@ describe('resolveLink', () => {
   it('is case-insensitive for title lookup', () => {
     const result = resolveLink('challah bread', index);
     expect(result.found).toBe(true);
+  });
+});
+
+describe('buildAttachmentIndex', () => {
+  let tmpDir;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attach-index-'));
+  });
+
+  afterEach(async () => {
+    await fs.remove(tmpDir);
+  });
+
+  async function makeVaultFiles(files) {
+    for (const [relPath, content] of Object.entries(files)) {
+      const full = path.join(tmpDir, relPath);
+      await fs.ensureDir(path.dirname(full));
+      await fs.writeFile(full, content);
+    }
+  }
+
+  it('returns { byBasename, byVaultPath } shape', async () => {
+    await makeVaultFiles({ 'media/logo.png': '' });
+    const idx = await buildAttachmentIndex(tmpDir, 'media');
+    expect(idx).toHaveProperty('byBasename');
+    expect(idx).toHaveProperty('byVaultPath');
+  });
+
+  it('preserves vault structure in URLs', async () => {
+    await makeVaultFiles({
+      'media/logo.png': '',
+      'projects/diagram.html': '',
+    });
+    const { byVaultPath } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byVaultPath['media/logo.png']).toBe('/media/logo.png');
+    expect(byVaultPath['projects/diagram.html']).toBe('/projects/diagram.html');
+  });
+
+  it('byBasename maps filename to vault-structure URL', async () => {
+    await makeVaultFiles({ 'projects/diagram.html': '' });
+    const { byBasename } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byBasename['diagram.html']).toBe('/projects/diagram.html');
+  });
+
+  it('encodes spaces and special characters in URLs', async () => {
+    await makeVaultFiles({ 'media/My Photo.jpg': '' });
+    const { byVaultPath, byBasename } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byVaultPath['media/My Photo.jpg']).toBe('/media/My%20Photo.jpg');
+    expect(byBasename['My Photo.jpg']).toBe('/media/My%20Photo.jpg');
+  });
+
+  it('provides case-insensitive byBasename lookup', async () => {
+    await makeVaultFiles({ 'media/Logo.PNG': '' });
+    const { byBasename } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byBasename['logo.png']).toBe('/media/Logo.PNG');
+  });
+
+  it('prefers attachment-folder file on basename collision', async () => {
+    await makeVaultFiles({
+      'notes/logo.png': '',   // not in attachment folder
+      'media/logo.png': '',   // in attachment folder — should win
+    });
+    const { byBasename } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byBasename['logo.png']).toBe('/media/logo.png');
+  });
+
+  it('byVaultPath has no collision — both files indexed separately', async () => {
+    await makeVaultFiles({
+      'notes/logo.png': '',
+      'media/logo.png': '',
+    });
+    const { byVaultPath } = await buildAttachmentIndex(tmpDir, 'media');
+    expect(byVaultPath['notes/logo.png']).toBe('/notes/logo.png');
+    expect(byVaultPath['media/logo.png']).toBe('/media/logo.png');
+  });
+
+  it('handles same-folder attachment mode without crashing', async () => {
+    await makeVaultFiles({ 'media/image.jpg': '' });
+    // "." means same-folder — no preferred prefix, just last-write-wins
+    const idx = await buildAttachmentIndex(tmpDir, '.');
+    expect(idx.byBasename['image.jpg']).toBe('/media/image.jpg');
   });
 });

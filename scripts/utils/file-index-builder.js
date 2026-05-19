@@ -152,10 +152,19 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
 }
 
 /**
- * Builds an index of all attachments (images, PDFs, etc).
+ * Builds an index of all attachments (images, PDFs, HTML files, etc).
+ *
+ * Returns two maps:
+ *   byBasename  — filename only → URL  (for wiki-link ![[file.jpg]] resolution)
+ *   byVaultPath — vault-relative path → URL  (for path-aware <img src="../x/y.jpg"> resolution)
+ *
+ * Vault directory structure is preserved in URLs: vault/projects/chart.html → /projects/chart.html
+ * On basename collision, the file inside the configured attachment folder wins
+ * (mirrors Obsidian's own resolution preference).
+ *
  * @param {string} contentDir - Path to content directory
- * @param {string} attachmentFolder - Relative path to attachment folder
- * @returns {Object} Attachment index mapping filenames to output paths
+ * @param {string} attachmentFolder - Obsidian attachmentFolderPath setting
+ * @returns {{ byBasename: Object, byVaultPath: Object }}
  */
 export async function buildAttachmentIndex(contentDir, attachmentFolder) {
   const extensions = [
@@ -167,40 +176,69 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     "svg",
     "pdf",
     "html",
+    "mp4",
+    "webm",
   ];
   const pattern = `**/*.{${extensions.join(",")}}`;
 
-  // Scan the entire vault so users can place images anywhere — mirrors Obsidian's
-  // own resolution behaviour (attachmentFolderPath only controls where Obsidian
-  // *pastes* new files, not where it *finds* existing ones).
-  // Exclude system directories that are never user content.
+  // Scan the entire vault — mirrors Obsidian's resolution behaviour.
   const files = await glob(pattern, {
     cwd: contentDir,
     nodir: true,
     ignore: [".obsidian/**", "node_modules/**", ".git/**"],
   });
 
-  const attachments = {};
+  // Normalize the configured attachment folder to a vault-root prefix.
+  // "." or "" means "same folder as the note" — no global preference possible.
+  let preferredPrefix = null;
+  if (attachmentFolder && attachmentFolder !== "." && attachmentFolder !== "") {
+    const normalized = attachmentFolder
+      .replace(/^\.\//, "")
+      .replace(/^\//, "")
+      .replace(/\/$/, "");
+    if (normalized) preferredPrefix = normalized + "/";
+  }
 
-  for (const file of files) {
+  // Process non-preferred files first so preferred-folder files overwrite on collision.
+  const orderedFiles = preferredPrefix
+    ? [
+        ...files.filter((f) => !f.startsWith(preferredPrefix)),
+        ...files.filter((f) => f.startsWith(preferredPrefix)),
+      ]
+    : files;
+
+  const byBasename = {};
+  const byVaultPath = {};
+
+  for (const file of orderedFiles) {
+    // file is vault-relative with forward slashes (glob guarantees this)
+    // e.g. "media/logo.png" or "projects/My Diagram.html"
     const filename = path.basename(file);
     const decodedFilename = decodeURIComponent(filename);
 
-    // Encode filename for use in URLs (spaces → %20, etc.)
-    const encodedFilename = encodeURIComponent(filename).replace(/%2F/g, "/");
-    const mediaPath = `/media/${encodedFilename}`;
+    // Preserve vault structure in URL: encode each segment individually
+    const url = "/" + file.split("/").map(encodeURIComponent).join("/");
 
-    attachments[filename] = mediaPath;
-    attachments[decodedFilename] = mediaPath;
+    // byVaultPath: exact vault-relative path → URL
+    byVaultPath[file] = url;
+    byVaultPath[file.toLowerCase()] = url;
 
-    // Also store lowercase versions for case-insensitive matching
-    attachments[filename.toLowerCase()] = mediaPath;
-    attachments[decodedFilename.toLowerCase()] = mediaPath;
+    // byBasename: filename only → URL (for wiki-link resolution)
+    if (byBasename[filename] !== undefined && byBasename[filename] !== url) {
+      console.warn(
+        `[index] Basename collision: "${filename}" found at multiple vault paths. ` +
+        `Using: ${url}`,
+      );
+    }
+    byBasename[filename] = url;
+    byBasename[decodedFilename] = url;
+    byBasename[filename.toLowerCase()] = url;
+    byBasename[decodedFilename.toLowerCase()] = url;
   }
 
   console.log(`[index] Indexed ${files.length} attachments from vault`);
 
-  return attachments;
+  return { byBasename, byVaultPath };
 }
 
 /**
@@ -260,11 +298,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
 
     // Test attachment index
-    const attachments = await buildAttachmentIndex(contentDir, "media");
-    console.log("\n[index] Sample attachments:");
-    const attachmentKeys = Object.keys(attachments).slice(0, 5);
-    for (const key of attachmentKeys) {
-      console.log(`  "${key}" → ${attachments[key]}`);
+    const { byBasename, byVaultPath } = await buildAttachmentIndex(contentDir, "media");
+    console.log("\n[index] Sample attachments (byBasename):");
+    for (const key of Object.keys(byBasename).slice(0, 5)) {
+      console.log(`  "${key}" → ${byBasename[key]}`);
+    }
+    console.log("\n[index] Sample attachments (byVaultPath):");
+    for (const key of Object.keys(byVaultPath).slice(0, 5)) {
+      console.log(`  "${key}" → ${byVaultPath[key]}`);
     }
   })();
 }

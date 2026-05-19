@@ -177,11 +177,22 @@ export async function preprocessContent({
   for (const f of existingMdFiles) {
     await fs.remove(f);
   }
-  // Clean media from previous build
-  await fs.remove(path.join(staticDir, "media"));
+
+  // Clean attachment files from previous build to prevent stale files from a different
+  // site appearing in this build's output. Vault structure is now preserved in staticDir,
+  // so we glob for all attachment extensions rather than just removing staticDir/media/.
+  // Skip: media/optimized/ (image optimizer cache — intentionally persisted across builds),
+  //       og/ (OG image cache), assets/ (theme assets written by assemble-src).
+  const ATTACHMENT_CLEAN_IGNORE = ["media/optimized/**", "og/**", "assets/**"];
+  const attachmentExts = "jpg,jpeg,png,gif,webp,svg,pdf,html,mp4,webm";
+  const staleAttachments = await glob(`**/*.{${attachmentExts}}`, {
+    cwd: staticDir,
+    absolute: true,
+    ignore: ATTACHMENT_CLEAN_IGNORE,
+  }).catch(() => []);
+  for (const f of staleAttachments) await fs.remove(f);
 
   await fs.ensureDir(outputDir);
-  await fs.ensureDir(path.join(staticDir, "media"));
   console.log(`[prep] Output directory: ${outputDir}`);
   console.log(`[prep] Static directory: ${staticDir}`);
 
@@ -208,10 +219,11 @@ export async function preprocessContent({
     processedContent = transclusionResult.content;
     stats.transclusions += transclusionResult.transclusions.length;
 
-    // 6c: Resolve attachments (images)
+    // 6c: Resolve attachments (images, embeds, HTML files)
     const attachmentResult = resolveAttachments(
       processedContent,
       attachmentIndex,
+      { sourceVaultPath: file.relativePath.replace(/\\/g, "/") },
     );
     processedContent = attachmentResult.content;
     stats.linksResolved += attachmentResult.resolved.length;
@@ -484,13 +496,12 @@ export async function preprocessContent({
     `[bloob-objects] Wrote ${Object.keys(resolvedRegistry).length} object types to bloobObjects.json`,
   );
 
-  // Step 9: Copy attachments
+  // Step 9: Copy attachments (vault structure preserved — files land at vault-relative paths)
   console.log("\n--- Step 9: Copying attachments ---");
-  const mediaOutputDir = path.join(staticDir, "media");
   const { copied } = await copyAttachments(
     contentDir,
     obsidianConfig.attachmentFolderPath,
-    mediaOutputDir,
+    staticDir,
   );
   stats.attachmentsCopied = copied.length;
 

@@ -46,21 +46,29 @@ async function fileHash(filePath) {
 }
 
 /**
- * Find the actual source file in src/media/ for a given base name.
- * Handles URL-encoded filenames and case variations.
+ * Find the actual source file in src/ for a given base name.
+ * Searches the whole src/ tree (vault structure is preserved — images may be
+ * anywhere, not just in src/media/).
+ * Handles URL-encoded filenames by using glob with decoded baseName.
  */
-async function findSourceFile(baseName, mediaDir) {
-  const mediaFiles = await fs.readdir(mediaDir);
-  for (const file of mediaFiles) {
-    const ext = path.extname(file).toLowerCase();
-    if (![".jpg", ".jpeg", ".png", ".gif"].includes(ext)) continue;
-    const name = path.basename(file, path.extname(file));
-    // Compare decoded versions for URL-encoded filenames
-    if (
-      name === baseName ||
-      decodeURIComponent(name) === decodeURIComponent(baseName)
-    ) {
-      return file;
+async function findSourceFile(baseName, srcDir) {
+  const decoded = decodeURIComponent(baseName);
+  const exts = ["jpg", "jpeg", "png", "gif"];
+  for (const ext of exts) {
+    const matches = await glob(`**/${decoded}.${ext}`, {
+      cwd: srcDir,
+      nodir: true,
+      ignore: ["og/**", "assets/**", "media/optimized/**"],
+    });
+    if (matches.length > 0) return matches[0]; // vault-relative path
+    // Try URL-encoded variant in case filename contains special chars on disk
+    if (decoded !== baseName) {
+      const encodedMatches = await glob(`**/${baseName}.${ext}`, {
+        cwd: srcDir,
+        nodir: true,
+        ignore: ["og/**", "assets/**", "media/optimized/**"],
+      });
+      if (encodedMatches.length > 0) return encodedMatches[0];
     }
   }
   return null;
@@ -165,9 +173,9 @@ export async function generateOgImages() {
     const baseName = decodeURIComponent(match[1]);
     if (imageSources.has(baseName)) continue;
 
-    const sourceFile = await findSourceFile(baseName, MEDIA_DIR);
+    const sourceFile = await findSourceFile(baseName, SRC_DIR);
     if (sourceFile) {
-      imageSources.set(baseName, sourceFile);
+      imageSources.set(baseName, sourceFile); // vault-relative path within SRC_DIR
     } else {
       console.log(`[og] Warning: source not found for ${baseName}`);
     }
@@ -179,7 +187,7 @@ export async function generateOgImages() {
   let skipped = 0;
 
   for (const [baseName, sourceFile] of imageSources) {
-    const sourcePath = path.join(MEDIA_DIR, sourceFile);
+    const sourcePath = path.join(SRC_DIR, sourceFile);
     const hash = await fileHash(sourcePath);
     const ext = path.extname(sourceFile).toLowerCase();
     const isGif = ext === ".gif";

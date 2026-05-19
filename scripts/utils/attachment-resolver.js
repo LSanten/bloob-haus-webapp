@@ -9,61 +9,113 @@ import { glob } from "glob";
 
 /**
  * Resolves image and attachment references in markdown content.
- * Handles: ![alt](image.jpg), ![](image.jpg), ![[image.jpg]] (wiki-style)
  *
- * @param {string} content - Markdown content with image references
- * @param {Object} attachmentIndex - Attachment index from buildAttachmentIndex()
- * @returns {Object} { content, resolved, broken } - processed content and stats
+ * Handles three syntaxes:
+ *   1. Standard markdown  ![alt](path)
+ *   2. Wiki-style         ![[image.jpg]]
+ *   3. Raw HTML src=      <img>, <video>, <audio>, <source>, <embed>, <iframe>
+ *
+ * Resolution strategy:
+ *   - Wiki syntax (![[]])  → basename lookup only (Obsidian never includes a path)
+ *   - Markdown / HTML src  → path-aware first (resolves ../relative/paths against the
+ *                            source file's vault location), then basename fallback
+ *
+ * @param {string} content - Markdown content
+ * @param {{ byBasename: Object, byVaultPath: Object }} attachmentIndex
+ * @param {{ sourceVaultPath?: string }} [options]
+ *   sourceVaultPath: vault-relative path of the file being processed
+ *                    (e.g. "marbles/my-page.md") — enables path-aware resolution
+ * @returns {{ content: string, resolved: Array, broken: Array }}
  */
-export function resolveAttachments(content, attachmentIndex) {
+export function resolveAttachments(content, attachmentIndex, { sourceVaultPath = null } = {}) {
+  const { byBasename, byVaultPath } = attachmentIndex;
   const resolved = [];
   const broken = [];
 
+  // Resolve a vault-relative path from a relative src like "../projects/file.jpg".
+  // Returns the URL if found in byVaultPath, null otherwise.
+  function resolveVaultRelative(rawSrc) {
+    if (!sourceVaultPath) return null;
+    const decoded = decodeURIComponent(rawSrc);
+    // Compute source file's directory within the vault (forward slashes)
+    const sourceDir = sourceVaultPath.replace(/\\/g, "/").split("/").slice(0, -1).join("/");
+    const joined = sourceDir ? sourceDir + "/" + decoded : decoded;
+    // Manually normalize: handle .. and . segments
+    const parts = joined.split("/");
+    const normalized = [];
+    for (const part of parts) {
+      if (part === "..") normalized.pop();
+      else if (part !== ".") normalized.push(part);
+    }
+    const vaultRelPath = normalized.join("/");
+    return byVaultPath[vaultRelPath] || byVaultPath[vaultRelPath.toLowerCase()] || null;
+  }
+
+  // Basename fallback: extract filename from path and look up in byBasename.
+  function lookupBasename(rawSrc) {
+    const decoded = decodeURIComponent(rawSrc);
+    const filename = path.basename(decoded);
+    return byBasename[filename] || byBasename[filename.toLowerCase()] || null;
+  }
+
+  // Full resolution: path-aware first, basename fallback.
+  function resolve(rawSrc) {
+    return resolveVaultRelative(rawSrc) || lookupBasename(rawSrc);
+  }
+
   // Pattern 1: Standard markdown images ![alt](path)
   const mdImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/g;
-
-  let processedContent = content.replace(
-    mdImagePattern,
-    (match, alt, imagePath) => {
-      // Decode URL-encoded characters
-      const decodedPath = decodeURIComponent(imagePath);
-      const filename = path.basename(decodedPath);
-
-      // Look up in attachment index
-      const resolvedPath =
-        attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
-
-      if (resolvedPath) {
-        resolved.push({ original: imagePath, resolved: resolvedPath });
-        return `![${alt}](${resolvedPath})`;
-      } else {
-        broken.push({ original: imagePath });
-        return match; // Keep original if not found
-      }
-    },
-  );
+  let processedContent = content.replace(mdImagePattern, (match, alt, imagePath) => {
+    const resolvedPath = resolve(imagePath);
+    if (resolvedPath) {
+      resolved.push({ original: imagePath, resolved: resolvedPath });
+      return `![${alt}](${resolvedPath})`;
+    }
+    broken.push({ original: imagePath });
+    return match;
+  });
 
   // Pattern 2: Wiki-style images ![[image.jpg]]
+  // Wiki syntax never carries path info — always basename lookup only.
   const wikiImagePattern = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+  processedContent = processedContent.replace(wikiImagePattern, (match, imagePath, altText) => {
+    const decoded = decodeURIComponent(imagePath);
+    const filename = path.basename(decoded);
+    const alt = altText || "";
+    const resolvedPath = byBasename[filename] || byBasename[filename.toLowerCase()] || null;
+    if (resolvedPath) {
+      resolved.push({ original: imagePath, resolved: resolvedPath });
+      return `![${alt}](${resolvedPath})`;
+    }
+    broken.push({ original: imagePath });
+    return `![${alt}](${imagePath})`;
+  });
 
+  // Pattern 3: Raw HTML src= on media/embed tags.
+  // Covers: <img>, <video>, <audio>, <source>, <embed>, <iframe>
+  // Path-aware: resolves Obsidian-relative paths (../folder/file) against the source
+  // file's vault location so they become correct root-relative URLs on the web.
+  const htmlSrcPattern =
+    /<(img|video|audio|source|embed|iframe)\b([^>]*?)src=(["'])([^"']+)\3([^>]*?)>/gi;
   processedContent = processedContent.replace(
-    wikiImagePattern,
-    (match, imagePath, altText) => {
-      const decodedPath = decodeURIComponent(imagePath);
-      const filename = path.basename(decodedPath);
-      const alt = altText || "";
-
-      // Look up in attachment index
-      const resolvedPath =
-        attachmentIndex[filename] || attachmentIndex[filename.toLowerCase()];
-
-      if (resolvedPath) {
-        resolved.push({ original: imagePath, resolved: resolvedPath });
-        return `![${alt}](${resolvedPath})`;
-      } else {
-        broken.push({ original: imagePath });
-        return `![${alt}](${imagePath})`; // Convert to standard markdown anyway
+    htmlSrcPattern,
+    (match, tag, before, quote, srcPath, after) => {
+      // Leave root-relative and absolute URLs alone
+      if (
+        srcPath.startsWith("/") ||
+        srcPath.startsWith("http://") ||
+        srcPath.startsWith("https://") ||
+        srcPath.startsWith("data:")
+      ) {
+        return match;
       }
+      const resolvedPath = resolve(srcPath);
+      if (resolvedPath) {
+        resolved.push({ original: srcPath, resolved: resolvedPath });
+        return `<${tag}${before}src="${resolvedPath}"${after}>`;
+      }
+      broken.push({ original: srcPath });
+      return match;
     },
   );
 
@@ -72,29 +124,31 @@ export function resolveAttachments(content, attachmentIndex) {
 
 /**
  * Extracts the first image reference from processed markdown content.
- * Should be called after resolveAttachments() so paths are resolved to /media/...
+ * Call after resolveAttachments() so paths are already root-relative.
+ * Matches any root-relative path to a known image extension.
  * @param {string} content - Processed markdown content
- * @returns {string|null} - The /media/... path of the first image, or null
+ * @returns {string|null} - Root-relative image path, or null
  */
 export function extractFirstImage(content) {
-  const match = content.match(/!\[[^\]]*\]\((\/media\/[^)]+)\)/);
+  const match = content.match(
+    /!\[[^\]]*\]\((\/[^)]+\.(?:jpg|jpeg|png|gif|webp|svg))\)/i,
+  );
   return match ? match[1] : null;
 }
 
 /**
- * Copies attachments from content source to static output folder.
- * @param {string} contentDir - Path to content directory
- * @param {string} attachmentFolder - Relative path to attachment folder in content
- * @param {string} outputDir - Path to output static folder (e.g., static/media)
- * @returns {Object} { copied, errors } - stats about copied files
+ * Copies attachments from the vault to the static root, preserving vault
+ * directory structure so URLs match the vault layout.
+ *
+ * vault/media/logo.png        → staticRootDir/media/logo.png   → /media/logo.png
+ * vault/projects/diagram.html → staticRootDir/projects/diagram.html → /projects/diagram.html
+ *
+ * @param {string} contentDir - Path to content directory (vault root)
+ * @param {string} attachmentFolder - Obsidian attachmentFolderPath (retained for API compat)
+ * @param {string} staticRootDir - Root of the static output tree (e.g., src/)
+ * @returns {{ copied: string[], errors: Array }} vault-relative paths of copied files
  */
-export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
-  // Ensure output directory exists
-  await fs.ensureDir(outputDir);
-
-  // Scan the entire vault — mirrors Obsidian's resolution behaviour.
-  // attachmentFolder is retained as a parameter for API compatibility but
-  // is no longer used to restrict the scan.
+export async function copyAttachments(contentDir, attachmentFolder, staticRootDir) {
   const extensions = [
     "jpg",
     "jpeg",
@@ -121,7 +175,9 @@ export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
 
   for (const file of files) {
     const sourcePath = path.join(contentDir, file);
-    const destPath = path.join(outputDir, path.basename(file));
+    // Preserve vault structure: dest mirrors the vault-relative path
+    const destPath = path.join(staticRootDir, file);
+    await fs.ensureDir(path.dirname(destPath));
 
     try {
       await fs.copy(sourcePath, destPath);
@@ -132,7 +188,7 @@ export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
     }
   }
 
-  console.log(`[attachments] Copied ${copied.length} files to ${outputDir}`);
+  console.log(`[attachments] Copied ${copied.length} files preserving vault structure`);
 
   return { copied, errors };
 }
@@ -156,12 +212,15 @@ And one that doesn't exist:
 `;
 
   const mockAttachmentIndex = {
-    "Pasted image 20250315160236.jpg":
-      "/media/Pasted%20image%2020250315160236.jpg",
-    "pasted image 20250315160236.jpg":
-      "/media/Pasted%20image%2020250315160236.jpg",
-    "cleanshot_2026-01-10-at-22-20-23@2x.png":
-      "/media/cleanshot_2026-01-10-at-22-20-23%402x.png",
+    byBasename: {
+      "Pasted image 20250315160236.jpg": "/media/Pasted%20image%2020250315160236.jpg",
+      "pasted image 20250315160236.jpg": "/media/Pasted%20image%2020250315160236.jpg",
+      "cleanshot_2026-01-10-at-22-20-23@2x.png": "/media/cleanshot_2026-01-10-at-22-20-23%402x.png",
+    },
+    byVaultPath: {
+      "media/Pasted image 20250315160236.jpg": "/media/Pasted%20image%2020250315160236.jpg",
+      "media/cleanshot_2026-01-10-at-22-20-23@2x.png": "/media/cleanshot_2026-01-10-at-22-20-23%402x.png",
+    },
   };
 
   const result = resolveAttachments(testContent, mockAttachmentIndex);

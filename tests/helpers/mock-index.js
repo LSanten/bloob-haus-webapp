@@ -40,17 +40,22 @@ export function createMockIndex(pages) {
 
 /**
  * Creates a mock attachment index from a simple file list.
- * @param {Array<{filename: string, path: string}>} files
- * @returns {Object} Index matching buildAttachmentIndex() output shape
+ * @param {Array<{filename: string, path: string, vaultPath?: string}>} files
+ *   vaultPath: vault-relative path (e.g. "media/image.jpg") — needed for path-aware tests
+ * @returns {{ byBasename: Object, byVaultPath: Object }}
  */
 export function createMockAttachmentIndex(files) {
-  const index = {};
+  const byBasename = {};
+  const byVaultPath = {};
 
   for (const file of files) {
-    index[file.filename] = file.path;
-    // Add lowercase variant
-    index[file.filename.toLowerCase()] = file.path;
+    byBasename[file.filename] = file.path;
+    byBasename[file.filename.toLowerCase()] = file.path;
+    if (file.vaultPath) {
+      byVaultPath[file.vaultPath] = file.path;
+      byVaultPath[file.vaultPath.toLowerCase()] = file.path;
+    }
   }
 
-  return index;
+  return { byBasename, byVaultPath };
 }

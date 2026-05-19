@@ -121,9 +121,14 @@ export async function generateFavicons({ config }) {
   const hashFile = path.join(SRC_DIR, ".favicon-hash");
   const existingHash = await fs.readFile(hashFile, "utf-8").catch(() => "");
 
-  if (existingHash.trim() === hash) {
+  const faviconExists = await fs.pathExists(path.join(SRC_DIR, "favicon.png"));
+  const touchIconExists = await fs.pathExists(path.join(SRC_DIR, "apple-touch-icon.png"));
+  if (existingHash.trim() === hash && faviconExists && touchIconExists) {
     console.log("[favicon] Source unchanged — using cached favicons");
     return;
+  }
+  if (existingHash.trim() === hash && (!faviconExists || !touchIconExists)) {
+    console.log("[favicon] Source unchanged but output missing — regenerating...");
   }
 
   console.log(`[favicon] Generating favicons from: ${sourceImagePath}`);

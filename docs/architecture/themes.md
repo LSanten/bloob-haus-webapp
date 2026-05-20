@@ -58,7 +58,7 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
 | `layouts/page.njk` | Default content page |
 | `partials/footer.njk` | Site footer |
 | `partials/scripts.njk` | JS includes |
-| `assets/css/main.css` | Theme stylesheet with CSS custom properties |
+| `assets/css/main.css` | Theme stylesheet — **must declare the visualizer token contract** (see below) |
 | `theme.yaml` | Theme metadata and feature declarations |
 
 ### Tier 2 — Standard (strongly recommended)
@@ -76,6 +76,52 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
 | `partials/banner.njk` | Full-width banner (object-aware themes) |
 | `partials/banner-modal.njk` | "What is a [object]?" modal |
 | `assets/objects/` | Default object-type images |
+
+---
+
+## CSS Token Contract — Required in Every Theme's `main.css`
+
+**Every theme must declare these CSS custom property names in `:root`.** All shared visualizers (`checkbox-tracker`, `page-preview`, `graph`, `search`, `testimonials`, etc.) read these exact names. If a theme uses different names internally, add aliases — do not rename the contract tokens.
+
+```css
+:root {
+  /* === Bloob Haus visualizer token contract ===
+     Copy this block into every new theme's main.css.
+     Set values to match your theme palette.
+     If your theme uses different internal names (e.g. --color-accent),
+     alias them: --accent-color: var(--color-accent); */
+
+  --accent-color: #914c9a;        /* Primary brand color — links, highlights, CTAs */
+  --accent-dark: #6b2d73;         /* Hover / active variant */
+  --bg-color: #dce8f8;            /* Default page background */
+  --text-color: #333333;          /* Body text */
+  --text-light: #666666;          /* Secondary / muted text */
+  --border-color: rgba(0,0,0,0.1);/* Subtle borders */
+  --card-bg: #ffffff;             /* Card / panel background */
+  --font-body: sans-serif;        /* Body typeface */
+  --font-heading: sans-serif;     /* Heading typeface */
+
+  /* Pagefind search UI — required if search is enabled */
+  --pagefind-ui-primary: var(--accent-color);
+  --pagefind-ui-text: var(--text-color);
+  --pagefind-ui-background: var(--card-bg);
+  --pagefind-ui-border: var(--border-color);
+  --pagefind-ui-tag: var(--bg-color);
+  --pagefind-ui-font: var(--font-body);
+}
+```
+
+**Why this matters:** Visualizer `styles.css` files only use `var(--accent-color)` etc. — they never hardcode hex values. If the theme doesn't declare these names, every visualizer silently falls back to its hardcoded defaults (warm-kitchen's brownish palette), which looks wrong on any other theme.
+
+**Melt note:** Melt uses `--color-*` naming internally. The contract tokens are declared as aliases in its `:root`:
+```css
+--accent-color: var(--color-accent);
+--bg-color: var(--color-bg);
+/* etc. */
+```
+This is the right pattern when a theme has its own internal naming convention.
+
+**Reference:** The full rationale and load order is in `docs/architecture/visualizers.md` under "CSS Token Standard".
 
 ---
 

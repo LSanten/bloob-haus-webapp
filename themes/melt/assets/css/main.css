@@ -4,7 +4,7 @@
    Purple-mauve gradient · Caveat headings · Quicksand body
    ============================================================ */
 
-/* --- Bloob Haus token contract (required) --- */
+/* --- Melt palette --- */
 :root {
   --color-bg: #7a5090;
   --color-text: #ffffff;
@@ -27,6 +27,27 @@
 
   --content-max-width: 680px;
   --radius: 12px;
+
+  /* --- Bloob Haus visualizer token contract ---
+     All shared visualizers (checkbox-tracker, page-preview, graph, search, etc.)
+     read these names. Map them to melt's own palette above so every visualizer
+     inherits the right colors without knowing about --color-* naming. */
+  --accent-color: var(--color-accent);
+  --accent-dark: var(--color-accent-2);
+  --bg-color: var(--color-bg);
+  --text-color: var(--color-text);
+  --text-light: var(--color-text-muted);
+  --border-color: var(--color-border);
+  --card-bg: var(--color-surface);
+  /* --font-body and --font-heading already use the standard names */
+
+  /* Pagefind search UI tokens */
+  --pagefind-ui-primary: var(--color-accent);
+  --pagefind-ui-text: var(--color-text);
+  --pagefind-ui-background: var(--color-surface);
+  --pagefind-ui-border: var(--color-border);
+  --pagefind-ui-tag: var(--color-accent-2);
+  --pagefind-ui-font: var(--font-body);
 
   /* Gradient — used on html, body, and fixed-bg pseudo */
   --gradient: linear-gradient(

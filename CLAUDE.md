@@ -9,7 +9,7 @@ This file is read automatically by Claude Code at session start. It contains dev
 1. **`docs/CLAUDE_CONTEXT.md`** — architecture overview, graph.json schema, build pipeline, what's working. May be outdated; check the "Last Updated" date and ask the user if the status section looks stale.
 2. **`docs/TECH-DEBT.md`** — known debt to avoid making worse
 3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/`, `scripts/utils/inject-container-raw.js`, or any `:::` container / code fence behavior. Pay special attention to: `data-vis-raw` pipeline, `browser.js` ownership convention, settings flow, and `inject-container-raw.js` utility.
-4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens
+4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens. Contains the **required CSS token contract** — every theme's `main.css` must declare `--accent-color`, `--bg-color`, `--text-color`, `--border-color`, `--card-bg`, `--font-body`, `--font-heading`, and `--pagefind-ui-*` so all shared visualizers pick up the right colors. Missing tokens = visualizers fall back to warm-kitchen defaults silently.
 5. **`docs/architecture/settings-registry.md`** — before adding any new per-page frontmatter or site-wide setting to any theme. This is the authoritative list of all settings across all themes (universal vs theme-specific).
 
 The session checklists below are a reminder for the END of the session.

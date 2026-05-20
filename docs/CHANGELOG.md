@@ -6,6 +6,38 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 37 - May 19, 2026
+**Worked on:** Attachment pipeline vault-structure refactor, favicon fix, image optimizer bypass, subtitle extraction
+
+**Attachment pipeline: vault structure preserved end-to-end**
+- Previously all attachments were flattened into `src/media/` regardless of where they lived in the vault. Now `copyAttachments` mirrors the vault's directory structure: `vault/projects/diagram.html` → `src/projects/diagram.html` → `/projects/diagram.html`
+- `buildAttachmentIndex` (`scripts/utils/file-index-builder.js`) rewritten to return `{ byBasename, byVaultPath }` dual map. `byVaultPath` enables path-aware resolution; `byBasename` keeps the fallback for wiki-links that have no path info
+- `resolveAttachments` (`scripts/utils/attachment-resolver.js`) extended with Pattern 3: resolves `src=` on `<img>`, `<video>`, `<audio>`, `<source>`, `<embed>`, `<iframe>` tags in raw HTML. Path-aware resolution via `sourceVaultPath` resolves Obsidian-relative `../` paths to correct root-relative URLs
+- `preprocess-content.js` Step 5 cleanup changed from `fs.remove(staticDir/media)` to per-extension glob across `staticDir` (preserves image optimizer cache, OG images, theme assets, and generated favicons)
+- `eleventy.config.js` passthrough rules extended: `src/**/*.{jpg,...}` and `src/**/*.html` now copied at vault-relative paths; backlinks filter updated to skip attachment URLs; image optimizer regex generalized beyond `/media/`
+- `generate-og-images.js` and `generate-favicons.js` updated to search the whole `src/` tree for source images (not just `src/media/`)
+- 36 new tests for `resolveAttachments` (all three syntax patterns, path-aware resolution, vault path matching); 8 new tests for `buildAttachmentIndex`
+
+**User-authored HTML `<img>` tags bypass image optimizer**
+- When Pattern 3 resolves an `<img src="...">` tag (relative path → root-relative URL), it injects `class="no-optimize"` — existing `no-optimize` mechanism in the optimizer preserves all inline attributes (style, width, etc.) and skips PhotoSwipe wrapping
+
+**Subtitle extraction from H2**
+- `title-deduplicator.js` now returns `{ content, subtitle }` instead of a string. If an H2 immediately follows the stripped H1 (no blank line), it is extracted as `subtitle` and exposed in frontmatter
+- All four page.njk templates render `{% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}` below the `<h1>`
+
+**Favicon bug fix: stale hash cache**
+- Root cause: `src-leons/.favicon-hash` existed (from a build that deleted `favicon.png` during cleanup) but `favicon.png` was gone. `generate-favicons.js` compared hashes, found a match, and returned early without checking if the output files actually existed
+- Fix: hash cache check now also verifies `favicon.png` and `apple-touch-icon.png` exist on disk before skipping
+- Also: `favicon.png` and `apple-touch-icon.png` added to the Step 5 cleanup ignore list so they survive across builds
+- Deleted stale `src-leons/.favicon-hash` so the next dev build regenerated correctly
+
+**Logo URL resolution: wiki-link hardcode removed**
+- `assemble-src.js` `resolveLogoUrl` was hardcoding `/media/${filename}` for `[[wiki-link]]` logo/favicon values — wrong if the logo file lives outside `media/`
+- Now async: globs the already-preprocessed `src-*/` tree to find the file at its real vault path. Falls back to `/media/` with a warning if not found
+- Safe because assemble always runs after preprocess has copied vault files into `src-*/`
+
+---
+
 ### Session 36 - May 18, 2026
 **Worked on:** URL slug defaults, filename sanitization, copy-link-button plugin, plugin plan docs
 

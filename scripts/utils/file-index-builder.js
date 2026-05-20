@@ -185,6 +185,7 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
   const files = await glob(pattern, {
     cwd: contentDir,
     nodir: true,
+    nocase: true,
     ignore: [".obsidian/**", "node_modules/**", ".git/**"],
   });
 

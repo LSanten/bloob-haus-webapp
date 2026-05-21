@@ -16,4 +16,4 @@ permalinks:
 
 # Build features
 features:
-  search: false
+  search: true

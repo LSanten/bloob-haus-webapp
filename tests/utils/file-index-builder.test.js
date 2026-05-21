@@ -123,8 +123,9 @@ describe('buildFileIndex', () => {
         makeFile('notes/index.md', '---\n---\n# Notes'),
       ]);
       expect(Object.keys(index.pages)).toHaveLength(2);
-      expect(index.pages['recipes/index']).toBeDefined();
-      expect(index.pages['notes/index']).toBeDefined();
+      // Folder index files use the folder name as their fullSlug key, not "folder/index"
+      expect(index.pages['recipes']).toBeDefined();
+      expect(index.pages['notes']).toBeDefined();
     });
   });
 });

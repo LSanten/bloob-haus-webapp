@@ -102,22 +102,30 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : filename;
     const title = extractTitle(frontmatter, body, titleFallback);
 
-    // Slug is based on FILENAME, not title (URLs stay stable even if title changes)
-    const slug = slugFn(filename);
-
     // Build URL with folder prefix if in a subfolder
     // Apply slug strategy to each folder segment
     const slugifiedFolder = hasFolder
       ? folderPath.split(path.sep).map(slugFn).join("/")
       : "";
+
+    // Slug is based on filename, not title (URLs stay stable even if title changes).
+    // Exception: folder index files use the parent folder name as the slug so that
+    // "resources/index.md" is indexed as "resources", not "index".
+    const slug = (isIndex && hasFolder)
+      ? slugFn(path.basename(folderPath))
+      : slugFn(filename);
+
     // index.md files use the folder URL (e.g. resources/index.md → /resources/)
     // matching the Eleventy permalink injected by preprocess-content.js
     const url = isIndex
       ? (hasFolder ? `/${slugifiedFolder}/` : "/")
       : (hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`);
 
-    // Create a unique key that includes folder path to avoid collisions
-    const fullSlug = hasFolder ? `${slugifiedFolder}/${slug}` : slug;
+    // Create a unique key that includes folder path to avoid collisions.
+    // Folder index files use just the folder path (not folder/folder after the slug fix).
+    const fullSlug = isIndex
+      ? (hasFolder ? slugifiedFolder : "")
+      : (hasFolder ? `${slugifiedFolder}/${slug}` : slug);
 
     const pageInfo = {
       title,
@@ -134,6 +142,11 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     pages[fullSlug] = pageInfo;
     titleLookup[title.toLowerCase()] = fullSlug;
     filenameLookup[filename.toLowerCase()] = fullSlug;
+    // For folder index files also register "folder/index" so resolveLink("resources/index.md")
+    // still works after fullSlug changed from "resources/index" to "resources".
+    if (isIndex && hasFolder) {
+      filenameLookup[`${slugifiedFolder}/index`] = fullSlug;
+    }
 
     // Also add filename without special characters for fuzzy matching
     const normalizedFilename = filename.toLowerCase().replace(/[^a-z0-9]/g, "");

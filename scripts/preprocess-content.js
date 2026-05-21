@@ -419,6 +419,7 @@ export async function preprocessContent({
       }
       outputFrontmatter.eleventyExcludeFromCollections = true;
       outputFrontmatter.templateEngineOverride = "njk,md";
+      outputFrontmatter.is_folder = true;
     }
 
     // Strip leading H1 from content body if it duplicates the page title.

@@ -69,6 +69,12 @@ function resolveLinkTarget(target, index, fullPath = null) {
     if (index.pages[key]) {
       return { url: index.pages[key].url, found: true };
     }
+    // Folder index files moved from pages["resources/index"] → pages["resources"].
+    // filenameLookup["resources/index"] still maps to the correct fullSlug.
+    if (index.filenameLookup[key]) {
+      const fullSlug = index.filenameLookup[key];
+      if (index.pages[fullSlug]) return { url: index.pages[fullSlug].url, found: true };
+    }
   }
 
   const normalized = target.toLowerCase();

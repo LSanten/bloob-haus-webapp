@@ -1,112 +1,576 @@
 /* Search Visualizer — Styles
  *
- * Loaded automatically in head.njk for all themes via the visualizer CSS
- * auto-include system (bundle-visualizers.js → assets/css/visualizers/search.css).
+ * Auto-bundled into every theme by scripts/bundle-visualizers.js.
+ * Owns: sizing, layout, Pagefind UI overrides using standard tokens.
+ * Theme-specific deviations (glass, accents) live in each theme's main.css.
  *
- * Results always appear above the filter panel.
- * Filters (tags) are hidden by default; opt-in with `show_tags: true` in the code fence.
+ * Layout tokens (--sv-*) are declared on wrapper selectors so themes can
+ * override individual values without touching the rules below.
  */
 
-/* Results always first, filters below */
-.pagefind-ui .pagefind-ui__drawer {
-  flex-direction: column;
+/* ───── Layout tokens ───── */
+.search-visualizer,
+.home-search,
+.footer-search__panel {
+  --sv-max-width: 100%;
+  --sv-widget-margin-y: 0px;
+
+  --sv-input-pad-y: 0.6em;
+  --sv-input-pad-x: 1.25em;
+  --sv-input-font-size: 1.125rem;
+  --sv-input-radius: 999px;
+
+  --sv-message-margin-top: 0.875rem;
+  --sv-message-margin-bottom: 0.75rem;
+  --sv-message-size: 0.8rem;
+  --sv-message-pad-left: 1.375rem;
+
+  --sv-results-gap: 0.75rem;
+  --sv-result-padding: 0.75rem 1.25rem;
+  --sv-result-radius: 17px;
+
+  --sv-result-title-size: 1rem;
+  --sv-result-title-weight: 700;
+  --sv-result-excerpt-size: 0.9rem;
+  --sv-result-excerpt-leading: 1.3;
+
+  --sv-thumb-size: 88px;
+  --sv-thumb-max-h: 96px;
 }
 
-.pagefind-ui .pagefind-ui__results-area {
-  order: 1;
+/* ───── Widget container ───── */
+.search-visualizer,
+.home-search,
+.footer-search__panel {
+  margin-block: var(--sv-widget-margin-y);
 }
 
-.pagefind-ui .pagefind-ui__filter-panel {
-  order: 2;
-  width: 100%;
+/* Container queries: responsive layout is driven by the widget's own width,
+   not the viewport. This means correct behaviour inside sidebars, modals, etc. */
+.search-visualizer .pagefind-ui,
+.home-search .pagefind-ui,
+.footer-search__panel .pagefind-ui {
+  max-width: var(--sv-max-width);
+  margin-inline: auto;
+  container-type: inline-size;
 }
 
-/* Hide filter panel by default on all search widgets */
+/* ───── Drawer order — results above, filters below ───── */
+.pagefind-ui .pagefind-ui__drawer { flex-direction: column; }
+.pagefind-ui .pagefind-ui__results-area { order: 1; }
+.pagefind-ui .pagefind-ui__filter-panel { order: 2; width: 100%; }
+
+/* Hide filter panel by default; opt-in via show_tags: true in code fence */
 .search-visualizer .pagefind-ui__filter-panel,
 .home-search .pagefind-ui__filter-panel,
-.footer-search__panel .pagefind-ui__filter-panel {
-  display: none !important;
-}
+.footer-search__panel .pagefind-ui__filter-panel { display: none !important; }
+.search-visualizer--show-tags .pagefind-ui__filter-panel { display: flex !important; }
 
-/* Opt-in: show_tags: true in code fence adds this class */
-.search-visualizer--show-tags .pagefind-ui__filter-panel {
-  display: block !important;
-}
+/* ───── Search input ───── */
+/* The form wraps both the input and the full results drawer, so we cannot use
+   top: 50% on the clear button (it would land in the results area). Instead,
+   browser.js wraps the input + Pagefind's clear button in .sv-input-wrapper
+   (position: relative) giving us a reliable, input-only containing block. */
+.pagefind-ui__form { width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
-/* ================================
-   Pagefind UI — Sizing & Layout
-   Makes the search input fill its container.
-   Pagefind's Svelte-compiled defaults constrain width; !important overrides.
-   Future UI sizing/positioning decisions go here — they propagate to all themes.
-   ================================ */
-
-.pagefind-ui__form {
-  width: 100% !important;
-}
+/* Wrapper injected by browser.js around the input + clear button only.
+   Sticky so the search bar stays visible as results grow below it. */
+.sv-input-wrapper { position: sticky; top: 1rem; z-index: 10; width: 100%; }
 
 .pagefind-ui__search-input {
   width: 100% !important;
-  padding: 0.65em 1.25em !important;
-  font-size: 1rem !important;
+  /* left padding clears Pagefind's built-in loupe icon (::before at left:16px, 14px wide) */
+  padding: var(--sv-input-pad-y) calc(var(--sv-input-pad-x) + 2.5em) var(--sv-input-pad-y) 2.75em !important;
+  transition: padding-left 150ms ease !important;
+  font-size: var(--sv-input-font-size) !important;
   line-height: 1.4 !important;
-}
-
-/* ================================
-   Pagefind UI — Color & Style Overrides
-   Uses standard contract tokens (declared in every theme's :root).
-   Pagefind hardcodes colors via Svelte-scoped selectors; !important is required.
-   Theme-specific deviations (glass effects, accent glows) live in each theme's main.css.
-   ================================ */
-
-.pagefind-ui__search-input {
   background: var(--card-bg) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 999px !important;
+  border-radius: var(--sv-input-radius) !important;
   color: var(--text-color) !important;
   font-family: var(--font-body) !important;
 }
 
-.pagefind-ui__search-input::placeholder {
-  color: var(--text-light) !important;
+/* Once typing starts: slide text left to where the icon was */
+.pagefind-ui__search-input:not(:placeholder-shown) {
+  padding-left: var(--sv-input-pad-x) !important;
 }
+
+.pagefind-ui__search-input::placeholder { color: var(--text-light) !important; }
 
 .pagefind-ui__search-input:focus {
   outline: none !important;
   border-color: var(--accent-color) !important;
 }
 
+/* Fade loupe out when typing (opacity so it can animate; icon is position:absolute, no layout impact) */
+.pagefind-ui__form::before { transition: opacity 150ms ease; }
+.pagefind-ui__form:has(.pagefind-ui__search-input:not(:placeholder-shown))::before {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ───── Clear button — × icon inside the right pill cap ─────
+   Positioned relative to .sv-input-wrapper (injected by browser.js) so it
+   stays inside the input area, not the full form height. Auto-hides when empty. */
 .pagefind-ui__search-clear {
+  position: absolute !important;
+  right: 0.5rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  bottom: auto !important;
+  height: 1.75rem !important;
+  width: 1.75rem !important;
+  aspect-ratio: auto !important;
+  border: none !important;
+  background: transparent !important;
+  font-size: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagefind-ui__search-clear::after {
+  content: "×";
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-light);
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagefind-ui__search-clear:hover::after {
+  color: var(--text-color);
+  border-color: var(--accent-color);
+}
+
+.pagefind-ui__search-input:placeholder-shown ~ .pagefind-ui__search-clear {
+  display: none !important;
+}
+
+/* ───── Results area + message ─────
+   Pagefind's results-area has margin-top: 16px and message has padding: 16px 0 —
+   zero both so our margin tokens give consistent, even spacing. */
+.pagefind-ui__results-area { margin-top: 0 !important; }
+
+.pagefind-ui__message {
+  margin: var(--sv-message-margin-top) 0 var(--sv-message-margin-bottom) !important;
+  padding: 0 0 0 var(--sv-message-pad-left) !important;
+  font-size: var(--sv-message-size) !important;
   color: var(--text-light) !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
 }
 
-.pagefind-ui__filter-panel {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
+/* ───── Results list ───── */
+.pagefind-ui__results {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--sv-results-gap) !important;
 }
 
-.pagefind-ui__filter-group {
-  border: none !important;
-}
-
-.pagefind-ui__filter-block {
-  border: 1px solid var(--border-color) !important;
-  border-radius: 8px !important;
-  background: var(--card-bg) !important;
-}
-
+/* ───── Result card layout ─────
+   Pagefind renders: li.pagefind-ui__result
+                       .pagefind-ui__result-thumb   (sibling, when image exists)
+                       .pagefind-ui__result-inner   (title link + excerpt)
+   We make the li itself a flex row so thumb and inner sit side by side. */
 .pagefind-ui__result {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 1rem !important;
   background: var(--card-bg) !important;
+  padding: var(--sv-result-padding) !important;
+  border-radius: var(--sv-result-radius) !important;
   border: 1px solid var(--border-color) !important;
+  margin: 0 !important;
+  position: relative !important;
 }
+
+.pagefind-ui__result-inner {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  position: relative !important;
+  margin-top: 0 !important;
+}
+
+.pagefind-ui__result-title { margin: 0 !important; }
 
 .pagefind-ui__result-link {
   color: var(--accent-color) !important;
+  font-size: var(--sv-result-title-size) !important;
+  font-weight: var(--sv-result-title-weight) !important;
+  line-height: 1.3 !important;
+  text-decoration: none !important;
 }
 
 .pagefind-ui__result-excerpt {
   color: var(--text-light) !important;
+  font-size: var(--sv-result-excerpt-size) !important;
+  line-height: var(--sv-result-excerpt-leading) !important;
+  margin: 0.5rem 0 0 !important;
+}
+
+/* ───── ID pill — shared by excerpts AND the result ID line ─────
+   browser.js uses this class in two places:
+     1. Excerpts: when the searched term matches the page slug ("ID: resources/")
+     2. ID line: always shown below the excerpt as the page's canonical slug
+   Both use the same structure: .sv-id-pill > .sv-id-pill-label + slug text */
+.sv-id-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-mono, ui-monospace, monospace) !important;
+  font-size: 0.8em;
+  padding: 1px 6px 1px 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--code-bg, rgba(0,0,0,0.06));
+  color: var(--text-color) !important;
+  vertical-align: middle;
+  white-space: nowrap;
+  margin: 0 1px;
+}
+
+/* "ID" label badge inside the pill */
+.sv-id-pill-label {
+  font-family: var(--font-body, sans-serif) !important;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+/* Let Pagefind's <mark> highlight show through naturally inside the pill */
+.sv-id-pill mark {
+  border-radius: 2px;
+}
+
+/* ───── Result ID line (slug) ─────
+   browser.js injects .pagefind-ui__result-id containing a .sv-id-pill.
+   Same pill structure as the excerpt ID pill for visual consistency. */
+.pagefind-ui__result-id {
+  margin-top: 0.35rem !important;
+  font-size: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Pill in the ID line uses 1em of the container's 0.75rem — keeps it
+   the same visual size as the excerpt pill without double-scaling. */
+.pagefind-ui__result-id .sv-id-pill {
+  font-size: 1em;
+}
+
+/* ───── Action cluster (eye preview + copy link) ─────
+   Injected by browser.js into .pagefind-ui__result-inner.
+   Hidden at rest; visible on card hover / keyboard focus.
+   On touch devices (hover: none): always visible. */
+.pagefind-ui__result-actions {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  gap: 6px !important;
+  z-index: 2 !important;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.pagefind-ui__result:hover .pagefind-ui__result-actions,
+.pagefind-ui__result:focus-within .pagefind-ui__result-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .pagefind-ui__result-actions { opacity: 1 !important; transform: none !important; }
+}
+
+@container (max-width: 480px) {
+  .pagefind-ui__result-actions {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    margin-top: 8px !important;
+    align-self: flex-start;
+  }
+}
+
+.pagefind-ui__result-action {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+}
+
+.pagefind-ui__result-action:hover { border-color: var(--accent-color); }
+.pagefind-ui__result-action:active { transform: scale(0.96); }
+.pagefind-ui__result-action svg { width: 16px; height: 16px; display: block; }
+
+.pagefind-ui__result-actions[data-copied="true"] .sv-copy-btn {
+  background: var(--accent-color);
+  color: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+/* Stretched-link — clicking title, excerpt, ID line, or blank card space
+   navigates to the result page. The thumbnail and action buttons opt out
+   via z-index. The ::after anchors to .pagefind-ui__result-inner (position:
+   relative), not to the link itself. */
+.pagefind-ui__result-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.pagefind-ui__result-inner { cursor: pointer; }
+.pagefind-ui__result-id code,
+.pagefind-ui__result-excerpt mark {
+  position: relative;
+  z-index: 2;
+}
+
+/* ───── Preview thumbnail ─────
+   Pagefind renders .pagefind-ui__result-thumb when a page has an indexed
+   og:image (data-pagefind-meta="image[src]"). Without one, it renders an empty
+   placeholder that our width override would make visible. Hide it unless it
+   contains an img with a non-empty src. */
+.pagefind-ui__result-thumb:not(:has(img[src]:not([src=""]))) {
+  display: none !important;
+}
+
+.pagefind-ui__result-thumb {
+  flex: 0 0 auto !important;
+  order: 1 !important; /* thumb on the right; swap to -1 for left */
+  position: relative !important;
+  width: var(--sv-thumb-size) !important;
+  aspect-ratio: 1 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: calc(var(--sv-result-radius) * 0.6) !important;
+  background: var(--card-bg) !important;
+  overflow: hidden !important;
+  cursor: zoom-in !important;
+  margin: 0 !important;
+  align-self: stretch !important;
+  z-index: 2 !important;
+  transition: box-shadow 150ms ease;
+}
+
+.pagefind-ui__result-thumb:hover {
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.pagefind-ui__result-image {
+  position: relative !important;
+  inset: auto !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+  transform: none !important;
+  max-width: none !important;
+  max-height: none !important;
+  transition: transform 200ms ease;
+}
+
+.pagefind-ui__result-thumb:hover .pagefind-ui__result-image {
+  transform: scale(1.06);
+}
+
+/* ───── Filter panel — inline pill chips ─────
+   Shown only when .search-visualizer--show-tags is set (show_tags: true). */
+.pagefind-ui__filter-panel {
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0.75rem 0 0 !important;
+}
+
+.pagefind-ui__filter-group,
+.pagefind-ui__filter-block {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.pagefind-ui__filter-name,
+.pagefind-ui__filter-value {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85rem !important;
+  padding: 0.3em 0.75em !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 999px !important;
+  background: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  cursor: pointer;
+  line-height: 1.2 !important;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.pagefind-ui__filter-value-checked {
+  background: var(--accent-color) !important;
+  color: var(--card-bg) !important;
+  border-color: var(--accent-color) !important;
+}
+
+/* ───── Responsive — below 480px ─────
+   Thumbnail becomes full-width 16:9 hero above the content. */
+@container (max-width: 480px) {
+  .pagefind-ui__result {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .pagefind-ui__result-thumb {
+    order: -1 !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    align-self: stretch !important;
+    max-width: none !important;
+  }
+
+  .pagefind-ui__result-image {
+    object-position: center !important;
+  }
+
+  .pagefind-ui__message {
+    padding-left: 0 !important;
+  }
+
+  .pagefind-ui__filter-panel {
+    width: 100% !important;
+  }
+}
+
+/* ───── Search preview modal ─────
+   Lightweight modal injected by browser.js. Independent from the
+   page-preview visualizer — no shared state, no theme JS required. */
+.sv-preview-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  /* Pre-promote to a GPU compositing layer so the first open doesn't
+     cause a black-frame flash while the browser builds the layer. */
+  will-change: backdrop-filter;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sv-preview-overlay.active {
+  display: flex;
+}
+
+.sv-preview-modal {
+  position: relative;
+  background: var(--bg-color, #fff);
+  color: var(--text-color);
+  border-radius: var(--sv-result-radius, 12px);
+  border: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.sv-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.sv-preview-goto {
+  color: var(--accent-color);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.sv-preview-goto:hover { text-decoration: underline; }
+
+.sv-preview-close {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-light);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.sv-preview-close:hover {
+  border-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.sv-preview-body {
+  overflow: hidden;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Loading text shown before iframe loads */
+.sv-preview-body .sv-preview-loading {
+  padding: 1.25rem 1.5rem;
+}
+
+.sv-preview-loading {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  padding: 1rem 0;
 }

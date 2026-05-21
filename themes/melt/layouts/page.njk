@@ -28,9 +28,13 @@ layout: layouts/base.njk
     {% include "partials/share-bar.njk" %}
   </header>
 
-  {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+  {# Slug indexed for pagefind search. Two hidden spans:
+     1. "ID: contact-us" — styled as a pill in excerpts by browser.js
+     2. "contact us"     — space-separated form so multi-word queries ("contact us") match
+     Folder index pages get a trailing / on the ID span to signal folder status. #}
   {% if slug %}
-  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
   {% endif %}
 
   <div class="page-body">

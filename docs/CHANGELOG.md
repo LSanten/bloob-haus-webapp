@@ -6,6 +6,26 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 39 — May 20, 2026
+**Worked on:** `photo-grid` visualizer (new), PhotoSwipe extracted to shared base
+
+**photo-grid visualizer**
+- New `lib/visualizers/photo-grid/` — `:::` container visualizer for image/GIF grids
+- Supports `cols: N` (uniform auto-flow) and `layout: 1,3,1` (explicit mixed-row layouts)
+- Config lines (`key: value`) and image lines (`![[...]]`) coexist freely — no separator needed
+- `ratio: 3/4 / 4/3 / 1/1 / crop` for uniform cell cropping; omit for natural heights
+- `gap` and `padding` (horizontal inset to make grids narrower than prose)
+- Columns preserved on mobile — no single-column collapse
+- Images wrapped in `pswp-gallery__item` anchors for automatic PhotoSwipe integration
+- `schema.md` (author docs) + `README.md` (design research + decisions) included
+
+**PhotoSwipe extracted to `_base/`**
+- `themes/_base/partials/photoswipe-head.njk` and `photoswipe-scripts.njk` — new shared partials
+- Fixes: natural-dimension filter (no squished images), `initialZoomLevel` capped at 1 (no upscaling for low-res images), hover zoom-in overlay icon (magnifier + plus SVG) on all `pswp-gallery__item` anchors
+- `image_zoom` enabled in `themes/melt/theme.yaml`
+- marbles-pouch and melt both now use `{% include %}` instead of inline duplication
+- `docs/architecture/themes.md` updated with how-to for new themes
+
 ### Session 38 - May 20, 2026
 **Worked on:** Search visualizer overhaul (melt), folder slug indexing, link resolution regression fix
 

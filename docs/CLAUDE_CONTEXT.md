@@ -74,7 +74,9 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Custom 404 page
 - Image optimization (WebP + JPEG at 600w/1200w, lazy loading)
 - Modular visualizer architecture with auto-discovery
-- `:::` container visualizers (image-grid live; `markdownItContainer` parses key=value settings → `data-vis-settings`)
+- `:::` container visualizers (image-grid, photo-grid live; `markdownItContainer` parses key=value settings → `data-vis-settings`)
+- `photo-grid` visualizer: `cols: N` uniform or `layout: 1,3,1` mixed-row grids; `ratio`/`gap`/`padding` params; PhotoSwipe lightbox automatic; columns preserved on mobile
+- PhotoSwipe 5 lightbox: shared via `themes/_base/partials/photoswipe-{head,scripts}.njk`; enabled in melt + marbles-pouch; hover zoom-in icon; no upscaling for low-res images
 - CSS Token Standard: all visualizer `styles.css` use `var(--accent-color)` etc. from `main.css` — documented in `docs/architecture/visualizers.md`
 - `| md` and `| mdinline` Nunjucks filters for rendering markdown frontmatter strings
 - alter-engineers theme: hero partial, Satoshi font via Fontshare CDN, correct brand color tokens

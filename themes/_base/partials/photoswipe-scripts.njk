@@ -1,0 +1,48 @@
+{# PhotoSwipe 5 lightbox — shared across all themes. #}
+{# Opt out per-site: set features.image_zoom: false in theme.yaml or site yaml. #}
+{# Opt out per-image: add class="no-zoom" to the <a> or <img>. #}
+{% if site.features.image_zoom != false %}
+<script type="module">
+  import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
+
+  const lightbox = new PhotoSwipeLightbox({
+    gallery: 'article',
+    children: 'a.pswp-gallery__item',
+    pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
+    wheelToZoom: true,
+    bgOpacity: 0.88,
+    // Never upscale: if the image is smaller than the viewport, show it at 100% natural size.
+    // For large images, 'fit' scales them down to fit the viewport (default behavior).
+    initialZoomLevel: (z) => Math.min(z.fit, 1),
+    secondaryZoomLevel: (z) => Math.min(z.fit * 2, 2),
+  });
+
+  // Read natural dimensions from the thumbnail <img> already loaded in the page.
+  // Required because the renderer doesn't know image dimensions at build time.
+  lightbox.addFilter('itemData', (itemData) => {
+    const img = itemData.element?.querySelector('img');
+    if (img && img.naturalWidth) {
+      itemData.width = img.naturalWidth;
+      itemData.height = img.naturalHeight;
+    }
+    return itemData;
+  });
+
+  // Button: open full-resolution image in a new tab.
+  lightbox.on('uiRegister', function () {
+    lightbox.pswp.ui.registerElement({
+      name: 'open-original',
+      title: 'Open full resolution image',
+      order: 9,
+      isButton: true,
+      html: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+      onClick: (event, el, pswp) => {
+        const href = pswp.currSlide.data.element?.href;
+        if (href) window.open(href, '_blank');
+      }
+    });
+  });
+
+  lightbox.init();
+</script>
+{% endif %}

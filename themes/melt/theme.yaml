@@ -12,6 +12,6 @@ visualizer_defaults:
   folder-preview: true
 
 feature_defaults:
-  image_zoom: false
+  image_zoom: true
   backlinks: false
   rss: false

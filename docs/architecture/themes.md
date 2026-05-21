@@ -14,8 +14,10 @@ Themes control the visual presentation of Bloob Haus sites. This document define
 themes/
 ├── _base/                    ← Shared partials (all themes inherit)
 │   └── partials/
-│       ├── head.njk          ← <head> tag with meta, OG, CSS includes
-│       └── backlinks.njk     ← Backlinks section
+│       ├── head.njk              ← <head> tag with meta, OG, CSS includes
+│       ├── backlinks.njk         ← Backlinks section
+│       ├── photoswipe-head.njk   ← PhotoSwipe CSS link (include in theme head.njk)
+│       └── photoswipe-scripts.njk← PhotoSwipe JS init (include in theme scripts.njk)
 ├── warm-kitchen/             ← Buffbaby's theme (recipes)
 │   ├── layouts/
 │   │   ├── base.njk
@@ -216,7 +218,7 @@ These features are provided by `_base/` and available to all themes automaticall
 
 | Feature | Implementation | Default |
 |---------|---------------|---------|
-| **Image zoom** | `medium-zoom` JS library (~4KB, zero deps) | **On** (opt-out via `_bloob-settings.md`: `image_zoom: false`) |
+| **Image zoom** | PhotoSwipe 5 via `_base/partials/photoswipe-*.njk` — include both partials in your theme (see below) | **On** (opt-out via `image_zoom: false` in `theme.yaml` or site yaml) |
 | **LaTeX** | KaTeX CDN | Off by default; theme can set `visualizer_defaults.latex: true` |
 | **Backlinks** | `partials/backlinks.njk` | On when `features.backlinks: true` in site config |
 | **OG meta tags** | `partials/head.njk` | Always on |
@@ -238,16 +240,32 @@ Themes load `/pagefind/pagefind-ui.css` in `head.njk` when `features.search != f
 
 Additional overrides can target `.pagefind-ui__*` class selectors. The search visualizer uses `resetStyles: false` so Pagefind's built-in styles apply and CSS variables work. The `browser.js` never touches CSS — that's the theme's job.
 
-### Image zoom CSS custom property contract
+### Image zoom (PhotoSwipe) — how to include in a new theme
 
-Themes that want to style the zoom overlay must define:
-```css
-:root {
-  --zoom-overlay-bg: rgba(0, 0, 0, 0.85);
-  --zoom-close-color: #ffffff;
-}
+Two base partials provide the full PhotoSwipe 5 lightbox. Include both in your theme:
+
+**In `partials/head.njk`** (inside `<head>`, after theme CSS):
+```njk
+{% include "partials/photoswipe-head.njk" %}
 ```
-If not defined, `_base` defaults are used.
+
+**In `partials/scripts.njk`** (at the bottom, after visualizer scripts):
+```njk
+{% include "partials/photoswipe-scripts.njk" %}
+```
+
+That's it. The partials are gated on `{% if site.features.image_zoom != false %}` — set `image_zoom: false` in `theme.yaml` or the site's yaml to disable.
+
+**What the shared partial does:**
+- Loads PhotoSwipe 5 CSS + JS from CDN (no build step)
+- Activates on any `<a class="pswp-gallery__item">` inside `<article>`
+- Reads natural image dimensions from the thumbnail already in the DOM (so the renderer doesn't need to know dimensions at build time)
+- Caps zoom at 100% natural size — low-res images are never upscaled
+- Adds an "open full resolution" button to the lightbox toolbar
+
+**To make an image open in the lightbox:** wrap it in `<a class="pswp-gallery__item" href="/path/to/image.jpg">`. The `photo-grid` visualizer does this automatically. For regular markdown images, wrap manually or use a custom renderer.
+
+**To opt an image out:** add `class="no-zoom"` to the `<a>` tag.
 
 ### Color Pair Contract (Tier 1 — required)
 
@@ -684,7 +702,8 @@ show_count: true
 3. Define all required CSS custom properties in `main.css`
 4. Create `theme.yaml` with feature declarations and visualizer defaults
 5. Add `assets/objects/` with identity images for the object types your theme supports (at minimum: the default object type)
-6. Test with a site: `SITE_NAME=my-site npm run build`
+6. Add PhotoSwipe includes to your theme partials (see "Image zoom" under Base Layer Features above)
+7. Test with a site: `SITE_NAME=my-site npm run build`
 
 **Theme selection:** Set `theme: [theme-name]` in `_bloob-settings.md` in the content repo.
 

@@ -2,3 +2,5 @@
 {% for vis in visualizers %}{% if vis.hasJs %}
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
 {% endif %}{% endfor %}
+
+{% include "partials/photoswipe-scripts.njk" %}

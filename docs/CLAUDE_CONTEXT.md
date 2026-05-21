@@ -182,7 +182,7 @@ bloob-haus-webapp/
 │       ├── wiki-link-resolver.js    ✅ [[Links]] resolution
 │       ├── markdown-link-resolver.js ✅ Standard links
 │       ├── attachment-resolver.js   ✅ Image handling
-│       ├── transclusion-handler.js  ✅ ![[Embed]] placeholders
+│       ├── transclusion-handler.js  ✅ ![[Embed]] inline expansion (showIndicators flag)
 │       ├── comment-stripper.js      ✅ Privacy protection
 │       ├── tag-extractor.js         ✅ Tag extraction & normalization
 │       ├── slug-strategy.js          ✅ Centralized slug strategies (slugify, preserve-case)
@@ -402,7 +402,7 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 - Deploy marbles to Cloudflare Pages (create project + workflow)
 
 **Transclusion (`![[file.md]]`):**
-`scripts/utils/transclusion-handler.js` exists but only renders a placeholder div. True content transclusion (inline the referenced page's markdown body) is a planned but not-yet-built feature.
+`scripts/utils/transclusion-handler.js` embeds the target page's markdown body inline (with cycle detection, recursive expansion, heading bump). `showIndicators` flag (default `true`) wraps the embed in `<div class="transclusion-embed">`; when `false`, content flows seamlessly with no wrapper. Controlled via `transclusion_indicators:` frontmatter (per-page) or `features.transclusion_indicators:` in `_bloob-settings.md` (site-wide). Heading/block slice (`![[Page#Heading]]`) is not yet implemented — full page is embedded.
 
 See `docs/implementation-plans/ROADMAP.md` for the full roadmap.
 

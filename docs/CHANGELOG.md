@@ -6,6 +6,16 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 40 — May 20, 2026
+**Worked on:** Transclusion indicator setting (universal), melt heading hierarchy
+
+- Added `transclusion_indicators` as a universal per-page frontmatter setting and `features.transclusion_indicators` as a site-wide default in `_bloob-settings.md`; when `false`, `![[embeds]]` render seamlessly inline with no wrapper div — no CSS needed, works on all themes
+- Set `transclusion_indicators: false` on `melt-website/articles/an-evening-with-melt.md` so its three embedded sections flow without visual borders
+- Melt theme h2/h3 heading hierarchy: h2 enlarged to 2.2rem / weight 700; h3 set to 1.4rem + `--color-accent-2` (soft lavender) for visible distinction
+- Documented both settings in `docs/architecture/settings-registry.md` under Universal Settings
+
+---
+
 ### Session 39 — May 20, 2026
 **Worked on:** `photo-grid` visualizer (new), PhotoSwipe extracted to shared base
 

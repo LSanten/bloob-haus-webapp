@@ -190,6 +190,10 @@ export async function preprocessContent({
     "assets/**",
     "favicon.png",
     "apple-touch-icon.png",
+    // Preserve converted MP4s produced by optimize-gifs.js — without this,
+    // they're deleted here and re-converted on every dev restart (no cache hit).
+    "**/*.mp4",
+    "**/*.webm",
   ];
   const attachmentExts = "jpg,jpeg,png,gif,webp,svg,pdf,html,mp4,webm";
   const staleAttachments = await glob(`**/*.{${attachmentExts}}`, {

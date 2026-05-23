@@ -317,8 +317,15 @@ Most configuration has moved to `sites/buffbaby.yaml` (content repo, publish mod
     ├─ Read .bloob/graph.yaml → write src/graph-settings.json
     └─ Build + write src/_data/tagIndex.json
     ↓ content → src/
-5. Generate OG images (generate-og-images.js)
-6. Bundle visualizers (bundle-visualizers.js)
+5. Convert GIFs to MP4 (optimize-gifs.js)  ← Step 5.8
+    ├─ Glob srcDir/**/*.gif
+    ├─ Skip if .mp4 counterpart already exists (dev cache)
+    ├─ Run ffmpeg-static: yuv420p, faststart, even-dimension scale
+    ├─ Delete original .gif from srcDir (keeps assets under CF Pages 25MB limit)
+    └─ Opt-out: media.convert_gif_to_mp4: false in _bloob-settings.md
+    ↓
+6. Generate OG images (generate-og-images.js)
+7. Bundle visualizers (bundle-visualizers.js)
     ↓ JS + CSS → src/assets/
 7. Eleventy build
     ├─ markdown-it + task-lists plugin

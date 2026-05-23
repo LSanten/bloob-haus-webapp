@@ -6,6 +6,38 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 41 — May 23, 2026
+**Worked on:** MELT image placement, GIF→MP4 pipeline, photo-grid video support
+
+**Image placement (melt-website)**
+- Mapped all 43 images from the original `an-evening-with-melt` HTML article into the correct Obsidian vault files using `photo-grid` blocks
+- Placed images in `an-evening-with-melt.md`, `what-is-melt.md`, `what-happens-at-melt.md`, and `contact-us.md`
+- Used mixed-row layouts (`layout: 1,2`, `layout: 1,3,1`, `layout: 2,1`) matching original HTML composition
+- Copied all 43 media files into `melt-website/media/`
+
+**GIF→MP4 build pipeline** (`scripts/optimize-gifs.js`)
+- New build step (5.8) converts `.gif` files to `.mp4` at build time using `ffmpeg-static` (npm-bundled binary — no system install, works in CI and webapp)
+- Converted `.gif` files are deleted from `srcDir` after conversion — keeps all files under Cloudflare Pages' 25MB per-file hard limit
+- Conversion is skipped if `.mp4` already exists (cache for dev rebuilds)
+- Opt-out via `media: convert_gif_to_mp4: false` in `_bloob-settings.md`
+- Added to `build-site.js` (Step 5.8) and `dev-local.js`
+
+**photo-grid: video item support**
+- `renderer.js`: GIF srcs (when conversion is enabled) render as `<video autoplay loop muted playsinline>` with a play overlay div
+- `styles.css`: video item styles, play overlay (hidden by default, shown only with `.is-paused`), "Play all animations" button
+- `browser.js` (new — first browser.js for photo-grid): attempts autoplay; only adds `.is-paused` on `NotAllowedError` (iOS Low Power Mode), not on `AbortError` or other races — prevents false play overlays on desktop
+- "Play all animations" button injected before the first paused grid when any video is blocked
+
+**PhotoSwipe video lightbox** (`themes/_base/partials/photoswipe-scripts.njk`)
+- `contentLoad` event renders a `<video controls autoplay loop muted=false>` in the lightbox for `data-pswp-type="video"` items — user gets unmuted full-screen video when clicking a playing animation
+- Second `addFilter` sets video slide dimensions to viewport size (16:9)
+
+**Documentation**
+- `media.convert_gif_to_mp4` setting documented in `docs/architecture/settings-registry.md` (new "Media Processing" key table)
+- Setting row added to media tables in `bloob-haus-marbles/_bloob-settings.md`, `content-source/_bloob-settings.md`, and `melt-website/_bloob-settings.md`
+
+---
+
 ### Session 40 — May 20, 2026
 **Worked on:** Transclusion indicator setting (universal), melt heading hierarchy
 
@@ -1294,6 +1326,9 @@ Development session history and completed work.
 | 36 | May 18, 2026 | URL slug defaults, filename sanitization, copy-link-button plugin |
 | 37 | May 19, 2026 | Attachment pipeline vault-structure refactor, favicon fix, subtitle extraction |
 | 38 | May 20, 2026 | Search visualizer overhaul (melt), folder slug ID pills, link resolution regression fix |
+| 39 | May 20, 2026 | photo-grid visualizer, PhotoSwipe extracted to shared base |
+| 40 | May 20, 2026 | Transclusion indicator setting, melt heading hierarchy |
+| 41 | May 23, 2026 | MELT image placement, GIF→MP4 pipeline, photo-grid video support |
 
 ---
 

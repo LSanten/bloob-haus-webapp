@@ -337,6 +337,24 @@ status_field: website_status   # optional, this is the default field name
 
 ---
 
+### GIF→MP4 conversion pipeline (2026-05-23)
+
+**Context:** Several GIF files in the MELT vault exceeded Cloudflare Pages' 25MB per-file deploy limit, causing CI failures. Even under the limit, animated GIFs are 10–20× larger than equivalent MP4.
+
+**Decision:** Build-time conversion using `ffmpeg-static` (npm-bundled binary). GIFs in `srcDir` are converted to MP4, then the source `.gif` is deleted from `srcDir` before Eleventy builds `_site/`. The deployed site never contains GIFs.
+
+**Why `ffmpeg-static` over system ffmpeg?** Future users run the webapp, not local dev — they have no control over their build environment. An npm-bundled binary works identically in CI, the webapp build, and local dev on any platform.
+
+**Why delete the GIF from srcDir?** Keeps deployed assets under the CF Pages per-file limit. GIFs remain in the vault content repo (git history). A future "download original" button can link to the raw GitHub URL.
+
+**Why opt-out (default on)?** Conversion is lossless for UX — the video autoplay is visually identical to the GIF. The only reason to keep GIFs is if a site specifically needs a GIF download link or uses GIFs for non-animated purposes. Opt out via `media: convert_gif_to_mp4: false`.
+
+**Autoplay blocking (NotAllowedError only):** The `browser.js` play overlay only activates on `NotAllowedError` — the specific error thrown when browser autoplay policy blocks unmuted/non-muted video. Other errors (`AbortError` from a play/load race, `NotSupportedError` from codec issues) are silently ignored. This prevents false play overlays on desktop where videos autoplay fine but the play() promise briefly rejects due to src loading timing.
+
+**Caching:** Local dev caches (skips if .mp4 exists). CI re-converts every build (no Cloudflare build cache configured). Acceptable for now — GIF count is small.
+
+---
+
 ### Post-preprocess cleanup of conflicting theme index.njk files (2026-03-23)
 
 **Context:** Theme section pages (e.g. `themes/warm-kitchen/pages/sections/notes/index.njk`) and preprocessor-generated folder stubs (e.g. `src/notes/index.md`) both emit `permalink: /notes/`, causing Eleventy's `DuplicatePermalinkOutputError`.

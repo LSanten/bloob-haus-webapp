@@ -219,6 +219,15 @@ export async function preprocessContent({
     // 6a: Strip comments (Obsidian %% ... %% and HTML <!-- ... -->)
     processedContent = stripComments(processedContent);
 
+    // 6b.pre: Normalize markdown-link-style transclusions → wiki-link style.
+    // Obsidian's "Use markdown links" mode writes ![alt](page.md) for page embeds.
+    // .md is unambiguous — no image has that extension — so rewrite before the
+    // transclusion handler runs. Strip the extension; the handler does its own lookup.
+    processedContent = processedContent.replace(
+      /!\[([^\]]*)\]\(([^)]+\.md)\)/g,
+      (_, _alt, src) => `![[${path.basename(src, ".md")}]]`
+    );
+
     // 6b: Handle transclusions first (before other ![[]] patterns)
     const currentFilename = path.basename(file.relativePath, ".md");
     const currentSlug = fileIndex.filenameLookup[currentFilename.toLowerCase()] || null;

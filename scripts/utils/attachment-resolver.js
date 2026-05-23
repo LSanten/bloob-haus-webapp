@@ -66,6 +66,8 @@ export function resolveAttachments(content, attachmentIndex, { sourceVaultPath =
   // Pattern 1: Standard markdown images ![alt](path)
   const mdImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/g;
   let processedContent = content.replace(mdImagePattern, (match, alt, imagePath) => {
+    // .md links are page transclusions — handled by transclusion-handler.js before this runs
+    if (imagePath.toLowerCase().endsWith(".md")) return match;
     const resolvedPath = resolve(imagePath);
     if (resolvedPath) {
       resolved.push({ original: imagePath, resolved: resolvedPath });

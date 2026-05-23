@@ -2517,12 +2517,28 @@ async function exportVideo() {
     dbg(`Encoded: ${(rawBuffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
     const buffer = injectMp4Metadata(rawBuffer);
 
-    const url = URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' }));
     const rawName = document.getElementById('image-credit').textContent.split('·')[0].trim();
     const slug = rawName.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'image';
-    const a = document.createElement('a');
-    a.href = url; a.download = `ken-burns-animation-${slug}.mp4`; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    const filename = `ken-burns-animation-${slug}.mp4`;
+    const blob = new Blob([buffer], { type: 'video/mp4' });
+
+    // On iOS, <a download> opens a quick-look tab instead of saving to Photos.
+    // The Web Share API with files triggers the native share sheet and allows
+    // the user to save to the camera roll.
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'video/mp4' })] })) {
+      dbg('Using Web Share API (mobile/share-sheet path)', 'ok');
+      await navigator.share({
+        files: [new File([blob], filename, { type: 'video/mp4' })],
+        title: 'Ken Burns Animation',
+      });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
+      // desktop browsers that need time to copy the file before the URL is freed.
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
 
     exportProgFill.style.width = '100%';
     exportProgText.textContent = '✓ Done';

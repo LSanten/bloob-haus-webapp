@@ -77,6 +77,7 @@ All scripts and `package.json` commands must work on both Mac/Linux and Windows.
 - Project status → `docs/CLAUDE_CONTEXT.md`
 - Architecture patterns → `docs/architecture/` (visualizers, magic-machines, search, etc.)
 - New or changed settings (any theme) → `docs/architecture/settings-registry.md`
+- **Per-tool decisions** → `lib/magic-machines/[name]/DECISIONS.md` or `lib/visualizers/[name]/DECISIONS.md`. Use these for browser quirks, non-obvious implementation choices, and debugging war stories specific to one tool. Global cross-cutting decisions still go in `docs/implementation-plans/DECISIONS.md`.
 
 ## File Identity Convention
 - Files are identified by filename (slug). URLs derive from filenames, not titles.

@@ -127,7 +127,9 @@
   .brand-bh {
     color: var(--end);
     letter-spacing: 0.04em;
+    text-decoration: none;
   }
+  .brand-bh:hover { text-decoration: underline; }
   .topbar-logo {
     font-family: var(--sans);
     font-size: 12px;
@@ -996,7 +998,7 @@
   <div class="topbar-brand">
     <span class="brand-mm">Magic Machine</span>
     <span class="brand-sep">×</span>
-    <span class="brand-bh">Bloob Haus</span>
+    <a class="brand-bh" href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a>
   </div>
   <div class="topbar-sep"></div>
   <div class="topbar-logo">
@@ -1006,7 +1008,7 @@
   <button class="debug-toggle" id="debug-toggle" title="Show debug log">
     debug <span class="debug-count" id="debug-count">0</span>
   </button>
-  <div class="topbar-badge">v0.1</div>
+  <div class="topbar-badge">v0.2</div>
 </div>
 
 <!-- TAGLINE -->
@@ -1413,7 +1415,7 @@ document.getElementById('debug-copy-btn').addEventListener('click', () => {
     .catch(() => { btn.textContent = 'failed'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); });
 });
 
-dbg('Page loaded — ken-burns-zoom-builder v0.1');
+dbg('Page loaded — ken-burns-zoom-builder v0.2');
 dbg(`User agent: ${navigator.userAgent}`);
 dbg(`SharedArrayBuffer available: ${typeof SharedArrayBuffer !== 'undefined'}`);
 
@@ -2193,7 +2195,17 @@ function checkVideoExport() {
 function computeOutputSize() {
   let MAX;
   if (state.resolution === 'native') {
-    MAX = state.imageLoaded ? Math.min(Math.max(state.imageW, state.imageH), 4096) : 1920;
+    if (state.imageLoaded) {
+      // Use the larger of the two rects' source pixel extents — not the full image.
+      // The bigger rect (usually the start/wide frame) sets the ceiling; both frames
+      // stay at or below 1:1 pixel mapping for the dominant shot.
+      const rs = state.rects.start, re = state.rects.end;
+      const startMax = Math.max(rs.w / 100 * state.imageW, rs.h / 100 * state.imageH);
+      const endMax   = Math.max(re.w / 100 * state.imageW, re.h / 100 * state.imageH);
+      MAX = Math.min(Math.max(startMax, endMax), 4096);
+    } else {
+      MAX = 1920;
+    }
   } else {
     MAX = parseInt(state.resolution, 10);
   }
@@ -2404,7 +2416,7 @@ async function exportVideo() {
     for (const c of codecCandidates) {
       try {
         const { supported } = await VideoEncoder.isConfigSupported({
-          codec: c, width: outW, height: outH, framerate: state.fps, bitrate: 8_000_000
+          codec: c, width: outW, height: outH, framerate: state.fps, bitrate
         });
         if (supported) { codec = c; break; }
       } catch {}
@@ -2420,7 +2432,8 @@ async function exportVideo() {
       fastStart: 'in-memory',
     });
 
-    // Set up encoder
+    // Set up encoder — bitrate scales with resolution so phones aren't over-allocated
+    const bitrate = Math.round(Math.min(outW * outH / (1920 * 1080), 1) * 6_000_000 + 2_000_000);
     const videoChunks = [];
     const encoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
@@ -2428,9 +2441,10 @@ async function exportVideo() {
     });
     encoder.configure({
       codec, width: outW, height: outH,
-      framerate: state.fps, bitrate: 8_000_000,
+      framerate: state.fps, bitrate,
       latencyMode: 'quality',
     });
+    dbg(`Encoder bitrate: ${(bitrate / 1_000_000).toFixed(1)} Mbps`);
 
     // Render + encode all frames (faster than real-time — no waiting)
     const canvas = document.createElement('canvas');
@@ -2487,7 +2501,12 @@ async function exportVideo() {
 
       exportProgFill.style.width = Math.round((i + 1) / totalFrames * 90) + '%';
       exportProgText.textContent = `Encoding ${i + 1} / ${totalFrames}`;
-      if (i % 20 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
+      // Back-pressure: wait when encoder queue is too deep.
+      // Without this, frames pile up in memory and iOS kills the tab mid-export.
+      while (encoder.encodeQueueSize > 5) {
+        await new Promise(r => setTimeout(r, 0));
+      }
+      if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
     }
 
     await encoder.flush();

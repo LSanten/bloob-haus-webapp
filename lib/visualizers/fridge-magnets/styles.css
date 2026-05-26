@@ -141,21 +141,41 @@
 
 /* Both submit buttons share identical style — same color, same weight */
 .fm-submit-btn {
-  padding: 5px 14px;
-  font-size: 12px;
+  padding: 7px 18px;
+  font-size: 13px;
   font-family: "Courier New", monospace;
   background: var(--accent-color, #1a56db);
   color: #fff;
   border: none;
-  border-radius: 2px;
+  border-radius: 3px;
   cursor: pointer;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  font-weight: 600;
   white-space: nowrap;
-  transition: opacity 0.1s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.1s;
 }
 
 .fm-submit-btn:hover {
-  opacity: 0.85;
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+}
+
+.fm-submit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes fm-btn-pop {
+  0%   { transform: scale(0.3) translateY(4px); opacity: 0; }
+  60%  { transform: scale(1.1) translateY(-1px); opacity: 1; }
+  80%  { transform: scale(0.97) translateY(0); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.fm-submit-btn.fm-pop {
+  animation: fm-btn-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* ── Bottom toolbar (add-word + editor toggle) ── */
@@ -280,6 +300,12 @@
 
 .fm-load-btn:hover {
   background: #444;
+}
+
+.fm-editor-copy-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 0 4px;
 }
 
 .fm-input-hint {
@@ -580,6 +606,7 @@
 
 .fm-submission-comment {
   margin: 0.25rem 0 0.5rem;
+  padding: 0 10px;
   font-size: 0.85rem;
   color: var(--text-color, #444);
   opacity: 0.8;
@@ -618,6 +645,11 @@
 
 .fm-display-board .fm-canvas-area {
   margin: 0 10px 10px;
+}
+
+/* Hide utility buttons in community display boards — not relevant for readers */
+.fm-display-board .fm-canvas-header {
+  display: none;
 }
 
 /* Submission header above each display board */
@@ -697,14 +729,28 @@
 
 /* ── Interaction footer (likes + comments on display-feedback boards) ── */
 .fm-interaction-footer {
-  padding: 8px 10px 10px;
-  border-top: 1px solid rgba(139, 90, 43, 0.12);
+  padding: 0 0 10px;
+  border-top: 1px solid rgba(139, 90, 43, 0.15);
+  background: color-mix(in srgb, var(--card-bg, #fff) 80%, #c8a97a 20%);
+  border-radius: 0 0 2px 2px;
+}
+
+.fm-interaction-header {
+  padding: 5px 10px 8px;
+  font-size: 10px;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(107, 74, 31, 0.7);
+  border-bottom: 1px solid rgba(139, 90, 43, 0.12);
+  margin-bottom: 8px;
 }
 
 .fm-like-bar {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 0 10px;
   margin-bottom: 8px;
 }
 
@@ -754,6 +800,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 0 10px;
 }
 
 .fm-comments-list {
@@ -842,4 +889,26 @@
 
 .fm-comment-submit-btn:hover {
   opacity: 0.85;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  /* Smaller cards — less padding, same font */
+  .fm-card {
+    padding: 4px 7px;
+    height: 30px;
+    line-height: 20px;
+  }
+
+  /* Canvas area: zoom-based scale applied by JS using card positions.
+     No overflow:hidden — it would make scrollWidth === offsetWidth, breaking width detection. */
+  .fm-canvas-area {
+    transform-origin: top left;
+  }
+
+  /* Bottom toolbar wraps on narrow screens */
+  .fm-canvas-bottom {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 }

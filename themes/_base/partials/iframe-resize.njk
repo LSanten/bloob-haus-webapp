@@ -1,0 +1,20 @@
+{# Auto-resize same-origin iframes to fit their content height.
+   Works for any embedded HTML file (charts, interactive graphics, etc.).
+   Cross-origin iframes are silently skipped via try/catch.
+   Opt out per-site: features.iframe_resize: false #}
+{% if site.features.iframe_resize != false %}
+<script>
+(function () {
+  function resizeIframe(iframe) {
+    try {
+      var doc = iframe.contentDocument || iframe.contentWindow.document;
+      var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+      if (h > 0) iframe.style.height = h + 'px';
+    } catch (e) {}
+  }
+  document.querySelectorAll('iframe').forEach(function (iframe) {
+    iframe.addEventListener('load', function () { resizeIframe(iframe); });
+  });
+})();
+</script>
+{% endif %}

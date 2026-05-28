@@ -40,6 +40,8 @@
   lightbox.init();
 </script>
 {% endif %}
+{% include "partials/iframe-resize.njk" %}
+
 <!-- Visualizer JS (auto-generated) -->
 {% for vis in visualizers %}{% if vis.hasJs %}
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>

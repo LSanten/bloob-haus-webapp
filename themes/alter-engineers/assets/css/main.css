@@ -118,6 +118,22 @@
 }
 
 /* ============================================================
+   FOOTER — DESIGN / CREDIT LINE OPACITY
+   De-emphasise "Design by Akeo" and "Built with Bloob Haus".
+   ============================================================ */
+.footer__design-by {
+  opacity: 0.4;
+}
+
+/* ============================================================
+   FOOTER — LINKEDIN LINK SIZE
+   Double the font size relative to the default menu-item.
+   ============================================================ */
+.footer__social .menu-item a {
+  font-size: 2em;
+}
+
+/* ============================================================
    HOMEPAGE BODY BACKGROUND
    The .hero-block is position: fixed; z-index: -1 — it stays fixed
    while sections scroll over it. body.home needs the matching
@@ -444,6 +460,22 @@ html { margin-top: 0 !important; }
 }
 .image-text--image-right .image-text__text-container {
   direction: ltr;
+}
+
+/* --- Iframe embeds --- */
+.entry-content iframe,
+.entry-content embed {
+  width: 100%;
+  display: block;
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+
+/* 16:9 only for video players — other embeds size themselves via JS */
+.entry-content iframe[src*="youtube.com"],
+.entry-content iframe[src*="vimeo.com"] {
+  aspect-ratio: 16 / 9;
+  height: auto;
 }
 
 /* --- Generic page layout (page.njk) --- */

@@ -295,15 +295,20 @@ body {
   padding: 60px 24px 120px;
 }
 
-/* Embeds (YouTube, Spotify, etc.) — full-width responsive 16:9 with spacing */
+/* Embeds — common layout for all iframes */
 .page-content iframe,
 .page-content embed {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
   display: block;
   border-radius: 8px;
   margin-bottom: 1.5rem;
+}
+
+/* 16:9 only for video players — Spotify, Mixcloud, SoundCloud, widgets etc. size themselves */
+.page-content iframe[src*="youtube.com"],
+.page-content iframe[src*="vimeo.com"] {
+  aspect-ratio: 16 / 9;
+  height: auto;
 }
 
 .page-content video {

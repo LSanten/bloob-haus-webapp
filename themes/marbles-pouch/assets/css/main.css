@@ -588,15 +588,20 @@ article.marble-page {
   padding: var(--spacing-sm) 0;
 }
 
-/* Embeds (YouTube, Spotify, etc.) — full-width responsive 16:9 with spacing */
+/* Embeds — common layout for all iframes */
 .marble-content iframe,
 .marble-content embed {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
   display: block;
   border-radius: 8px;
   margin-bottom: var(--spacing-sm, 1rem);
+}
+
+/* 16:9 only for video players — Spotify, Mixcloud, SoundCloud, widgets etc. size themselves */
+.marble-content iframe[src*="youtube.com"],
+.marble-content iframe[src*="vimeo.com"] {
+  aspect-ratio: 16 / 9;
+  height: auto;
 }
 
 .marble-content video {

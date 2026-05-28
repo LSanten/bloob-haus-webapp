@@ -123,12 +123,11 @@ h1 {
   color: var(--heading-h1-color);
 }
 
-/* H2 — two roles: subtitle (after H1) or section heading (in body) */
-h2 {
-  font-size: 1.45rem;   /* ~26px */
-  font-weight: 500;     /* lighter than h1 — clearly subordinate */
-  color: var(--text-color);
-}
+h2 { font-size: 1.45rem; }   /* ~26px */
+h3 { font-size: 1.1rem; }    /* ~20px */
+h4 { font-size: 0.95rem; }   /* ~17px */
+h5 { font-size: 0.85rem; }   /* ~15px */
+h6 { font-size: 0.75rem; }   /* ~13px */
 
 /* In-content heading rules — scoped to .marble-content so they don't affect .page-title */
 /* First H1 in content: no top gap; if no H2 subtitle follows, add breathing room below */
@@ -147,17 +146,6 @@ h2 {
   font-weight: 600;
   margin-bottom: 2.8rem;
 }
-
-/* H3 — tertiary section, teal accent */
-h3 {
-  font-size: 1.1rem;    /* ~20px */
-  color: var(--heading-h3-color);
-}
-
-/* H4–H6 — minor headings, neutral */
-h4 { font-size: 0.95rem; }   /* ~17px */
-h5 { font-size: 0.85rem; }   /* ~15px */
-h6 { font-size: 0.75rem; }   /* ~13px */
 
 /* Consecutive heading spacing — collapse top margin when headings directly follow each other */
 .marble-content h2 + h3 {

@@ -38,6 +38,7 @@
         btn.addEventListener('click', function () {
           var open = panel.hidden;
           panel.hidden = !open;
+          btn.hidden = open;  /* hide button when panel is open */
           btn.setAttribute('aria-expanded', open ? 'true' : 'false');
           if (open && !mounted) {
             mounted = true;

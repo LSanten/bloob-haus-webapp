@@ -5,8 +5,8 @@ site:
   url: "https://alterengineers.com"
 
 content:
-  repo: "LSanten/alter-website-content"
-  branch: "main"
+  repo: "altron-alters/website-content"
+  branch: "master"
 
 features:
   search: false

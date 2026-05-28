@@ -187,11 +187,22 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
 
   console.log(`[attachments] Found ${files.length} attachments to copy`);
 
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MiB — Cloudflare Pages hard limit
   const copied = [];
+  const skipped = [];
   const errors = [];
 
   for (const file of files) {
     const sourcePath = path.join(contentDir, file);
+    const stat = await fs.stat(sourcePath);
+
+    if (stat.size > MAX_FILE_SIZE) {
+      const sizeMiB = (stat.size / 1024 / 1024).toFixed(1);
+      console.warn(`[attachments] ⚠️  SKIPPED (${sizeMiB} MiB > 25 MiB limit): ${file}`);
+      skipped.push({ file, sizeMiB });
+      continue;
+    }
+
     // Preserve vault structure: dest mirrors the vault-relative path
     const destPath = path.join(staticRootDir, file);
     await fs.ensureDir(path.dirname(destPath));
@@ -205,6 +216,9 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
     }
   }
 
+  if (skipped.length > 0) {
+    console.warn(`[attachments] ⚠️  ${skipped.length} file(s) skipped — exceed 25 MiB Cloudflare Pages limit. Compress or move them out of the vault.`);
+  }
   console.log(`[attachments] Copied ${copied.length} files preserving vault structure`);
 
   return { copied, errors };

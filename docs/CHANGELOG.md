@@ -6,6 +6,25 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 42 — May 28, 2026
+**Worked on:** AE fork setup, Cloudflare Pages deploy pipeline, pipeline bug fixes
+
+**Fork setup (`altron-alters/bloob-haus-webapp`)**
+- Forked `LSanten/bloob-haus-webapp` → `altron-alters/bloob-haus-webapp`; rewired local remotes (`origin` = fork, `upstream` = personal)
+- Added `.gitattributes` with `merge=ours` on `.github/workflows/**` — prevents upstream merges from overwriting AE-only deploy workflow
+- Removed non-AE workflows from fork; added `deploy-alter-engineers.yml` (mirrors `deploy-buffbaby` pattern)
+- Updated `sites/alter-engineers.yaml`: content repo → `altron-alters/website-content`, branch → `master`
+
+**Pipeline bug fixes**
+- `eleventy.config.js`: set `templateFormats: ["md", "njk"]` — HTML vault attachments (e.g. chart embeds) were being processed as Eleventy pages and appearing as empty cards in folder-preview
+- `publish-filter.js`: normalize `.md` extension in `excludeFiles` comparison — `"README.md"` in yaml wasn't matching because filter stripped `.md` before comparing
+- `attachment-resolver.js`: auto-compress PNG/JPG over 20 MiB using sharp during copy (vault source never touched); skip non-compressible files over 25 MiB with warning; return `skipped` in result
+
+**Tests**
+- Added 3 new `copyAttachments` tests: auto-compress path, non-compressible skip, under-threshold copy-as-is
+
+---
+
 ### Session 41 — May 23, 2026
 **Worked on:** MELT image placement, GIF→MP4 pipeline, photo-grid video support
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
@@ -443,5 +443,63 @@ describe('copyAttachments', () => {
 
     expect(copied).toHaveLength(1);
     expect(copied[0]).toBe('media/real.png');
+  });
+
+  it('auto-compresses PNG over 20 MiB using sharp instead of plain copy', async () => {
+    // Minimal valid 1x1 white PNG so sharp can actually process it
+    const minimalPng = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    const full = path.join(contentDir, 'media', 'big.png');
+    await fs.ensureDir(path.dirname(full));
+    await fs.writeFile(full, minimalPng);
+
+    // Mock stat to report > 20 MiB so the compression path triggers
+    const realStat = fs.stat.bind(fs);
+    vi.spyOn(fs, 'stat').mockImplementation(async (p) => {
+      if (p === full) return { size: 21 * 1024 * 1024 };
+      return realStat(p);
+    });
+
+    const { copied } = await copyAttachments(contentDir, 'media', staticRootDir);
+
+    // File treated as copied (not skipped) and written to destination
+    const normalised = copied.map(f => f.replace(/\\/g, '/'));
+    expect(normalised).toContain('media/big.png');
+    expect(await fs.pathExists(path.join(staticRootDir, 'media', 'big.png'))).toBe(true);
+
+    vi.restoreAllMocks();
+  });
+
+  it('skips non-compressible files over 25 MiB', async () => {
+    await writeVaultFile('media/huge.pdf', 'fake-pdf');
+    const sourcePath = path.join(contentDir, 'media', 'huge.pdf');
+
+    const realStat = fs.stat.bind(fs);
+    vi.spyOn(fs, 'stat').mockImplementation(async (p) => {
+      if (p === sourcePath) return { size: 26 * 1024 * 1024 };
+      return realStat(p);
+    });
+
+    const { copied, skipped } = await copyAttachments(contentDir, 'media', staticRootDir);
+
+    const normCopied = copied.map(f => f.replace(/\\/g, '/'));
+    const normSkipped = skipped.map(s => s.file.replace(/\\/g, '/'));
+    expect(normCopied).not.toContain('media/huge.pdf');
+    expect(normSkipped).toContain('media/huge.pdf');
+    expect(await fs.pathExists(path.join(staticRootDir, 'media', 'huge.pdf'))).toBe(false);
+
+    vi.restoreAllMocks();
+  });
+
+  it('copies PNG under 20 MiB as-is without compression', async () => {
+    await writeVaultFile('media/normal.png', 'small-png');
+    const { copied } = await copyAttachments(contentDir, 'media', staticRootDir);
+
+    const normalised = copied.map(f => f.replace(/\\/g, '/'));
+    expect(normalised).toContain('media/normal.png');
+    const dest = await fs.readFile(path.join(staticRootDir, 'media', 'normal.png'), 'utf8');
+    expect(dest).toBe('small-png');
   });
 });

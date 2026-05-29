@@ -8,6 +8,9 @@ Track major architectural and technical decisions with their rationale.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-05-28 | `templateFormats: ["md", "njk"]` — exclude HTML from Eleventy pipeline | HTML vault attachments were being processed as pages and added to collections. All theme templates use `.njk`; HTML files are passthrough-only |
+| 2026-05-28 | Auto-compress PNG/JPG over 20 MiB during attachment copy | Cloudflare Pages hard limit is 25 MiB. Compress during copy so vault source is never modified; 20 MiB threshold gives headroom |
+| 2026-05-28 | AE fork uses `altron-alters/bloob-haus-webapp`; upstream sync via cherry-pick only | `git push upstream main` is banned — AE fork has deleted LSanten's site workflows. Fixes go upstream via cherry-pick or PR |
 | 2026-01-29 | Hugo over Eleventy | Faster builds, single binary |
 | 2026-01-29 | @flowershow/remark-wiki-link | Battle-tested, maintained |
 | 2026-01-29 | Consent-first publishing | Aligns with values, prevents accidents |

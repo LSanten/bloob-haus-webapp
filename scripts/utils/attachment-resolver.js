@@ -242,7 +242,7 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
   }
   console.log(`[attachments] Copied ${copied.length} files preserving vault structure`);
 
-  return { copied, errors };
+  return { copied, skipped, errors };
 }
 
 // Test if run directly

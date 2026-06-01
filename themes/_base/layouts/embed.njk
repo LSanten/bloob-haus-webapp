@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="{{ site.languageCode or 'en' }}">
+  {% include "partials/head.njk" %}
+  <meta name="robots" content="noindex, nofollow">
+  <body class="embed-view">
+    <script>
+      // Apply embed params before first paint to avoid flash of wrong background
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var b = document.body;
+        var bg = p.get('bg');
+        var bgValue = (bg && bg !== 'transparent') ? bg : 'transparent';
+        b.style.setProperty('background', bgValue, 'important');
+        b.style.setProperty('background-image', bgValue === 'transparent' ? 'none' : '', 'important');
+        var text = p.get('text');
+        if (text) {
+          b.style.setProperty('--text-color', text, 'important');
+          b.style.setProperty('--surface-text-color', text, 'important');
+          b.style.setProperty('color', text, 'important');
+        }
+        if (p.get('title') === '0') b.classList.add('embed--no-title');
+        if (p.get('share') === '0') b.classList.add('embed--no-share');
+      })();
+    </script>
+    <style>
+      html, body.embed-view { background: transparent !important; background-image: none !important; }
+      body.embed-view .share-btn--embed { display: none !important; }
+      .embed--no-title .page-title,
+      .embed--no-title .page-subtitle,
+      .embed--no-title .marble-date { display: none !important; }
+      .embed--no-share .share-bar { display: none !important; }
+      .embed--no-title.embed--no-share .marble-header { display: none !important; }
+    </style>
+    <main class="site-main">
+      {{ content | safe }}
+    </main>
+    {% include "partials/scripts.njk" %}
+  </body>
+</html>

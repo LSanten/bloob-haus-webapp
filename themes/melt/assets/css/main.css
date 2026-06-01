@@ -38,6 +38,7 @@
   --text-color: var(--color-text);
   --text-light: var(--color-text-muted);
   --border-color: var(--color-border);
+  --surface-text-color: #1a0838;   /* text on light surfaces: modals, cards, popovers */
   --card-bg: var(--color-surface);
   /* --font-body and --font-heading already use the standard names */
 

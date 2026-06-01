@@ -96,8 +96,12 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
   --accent-color: #914c9a;        /* Primary brand color — links, highlights, CTAs */
   --accent-dark: #6b2d73;         /* Hover / active variant */
   --bg-color: #dce8f8;            /* Default page background */
-  --text-color: #333333;          /* Body text */
+  --text-color: #333333;          /* Body text — designed for the PAGE background */
   --text-light: #666666;          /* Secondary / muted text */
+  --surface-text-color: #333333;  /* Text on LIGHT surfaces: modals, cards, popovers.
+                                     Must be dark enough for contrast on rgba(255,255,255,0.82).
+                                     Dark-background themes must set this separately from --text-color
+                                     (e.g. melt sets --text-color: #fff but --surface-text-color: #1a0838). */
   --border-color: rgba(0,0,0,0.1);/* Subtle borders */
   --card-bg: #ffffff;             /* Card / panel background */
   --font-body: sans-serif;        /* Body typeface */

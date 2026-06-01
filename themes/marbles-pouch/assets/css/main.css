@@ -9,6 +9,7 @@
   --banner-bg: #ffffff;          /* banner: white */
   --text-color: #333333;
   --text-light: #666666;
+  --surface-text-color: #333333;   /* text on light surfaces: modals, cards, popovers */
   --accent-color: #914c9a;
   --accent-dark: #6b2d73;
   --link-color: #914c9a;

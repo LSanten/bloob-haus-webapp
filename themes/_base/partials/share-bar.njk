@@ -1,0 +1,307 @@
+<style>
+/* ── Embed modal — self-contained, uses CSS token contract ── */
+.embed-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;padding:var(--spacing-sm,1rem)}
+.embed-modal-overlay.is-open{display:flex}
+.embed-modal{background:rgba(255,255,255,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border-color,rgba(0,0,0,.15));border-radius:16px;width:100%;max-width:660px;max-height:90vh;overflow-y:auto;padding:var(--spacing-lg,2rem);position:relative;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.embed-modal__close{position:absolute;top:var(--spacing-sm,1rem);right:var(--spacing-sm,1rem);background:none;border:none;font-size:1.4rem;line-height:1;cursor:pointer;color:var(--surface-text-color,#555);padding:.2em .4em}
+.embed-modal__close:hover{color:var(--surface-text-color,#333)}
+.embed-modal__title{font-family:var(--font-heading,sans-serif);font-size:1.1rem;font-weight:700;color:var(--accent-dark,var(--accent-color,#555));margin:0 0 var(--spacing-sm,1rem)}
+.embed-modal__section-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--surface-text-color,#555);opacity:.7;margin:var(--spacing-sm,1rem) 0 .4rem}
+.embed-modal__controls{display:grid;grid-template-columns:1fr 1fr;gap:.6rem var(--spacing-sm,1rem);margin-bottom:var(--spacing-sm,1rem)}
+.embed-ctrl{display:flex;flex-direction:column;gap:.3rem}
+.embed-ctrl__label{font-size:.82rem;font-weight:600;color:var(--surface-text-color,#333)}
+.embed-ctrl__row{display:flex;align-items:center;gap:.5rem}
+.embed-ctrl__number{width:72px;padding:4px 8px;border:1px solid var(--border-color,rgba(0,0,0,.15));border-radius:var(--border-radius-sm,6px);font-family:var(--font-body,sans-serif);font-size:.9rem;color:var(--surface-text-color,#333);background:transparent}
+.embed-ctrl__unit{font-size:.82rem;color:var(--surface-text-color,#555);opacity:.7}
+.embed-ctrl__color{width:36px;height:28px;border:1px solid var(--border-color,rgba(0,0,0,.15));border-radius:var(--border-radius-sm,6px);padding:2px;cursor:pointer;background:transparent}
+.embed-toggle{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none}
+.embed-toggle input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0}
+.embed-toggle__track{width:36px;height:20px;border-radius:10px;background:var(--border-color,#ccc);position:relative;flex-shrink:0;transition:background .2s}
+.embed-toggle__track::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.embed-toggle input:checked+.embed-toggle__track{background:var(--accent-color,#555)}
+.embed-toggle input:checked+.embed-toggle__track::after{transform:translateX(16px)}
+.embed-toggle__label{font-size:.82rem;color:var(--surface-text-color,#555);opacity:.8;min-width:2rem}
+.embed-modal__preview-wrap{border-radius:var(--border-radius-sm,6px);overflow:hidden;background-color:#fff;background-image:linear-gradient(45deg,#e0e0e0 25%,transparent 25%),linear-gradient(-45deg,#e0e0e0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e0e0e0 75%),linear-gradient(-45deg,transparent 75%,#e0e0e0 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;border:1px solid var(--border-color,rgba(0,0,0,.15))}
+.embed-modal__code-wrap{display:flex;align-items:flex-start;gap:var(--spacing-xs,.5rem);background:rgba(0,0,0,.04);border:1px solid var(--border-color,rgba(0,0,0,.15));border-radius:var(--border-radius-sm,6px);padding:var(--spacing-xs,.5rem)}
+.embed-modal__code{flex:1;font-size:.75rem;line-height:1.5;word-break:break-all;white-space:pre-wrap;color:var(--surface-text-color,#333);font-family:monospace}
+.embed-modal__copy-btn{flex-shrink:0}
+@media(max-width:540px){.embed-modal__controls{grid-template-columns:1fr}}
+</style>
+
+<div class="share-bar" data-pagefind-ignore>
+  <button class="share-btn share-btn--share" id="js-share-btn" aria-label="Share this page">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <span>Share</span>
+  </button>
+  <button class="share-btn share-btn--copy" id="js-copy-link-btn" aria-label="Copy link to this page">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    <span>Copy link</span>
+  </button>
+  {% if site.features.embed !== false %}
+  <button class="share-btn share-btn--embed" id="js-embed-btn" aria-label="Embed this page">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <span>Embed</span>
+  </button>
+  {% endif %}
+</div>
+
+<!-- Embed modal -->
+{% if site.features.embed !== false %}
+<div class="embed-modal-overlay" id="js-embed-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="js-embed-modal-title">
+  <div class="embed-modal">
+    <button class="embed-modal__close" id="js-embed-modal-close" aria-label="Close embed modal">&#x2715;</button>
+    <h2 class="embed-modal__title" id="js-embed-modal-title">Embed this page</h2>
+
+    <div class="embed-modal__controls">
+      <div class="embed-ctrl">
+        <label class="embed-ctrl__label" for="embed-height">Height</label>
+        <div class="embed-ctrl__row">
+          <input class="embed-ctrl__number" type="number" id="embed-height" value="500" min="100" max="2000" step="50">
+          <span class="embed-ctrl__unit">px</span>
+        </div>
+      </div>
+
+      <div class="embed-ctrl">
+        <label class="embed-ctrl__label">Background</label>
+        <div class="embed-ctrl__row">
+          <label class="embed-toggle">
+            <input type="checkbox" id="embed-transparent" checked>
+            <span class="embed-toggle__track"></span>
+            <span class="embed-toggle__label">Transparent</span>
+          </label>
+          <input type="color" id="embed-bg-color" value="#ffffff" class="embed-ctrl__color" style="display:none" title="Pick background colour">
+        </div>
+      </div>
+
+      <div class="embed-ctrl">
+        <label class="embed-ctrl__label">Text color</label>
+        <div class="embed-ctrl__row">
+          <label class="embed-toggle">
+            <input type="checkbox" id="embed-text-inherit" checked>
+            <span class="embed-toggle__track"></span>
+            <span class="embed-toggle__label">Inherit</span>
+          </label>
+          <input type="color" id="embed-text-color" value="#333333" class="embed-ctrl__color" style="display:none" title="Override text colour">
+        </div>
+      </div>
+
+      <div class="embed-ctrl">
+        <label class="embed-ctrl__label">Show title &amp; subtitle</label>
+        <label class="embed-toggle">
+          <input type="checkbox" id="embed-show-title" checked>
+          <span class="embed-toggle__track"></span>
+          <span class="embed-toggle__label">On</span>
+        </label>
+      </div>
+
+      <div class="embed-ctrl">
+        <label class="embed-ctrl__label">Show share bar</label>
+        <label class="embed-toggle">
+          <input type="checkbox" id="embed-show-share" checked>
+          <span class="embed-toggle__track"></span>
+          <span class="embed-toggle__label">On</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Code output -->
+    <p class="embed-modal__section-label">Code</p>
+    <div class="embed-modal__code-wrap">
+      <code id="js-embed-code" class="embed-modal__code"></code>
+      <button class="share-btn share-btn--copy embed-modal__copy-btn" id="js-embed-copy-code">Copy code</button>
+    </div>
+
+    <!-- Live preview -->
+    <p class="embed-modal__section-label">Preview</p>
+    <div class="embed-modal__preview-wrap">
+      <iframe id="js-embed-preview" src="" width="100%" height="500"
+              frameborder="0" allowtransparency="true"
+              style="border:none;border-radius:var(--border-radius-sm);display:block">
+      </iframe>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function copyText(text, cb) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(cb);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); cb(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Share button ──────────────────────────────────────────────────────────
+  var shareBtn = document.getElementById('js-share-btn');
+  if (shareBtn) {
+    if (!navigator.share) {
+      shareBtn.style.display = 'none';
+    } else {
+      shareBtn.addEventListener('click', function () {
+        navigator.share({ title: document.title, url: window.location.href }).catch(function () {});
+      });
+    }
+  }
+
+  // ── Copy link button ──────────────────────────────────────────────────────
+  var copyBtn = document.getElementById('js-copy-link-btn');
+  if (copyBtn) {
+    var copyLabel = copyBtn.querySelector('span');
+    copyBtn.addEventListener('click', function () {
+      copyText(window.location.href, function () {
+        copyLabel.textContent = 'Copied!';
+        copyBtn.classList.add('share-btn--confirmed');
+        setTimeout(function () {
+          copyLabel.textContent = 'Copy link';
+          copyBtn.classList.remove('share-btn--confirmed');
+        }, 2000);
+      });
+    });
+  }
+
+  // ── Embed modal (only wired when features.embed !== false) ───────────────
+  var embedBtn    = document.getElementById('js-embed-btn');
+  var overlay     = document.getElementById('js-embed-modal-overlay');
+  var closeBtn    = document.getElementById('js-embed-modal-close');
+  var heightInput = document.getElementById('embed-height');
+  var transpCheck  = document.getElementById('embed-transparent');
+  var bgColor      = document.getElementById('embed-bg-color');
+  var textInherit  = document.getElementById('embed-text-inherit');
+  var textColor    = document.getElementById('embed-text-color');
+  var showTitle    = document.getElementById('embed-show-title');
+  var showShare    = document.getElementById('embed-show-share');
+  var preview     = document.getElementById('js-embed-preview');
+  var codeEl      = document.getElementById('js-embed-code');
+  var copyCodeBtn = document.getElementById('js-embed-copy-code');
+
+  if (!embedBtn || !overlay) return;
+
+  function buildEmbedUrl() {
+    var path = window.location.pathname.replace(/\/?$/, '/');
+    var base = window.location.origin + path + 'embed/';
+    var params = new URLSearchParams();
+    if (!transpCheck.checked)  params.set('bg', bgColor.value);
+    if (!textInherit.checked)  params.set('text', textColor.value);
+    if (!showTitle.checked)    params.set('title', '0');
+    if (!showShare.checked)    params.set('share', '0');
+    var qs = params.toString();
+    return qs ? base + '?' + qs : base;
+  }
+
+  function buildSnippet() {
+    var url    = buildEmbedUrl();
+    var h      = parseInt(heightInput.value) || 500;
+    var transp = transpCheck.checked;
+    var style  = 'border:none;border-radius:8px' + (transp ? ';background:transparent' : '');
+    return '<iframe src="' + url + '"'
+      + ' width="100%"'
+      + ' height="' + h + '"'
+      + ' frameborder="0"'
+      + ' style="' + style + '"'
+      + ' loading="lazy"'
+      + ' title="' + document.title.replace(/"/g, '&quot;') + '"'
+      + (transp ? ' allowtransparency="true"' : '')
+      + '></iframe>';
+  }
+
+  function refresh() {
+    var url = buildEmbedUrl();
+    var h   = parseInt(heightInput.value) || 500;
+    if (preview.src !== url) preview.src = url;
+    preview.height = h;
+    codeEl.textContent = buildSnippet();
+  }
+
+  // Show/hide colour picker when transparent is toggled
+  transpCheck.addEventListener('change', function () {
+    bgColor.style.display = this.checked ? 'none' : 'inline-block';
+    refresh();
+  });
+
+  textInherit.addEventListener('change', function () {
+    textColor.style.display = this.checked ? 'none' : 'inline-block';
+    refresh();
+  });
+
+  [heightInput, bgColor, textColor, showTitle, showShare].forEach(function (el) {
+    el.addEventListener('change', refresh);
+    if (el.type === 'number') el.addEventListener('input', refresh);
+  });
+
+  // Update toggle labels
+  [{ check: showTitle, labels: ['On', 'Off'] }, { check: showShare, labels: ['On', 'Off'] }]
+    .forEach(function (item) {
+      item.check.addEventListener('change', function () {
+        item.check.closest('.embed-toggle').querySelector('.embed-toggle__label').textContent =
+          item.check.checked ? item.labels[0] : item.labels[1];
+      });
+    });
+
+  function openModal() {
+    overlay.classList.add('is-open');
+    refresh();
+  }
+  function closeModal() {
+    overlay.classList.remove('is-open');
+  }
+
+  embedBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  copyCodeBtn.addEventListener('click', function () {
+    copyText(buildSnippet(), function () {
+      copyCodeBtn.textContent = 'Copied!';
+      copyCodeBtn.classList.add('share-btn--confirmed');
+      setTimeout(function () {
+        copyCodeBtn.textContent = 'Copy code';
+        copyCodeBtn.classList.remove('share-btn--confirmed');
+      }, 2000);
+    });
+  });
+
+  // ── Heading anchor links ──────────────────────────────────────────────────
+  var body = document.querySelector('.marble-content, .page-body');
+  if (!body) return;
+
+  var slugCounts = {};
+  function makeSlug(text) {
+    var base = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    var count = slugCounts[base] = (slugCounts[base] || 0) + 1;
+    return count > 1 ? base + '-' + count : base;
+  }
+
+  body.querySelectorAll('h2, h3, h4').forEach(function (h) {
+    if (!h.id) h.id = makeSlug(h.textContent);
+    var a = document.createElement('a');
+    a.className = 'heading-anchor';
+    a.href = '#' + h.id;
+    a.setAttribute('aria-label', 'Copy link to this section');
+    var linkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    var checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+    a.innerHTML = linkIcon;
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      history.pushState(null, '', '#' + h.id);
+      copyText(location.href, function () {
+        a.innerHTML = checkIcon;
+        a.classList.add('heading-anchor--copied');
+        setTimeout(function () {
+          a.innerHTML = linkIcon;
+          a.classList.remove('heading-anchor--copied');
+        }, 2000);
+      });
+    });
+    h.appendChild(a);
+  });
+});
+</script>

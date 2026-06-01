@@ -1,0 +1,24 @@
+---
+pagination:
+  data: collections.all
+  size: 1
+  alias: embedPage
+permalink: "{{ embedPage.url }}embed/"
+layout: layouts/embed.njk
+eleventyExcludeFromCollections: true
+---
+<article class="marble-page">
+  <header class="marble-header">
+    <h1 class="page-title">{{ (embedPage.data.title_md if embedPage.data.title_md else embedPage.data.title) | mdinline | safe }}</h1>
+    {% if embedPage.data.subtitle %}<p class="page-subtitle">{{ embedPage.data.subtitle | mdinline | safe }}</p>{% endif %}
+    {% if embedPage.data.date_created %}
+      {% set dcStr = embedPage.data.date_created | string %}
+      {% set dcParts = dcStr | split(",") %}
+      <p class="marble-date">{{ dcParts[0] | trim | dateFormat }}</p>
+    {% endif %}
+    {% include "partials/share-bar.njk" %}
+  </header>
+  <div class="marble-content">
+    {{ embedPage.content | safe }}
+  </div>
+</article>

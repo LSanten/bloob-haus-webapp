@@ -298,10 +298,13 @@ export async function preprocessContent({
     processedContent = injectContainerRaw(processedContent);
 
     // 6e.6: File-scope shape rendering.
-    // When bloob-shape is set, route the body through the named shape's
-    // renderFilescope(settings, body) function. The returned HTML replaces
-    // the markdown body entirely — markdown-it will pass it through as an
-    // HTML block. This is the file-scope equivalent of inline ::: visualizers.
+    // Two roles for bloob-shape:
+    //   a) Body renderer — shape has renderFilescope(settings, body) in its index.js.
+    //      The returned HTML replaces the markdown body entirely.
+    //   b) Layout shape — shape has no renderFilescope (or no index.js at all).
+    //      Treated as a layout reference: layouts/[name].njk wraps the page as chrome.
+    //      Enables the convention bloob-shape: article → layouts/article.njk.
+    let bloobShapeLayout = null;
     if (bloobShape) {
       const shapePath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "index.js");
       if (await fs.pathExists(shapePath)) {
@@ -310,12 +313,18 @@ export async function preprocessContent({
           if (typeof mod.renderFilescope === "function") {
             console.log(`[shape] Rendering file-scope shape: ${bloobShape}`);
             processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+          } else {
+            // Module exists but no renderFilescope — treat as layout shape
+            bloobShapeLayout = `layouts/${bloobShape}.njk`;
+            console.log(`[shape] "${bloobShape}" has no renderFilescope — using as layout: ${bloobShapeLayout}`);
           }
         } catch (e) {
-          console.warn(`[shape] Failed to render ${bloobShape}: ${e.message}`);
+          console.warn(`[shape] Failed to load ${bloobShape}: ${e.message}`);
         }
       } else {
-        console.warn(`[shape] No shape found at lib/visualizers/${bloobShape}/index.js`);
+        // No visualizer module — treat as layout shape
+        bloobShapeLayout = `layouts/${bloobShape}.njk`;
+        console.log(`[shape] "${bloobShape}" is a layout shape → ${bloobShapeLayout}`);
       }
     }
 
@@ -463,7 +472,8 @@ export async function preprocessContent({
     // Priority order (highest → lowest):
     //   1. Explicit `layout: layouts/…` in the file's own frontmatter
     //   2. Layout declared on the bloob-type in _bloob-types.md / _bloob-objects.md
-    //   3. Default: layouts/page.njk (layouts/base.njk for index.md files)
+    //   3. bloob-shape as a layout shape (no renderFilescope) → layouts/[name].njk
+    //   4. Default: layouts/page.njk (layouts/base.njk for index.md files)
     const hasEleventyLayout =
       frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
 
@@ -476,7 +486,7 @@ export async function preprocessContent({
 
     if (BUILD_TARGET === "eleventy") {
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? "layouts/page.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/page.njk";
       }
     }
 
@@ -491,7 +501,7 @@ export async function preprocessContent({
         dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? "layouts/base.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/base.njk";
       }
       // Exclude from tag and section listings but keep in collections.all
       // so embed-pages.njk can generate /folder/embed/ URLs for them.

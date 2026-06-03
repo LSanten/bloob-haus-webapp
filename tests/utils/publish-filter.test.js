@@ -172,6 +172,51 @@ describe('filterPublishableFiles', () => {
     });
   });
 
+  // --- Universal visibility: private ---
+
+  describe('universal private blocking', () => {
+    it('always excludes files with visibility: private, regardless of publish mode', async () => {
+      await writeFile('notes/hidden.md', '---\nvisibility: private\ntitle: Hidden\n---\nSecret');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'blocklist',
+        blocklistTag: 'not-for-public',
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+
+    it('always excludes files with visibility: private in allowlist mode', async () => {
+      await writeFile('notes/hidden.md', '---\nvisibility: private\npublish: true\n---\nSecret');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'allowlist',
+        allowlistKey: 'publish',
+        allowlistValue: true,
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+
+    it('always excludes files with #private tag in frontmatter', async () => {
+      await writeFile('notes/hidden.md', '---\ntags:\n  - private\ntitle: Hidden\n---\nSecret');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'blocklist',
+        blocklistTag: 'not-for-public',
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+
+    it('always excludes files with #private in body content', async () => {
+      await writeFile('notes/hidden.md', '---\ntitle: Hidden\n---\nThis note is #private');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'blocklist',
+        blocklistTag: 'not-for-public',
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+  });
+
   // --- Edge cases ---
 
   describe('edge cases', () => {

@@ -44,6 +44,13 @@ function getPublishConfig() {
  * @returns {boolean} True if file should be published
  */
 function shouldPublish(frontmatter, content, config) {
+  // Universal: visibility: private or #private tag always blocks, regardless of publish mode.
+  if (frontmatter.visibility === "private") return false;
+  const privateTagInFrontmatter =
+    Array.isArray(frontmatter.tags) &&
+    frontmatter.tags.some((t) => t === "private" || t === "#private");
+  if (privateTagInFrontmatter || content.includes("#private")) return false;
+
   if (config.publishMode === "status_field") {
     // Status field mode: exclude only files where the status field equals "draft".
     // Absent field defaults to public. unlisted/archived/public all pass through (they are built).

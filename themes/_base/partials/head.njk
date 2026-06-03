@@ -13,6 +13,10 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
 
+    {% if _bloob_unlisted %}
+    <meta name="robots" content="noindex,nofollow" />
+    {% endif %}
+
     {% if redirect %}
     <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
     <meta http-equiv="refresh" content="0; url={{ redirect }}" />

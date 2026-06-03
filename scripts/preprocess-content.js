@@ -371,6 +371,13 @@ export async function preprocessContent({
       fileIndex,
     );
 
+    // Normalize visibility: unlisted, website_status: unlisted, or #unlisted tag
+    // into a single internal flag that templates, layouts, and eleventyComputed read.
+    const isUnlisted =
+      frontmatter.visibility === "unlisted" ||
+      frontmatter.website_status === "unlisted" ||
+      pageTags.some((t) => t === "unlisted" || t === "#unlisted");
+
     const outputFrontmatter = {
       ...frontmatter,
       title: pageTitle,
@@ -379,6 +386,7 @@ export async function preprocessContent({
       tags: pageTags,
       ...(bloobObject && { bloob_object: bloobObject }),
       ...(resolvedRedirect && { redirect: resolvedRedirect }),
+      ...(isUnlisted && { _bloob_unlisted: true }),
     };
 
     // Propagate redirect to graph node

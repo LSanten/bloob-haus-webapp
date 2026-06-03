@@ -1,7 +1,7 @@
 ---
 layout: layouts/base.njk
 ---
-<article class="page-article" data-pagefind-body>
+<article class="page-article" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="page-header">
     <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
     {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle">{{ subtitle | mdinline | safe }}</p>{% endif %}

@@ -549,16 +549,14 @@ th {
 
 .site-footer__links a,
 .site-footer__links > a,
-.site-footer__home,
-.site-footer__rss {
+.site-footer__home {
   color: var(--text-light);
   font-size: 0.9rem;
   text-decoration: none;
 }
 
 .site-footer__links a:hover,
-.site-footer__home:hover,
-.site-footer__rss:hover {
+.site-footer__home:hover {
   color: var(--accent-color);
 }
 
@@ -966,14 +964,7 @@ details > *:not(summary) {
   color: var(--link-color) !important;
 }
 
-/* Subtitle line shown above the auto-excerpt in search result cards */
-.pagefind-subtitle {
-  display: block;
-  font-size: 0.78em;
-  opacity: 0.7;
-  margin-bottom: 0.25em;
-  font-style: italic;
-}
+/* .pagefind-subtitle moved to lib/visualizers/search/styles.css */
 
 /* ================================
    Tags Visualizer

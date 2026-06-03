@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 ---
 {% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
-<article class="page-content" data-pagefind-body>
+<article class="page-content" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="page-header">
     {% if typeData and typeData.display_name %}<p class="page-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>

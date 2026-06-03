@@ -1,7 +1,7 @@
 ---
 layout: layouts/base.njk
 ---
-<article class="recipe-page" data-pagefind-body>
+<article class="recipe-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
     {% if image %}
     <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden style="display:none" />
     {% endif %}

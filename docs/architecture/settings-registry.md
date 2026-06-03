@@ -8,7 +8,7 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
-**Last Updated:** 2026-04-21
+**Last Updated:** 2026-06-03
 
 ---
 
@@ -28,7 +28,8 @@ These settings work identically across every theme. They are part of the Bloob H
 | `bloob-shape` | string | — | Rendering shape for this page. Routes the entire page body through the named shape's `renderFilescope()` renderer in `lib/visualizers/[name]/index.js`. Separate from `bloob-type:` — a file can have both. Shape config goes in a `::: settings` block in the body (not in frontmatter). See `docs/architecture/visualizers.md` — File-scope Shapes section. |
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
-| `website_status` | string | `public` (when absent) | Publish visibility for this page. One of `draft` / `unlisted` / `archived` / `public`. Only active when `publish_mode: status_field` is set in `_bloob-settings.md`. See status matrix below. |
+| `visibility` | string | — | Per-page visibility shorthand. `private` = excluded from build entirely. `unlisted` = built but hidden from all indexes (RSS, search, sitemap, noindex). Works in any `publish_mode`. Sets `_bloob_unlisted: true` internally. |
+| `website_status` | string | `public` (when absent) | Legacy visibility field. `draft` = excluded from build (requires `publish_mode: status_field`). `unlisted` = same effect as `visibility: unlisted` (normalised to `_bloob_unlisted: true` regardless of publish mode). `archived` / `public` = built normally. |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
@@ -37,36 +38,53 @@ These settings work identically across every theme. They are part of the Bloob H
 |-------|-------------|
 | `byline` | Freeform attribution string displayed as-is below the title — use when you need full control over the attribution line (e.g. "In collaboration with X and Y"). Takes precedence over `author` if both are set. No "By" prefix is added. |
 
+#### Tag-based visibility (no frontmatter key required)
+
+These tags are reserved and always handled by the pipeline, regardless of `publish_mode`:
+
+| Tag | Effect |
+|-----|--------|
+| `#private` | File removed from build entirely — same as `visibility: private` |
+| `#unlisted` | File built but hidden from all indexes — same as `visibility: unlisted` |
+
+Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`).
+
 #### Preprocessor-injected fields (set automatically — do not set in content files)
 
 | Field | Type | Set by | Description |
 |-------|------|--------|-------------|
+| `_bloob_unlisted` | bool | `preprocess-content.js` | `true` when the page has `visibility: unlisted`, `website_status: unlisted`, or the `#unlisted` tag. Read by `eleventyComputed.js`, layouts, and `head.njk` — do not set manually. |
 | `is_folder` | bool | `preprocess-content.js` | `true` on folder index files (`resources/index.md`). Used by `page.njk` to emit a trailing `/` on the `ID:` body search span so search results show `resources/` not `resources`. |
 | `slug` | string | `preprocess-content.js` | URL slug derived from filename. For folder index files, set to the parent folder name (not "index"). |
 | `slug_spaced` | string | `preprocess-content.js` | Space-separated version of the slug (e.g. `"contact us"` for `contact-us`). Emitted as a separate hidden span so multi-word queries like "contact us" still match the slug. |
 
-#### `website_status` — Status Matrix
+#### Visibility — Status Matrix
 
-Requires `publish_mode: status_field` in `_bloob-settings.md`. Field absent = `public`.
+`_bloob_unlisted: true` is set by the pipeline whenever any of these are present: `visibility: unlisted`, `website_status: unlisted`, or tag `#unlisted`. `draft` exclusion still requires `publish_mode: status_field`.
 
-| Value | Built | Direct URL | Google-indexable | `sitemap.xml` | Internal search | Card/folder previews | `graph.json` |
-|-------|-------|------------|-----------------|---------------|-----------------|---------------------|--------------|
-| `draft` | No | No | — | No | No | No | No |
-| `unlisted` | Yes | Yes | No (`noindex`) | No | No | No | No |
-| `archived` | Yes | Yes | Yes | Yes | No | No | Yes (with field) |
-| `public` | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Declaration | Built | Direct URL | Google-indexable | RSS | Internal search (pagefind) | Collections (tags, recents) | `graph.json` |
+|---|---|---|---|---|---|---|---|
+| `visibility: private` or `#private` | No | No | — | No | No | No | No |
+| `website_status: draft` (status_field mode only) | No | No | — | No | No | No | No |
+| `visibility: unlisted` / `#unlisted` / `website_status: unlisted` | Yes | Yes | No (`noindex`) | No | No | No | No |
+| `website_status: archived` | Yes | Yes | Yes | Yes | No | No | Yes |
+| `public` (default) | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
 
-**Theme wiring required (per-theme, not automatic):**
-- `partials/head.njk` — add `<meta name="robots" content="noindex">` when `website_status == "unlisted"`
-- `layouts/base.njk` (or equivalent) — add `data-pagefind-ignore` on main content wrapper when `website_status` is `unlisted` or `archived`
-- `pages/sitemap.njk` — filter out `website_status == "unlisted"` entries
+**Unlisted wiring — what's automatic vs per-theme:**
+| Concern | Mechanism | Automatic? |
+|---------|-----------|------------|
+| Excluded from RSS | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✓ Universal |
+| `noindex` meta | `_base/partials/head.njk` checks `_bloob_unlisted` | ✓ Universal |
+| Excluded from pagefind | Layout must check `_bloob_unlisted` and swap `data-pagefind-body` → `data-pagefind-ignore` | Per-theme obligation |
+| Excluded from sitemap | `pages/sitemap.njk` must filter `_bloob_unlisted` entries | Per-theme obligation |
 
 **Theme implementation status:**
 | Theme | noindex | pagefind-ignore | sitemap filter |
 |-------|---------|-----------------|----------------|
 | `alter-engineers` | ✓ | ✓ | ✓ |
-| `marbles-pouch` | — | — | — |
-| `warm-kitchen` | — | — | — |
+| `marbles-pouch` | ✓ | ✓ | — (no sitemap) |
+| `warm-kitchen` | ✓ | ✓ | — |
+| `melt` | ✓ | ✓ | — |
 
 ### Site-Wide (top-level keys in `_bloob-settings.md`)
 

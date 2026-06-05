@@ -6,6 +6,36 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 45 — June 5, 2026
+**Worked on:** Upstream merge, `article` shape (new layout-only pattern), `shape_settings` mechanism, AE theme tokens + nav offset
+
+**Upstream merge (LSanten → altron-alters fork)**
+- Pulled 8 upstream commits; resolved conflict in `preprocess-content.js` via `git checkout --theirs` (no AE-specific changes in that file)
+- Post-merge: `npm run dev:alter-engineers` broke — `Cannot find package 'markdown-it-footnote'`; upstream added the import but not the install. Fix: `npm install markdown-it-footnote`
+
+**`article` shape — first layout-only shape (`lib/visualizers/article/`)**
+- New shape type: **layout-only** — no `index.js`, no `renderFilescope`, just `manifest.json` + `layout.njk` + `styles.css`
+- `layout.njk`: melt-theme-inspired, renders title/subtitle/author/byline/date, `bloob_object` type badge, hidden slug spans for pagefind, share bar toggle via `shape_settings`
+- `styles.css`: fully token-based, works out of the box in any theme; covers header, body typography, share bar — ~190 lines
+- Deleted `themes/alter-engineers/layouts/article.njk` — shape's `layout.njk` is now the sole source
+- `manifest.json` type: `"layout"` (new type, distinguishes from renderFilescope shapes)
+
+**`shape_settings` mechanism (completes the `:::settings` flow)**
+- `preprocess-content.js` now writes `shape_settings` to `outputFrontmatter` when `bloob-shape` is declared and the `:::settings` block is non-empty
+- Layout templates access via `{{ shape_settings.key }}` — keeps shape-internal config separate from page metadata
+- First use: `article` shape's share bar toggle (`share_bar: false` to opt out; default is ON)
+
+**AE theme tokens and nav offset**
+- Overhauled `themes/alter-engineers/assets/css/main.css` `:root` — organized into named sections (Brand, Shape, Typography, Spacing, Layout), added `--accent-dark`, `--text-light`, `--color-mint`, `--color-orange`, `--nav-height: 3rem`, `--article-width: 820px`
+- Added `.article-page { padding-top: calc(var(--nav-height) + var(--spacing-lg)); }` to offset fixed nav bar
+- Updated `themes/_base/partials/share-bar.njk` querySelector to include `.article-body` (was missing, heading anchor links weren't attaching)
+
+**Documentation (this session)**
+- `docs/architecture/shapes.md`: added Layout-only shapes checklist, `shape_settings` mechanism, token-based `styles.css` pattern, `_base` partials note, updated shape status table
+- `docs/implementation-plans/DECISIONS.md`: added 4 new entries — layout-only shapes, `shape_settings` output path, `manifest.defaultLayout` asymmetry, token-based CSS pattern
+
+---
+
 ### Session 44 — June 5, 2026
 **Worked on:** Citations rendering, base-wide link improvements, shape fallback fix
 

@@ -418,6 +418,8 @@ export async function preprocessContent({
       ...(bloobObject && { bloob_object: bloobObject }),
       ...(resolvedRedirect && { redirect: resolvedRedirect }),
       ...(isUnlisted && { _bloob_unlisted: true }),
+      // Expose :::settings block values to layout templates (e.g. share_bar toggle in article shape)
+      ...(bloobShape && Object.keys(shapeSettings).length > 0 && { shape_settings: shapeSettings }),
     };
 
     // Propagate redirect to graph node

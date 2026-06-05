@@ -5,7 +5,7 @@ Shapes are the unified concept for everything that renders content visually: `bl
 ## Two scopes
 
 - **Inline scope** — authored as a `:::` block inside a page body. Rendered by the visualizer's `transform()` + optional `browser.js`. No layout needed.
-- **File scope** — its own `.md` file with `bloob-shape:` in frontmatter. The entire page body is replaced by the shape's renderer. Requires a `layout.njk` in the shape folder.
+- **File scope** — its own `.md` file with `bloob-shape:` in frontmatter. Requires a `layout.njk` in the shape folder. Two sub-patterns exist (see below): the shape can replace the body entirely via `renderFilescope`, or it can act as a pure layout wrapper and leave the body untouched.
 
 ## What a complete shape carries
 
@@ -13,10 +13,10 @@ Shapes are the unified concept for everything that renders content visually: `bl
 lib/visualizers/[name]/
   manifest.json       required — identity, type, defaultLayout (file-scope only)
   schema.md           required — human + AI readable contract (settings, examples)
-  index.js            required — build-time transform() and/or renderFilescope()
+  index.js            renderFilescope shapes only — build-time transform() and/or renderFilescope()
   browser.js          when needed — runtime rendering from graph.json or DOM
-  styles.css          when needed — scoped CSS using theme CSS tokens
-  layout.njk          file-scope only — default page layout template
+  styles.css          when needed — scoped CSS using theme CSS tokens (see "Token-based styles.css" below)
+  layout.njk          file-scope shapes only — default page layout template
 ```
 
 ## Conversion checklist per shape type
@@ -30,17 +30,32 @@ These are already valid shapes. Remaining gaps are documentation only:
 
 No `layout.njk` needed — ever.
 
-### File-scope shapes (`file-scope` type, or `hybrid` used as a full-page shape)
+### Layout-only shapes (no body renderer — pure layout wrapper)
 
-Full checklist:
+The simplest file-scope pattern: the shape provides a `layout.njk` template and optional `styles.css`, but does NOT replace the body. The user's markdown content renders normally inside the layout. `article` is the canonical example.
 
+Checklist:
+- [ ] `manifest.json` has `"type": "layout"` and `"defaultLayout": "layouts/[name].njk"`
+- [ ] No `index.js` — there is no `renderFilescope` and no `transform()`
+- [ ] `layout.njk` inherits from `layouts/base.njk`; renders `{{ content | safe }}` inside its chrome
+- [ ] `styles.css` uses only CSS token contract variables (see "Token-based styles.css" below)
+- [ ] `schema.md` documents settings and activation
+- [ ] User only needs `bloob-shape: [name]` in frontmatter — no `layout:` required
+
+Layout resolution for layout-only shapes: the preprocessor derives the layout name directly from the shape folder name (`bloob-shape: article` → `layouts/article.njk`). This path does **not** read `manifest.defaultLayout` — that field is only used by `assemble-src.js` to know which file to copy (Step 2b.5), and by `renderFilescope` shapes to inject the layout via `shapeManifestLayout`. See the manifest.defaultLayout asymmetry note in DECISIONS.md 2026-06-05.
+
+### renderFilescope shapes (`file-scope` type, or `hybrid` used as a full-page shape)
+
+These shapes actively replace the page body with a custom renderer. `folder-preview` is the canonical example.
+
+Checklist:
 - [ ] `manifest.json` has `"type": "file-scope"` (or `"hybrid"` if also used inline)
 - [ ] `manifest.json` has `"filescope": true`
 - [ ] `manifest.json` has `"defaultLayout": "layouts/[name].njk"`
 - [ ] `index.js` exports `renderFilescope(settings, body)` returning inner HTML
 - [ ] `layout.njk` exists — inherits from `layouts/base.njk`, renders `{{ content | safe }}`
 - [ ] `schema.md` documents settings and activation
-- [ ] Auto-stubs or user files only need `bloob-shape: [name]` — no `layout:`, `title:`, `folder:`, or `permalink:` required (all auto-injected by preprocessor)
+- [ ] User only needs `bloob-shape: [name]` — no `layout:`, `title:`, `folder:`, or `permalink:` required (all auto-injected by preprocessor)
 
 ## How layout.njk gets into the build
 
@@ -91,6 +106,74 @@ Steps 3 and 4 use `effectiveShape` — so both an explicitly declared shape and 
 
 **A user only needs `bloob-shape: folder-preview`** — no `layout:` required. The preprocessor reads the manifest and injects the correct layout automatically. For index.md files the preprocessor also auto-injects `folder`, `folder_display`, and `title` from the directory name when the user hasn't provided them.
 
+## The `shape_settings` mechanism
+
+Shape layouts can read per-page configuration values that the user authors in a `:::settings` block in the page body — without polluting the user's frontmatter with shape-internal options.
+
+**How it works:**
+
+1. User writes a `:::settings` block in the body:
+   ```
+   :::settings
+   share_bar: false
+   :::
+   ```
+2. `preprocess-content.js` calls `extractSettingsBlock()` on the raw body whenever `bloob-shape` is declared in frontmatter
+3. The parsed key/value pairs are written to `outputFrontmatter.shape_settings` (only if non-empty and `bloob-shape` is present)
+4. The shape's `layout.njk` reads them via `{{ shape_settings.key }}`
+
+**Example — article shape's share bar toggle:**
+```njk
+{% if shape_settings.share_bar !== false %}
+  {% include "partials/share-bar.njk" %}
+{% endif %}
+```
+The default is "on" (include renders unless explicitly opted out). Users opt out with `share_bar: false` in a `:::settings` block.
+
+**Why `:::settings` instead of direct frontmatter keys:**
+- Shape-internal options shouldn't compete with standard page frontmatter keys
+- The `:::settings` block is strip-parsed at build time — it never appears in rendered output
+- Layout templates read from a single `shape_settings` object, making it obvious which keys come from shape config vs page metadata
+- See DECISIONS.md 2026-06-05 for the full rationale
+
+## Token-based `styles.css`
+
+Shapes ship their own `styles.css` using **only** the CSS token contract as variables. This means the shape's styles work correctly in any theme that implements the token contract — no theme-specific overrides needed.
+
+Required tokens used by shapes (all themes must declare these — see `docs/architecture/themes.md`):
+```
+--accent-color    --bg-color    --text-color    --border-color    --card-bg
+--font-body       --font-heading
+```
+
+Optional tokens shapes can use with safe fallbacks:
+```
+--article-width   (shape default: 820px)
+--spacing-xs/sm/md/lg/xl
+--border-radius   --border-radius-sm
+--nav-height      (for fixed-nav offset — theme's responsibility to declare)
+```
+
+**The override pattern for theme-specific adjustments:**
+Shape CSS is copied to `src-*` as part of the build. Themes apply overrides in their `main.css` using the shape's class names:
+```css
+/* AE theme — offset article-page for fixed nav bar */
+.article-page {
+  padding-top: calc(var(--nav-height) + var(--spacing-lg));
+}
+```
+This keeps the shape portable while letting themes fine-tune without forking the shape's template.
+
+## `_base` partials in shape layouts
+
+Shape `layout.njk` files can reference `_base` partials directly:
+```njk
+{% include "partials/share-bar.njk" %}
+```
+This works because `assemble-src.js` copies `themes/_base/partials/` into `src-*/_includes/partials/` before Eleventy runs — those partials are available to all themes and all shape layouts.
+
+**Caveat:** If a `_base` partial uses a JS querySelector to target the body content (e.g., `share-bar.njk` for heading anchor links), the new shape's body class must be added to that selector. When `article` was introduced, `share-bar.njk` needed `.article-body` added alongside `.marble-content` and `.page-body`.
+
 ## Unknown shape names — fallback behaviour
 
 When `effectiveShape` names a shape with no `lib/visualizers/[name]/` folder:
@@ -107,6 +190,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 
 | Shape | Type | Complete? | Gaps |
 |-------|------|-----------|------|
+| `article` | layout-only | ✓ | First layout-only shape; reference implementation |
 | `folder-preview` | hybrid + file-scope | ✓ | — |
 | `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |
 | `card-preview` | build-time | Partial | Missing `schema.md` |

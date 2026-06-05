@@ -1,0 +1,32 @@
+---
+layout: layouts/base.njk
+---
+{% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
+<article class="article-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
+  <header class="article-header">
+    {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
+    <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="article-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
+    {% if author %}<p class="article-author">By {{ author }}</p>{% endif %}
+    {% if byline %}<p class="article-byline">{{ byline }}</p>{% endif %}
+    {% if date_created %}
+    {% set dcStr = date_created | string %}
+    {% set dcParts = dcStr | split(",") %}
+    {% set dcDate = dcParts[0] | trim %}
+    {% set dcLabel = (dcParts[1] | trim) if dcParts.length > 1 else "Written on" %}
+    <p class="article-date" data-pagefind-ignore>{{ dcLabel }} {{ dcDate | dateFormat }}</p>
+    {% endif %}
+    {% if shape_settings.share_bar !== false %}
+      {% include "partials/share-bar.njk" %}
+    {% endif %}
+  </header>
+
+  {% if slug %}
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
+  {% endif %}
+
+  <div class="article-body">
+    {{ content | safe }}
+  </div>
+</article>

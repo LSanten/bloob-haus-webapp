@@ -1,0 +1,6 @@
+{
+  "name": "article",
+  "type": "layout",
+  "defaultLayout": "layouts/article.njk",
+  "description": "Constrained reading-width page with title header and optional share bar. Share bar is on by default; opt out per-page with share_bar: false in a :::settings block."
+}

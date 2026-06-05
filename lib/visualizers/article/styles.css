@@ -1,0 +1,188 @@
+/* Article Shape — Styles
+   Token-based: works in any theme that implements the CSS token contract.
+   Themes can override layouts/article.njk but don't need to. */
+
+/* ── Page wrapper ───────────────────────────────────────────────────────── */
+.article-page {
+  max-width: var(--article-width, 820px);
+  margin: 0 auto;
+  padding: var(--spacing-lg, 2.5rem) var(--spacing-md, 1.5rem);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.article-header {
+  margin-bottom: var(--spacing-lg, 2rem);
+  padding-bottom: var(--spacing-md, 1.5rem);
+  border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.1));
+}
+
+.article-type {
+  font-family: var(--font-body, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent-color, #555);
+  margin: 0 0 0.6rem;
+}
+
+.article-title {
+  font-family: var(--font-heading, sans-serif);
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-color, #1a1a1a);
+  margin: 0 0 0.5rem;
+}
+
+.article-subtitle {
+  font-family: var(--font-body, sans-serif);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--text-color, #555);
+  opacity: 0.72;
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.article-author {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-color, #333);
+  margin: 0.5rem 0 0;
+}
+
+.article-byline {
+  font-size: 0.84rem;
+  color: var(--text-color, #555);
+  opacity: 0.7;
+  margin: 0.2rem 0 0;
+}
+
+.article-date {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-color, #555);
+  background: color-mix(in srgb, var(--accent-color, #888) 12%, var(--bg-color, #fff) 88%);
+  border-radius: 20px;
+  padding: 0.22em 0.7em;
+  margin-top: 0.75rem;
+}
+
+/* ── Body typography ────────────────────────────────────────────────────── */
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4,
+.article-body h5,
+.article-body h6 {
+  font-family: var(--font-heading, sans-serif);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color, #1a1a1a);
+}
+
+.article-body h1 { font-size: clamp(1.55rem, 3.5vw, 2rem); }
+.article-body h2 { font-size: clamp(1.25rem, 3vw, 1.65rem); }
+.article-body h3 { font-size: 1.2rem; }
+.article-body h4 { font-size: 1rem; }
+.article-body h5 { font-size: 0.9rem; }
+.article-body h6 { font-size: 0.82rem; }
+
+.article-body :is(h1, h2, h3):first-child { margin-top: 0; }
+
+.article-body p {
+  margin: 0 0 1rem;
+  line-height: 1.7;
+  color: var(--text-color, #333);
+}
+
+.article-body a {
+  color: var(--accent-color, #555);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-body a:hover { opacity: 0.75; }
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.article-body li { margin-bottom: 0.35rem; line-height: 1.65; }
+
+.article-body blockquote {
+  border-left: 3px solid var(--accent-color, #888);
+  margin: 1.5rem 0;
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  color: var(--text-color, #555);
+  opacity: 0.82;
+  font-style: italic;
+}
+
+.article-body code {
+  font-size: 0.88em;
+  background: color-mix(in srgb, var(--border-color, rgba(0,0,0,0.08)) 60%, transparent);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+.article-body pre {
+  background: color-mix(in srgb, var(--border-color, rgba(0,0,0,0.08)) 60%, transparent);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.article-body pre code { background: none; padding: 0; }
+
+.article-body img {
+  max-width: 100%;
+  border-radius: var(--border-radius, 6px);
+}
+
+.article-body hr {
+  border: none;
+  border-top: 1px solid var(--border-color, rgba(0,0,0,0.1));
+  margin: 2rem 0;
+}
+
+/* ── Share bar ──────────────────────────────────────────────────────────── */
+.share-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4em 0.9em;
+  border-radius: 20px;
+  border: 1px solid var(--border-color, rgba(0,0,0,0.15));
+  background: transparent;
+  color: var(--text-color, #333);
+  font-family: var(--font-body, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.share-btn:hover {
+  background: color-mix(in srgb, var(--accent-color, #555) 8%, transparent);
+  border-color: var(--accent-color, #555);
+  color: var(--accent-color, #555);
+}
+
+.share-btn--confirmed {
+  border-color: var(--accent-color, #555);
+  color: var(--accent-color, #555);
+}

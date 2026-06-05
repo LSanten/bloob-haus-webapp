@@ -322,9 +322,16 @@ export async function preprocessContent({
           console.warn(`[shape] Failed to load ${bloobShape}: ${e.message}`);
         }
       } else {
-        // No visualizer module — treat as layout shape
-        bloobShapeLayout = `layouts/${bloobShape}.njk`;
-        console.log(`[shape] "${bloobShape}" is a layout shape → ${bloobShapeLayout}`);
+        // No index.js — only treat as a layout shape if the visualizer folder exists.
+        // An unknown name (e.g. bloob-shape: note with no lib/visualizers/note/) is
+        // likely a content annotation, not a shape — fall back to page.njk silently.
+        const shapeDirPath = path.join(ROOT_DIR, "lib/visualizers", bloobShape);
+        if (await fs.pathExists(shapeDirPath)) {
+          bloobShapeLayout = `layouts/${bloobShape}.njk`;
+          console.log(`[shape] "${bloobShape}" is a layout shape → ${bloobShapeLayout}`);
+        } else {
+          console.warn(`[shape] bloob-shape: "${bloobShape}" not found in lib/visualizers/ — falling back to page.njk`);
+        }
       }
     }
 

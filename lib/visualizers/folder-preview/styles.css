@@ -52,14 +52,6 @@
   gap: 1.25rem;
 }
 
-@media (max-width: 900px) {
-  .fp-cards { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 480px) {
-  .fp-cards { grid-template-columns: 1fr; }
-}
-
 .fp-card {
   display: flex;
   flex-direction: column;
@@ -367,4 +359,6 @@
   opacity: 0.8;
 }
 
-/* 900px and 480px breakpoints for .fp-cards are defined in the default grid section above */
+@media (max-width: 900px) {
+  .fp-cards { grid-template-columns: repeat(2, 1fr); }
+}

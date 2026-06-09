@@ -122,6 +122,7 @@ export async function preprocessContent({
     ...(siteConfig.content?.blocklist_tag && { blocklistTag: siteConfig.content.blocklist_tag }),
     ...(siteConfig.content?.exclude_files && { excludeFiles: siteConfig.content.exclude_files }),
     ...(siteConfig.content?.status_field && { statusField: siteConfig.content.status_field }),
+    ...(siteConfig.content?.publish_by_default !== undefined && { publishByDefault: siteConfig.content.publish_by_default }),
   };
 
   // Step 2: Filter publishable files

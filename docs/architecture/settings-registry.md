@@ -29,7 +29,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `visibility` | string | — | Per-page visibility shorthand. `private` = excluded from build entirely. `unlisted` = built but hidden from all indexes (RSS, search, sitemap, noindex). Works in any `publish_mode`. Sets `_bloob_unlisted: true` internally. |
-| `website_status` | string | `public` (when absent) | Legacy visibility field. `draft` = excluded from build (requires `publish_mode: status_field`). `unlisted` = same effect as `visibility: unlisted` (normalised to `_bloob_unlisted: true` regardless of publish mode). `archived` / `public` = built normally. |
+| `website_status` | string | depends on `publish_by_default` | Used when `publish_mode: status_field`. `draft` = excluded from build. `unlisted` = built, hidden from all indexes. `archived` = built, Google-indexable, hidden from listings. `public` = fully published. Absent field = excluded if `publish_by_default: false`, treated as public if `true` (default). |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
@@ -115,6 +115,7 @@ Both fields accept the same value formats:
 | `publish_mode` | `blocklist` (default) / `allowlist` / `status_field` | How the pipeline decides which files to build |
 | `blocklist_tag` | tag string | Used when `publish_mode: blocklist`. Files tagged with this are excluded. |
 | `status_field` | field name (default `website_status`) | Used when `publish_mode: status_field`. Which frontmatter field to read. |
+| `publish_by_default` | bool (default `true`) | Used when `publish_mode: status_field`. When `false`, files with no `website_status` field are excluded from the build (private-by-default). When `true` (default), absent field = treated as public, preserving backwards-compatible behaviour. |
 
 Documented in full in `docs/architecture/themes.md` → "Baseline Features Contract". Quick reference:
 

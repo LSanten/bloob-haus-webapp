@@ -153,7 +153,7 @@ describe('filterPublishableFiles', () => {
       expect(published).toHaveLength(1);
     });
 
-    it('publishes files with no website_status field (defaults to public)', async () => {
+    it('publishes files with no website_status field when publishByDefault is true (default)', async () => {
       await writeFile('index.md', '---\ntitle: Home\n---\nWelcome');
       const { published } = await filterPublishableFiles(tmpDir, {
         publishMode: 'status_field',
@@ -169,6 +169,50 @@ describe('filterPublishableFiles', () => {
       });
       expect(published).toHaveLength(0);
       expect(excluded).toHaveLength(1);
+    });
+
+    describe('publishByDefault: false', () => {
+      it('excludes files with no website_status field', async () => {
+        await writeFile('projects/no-status.md', '---\ntitle: No Status\n---\nContent');
+        const { published, excluded } = await filterPublishableFiles(tmpDir, {
+          publishMode: 'status_field',
+          statusField: 'website_status',
+          publishByDefault: false,
+        });
+        expect(published).toHaveLength(0);
+        expect(excluded).toHaveLength(1);
+      });
+
+      it('still publishes files with explicit public status', async () => {
+        await writeFile('projects/live.md', '---\nwebsite_status: public\n---\nLive');
+        const { published } = await filterPublishableFiles(tmpDir, {
+          publishMode: 'status_field',
+          statusField: 'website_status',
+          publishByDefault: false,
+        });
+        expect(published).toHaveLength(1);
+      });
+
+      it('still publishes files with unlisted status', async () => {
+        await writeFile('projects/hidden.md', '---\nwebsite_status: unlisted\n---\nHidden');
+        const { published } = await filterPublishableFiles(tmpDir, {
+          publishMode: 'status_field',
+          statusField: 'website_status',
+          publishByDefault: false,
+        });
+        expect(published).toHaveLength(1);
+      });
+
+      it('still excludes draft regardless of publishByDefault', async () => {
+        await writeFile('projects/draft.md', '---\nwebsite_status: draft\n---\nDraft');
+        const { published, excluded } = await filterPublishableFiles(tmpDir, {
+          publishMode: 'status_field',
+          statusField: 'website_status',
+          publishByDefault: false,
+        });
+        expect(published).toHaveLength(0);
+        expect(excluded).toHaveLength(1);
+      });
     });
   });
 

@@ -17,6 +17,7 @@ const DEFAULTS = {
   allowlistKey: "publish",
   allowlistValue: true,
   statusField: "website_status",
+  publishByDefault: true,
 };
 
 /**
@@ -32,6 +33,8 @@ function getPublishConfig() {
     allowlistValue:
       process.env.ALLOWLIST_VALUE === "false" ? false : DEFAULTS.allowlistValue,
     statusField: process.env.STATUS_FIELD || DEFAULTS.statusField,
+    publishByDefault:
+      process.env.PUBLISH_BY_DEFAULT === "false" ? false : DEFAULTS.publishByDefault,
     excludeFiles: excludeFilesRaw ? excludeFilesRaw.split(",").map(s => s.trim()) : [],
   };
 }
@@ -52,10 +55,11 @@ function shouldPublish(frontmatter, content, config) {
   if (privateTagInFrontmatter || content.includes("#private")) return false;
 
   if (config.publishMode === "status_field") {
-    // Status field mode: exclude only files where the status field equals "draft".
-    // Absent field defaults to public. unlisted/archived/public all pass through (they are built).
     const statusValue = frontmatter[config.statusField];
-    return statusValue !== "draft";
+    if (statusValue === "draft") return false;
+    // Absent field: honour publishByDefault (false = private-by-default, true = public-by-default).
+    if (statusValue == null) return config.publishByDefault;
+    return true;
   } else if (config.publishMode === "allowlist") {
     // Only publish if explicitly marked
     return frontmatter[config.allowlistKey] === config.allowlistValue;
@@ -92,7 +96,7 @@ export async function filterPublishableFiles(contentDir, options = {}) {
 
   console.log(`[filter] Mode: ${config.publishMode}`);
   if (config.publishMode === "status_field") {
-    console.log(`[filter] Status field: ${config.statusField} (draft = excluded)`);
+    console.log(`[filter] Status field: ${config.statusField} (draft = excluded, publishByDefault: ${config.publishByDefault})`);
   } else if (config.publishMode === "blocklist") {
     console.log(`[filter] Blocklist tag: #${config.blocklistTag}`);
   } else {
@@ -150,8 +154,8 @@ export async function filterPublishableFiles(contentDir, options = {}) {
         frontmatter,
       });
     } else {
-      const isDraft = config.publishMode === "status_field" &&
-        frontmatter?.[config.statusField] === "draft";
+      const statusVal = frontmatter?.[config.statusField];
+      const isDraft = config.publishMode === "status_field" && statusVal === "draft";
       excluded.push({
         path: filePath,
         relativePath,
@@ -159,7 +163,9 @@ export async function filterPublishableFiles(contentDir, options = {}) {
           config.publishMode === "blocklist"
             ? `contains #${config.blocklistTag}`
             : config.publishMode === "status_field"
-              ? `website_status: draft`
+              ? statusVal === "draft"
+                ? `website_status: draft`
+                : `website_status: absent (publish_by_default: false)`
               : `missing ${config.allowlistKey}: ${config.allowlistValue}`,
         isDraft,
       });

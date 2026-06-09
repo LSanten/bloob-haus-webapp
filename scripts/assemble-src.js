@@ -167,6 +167,7 @@ export async function assembleSrc(config, contentDir = null) {
           contentDirFolders.includes(section) ||
           (contentDir &&
             (fs.existsSync(path.join(contentDir, section, "index.md")) ||
+              fs.existsSync(path.join(contentDir, section, "_index.md")) ||
               fs.existsSync(path.join(contentDir, section + ".md")) ||
               fs.existsSync(path.join(contentDir, capitalized + ".md"))));
 
@@ -192,8 +193,11 @@ export async function assembleSrc(config, contentDir = null) {
       }
     }
 
-    // If vault has index.md at its root, skip theme's index.njk to avoid permalink collision
-    const vaultHasIndex = contentDir && fs.existsSync(path.join(contentDir, "index.md"));
+    // If vault has index.md or _index.md at its root, skip theme's index.njk to avoid permalink collision
+    const vaultHasIndex = contentDir && (
+      fs.existsSync(path.join(contentDir, "index.md")) ||
+      fs.existsSync(path.join(contentDir, "_index.md"))
+    );
     if (vaultHasIndex) {
       console.log("[assemble] Vault has index.md — skipping theme index.njk");
     }

@@ -128,6 +128,41 @@ describe('buildFileIndex', () => {
       expect(index.pages['notes']).toBeDefined();
     });
   });
+
+  // --- _index.md support ---
+
+  describe('_index.md treated identically to index.md', () => {
+    it('_index.md gets folder URL, not /_index/', async () => {
+      const index = await writeAndIndex([
+        makeFile('projects/_index.md', '---\n---\n# Our Projects'),
+      ]);
+      const page = Object.values(index.pages)[0];
+      expect(page.url).toBe('/projects/');
+    });
+
+    it('_index.md slug is folder name, not "_index"', async () => {
+      const index = await writeAndIndex([
+        makeFile('projects/_index.md', '---\n---\n# Our Projects'),
+      ]);
+      const page = Object.values(index.pages)[0];
+      expect(page.slug).toBe('projects');
+    });
+
+    it('_index.md uses prettified folder name as title fallback', async () => {
+      const index = await writeAndIndex([
+        makeFile('my-projects/_index.md', '---\n---\n'),
+      ]);
+      const page = Object.values(index.pages)[0];
+      expect(page.title).toBe('My Projects');
+    });
+
+    it('_index.md fullSlug key is folder path, same as index.md', async () => {
+      const index = await writeAndIndex([
+        makeFile('projects/_index.md', '---\n---\n# Projects'),
+      ]);
+      expect(index.pages['projects']).toBeDefined();
+    });
+  });
 });
 
 describe('resolveLink', () => {

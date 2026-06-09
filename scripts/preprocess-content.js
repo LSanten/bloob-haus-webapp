@@ -531,11 +531,11 @@ export async function preprocessContent({
       }
     }
 
-    // Auto-inject Eleventy frontmatter for index.md files.
+    // Auto-inject Eleventy frontmatter for index.md / _index.md files.
     // Users should write plain content — no YAML boilerplate needed.
-    // Works for root index.md (permalink: /) and subfolder index.md (permalink: /folder/).
+    // Works for root index.md (permalink: /) and subfolder index.md/_index.md (permalink: /folder/).
     const isIndexFile =
-      path.basename(file.relativePath, ".md") === "index";
+      ["index", "_index"].includes(path.basename(file.relativePath, ".md"));
     if (isIndexFile && BUILD_TARGET === "eleventy") {
       const dir = path.dirname(file.relativePath);
       const permalink =
@@ -719,13 +719,14 @@ export async function preprocessContent({
 
       const folderSlug = entry.name;
       const indexPath = path.join(outputDir, folderSlug, "index.md");
+      const _indexPath = path.join(outputDir, folderSlug, "_index.md");
 
-      // Skip if an index file already exists — either user-provided index.md (Step 6)
+      // Skip if an index file already exists — either user-provided index.md/_index.md (Step 6)
       // or a theme-provided index.njk assembled into src by assemble-src.js.
       // Both claim the same permalink so generating a stub would cause a conflict.
-      if (await fs.pathExists(indexPath)) continue;
+      if (await fs.pathExists(indexPath) || await fs.pathExists(_indexPath)) continue;
       const folderContents = await fs.readdir(path.join(outputDir, folderSlug));
-      if (folderContents.some((f) => f.startsWith("index.") && f !== "index.md")) continue;
+      if (folderContents.some((f) => (f.startsWith("index.") || f.startsWith("_index.")) && f !== "index.md" && f !== "_index.md")) continue;
 
       // Skip if a root-level file claims the same permalink slug (e.g. Notes.md → /notes/)
       if (rootFileSlugs.has(folderSlug.toLowerCase())) {

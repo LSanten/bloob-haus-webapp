@@ -119,8 +119,8 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const folderPath = path.dirname(file.relativePath);
     const hasFolder = folderPath && folderPath !== ".";
 
-    // For index files, fall back to prettified folder name rather than "index"
-    const isIndex = filename === "index";
+    // For index files, fall back to prettified folder name rather than "index" or "_index"
+    const isIndex = filename === "index" || filename === "_index";
     const titleFallback =
       isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : filename;
     const title = extractTitle(frontmatter, body, titleFallback);

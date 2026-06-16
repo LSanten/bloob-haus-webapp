@@ -109,6 +109,9 @@ npm test                  # Run all tests
 npm run test:watch        # Watch mode
 ```
 
+## Dev Server Rule
+**Stop the dev server before editing any files, then restart it after.** Never leave a dev server running in the background while making edits. Kill it first (`Ctrl+C` or `pkill -f "dev-local.js"`), make the changes, then start it again.
+
 ## Git Remotes (AE fork only)
 
 This repo is a fork. Two remotes are set:

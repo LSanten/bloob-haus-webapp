@@ -197,6 +197,42 @@ Each phase is independently shippable and backwards-compatible.
 
 ---
 
+## Implementation notes for the builder (gathered 2026-06-17 — verify against code before relying)
+
+Concrete knowledge gathered while building the quick win; captured so a fresh session doesn't re-derive or hit traps.
+
+### ⚠️ Data-availability-by-phase — the biggest trap
+
+Where you render the cards determines what data you can read. This is **non-negotiable** and already shapes how `folder-preview` is built:
+
+| Render phase | Can read | Cannot read |
+|--------------|----------|-------------|
+| `renderFilescope()` (preprocessor, per-file) | the file's own body/settings | **NOT** `graph.json`, **NOT** Eleventy collections — both are assembled *after* all files are preprocessed |
+| `transform(html)` (Eleventy `addTransform`, post-render) | `graph.json` from disk (written by now) | Eleventy collections |
+| `layout.njk` / page template (Eleventy build) | **Eleventy collections** (`collections.projects`, `collections[tag]`) | n/a |
+| `browser.js` (runtime) | `/graph.json` via fetch | build-time-only data |
+
+**Proof in existing code:** `folder-preview`'s `renderFilescope()` emits only the *runtime placeholder* `<div class="folder-preview-visualizer" data-fp-settings>` — it deliberately does NOT render cards, because `graph.json` doesn't exist yet at preprocess time. The build-time SEO cards (`renderSeoGrid`) are produced from the **`transform(html)` path** (code fences), where `graph.json` is on disk. The quick-win tag page renders build-time cards from **Eleventy `collections[tag]`** in Nunjucks.
+
+**Consequence for `collection`:** a file-scope `bloob-shape: collection` page **cannot** render SEO cards in `renderFilescope`. Build-time cards must come from either (a) the layout reading Eleventy collections, or (b) the `transform(html)` path reading `graph.json`. Don't try to read `graph.json` in `renderFilescope` — it will be empty/missing.
+
+### Card markup: consolidate the existing divergence
+There are currently **two card implementations that drift**: build-time `renderSeoGrid` (index.js) uses class `fp-card__image-wrap`; runtime `renderCards` (browser.js) uses `fp-card__img-wrap` — and `styles.css` defines **both**. The quick win standardized on the `renderSeoGrid` markup (`fp-card__image-wrap` + `fp-card__title` small label + `fp-card__subtitle` headline), which the AE theme override styles. `collection` should collapse this to **one** card markup (ideally a shared `partials/collection-card.njk` per open question 6) so build-time and runtime render identically.
+
+### `no-pswp` is mandatory on build-time card images
+Any `<img>` rendered into build-time HTML gets wrapped by the image optimizer in `<a class="pswp-gallery__item">`. Inside a card that is itself an `<a href>`, that's an **invalid nested anchor** that breaks the card link. Add `class="no-pswp"` to every card image (the optimizer then emits a plain `<picture>`). The legacy `renderSeoGrid` build-time path likely has this latent bug — fix it in `collection`.
+
+### `field:` source/display depends on `graph.extra_fields` config
+Arbitrary frontmatter fields (`building_type`, `location`, `sqft`, `services`, `tags`) only reach `graph.json` because `sites/alter-engineers.yaml` lists them under `graph.extra_fields.project-profile`. To filter or display by a field, it **must** be declared there per site. `tags`/`subtitle`/`image`/`website_status` are always present.
+
+### Confirmed `graph.json` schema (AE, 2026-06-17)
+Page node: `{ id, title, subtitle?, section, type:"page", website_status, image?, bloobIcon?, redirect?, content_type?, ...extra_fields }` where extra_fields includes `tags:[...]` for tagged pages. Tag nodes also exist: `{ id:"/tags/<slug>/", title:"#<slug>", section:"tags", type:"tag", nodeVal }` with page→tag links. So a tag-filtered collection can use either `node.tags.includes(tag)` on page nodes (simplest) or traverse tag-node links.
+
+### Reuse existing tag plumbing
+`eleventy.config.js` already provides the `filterTagList` filter (strips `all/nav/posts/not-for-public`) and a `tagList` collection (all unique tags). `collection`'s tag source should reuse these, not reinvent.
+
+---
+
 ## Touch points (for when we build)
 
 - `lib/visualizers/folder-preview/{index.js,browser.js}` — source of the renderers to generalize; `renderSeoGrid()` is the build-time card path; `attachSearch()` is the metadata text-match.
@@ -213,3 +249,20 @@ Each phase is independently shippable and backwards-compatible.
 - Backwards compatibility is mandatory: `folder-preview` content keeps working; new behavior is opt-in (holistic change rule).
 - Don't build the cross-shape search-plugin system until ≥3 real consumers exist.
 - Keep parsers/renderers pure (`source→data`, `data→html`); DOM/Pagefind only in `browser.js` and `collection-core`'s runtime path.
+
+---
+
+## Upstreaming strategy
+
+The `collection` shape is **shared infrastructure** (`lib/visualizers/collection/`, plus likely `collection-core`, `graph-builder`, `eleventy.config.js`, `tests/`). It benefits every theme/site, so it is genuinely **upstream-worthy** — this is the whole point of the holistic goal. The AE-specific glue (`themes/alter-engineers/**`, `sites/alter-engineers.yaml`, generated tag stubs) is **fork-only** and must never go upstream.
+
+**Upstream is not a push.** `git push upstream main` is banned (it would carry the entire fork history incl. AE config + deleted workflows). Upstreaming = **cherry-pick the shared commits** onto a temp branch from `upstream/main` — see CLAUDE.md "Pushing a shared fix upstream".
+
+**The discipline that makes one clean upstream batch possible — commit hygiene during the build:**
+- Shared-infra changes (`lib/visualizers/collection/**`, `lib/**`, `scripts/**`, `eleventy.config.js`, `tests/**`) → their **own** commits.
+- AE-specific changes (`themes/alter-engineers/**`, `sites/alter-engineers.yaml`, tag stubs) → **separate** commits.
+- Never interleave the two in a single commit, or the eventual cherry-pick becomes manual diff surgery.
+
+**Before upstreaming:** validate the shared shape against **marbles, melt, and buffbaby** (holistic rule — `folder-preview` already works across themes; `collection` must too). Then cherry-pick the shared commits in one batch.
+
+Today's committed work (`tags.njk`, `project.njk`, `main.css`) is correctly AE-only and stays on the fork — none of it is upstream material.

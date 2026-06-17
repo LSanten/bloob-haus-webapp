@@ -123,6 +123,15 @@ This repo is a fork. Two remotes are set:
 
 **Never run `git push upstream main`** — it overwrites Leon's personal repo with AE-specific commits.
 
+### Commit hygiene: keep shared and AE-specific changes in SEPARATE commits
+
+**This is the rule that makes upstreaming possible.** When a piece of work touches both shared infrastructure and AE-specific files, split it into separate commits — never mix the two in one commit:
+
+- **Shared / bloob-haus-wide** (`lib/**`, `scripts/**`, `eleventy.config.js`, `tests/**`, `themes/_base/**`) → their own commits. These are the ones eligible to cherry-pick upstream.
+- **AE-specific** (`themes/alter-engineers/**`, `sites/alter-engineers.yaml`, `.github/workflows/`, generated content stubs) → separate commits. These stay on the fork forever.
+
+If shared and AE changes land in one commit, the eventual cherry-pick becomes manual diff surgery. Separating them up front means a future shared feature (e.g. the `collection` shape) can be cherry-picked upstream in one clean batch. See `docs/implementation-plans/2026-06-17_collection-shape-unified-search.md` → "Upstreaming strategy".
+
 ### Pushing a shared fix upstream (cherry-pick workflow)
 
 Only cherry-pick **shared pipeline commits** (scripts, lib, eleventy.config.js, tests). Never cherry-pick AE-specific commits (sites/alter-engineers.yaml, .github/workflows/, themes/alter-engineers/).

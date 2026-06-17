@@ -94,12 +94,28 @@
   flex: 1;
 }
 
+/* fp-card__title: small identifier label above the headline.
+   Themes override color/size in their visualizer CSS override file. */
 .fp-card__title {
   display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-color, #333);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-color, #333);
   line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+/* fp-card__subtitle: main catching headline, shown when the page has a ## subtitle.
+   Themes override in their visualizer CSS override file. */
+.fp-card__subtitle {
+  display: block;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-color, #1a1a1a);
+  margin: 0 0 0.5rem;
 }
 
 /* --- Bubbles layout (MELT theme / scatter mode) --- */

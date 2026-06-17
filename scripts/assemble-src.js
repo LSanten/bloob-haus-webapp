@@ -229,6 +229,25 @@ export async function assembleSrc(config, contentDir = null) {
     await fs.copy(path.join(themeDir, "assets"), path.join(SRC_DIR, "assets"));
   }
 
+  // Step 6.5: Copy theme-specific visualizer CSS overrides
+  // themes/[name]/assets/css/visualizers/*.css → src-*/assets/css/theme-visualizers/[name].css
+  // Writes themeVisualizerCss.json so head.njk can load them after the shared visualizer CSS.
+  const themeVizCssDir = path.join(themeDir, "assets", "css", "visualizers");
+  const themeVizCssNames = [];
+  if (fs.existsSync(themeVizCssDir)) {
+    const vizCssFiles = (await fs.readdir(themeVizCssDir)).filter((f) => f.endsWith(".css"));
+    if (vizCssFiles.length > 0) {
+      const destDir = path.join(SRC_DIR, "assets", "css", "theme-visualizers");
+      await fs.ensureDir(destDir);
+      for (const file of vizCssFiles) {
+        await fs.copy(path.join(themeVizCssDir, file), path.join(destDir, file));
+        themeVizCssNames.push(path.basename(file, ".css"));
+        console.log(`[assemble] Theme visualizer CSS: ${file}`);
+      }
+    }
+  }
+  await fs.writeJson(path.join(SRC_DIR, "_data", "themeVisualizerCss.json"), themeVizCssNames);
+
   // Step 7: Generate src/_data/site.js from config
   console.log("[assemble] Generating site data...");
   await generateSiteData(config);
@@ -282,6 +301,13 @@ async function cleanGeneratedFiles() {
   const mainCssPath = path.join(SRC_DIR, "assets", "css", "main.css");
   if (fs.existsSync(mainCssPath)) {
     await fs.remove(mainCssPath);
+  }
+
+  // Clean theme-specific visualizer CSS overrides (Step 6.5)
+  await fs.remove(path.join(SRC_DIR, "assets", "css", "theme-visualizers"));
+  const themeVizCssDataPath = path.join(SRC_DIR, "_data", "themeVisualizerCss.json");
+  if (fs.existsSync(themeVizCssDataPath)) {
+    await fs.remove(themeVizCssDataPath);
   }
 
   // Clean top-level .njk pages

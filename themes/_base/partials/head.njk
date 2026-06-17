@@ -66,6 +66,10 @@
     {% for vis in visualizers %}{% if vis.hasCss %}
     <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
     {% endif %}{% endfor %}
+    <!-- Theme-specific visualizer overrides (themes/[name]/assets/css/visualizers/*.css) -->
+    {% for name in themeVisualizerCss %}
+    <link rel="stylesheet" href="{{ ("/assets/css/theme-visualizers/" + name + ".css") | url }}" />
+    {% endfor %}
     <!-- Pagefind UI styles — loaded on all pages when search is enabled -->
     {% if site.features.search != false %}
     <link rel="stylesheet" href="{{ "/pagefind/pagefind-ui.css" | url }}" />

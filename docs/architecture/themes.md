@@ -78,6 +78,7 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
 | `partials/banner.njk` | Full-width banner (object-aware themes) |
 | `partials/banner-modal.njk` | "What is a [object]?" modal |
 | `assets/objects/` | Default object-type images |
+| `assets/css/visualizers/` | Per-visualizer CSS overrides (see "Theme-specific visualizer overrides" below) |
 
 ---
 
@@ -474,6 +475,20 @@ Themes should include visualizer assets in `partials/scripts.njk`:
   {% if vis.hasJs %}<script src="/assets/js/visualizers/{{ vis.name }}.js" defer></script>{% endif %}
 {% endfor %}
 ```
+
+### Theme-specific visualizer overrides
+
+A theme can ship per-visualizer CSS files that load **after** the shared visualizer stylesheets. Place them in:
+
+```
+themes/[theme-name]/assets/css/visualizers/[visualizer-name].css
+```
+
+`assemble-src.js` Step 6.5 auto-discovers these files and copies them to `src-*/assets/css/theme-visualizers/`. `head.njk` emits their `<link>` tags after the shared visualizer CSS so specificity-equal rules override correctly.
+
+Use this for theme personality on top of shared components — e.g., making `.fp-card__title` orange in the AE theme while keeping the shared layout in `lib/visualizers/folder-preview/styles.css`. Keep overrides minimal: only properties that differ from the shared baseline.
+
+Full details in [visualizers.md → Theme-specific visualizer CSS overrides](visualizers.md).
 
 ### Visualizer CSS Contract
 

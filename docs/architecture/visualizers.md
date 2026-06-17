@@ -394,12 +394,50 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 ### Load order
 
 ```
-theme.min.css          ← legacy theme base (may contain hardcoded values)
-main.css               ← :root { --accent-color: ...; --font-heading: ...; }
-visualizers/image-grid.css  ← uses var(--accent-color), var(--font-heading)
-visualizers/card-preview.css
+theme.min.css                              ← legacy theme base (may contain hardcoded values)
+main.css                                   ← :root { --accent-color: ...; --font-heading: ...; }
+visualizers/image-grid.css                 ← uses var(--accent-color), var(--font-heading)
+visualizers/folder-preview.css             ← shared baseline card layout
 ...
+theme-visualizers/folder-preview.css       ← AE theme override (orange title, larger subtitle)
 ```
+
+### Theme-specific visualizer CSS overrides
+
+Each theme can ship per-visualizer CSS overrides that load **after** the shared visualizer stylesheet. Place them in:
+
+```
+themes/[theme-name]/assets/css/visualizers/[visualizer-name].css
+```
+
+**Pipeline flow (Step 6.5 in `assemble-src.js`):**
+1. At assemble time, the script scans `themes/[theme]/assets/css/visualizers/` for `*.css` files.
+2. Each file is copied to `src-*/assets/css/theme-visualizers/` in the generated source directory.
+3. The list of names (without `.css`) is written to `src-*/_data/themeVisualizerCss.json`.
+4. `themes/_base/partials/head.njk` loops over `themeVisualizerCss` and emits `<link>` tags **after** the shared visualizer stylesheets, so overrides win on equal specificity.
+
+**Authoring rules:**
+- File name must match the visualizer name exactly (e.g. `folder-preview.css` overrides `lib/visualizers/folder-preview/styles.css`).
+- Use CSS tokens (`var(--accent-color)`, `var(--color-orange)` etc.) — no hardcoded hex values.
+- Only add properties that differ from the shared baseline — keep overrides minimal.
+- Document the override with a one-line comment at the top of the file identifying the theme.
+
+**Example** (`themes/alter-engineers/assets/css/visualizers/folder-preview.css`):
+```css
+/* Alter Engineers — folder-preview visualizer overrides */
+.fp-card__title {
+  color: var(--color-orange);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+.fp-card__subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: var(--text-color);
+}
+```
+
+If no `visualizers/` directory exists in the theme, Step 6.5 is a no-op — no files are copied and `themeVisualizerCss.json` is written as an empty array `[]`.
 
 ---
 

@@ -6,6 +6,58 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 48 — June 17, 2026
+**Worked on:** Collection shape — Phase 1 (metadata mode, Phases 0–1 + projects index swap)
+
+**New visualizer: `lib/visualizers/collection/`** (upstream-eligible shared infrastructure)
+- `core.js` — pure `parseSource` / `filterNodes` / `sortAndLimit` / `resolvePages`. Supports sources: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`. Works in both Node.js (build-time) and browser (esbuild bundle).
+- `render-card.js` — pure `renderCardHtml` / `renderCardGridHtml` shared by build-time and runtime. Canonical class `fp-card__image-wrap` (fixes drift from legacy `fp-card__img-wrap` in folder-preview runtime). All images carry `class="no-pswp"` (prevents nested-anchor bug when image-optimizer wraps images in PhotoSwipe `<a>`).
+- `index.js` — `transform()` for ` ```collection ``` ` code fences. Renders build-time SEO card grid from graph.json at Eleventy transform time. `renderFilescope()` emits runtime placeholder (graph.json unavailable at preprocess time).
+- `browser.js` — runtime with all five display modes (cards, list, slider, bubbles, marbles). Cards display uses shared `renderCardHtml`. SEO containers get search-only wiring.
+- `styles.css` — complete token-based CSS. `fp-card__image-wrap` canonical. All display modes covered.
+- `schema.md` — shape contract with settings table, source syntax, display modes, placement/content policy, implementation notes.
+- 52 new unit tests: manifest, index exports, core source resolution, render-card HTML output.
+
+**AE content repo: projects `_index.md` swapped** to use `collection` code fence. Same settings as the former `folder-preview` fence; verified: 22 cards render with correct fields, canonical class names, `no-pswp` on images.
+
+**Tags page (Phase 0)** — already shipped in Session 47; verified it uses the same `fp-card*` classes and `no-pswp`. No changes needed.
+
+**Commit hygiene:** two commits — A (shared `lib/visualizers/collection/`) and B (AE content repo `_index.md`). A is upstream-eligible; B is fork-only.
+
+**Not done (Phase 2 — deferred):**
+- Pagefind full-text mode (low-level API + join to graph.json). Needs: `features.search: true` in `sites/alter-engineers.yaml`, `data-pagefind-body` + `data-pagefind-filter` in AE layouts. Requires browser testing — left as a separate session with Opus.
+
+---
+
+### Session 47 — June 16, 2026
+**Worked on:** AE theme fine-tuning — project layout fixes, folder-preview subtitle, theme-specific visualizer CSS override system
+
+**Project layout fixes (alter-engineers theme)**
+- Fixed nav overlap on no-hero project pages: added `.projects-single--no-hero` modifier class in `project.njk` and `padding-top: calc(var(--nav-height) + var(--spacing-md))` CSS rule
+- Added `padding-top` offset to `.page-article` for the same reason
+- Added `date_started` field displayed as "PROJECT STARTED" row in the project metadata `<dl>` using the `dateFormat` filter
+- Removed READ MORE truncation: overrode `theme.min.css` mobile height limit with `height: auto !important; overflow: visible !important;` and hid `.projects-single__read-more` button
+- Bumped H2 size inside project body: `.projects-single__text h2 { font-size: 2rem; font-weight: 800; }`
+
+**folder-preview visualizer — subtitle support**
+- Added `.fp-card__subtitle` baseline styles to `lib/visualizers/folder-preview/styles.css`
+- Changed `.fp-card__title` to a `<span>` (label role) in both `index.js` (build-time) and `browser.js` (runtime)
+- Both paths now render `<p class="fp-card__subtitle">` from `node.subtitle` (already in graph.json from `## heading` extraction)
+
+**Theme-specific visualizer CSS override system (new pipeline feature)**
+- Added Step 6.5 to `scripts/assemble-src.js`: auto-scans `themes/[name]/assets/css/visualizers/*.css`, copies to `src-*/assets/css/theme-visualizers/`, writes name list to `src-*/_data/themeVisualizerCss.json`
+- Added cleanup of those directories in `cleanGeneratedFiles()`
+- Updated `themes/_base/partials/head.njk` to loop `themeVisualizerCss` and emit `<link>` tags after shared visualizer CSS
+- Created `themes/alter-engineers/assets/css/visualizers/folder-preview.css` — AE overrides making title orange and subtitle larger
+- Moved `.fp-card__title` color rule out of AE `main.css` (was misplaced there) into the new override file
+
+**Documentation**
+- Added "Theme-specific visualizer CSS overrides" section to `docs/architecture/visualizers.md` with pipeline flow, authoring rules, and example
+- Added `assets/css/visualizers/` row to Tier 3 in `docs/architecture/themes.md`, plus "Theme-specific visualizer overrides" cross-reference section
+- Added two DECISIONS.md entries (2026-06-16): theme CSS override pattern and `fp-card__subtitle`
+
+---
+
 ### Session 46 — June 5, 2026
 **Worked on:** Shapes architecture deep-dive — philosophical exploration and open question documentation
 

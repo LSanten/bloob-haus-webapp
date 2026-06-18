@@ -313,6 +313,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | Shape | Type | Complete? | Gaps |
 |-------|------|-----------|------|
 | `article` | layout-only | ✓ | First layout-only shape; reference implementation |
+| `collection` | hybrid | Partial | Phase 1 (metadata mode) shipped: cards, list, slider, bubbles, marbles display modes. Phase 2 (Pagefind full-text) deferred — needs browser testing. No `layout.njk` yet (file-scope use emits runtime placeholder only). |
 | `folder-preview` | hybrid + file-scope | ✓ | — |
 | `foldable` | inline (build-time + runtime) | Not yet built | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
 | `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |

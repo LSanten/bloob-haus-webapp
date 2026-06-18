@@ -1,0 +1,14 @@
+{
+  "name": "collection",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Unified shape: resolves a source (folder, tag, field, all) into a set of pages and renders them via a chosen display mode (cards, list, slider, bubbles, marbles).",
+  "activation": {
+    "method": "code-fence",
+    "language": "collection"
+  },
+  "files": {
+    "js": "browser.js",
+    "css": "styles.css"
+  }
+}

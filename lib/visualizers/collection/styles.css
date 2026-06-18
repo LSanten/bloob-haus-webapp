@@ -1,0 +1,331 @@
+/* Collection Visualizer — Styles
+ *
+ * All card CSS uses the canonical class name fp-card__image-wrap
+ * (not the legacy fp-card__img-wrap from folder-preview/browser.js).
+ * All card images carry class="no-pswp" to prevent nested-anchor bugs.
+ */
+
+.collection-visualizer {
+  margin-bottom: var(--spacing-xl, 2rem);
+}
+
+.collection__empty {
+  color: var(--text-light, #888);
+  font-style: italic;
+}
+
+/* ── SEO wrapper (search + cards column) ─────────────────────────────────── */
+
+.fp-seo-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 1rem);
+}
+
+.fp-search-input {
+  width: 100%;
+  padding: 0.6em 0.9em;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
+  border-radius: var(--border-radius, 6px);
+  font-family: var(--font-body, sans-serif);
+  font-size: 1rem;
+  color: var(--text-color, #333);
+  background: var(--bg-color, #fff);
+  box-sizing: border-box;
+}
+
+.fp-search-input:focus {
+  outline: 2px solid var(--accent-color, #555);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.fp-filter-placeholder {
+  min-height: 0; /* reserved for filter chips */
+}
+
+/* ── Card grid ────────────────────────────────────────────────────────────── */
+
+.fp-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md, 1.5rem);
+}
+
+.fp-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--text-color, #333);
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  border-radius: var(--border-radius, 6px);
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.fp-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.fp-card[hidden] {
+  display: none;
+}
+
+/* fp-card__image-wrap: canonical class name used by collection.
+   folder-preview/styles.css also defines fp-card__img-wrap (legacy runtime
+   class) and fp-card__image-wrap (SEO class) — both still load on AE pages
+   where folder-preview is active (articles slider). */
+.fp-card__image-wrap {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--border-color, rgba(0, 0, 0, 0.06));
+  flex-shrink: 0;
+}
+
+.fp-card__image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fp-card__image-wrap--placeholder {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-color, #9b6dff) 18%, var(--bg-color, #ece8f4) 82%) 0%,
+    var(--bg-color, #ece8f4) 100%
+  );
+}
+
+.fp-card__body {
+  padding: var(--spacing-sm, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+/* Small identifier label — themes override color/size in their visualizer override CSS */
+.fp-card__title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-color, #333);
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+/* Main headline — themes override in their visualizer override CSS */
+.fp-card__subtitle {
+  display: block;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-color, #1a1a1a);
+  margin: 0 0 0.5rem;
+}
+
+.fp-card__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  margin-top: 0.1rem;
+}
+
+.fp-field {
+  display: inline-flex;
+  gap: 0.25em;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.fp-field__label {
+  font-weight: 600;
+  color: var(--accent-color, #555);
+}
+
+.fp-field__label::after {
+  content: ":";
+}
+
+.fp-field__value {
+  color: var(--text-color, #555);
+  opacity: 0.8;
+}
+
+/* ── List display ─────────────────────────────────────────────────────────── */
+
+.folder-preview__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+
+.folder-preview__item {
+  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
+.folder-preview__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.55em 0.25em;
+  text-decoration: none;
+  color: var(--link-color, var(--accent-color, #555));
+  font-weight: 500;
+  transition: color 0.12s;
+}
+
+.folder-preview__link:hover {
+  color: var(--accent-dark, var(--accent-color, #333));
+}
+
+.folder-preview__icon {
+  width: 1.1em;
+  height: 1.1em;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+/* ── Bubbles display ──────────────────────────────────────────────────────── */
+
+.fp-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 24px 60px;
+  align-items: flex-start;
+}
+
+.fp-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  text-decoration: none;
+  text-align: center;
+  padding: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: radial-gradient(
+    circle at 40% 32%,
+    rgba(190, 210, 248, 0.52) 0%,
+    rgba(165, 185, 232, 0.32) 55%,
+    transparent 100%
+  );
+  box-shadow: 0 8px 32px rgba(80, 60, 140, 0.2);
+  -webkit-mask-image: radial-gradient(circle, black 50%, transparent 80%);
+  mask-image: radial-gradient(circle, black 50%, transparent 80%);
+  transition: transform 0.2s ease;
+}
+
+.fp-bubble:hover {
+  transform: scale(1.06);
+  -webkit-mask-image: radial-gradient(circle, black 60%, transparent 86%);
+  mask-image: radial-gradient(circle, black 60%, transparent 86%);
+}
+
+.fp-bubble__type {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 5px;
+  pointer-events: none;
+}
+
+.fp-bubble__title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .fp-bubble { width: 110px !important; height: 110px !important; margin-top: 0 !important; }
+  .fp-bubbles { gap: 12px; }
+}
+
+/* ── Marbles display ──────────────────────────────────────────────────────── */
+
+.fp-marbles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 24px 60px;
+  align-items: flex-start;
+}
+
+.fp-marble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  cursor: grab;
+  border-radius: 50%;
+  flex-shrink: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+
+.fp-marble--dragging {
+  cursor: grabbing;
+  z-index: 100;
+}
+
+.fp-marble__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  opacity: 0.38;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.fp-marble__title {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+  padding: 0 14px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .fp-marble { width: 110px !important; height: 110px !important; margin-top: 0 !important; }
+  .fp-marbles { gap: 10px; }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .fp-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .fp-cards { grid-template-columns: 1fr; }
+}

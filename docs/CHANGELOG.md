@@ -6,6 +6,33 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 49 — June 17, 2026
+**Worked on:** Collection shape — Phase 2 (combined fulltext search) + AE tag/search polish
+
+**Phase 2 — combined search (shared, upstream-eligible):**
+- `browser.js`: default search mode is now **combined** — metadata filter runs synchronously (instant cards), Pagefind low-level API expands the result set when it resolves (union, never hides more than metadata alone). Stale-query guard prevents race conditions.
+- `browser.js`: `search: basics` opts down to metadata-only; `search: fulltext` kept as alias for default; `search: off` removes the input.
+- `render-card.js`: `data-fp-tags` attribute on each card anchor so tags are searchable in metadata mode.
+- Hyphen normalization in both query and haystack — `"radiant floor"` matches `"radiant-floor"` tag.
+- Source filter passed to Pagefind: `folder=projects` → `{ section: "projects" }`, `tag=X` → `{ tag: "X" }`.
+
+**AE prerequisites (fork-only):**
+- `sites/alter-engineers.yaml`: `features.search: true` (enables Pagefind `eleventy.after` hook).
+- `_bloob-settings.md` in vault: `search: true` — this overrides `sites/alter-engineers.yaml`; it was the actual source of `search: false`.
+- `project.njk`: `data-pagefind-body` + `data-pagefind-filter="section:projects"` on main content div; `data-pagefind-filter="tag:X"` on each tag badge.
+
+**AE tag display polish (fork-only):**
+- Tag badges on project pages: hyphens replaced with spaces (`radiant-floor` → `RADIANT FLOOR`).
+- Tag page heading: `#` prefix, uppercase, hyphens replaced with spaces, "Tag" label removed.
+- AE `collection.css` override: explicit theme override so collection cards look correct independently of folder-preview.
+- Resources `_index.md`: removed stray `ng_type, location, sqft, services` paragraph (paste artifact).
+
+**Commit count this session:** 9 builder commits (5 shared + 4 AE), 2 content repo commits.
+
+**Phase 2 complete.** Implementation plan moved to `docs/implementation-plans/_completed/`.
+
+---
+
 ### Session 48 — June 17, 2026
 **Worked on:** Collection shape — Phase 1 (metadata mode, Phases 0–1 + projects index swap)
 

@@ -39,7 +39,7 @@ Note: file-scope use emits a runtime placeholder. For build-time SEO-crawlable c
 | `sort` | string | `alpha` | `alpha` or `reverse-alpha` |
 | `limit` | number | — | Max pages to show |
 | `show_fields` | string or list | — | Extra frontmatter fields to show on each card. Must be declared in `sites/[site].yaml` `graph.extra_fields`. Comma-separated: `building_type, location` |
-| `search` | string | `metadata` | `metadata` = text-match over rendered cards (default for cards display). `off` = no search input. `fulltext` = Pagefind low-level API (Phase 2, not yet implemented). |
+| `search` | string | combined | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. |
 | `title` | string | `ARTICLES` | Label shown above `display: slider` |
 | `id` | string | — | HTML id on the container element |
 

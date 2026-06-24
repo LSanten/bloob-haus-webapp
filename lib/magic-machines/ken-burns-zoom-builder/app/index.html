@@ -2562,6 +2562,16 @@ async function exportVideo(mode = 'download') {
     //                 camera roll, or anyone hand the file to another app).
     //  - 'download' → <a download> writes the .mp4 straight to disk. Default, and
     //                 the only reliable "save a real file" path on desktop.
+    const saveByDownload = () => {
+      dbg('Saving file via download', 'ok');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
+      // desktop browsers that need time to copy the file before the URL is freed.
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    };
+
     const canShareFile = navigator.canShare &&
       navigator.canShare({ files: [new File([blob], filename, { type: 'video/mp4' })] });
 
@@ -2573,19 +2583,22 @@ async function exportVideo(mode = 'download') {
           title: 'Ken Burns Animation',
         });
       } catch (e) {
-        // User dismissing the share sheet rejects with AbortError — not a failure.
-        if (e?.name === 'AbortError') { dbg('Share cancelled', 'warn'); }
-        else throw e;
+        if (e?.name === 'AbortError') {
+          // User dismissed the share sheet — not a failure.
+          dbg('Share cancelled', 'warn');
+        } else if (e?.name === 'NotAllowedError') {
+          // Web Share needs transient user activation, which Chrome expires after
+          // ~5s. Encoding can outlast that, so the gesture is gone by the time we
+          // call share(). Fall back to a download so the file is never lost.
+          dbg('Share blocked (gesture expired during encode) — downloading instead', 'warn');
+          saveByDownload();
+        } else {
+          throw e;
+        }
       }
     } else {
       if (mode === 'share') dbg('Web Share unavailable — saving file instead', 'warn');
-      dbg('Saving file via download', 'ok');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename; a.click();
-      // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
-      // desktop browsers that need time to copy the file before the URL is freed.
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      saveByDownload();
     }
 
     exportProgFill.style.width = '100%';

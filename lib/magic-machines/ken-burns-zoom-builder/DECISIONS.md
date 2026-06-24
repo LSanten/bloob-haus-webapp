@@ -50,6 +50,11 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** two explicit buttons. `exportVideo(mode)` takes `'download'` (default — primary button, always `<a download>` to disk) or `'share'` (secondary button — Web Share sheet). The Share button is feature-detected at load (`shareSupported`) and stays hidden when files can't be shared, so Windows/Linux desktop sees Download only.
 - Share-sheet dismissal rejects with `AbortError` — caught and treated as a no-op, not an export failure.
 
+### Web Share fails after a slow encode — `NotAllowedError` (gesture expired)
+- **Symptom:** `navigator.share()` threw `NotAllowedError: Must be handling a user gesture` — but only sometimes. It worked on a 4.6s Windows encode and failed on a 5.8s Mac encode of the same kind of image.
+- **Cause:** Web Share requires *transient user activation*, which Chrome expires **~5 seconds** after the click. Encoding happens between the button click and the `share()` call, so a long encode outlives the activation window and the share is blocked.
+- **Fix:** on `NotAllowedError`, fall back to `saveByDownload()` so the file is never lost. (We can't reliably keep the gesture alive across multi-second encoding; the dedicated Download button is the gesture-free path, and Share degrades to it.)
+
 ---
 
 ## Native resolution logic

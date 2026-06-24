@@ -1293,7 +1293,14 @@
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M7 1v8M4 6l3 3 3-3M2 11h10"/>
         </svg>
-        <span id="btn-download-label">Export Video</span>
+        <span id="btn-download-label">Download Video</span>
+      </button>
+      <button class="btn-secondary" id="btn-share" disabled style="display:none;">
+        <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="3" r="2"/><circle cx="3" cy="7" r="2"/><circle cx="11" cy="11" r="2"/>
+          <path d="M4.7 6 9.3 3.8M4.7 8l4.6 2.2"/>
+        </svg>
+        <span id="btn-share-label">Share Video</span>
       </button>
       <button class="btn-secondary" id="btn-copy">
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -2178,18 +2185,30 @@ function syncCaptionOverlay(t) {
 // ─────────────────────────────────────────────
 const btnDownload    = document.getElementById('btn-download');
 const btnLabel       = document.getElementById('btn-download-label');
+const btnShare       = document.getElementById('btn-share');
 const exportProg     = document.getElementById('export-progress');
 const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
 
+// Feature-detect Web Share with files (probe with a tiny dummy mp4). When absent
+// (most desktop Chrome on Windows/Linux), the Share button stays hidden and only
+// Download is offered.
+const shareSupported = !!(navigator.canShare &&
+  navigator.canShare({ files: [new File([new Blob()], 'probe.mp4', { type: 'video/mp4' })] }));
+
 function checkVideoExport() {
   if (typeof VideoEncoder === 'undefined') {
     dbg('VideoEncoder (WebCodecs) not available in this browser', 'warn');
-    btnLabel.textContent = 'Export Video (unsupported)';
+    btnLabel.textContent = 'Download Video (unsupported)';
     return;
   }
   dbg('VideoEncoder (WebCodecs) available', 'ok');
   btnDownload.disabled = false;
+  if (shareSupported) {
+    btnShare.style.display = '';
+    btnShare.disabled = false;
+    dbg('Web Share API available — Share button enabled', 'ok');
+  }
 }
 
 function computeOutputSize() {
@@ -2384,12 +2403,13 @@ function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
   ctx.restore();
 }
 
-async function exportVideo() {
+async function exportVideo(mode = 'download') {
   if (!state.imageLoaded) { flashFootnote('⚠ Load an image first'); return; }
 
   await document.fonts.ready;
   btnDownload.disabled = true;
-  btnLabel.textContent = 'Exporting…';
+  btnShare.disabled = true;
+  btnLabel.textContent = mode === 'share' ? 'Preparing…' : 'Exporting…';
   exportProg.classList.add('visible');
 
   const { w: outW, h: outH } = computeOutputSize();
@@ -2537,16 +2557,29 @@ async function exportVideo() {
     const filename = `ken-burns-animation-${slug}.mp4`;
     const blob = new Blob([buffer], { type: 'video/mp4' });
 
-    // On iOS, <a download> opens a quick-look tab instead of saving to Photos.
-    // The Web Share API with files triggers the native share sheet and allows
-    // the user to save to the camera roll.
-    if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'video/mp4' })] })) {
-      dbg('Using Web Share API (mobile/share-sheet path)', 'ok');
-      await navigator.share({
-        files: [new File([blob], filename, { type: 'video/mp4' })],
-        title: 'Ken Burns Animation',
-      });
+    // Two save paths, chosen by which button was clicked:
+    //  - 'share'    → Web Share API (native share sheet; lets mobile users save to
+    //                 camera roll, or anyone hand the file to another app).
+    //  - 'download' → <a download> writes the .mp4 straight to disk. Default, and
+    //                 the only reliable "save a real file" path on desktop.
+    const canShareFile = navigator.canShare &&
+      navigator.canShare({ files: [new File([blob], filename, { type: 'video/mp4' })] });
+
+    if (mode === 'share' && canShareFile) {
+      dbg('Sharing via Web Share API', 'ok');
+      try {
+        await navigator.share({
+          files: [new File([blob], filename, { type: 'video/mp4' })],
+          title: 'Ken Burns Animation',
+        });
+      } catch (e) {
+        // User dismissing the share sheet rejects with AbortError — not a failure.
+        if (e?.name === 'AbortError') { dbg('Share cancelled', 'warn'); }
+        else throw e;
+      }
     } else {
+      if (mode === 'share') dbg('Web Share unavailable — saving file instead', 'warn');
+      dbg('Saving file via download', 'ok');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
@@ -2566,11 +2599,13 @@ async function exportVideo() {
     exportProgText.textContent = '⚠ Export failed — open debug log';
   } finally {
     btnDownload.disabled = false;
-    btnLabel.textContent = 'Export Video';
+    btnShare.disabled = !shareSupported;
+    btnLabel.textContent = 'Download Video';
   }
 }
 
-document.getElementById('btn-download').addEventListener('click', exportVideo);
+document.getElementById('btn-download').addEventListener('click', () => exportVideo('download'));
+btnShare.addEventListener('click', () => exportVideo('share'));
 
 document.getElementById('btn-copy').addEventListener('click', () => {
   const text = document.getElementById('bloob-pre').textContent;

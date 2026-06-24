@@ -20,6 +20,13 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** `fixChunkOffsets()` walks the full `moov` box tree recursively and adds `shift` to every `stco` and `co64` entry.
 - Verified with Python + ffprobe: `stco first_offset + shift === mdat_data_start`. ✓
 
+### "No supported H.264 codec found" — swallowed TDZ error
+- **Symptom:** every export threw `No supported H.264 codec found in this browser`, on all OSes (first reported on Windows). Looked like a hardware codec gap; it wasn't.
+- **Root cause:** the codec-probe loop called `VideoEncoder.isConfigSupported({ …, bitrate })` while `const bitrate` was declared *below* the loop. Reading a `const` before its declaration throws a `ReferenceError` (temporal dead zone), which an empty `catch {}` swallowed — so all candidates "failed" and `codec` stayed `null`.
+- **Fix:** declare `bitrate` *above* the probe loop; log probe failures instead of `catch {}`.
+- **Also fixed alongside:** `computeOutputSize()` could return fractional/odd dimensions (export ran at `3016.712×3018`). H.264 needs even *integers* → floor each side with `Math.floor(x/2)*2`. And added a `hardwareAcceleration: 'prefer-software'` fallback pass for large/near-square frames that Windows hardware encoders reject.
+- **Lesson:** never use a bare `catch {}` around codec/feature probing — it hides real bugs. Always `dbg()` the caught error.
+
 ### Second export crash on Safari
 - Missing `encoder.close()` after `encoder.flush()` left the first `VideoEncoder` alive. Safari reuses internal codec resources, so creating a second encoder in the same session caused resource contention → corrupt bitstream on the second export.
 - **Fix:** always call `encoder.close()` immediately after `encoder.flush()`.
@@ -37,6 +44,11 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - On iOS (Safari and Chrome-as-WebKit), `<a download>` on a Blob URL does **not** save the file. The browser opens it in a Quick Look tab instead. If the user doesn't interact within the Blob URL's revocation window (previously 5s), the file disappears.
 - **Fix:** use the Web Share API (`navigator.share({ files: [...] })`) when available. This triggers the native iOS share sheet, which lets the user save to the camera roll. Falls back to `<a download>` on desktop with a 60-second Blob URL lifetime.
 - `navigator.canShare({ files })` is the feature check — supported iOS 15+, Android Chrome, macOS Safari 15+.
+
+### Download vs Share — separate buttons (don't auto-prefer share)
+- **Problem:** the original code preferred Web Share *whenever* `navigator.canShare({files})` was true. That check now passes on desktop Chrome (Windows) and macOS too, so every export opened the OS share sheet and there was **no way to just save the .mp4 to disk** — desktop users were stuck (share sheet only offers "Copy"/apps, not "Save").
+- **Fix:** two explicit buttons. `exportVideo(mode)` takes `'download'` (default — primary button, always `<a download>` to disk) or `'share'` (secondary button — Web Share sheet). The Share button is feature-detected at load (`shareSupported`) and stays hidden when files can't be shared, so Windows/Linux desktop sees Download only.
+- Share-sheet dismissal rejects with `AbortError` — caught and treated as a no-op, not an export failure.
 
 ---
 

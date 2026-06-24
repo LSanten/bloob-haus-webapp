@@ -2212,7 +2212,9 @@ function computeOutputSize() {
   let w, h;
   if (state.arW >= state.arH) { w = MAX; h = Math.round(MAX * state.arH / state.arW); }
   else                         { h = MAX; w = Math.round(MAX * state.arW / state.arH); }
-  return { w: w % 2 === 0 ? w : w - 1, h: h % 2 === 0 ? h : h - 1 };
+  // H.264 requires even *integer* dimensions (chroma subsampling). MAX and the
+  // aspect-ratio math can both be fractional, so floor each side down to even.
+  return { w: Math.floor(w / 2) * 2, h: Math.floor(h / 2) * 2 };
 }
 
 const EASING_FNS = {
@@ -2410,19 +2412,32 @@ async function exportVideo() {
     dbg(`mp4-muxer — Muxer: ${typeof Muxer}, ArrayBufferTarget: ${typeof ArrayBufferTarget}`, typeof Muxer === 'function' ? 'ok' : 'error');
     if (typeof Muxer !== 'function' || typeof ArrayBufferTarget !== 'function') throw new Error(`mp4-muxer bad exports — Muxer: ${typeof Muxer}, ArrayBufferTarget: ${typeof ArrayBufferTarget}`);
 
-    // Find best supported H.264 codec
+    // Bitrate scales with resolution so phones aren't over-allocated.
+    // Declared here (before codec probing) because isConfigSupported needs it —
+    // referencing it later would be a temporal-dead-zone ReferenceError.
+    const bitrate = Math.round(Math.min(outW * outH / (1920 * 1080), 1) * 6_000_000 + 2_000_000);
+
+    // Find best supported H.264 codec. Probe hardware first, then fall back to
+    // software ('prefer-software') — Windows hardware encoders frequently reject
+    // large or non-16:9 frames that the software encoder (OpenH264) handles fine.
     const codecCandidates = ['avc1.640034', 'avc1.4d0034', 'avc1.42003e'];
-    let codec = null;
-    for (const c of codecCandidates) {
-      try {
-        const { supported } = await VideoEncoder.isConfigSupported({
-          codec: c, width: outW, height: outH, framerate: state.fps, bitrate
-        });
-        if (supported) { codec = c; break; }
-      } catch {}
+    let codec = null, accel = 'no-preference';
+    for (const acc of ['no-preference', 'prefer-software']) {
+      for (const c of codecCandidates) {
+        try {
+          const { supported } = await VideoEncoder.isConfigSupported({
+            codec: c, width: outW, height: outH, framerate: state.fps, bitrate,
+            hardwareAcceleration: acc,
+          });
+          if (supported) { codec = c; accel = acc; break; }
+        } catch (e) {
+          dbg(`Codec probe ${c} (${acc}) threw: ${e.message}`, 'warn');
+        }
+      }
+      if (codec) break;
     }
-    if (!codec) throw new Error('No supported H.264 codec found in this browser');
-    dbg(`Codec selected: ${codec}`, 'ok');
+    if (!codec) throw new Error(`No supported H.264 codec found for ${outW}×${outH} @ ${state.fps}fps`);
+    dbg(`Codec selected: ${codec} (${accel})`, 'ok');
 
     // Set up muxer
     const target = new ArrayBufferTarget();
@@ -2432,8 +2447,7 @@ async function exportVideo() {
       fastStart: 'in-memory',
     });
 
-    // Set up encoder — bitrate scales with resolution so phones aren't over-allocated
-    const bitrate = Math.round(Math.min(outW * outH / (1920 * 1080), 1) * 6_000_000 + 2_000_000);
+    // Set up encoder
     const videoChunks = [];
     const encoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
@@ -2442,6 +2456,7 @@ async function exportVideo() {
     encoder.configure({
       codec, width: outW, height: outH,
       framerate: state.fps, bitrate,
+      hardwareAcceleration: accel,
       latencyMode: 'quality',
     });
     dbg(`Encoder bitrate: ${(bitrate / 1_000_000).toFixed(1)} Mbps`);

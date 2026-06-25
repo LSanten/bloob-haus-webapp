@@ -2231,9 +2231,22 @@ function computeOutputSize() {
   let w, h;
   if (state.arW >= state.arH) { w = MAX; h = Math.round(MAX * state.arH / state.arW); }
   else                         { h = MAX; w = Math.round(MAX * state.arW / state.arH); }
+
+  // Clamp to the H.264 encoder frame-size budget. Browsers expose at most
+  // Level 5.2 (≈36,864 macroblocks ≈ 9.4 MP — e.g. 4096×2304 or 3072×3072).
+  // A 4096×4096 square (65,536 MBs) needs Level 6, which both Mac VideoToolbox
+  // and Chrome's software encoder reject — so scale proportionally to fit.
+  const MAX_PIXELS = 3072 * 3072;
+  let clamped = false;
+  if (w * h > MAX_PIXELS) {
+    const scale = Math.sqrt(MAX_PIXELS / (w * h));
+    w *= scale; h *= scale;
+    clamped = true;
+  }
+
   // H.264 requires even *integer* dimensions (chroma subsampling). MAX and the
   // aspect-ratio math can both be fractional, so floor each side down to even.
-  return { w: Math.floor(w / 2) * 2, h: Math.floor(h / 2) * 2 };
+  return { w: Math.floor(w / 2) * 2, h: Math.floor(h / 2) * 2, clamped };
 }
 
 const EASING_FNS = {
@@ -2412,7 +2425,11 @@ async function exportVideo(mode = 'download') {
   btnLabel.textContent = mode === 'share' ? 'Preparing…' : 'Exporting…';
   exportProg.classList.add('visible');
 
-  const { w: outW, h: outH } = computeOutputSize();
+  const { w: outW, h: outH, clamped } = computeOutputSize();
+  if (clamped) {
+    dbg(`Output capped at ${outW}×${outH} — larger frames exceed H.264 encoder limits`, 'warn');
+    flashFootnote(`⚠ Capped to ${outW}×${outH} (max H.264 size)`);
+  }
   const halfFrames  = Math.round(state.duration * state.fps);
   const totalFrames = state.playback === 'bounce' ? halfFrames * 2 : halfFrames;
   const easeFn = EASING_FNS[state.easing] || EASING_FNS['linear'];

@@ -27,6 +27,12 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Also fixed alongside:** `computeOutputSize()` could return fractional/odd dimensions (export ran at `3016.712×3018`). H.264 needs even *integers* → floor each side with `Math.floor(x/2)*2`. And added a `hardwareAcceleration: 'prefer-software'` fallback pass for large/near-square frames that Windows hardware encoders reject.
 - **Lesson:** never use a bare `catch {}` around codec/feature probing — it hides real bugs. Always `dbg()` the caught error.
 
+### 4096×4096 export fails — H.264 frame-size ceiling
+- **Symptom:** `No supported H.264 codec found for 4096×4096 @ 30fps`, while 3034×3034 and 4096×2304 export fine. It is the *resolution*, not the framerate.
+- **Cause:** browsers expose at most H.264 **Level 5.2**, whose max frame size is **36,864 macroblocks** (≈9.4 MP — e.g. 4096×2304 or 3072×3072). A 4096×4096 square is **65,536 macroblocks**, needing Level 6.x, which neither Mac VideoToolbox nor Chrome's software encoder (OpenH264) provides.
+- **Fix:** `computeOutputSize()` clamps total area to `3072×3072` (= the Level 5.2 budget), scaling proportionally and preserving aspect ratio. It returns a `clamped` flag; `exportVideo()` shows a footnote (`⚠ Capped to NxN`) so the reduction is visible, not silent. The `res-desc` UI label also reflects the capped size before export.
+- Note: 4096×2304 (16:9) is *not* penalized — it equals the budget exactly. Only oversized frames (tall/square at 4096) get scaled.
+
 ### Second export crash on Safari
 - Missing `encoder.close()` after `encoder.flush()` left the first `VideoEncoder` alive. Safari reuses internal codec resources, so creating a second encoder in the same session caused resource contention → corrupt bitstream on the second export.
 - **Fix:** always call `encoder.close()` immediately after `encoder.flush()`.

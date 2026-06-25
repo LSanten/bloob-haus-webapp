@@ -148,6 +148,17 @@ npm run build          # full build (defaults to buffbaby)
 npm test               # run the test suite
 ```
 
+### Fast single-file iteration
+
+A full dev build preprocesses every file in the vault, which is slow for debugging one page. Pass `--page=<path>` (relative to the content repo) to any `dev:*` command to preprocess **only that file** — much faster when iterating on a layout, visualizer, or frontmatter behavior:
+
+```bash
+npm run dev:marbles -- --page=marbles/RADICALNESS.md
+npm run dev:melt    -- --page=what-is-melt.md
+```
+
+(Note the `--` before `--page`, required so npm forwards the flag to the script.)
+
 Site configs live in `sites/*.yaml`. Themes live in `themes/`. Content stays in its own private repo — this builder just reads it.
 
 ### Adding a new site

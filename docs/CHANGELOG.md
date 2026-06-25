@@ -6,6 +6,27 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 50 — June 25, 2026
+**Worked on:** Date frontmatter convention — `date_lastchanged` → `date_updated`, marbles vault cleanup, universal date support
+
+**Marbles vault migration (content repo, one-time):**
+- Python script (`ruamel.yaml`) migrated 468 files: `date_lastchanged` → `date_updated` (YAML list, quotes stripped); custom comma-label text preserved into new `date_created_text` / `date_updated_text` fields (8 files); obsolete `show_date_lastchanged_updatedauto` removed. `bloob-object` left untouched (separate concern). Output matches the Obsidian plugin's convention byte-for-byte.
+
+**Shared pipeline (upstream-eligible):**
+- `eleventy.config.js` `dateFormat` filter: now accepts an array (formats most recent entry, for `date_updated`) and formats `Date` objects in UTC to avoid off-by-one in negative-offset timezones.
+- `preprocess-content.js`: new `toDateOnly()` helper normalizes `date_created` / `date_updated` to plain `YYYY-MM-DD` strings before `matter.stringify`. Fixes a latent off-by-one bug (bare YAML dates were re-serialized as UTC-midnight ISO timestamps and rendered a day early). Preserves the legacy `2024-11-07, Written on` comma-label form (melt). Universal — benefits all themes.
+- `tests/utils/to-date-only.test.js`: regression tests (7 cases) for the off-by-one fix and comma-label preservation.
+
+**marbles-pouch + melt themes:**
+- `layouts/page.njk` (both): render a `date_updated` pill (hidden when it matches `date_created`); custom labels via `date_created_text` / `date_updated_text`. Legacy `date_created: …, Label` comma-split removed from both themes in favor of the `*_text` convention.
+- `main.css`: `.marble-date--updated` / `.page-date--updated` modifiers (lighter emphasis).
+
+**Docs:**
+- `settings-registry.md`: `date_created` + `date_updated` added as Universal; `date_created_text` / `date_updated_text` under marbles-pouch and melt.
+- `README.md`: documented the `--page=<file>` single-file dev flag for fast iteration.
+
+**melt vault:** has no date frontmatter; left as-is (the Obsidian plugin will stamp dates going forward).
+
 ### Session 49 — June 17, 2026
 **Worked on:** Collection shape — Phase 2 (combined fulltext search) + AE tag/search polish
 

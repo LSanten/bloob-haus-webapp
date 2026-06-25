@@ -67,6 +67,25 @@ function getBuildTarget() {
 }
 
 /**
+ * Normalize a calendar-date value to a plain `YYYY-MM-DD` string.
+ * Date objects (from bare YAML dates) are read in UTC so the calendar date is
+ * preserved; date-prefixed strings are truncated to the date portion; anything
+ * else is returned unchanged.
+ */
+export function toDateOnly(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return v.toISOString().slice(0, 10);
+  }
+  if (typeof v === "string") {
+    // Truncate a pure ISO timestamp to its date portion, but leave bare dates
+    // and labelled forms ("2024-11-07, Written on" — melt/legacy) untouched.
+    const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$/);
+    return m ? m[1] : v;
+  }
+  return v;
+}
+
+/**
  * Main preprocessing function.
  * @param {Object} options - Configuration options
  * @param {string} options.contentDir - Path to cloned content directory
@@ -606,6 +625,20 @@ export async function preprocessContent({
     // but no H1 was stripped (e.g. user wrote title: _Italic_ in frontmatter directly).
     if (!outputFrontmatter.title_md && pageInfo?.title_md) {
       outputFrontmatter.title_md = pageInfo.title_md;
+    }
+
+    // Normalize calendar-date fields to plain YYYY-MM-DD strings.
+    // Bare YAML dates parse into UTC-midnight Date objects; if left as Dates they
+    // re-serialize to full ISO timestamps and format off-by-one in negative-offset
+    // timezones. Quoted YYYY-MM-DD strings round-trip cleanly and feed the
+    // dateFormat filter's string path. Universal: applies to every theme.
+    if (outputFrontmatter.date_created != null) {
+      outputFrontmatter.date_created = toDateOnly(outputFrontmatter.date_created);
+    }
+    if (Array.isArray(outputFrontmatter.date_updated)) {
+      outputFrontmatter.date_updated = outputFrontmatter.date_updated.map(toDateOnly);
+    } else if (outputFrontmatter.date_updated != null) {
+      outputFrontmatter.date_updated = toDateOnly(outputFrontmatter.date_updated);
     }
 
     // Reconstruct the file with frontmatter

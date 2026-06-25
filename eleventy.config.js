@@ -198,12 +198,24 @@ export default async function (eleventyConfig) {
 
   // Date formatting filter
   // Handles JS Date objects and YYYY-MM-DD strings.
+  // Also accepts an array (e.g. `date_updated`) — formats the most recent (last) entry.
   // YYYY-MM-DD strings are treated as local noon to avoid off-by-one timezone issues.
   eleventyConfig.addFilter("dateFormat", function (date) {
     if (!date) return "";
+    if (Array.isArray(date)) {
+      if (date.length === 0) return "";
+      date = date[date.length - 1];
+    }
     let d;
+    let useUTC = false;
     if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
       d = new Date(date.trim() + "T12:00:00");
+    } else if (date instanceof Date) {
+      // YAML bare dates (and the preprocessor's ISO re-serialization) become
+      // UTC-midnight Date objects. Format in UTC so the calendar date is
+      // preserved in negative-offset timezones (otherwise off-by-one).
+      d = date;
+      useUTC = true;
     } else {
       d = new Date(date);
     }
@@ -211,6 +223,7 @@ export default async function (eleventyConfig) {
       year: "numeric",
       month: "long",
       day: "numeric",
+      ...(useUTC ? { timeZone: "UTC" } : {}),
     });
   });
 

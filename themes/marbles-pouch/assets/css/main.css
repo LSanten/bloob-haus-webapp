@@ -622,6 +622,13 @@ article.marble-page {
   margin: 0 0 var(--spacing-sm);
 }
 
+/* THEME STANDARD: updated date pill — lighter emphasis than the created pill */
+.marble-date--updated {
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.85;
+}
+
 /* THEME STANDARD: internal link pills */
 a.internal-link {
   display: inline-flex;

@@ -28,6 +28,8 @@ These settings work identically across every theme. They are part of the Bloob H
 | `bloob-shape` | string | — | Rendering shape for this page. Routes the entire page body through the named shape's `renderFilescope()` renderer in `lib/visualizers/[name]/index.js`. Separate from `bloob-type:` — a file can have both. Shape config goes in a `::: settings` block in the body (not in frontmatter). See `docs/architecture/visualizers.md` — File-scope Shapes section. |
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
+| `date_created` | string | — | Creation date (`YYYY-MM-DD`). Available to every theme via the data cascade; rendered as a pill only where a theme wires it up. Written by the bloob-haus Obsidian plugin. |
+| `date_updated` | list of strings | — | Chronological list of significant-edit dates (`YYYY-MM-DD`). Appended by the Obsidian plugin. Available to every theme; the shared `dateFormat` filter accepts the array and formats the most recent entry (`{{ date_updated \| dateFormat }}`). Rendered only where a theme opts in. |
 | `visibility` | string | — | Per-page visibility shorthand. `private` = excluded from build entirely. `unlisted` = built but hidden from all indexes (RSS, search, sitemap, noindex). Works in any `publish_mode`. Sets `_bloob_unlisted: true` internally. |
 | `website_status` | string | depends on `publish_by_default` | Used when `publish_mode: status_field`. `draft` = excluded from build. `unlisted` = built, hidden from all indexes. `archived` = built, Google-indexable, hidden from listings. `public` = fully published. Absent field = excluded if `publish_by_default: false`, treated as public if `true` (default). |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
@@ -322,7 +324,10 @@ No theme-specific page-level settings beyond the universal contract.
 
 | Setting | Type | Default | Scope | Description |
 |---------|------|---------|-------|-------------|
-| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown above content. Format: `YYYY-MM-DD` or `YYYY-MM-DD, Custom label`. Label defaults to "Started on". |
+| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown above content. Format: `YYYY-MM-DD`. Label comes from `date_created_text`, else defaults to "Started on". |
+| `date_created_text` | string | `Started on` | `layouts/page.njk` | Custom label for the creation-date pill. |
+| `date_updated` | list of strings | — | `layouts/page.njk` | Renders an "updated" pill from the most recent entry. Hidden when the latest update matches `date_created`. See universal `date_updated`. |
+| `date_updated_text` | string | `Updated on` | `layouts/page.njk` | Custom label for the updated-date pill. |
 
 #### Site-Wide
 
@@ -339,7 +344,10 @@ No theme-specific page-level settings beyond the universal contract.
 
 | Setting | Type | Default | Scope | Description |
 |---------|------|---------|-------|-------------|
-| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown in page header. Format: `YYYY-MM-DD` or `YYYY-MM-DD, Custom label`. Label defaults to "Written on". |
+| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown in page header. Format: `YYYY-MM-DD`. Label comes from `date_created_text`, else defaults to "Written on". |
+| `date_created_text` | string | `Written on` | `layouts/page.njk` | Custom label for the creation-date pill. |
+| `date_updated` | list of strings | — | `layouts/page.njk` | Renders an "updated" pill from the most recent entry. Hidden when the latest update matches `date_created`. See universal `date_updated`. |
+| `date_updated_text` | string | `Updated on` | `layouts/page.njk` | Custom label for the updated-date pill. |
 
 ---
 

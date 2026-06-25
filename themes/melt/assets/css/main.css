@@ -355,6 +355,12 @@ body {
   margin-top: 14px;
 }
 
+/* Updated date pill — lighter emphasis than the created pill */
+.page-date--updated {
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
 /* --- Body typography --- */
 .page-body { font-size: 1.05rem; line-height: 1.8; }
 

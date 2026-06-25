@@ -75,6 +75,11 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - This replaced the old global `kb-rect-start` / `kb-rect-end` keys, which shared one framing across all images. Both START and END rect position+size are saved.
 - `outputStateKey()` (used by the encode cache) includes `imageName`, so switching images invalidates the cached video.
 
+## Live-preview timeline drives off the engine, not wall-clock
+
+- **Bug:** the preview's seconds counter climbed forever and the orange bar never reset, because the builder's `onTick` used `getElapsedSec()` (monotonic `performance.now()` accumulation) for the display.
+- **Fix:** drive the timeline from the engine's own normalized position `t` (0..1), which already resets to 0 on `loop`, stops at 1 on `hold`, and ping-pongs on `bounce`. Time shown = `t * state.duration`; bar = `t * 100%`. The wall-clock helpers remain only for play/pause/seek bookkeeping.
+
 ## Native resolution logic
 
 - `Native` resolution was previously `max(imageW, imageH)` — the full image size, which is unnecessarily large for tight zoom animations.

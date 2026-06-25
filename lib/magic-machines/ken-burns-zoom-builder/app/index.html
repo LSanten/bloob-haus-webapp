@@ -153,18 +153,15 @@
 
   .tagline-bar {
     flex-shrink: 0;
-    padding: 6px 20px;
-    min-height: 32px;
-    height: auto;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    padding: 8px 20px;
+    /* Plain text block — a flex container turned the text + inline link into
+       separate flex items, which wrapped at awkward boundaries on narrow phones. */
+    display: block;
     font-family: var(--sans);
     font-size: 11.5px;
     color: var(--dim);
     background: oklch(0.98 0.015 65 / 0.50);
     border-bottom: 1px solid var(--glass-border);
-    gap: 0 4px;
     line-height: 1.6;
   }
   .tagline-bar a {
@@ -906,6 +903,47 @@
   .info-popover a { color: var(--accent); text-decoration: underline; }
   .info-popover[hidden] { display: none; }
 
+  /* ── Collapsible "Bloob Haus Visual" section ── */
+  /* Size to content (don't inherit summary-section's flex:1, which would leave a
+     large empty gap below the toggle when collapsed). */
+  .bloob-section { flex: 0 0 auto; }
+  .bloob-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+  }
+  .bloob-toggle .panel-section-title { margin: 0; }
+  .bloob-chevron {
+    width: 13px; height: 13px;
+    flex-shrink: 0;
+    color: var(--dim);
+    transition: transform 0.2s ease;
+  }
+  .bloob-section.collapsed .bloob-chevron { transform: rotate(-90deg); }
+  .bloob-section.collapsed .bloob-body { display: none; }
+  .bloob-body { margin-top: 10px; }
+  .bloob-explain {
+    margin: 0 0 9px;
+    padding: 10px 12px;
+    background: oklch(0.60 0.17 42 / 0.08);
+    border: 1px solid oklch(0.60 0.17 42 / 0.22);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .bloob-explain a { color: var(--accent); text-decoration: underline; }
+
   /* ── TABLET (≤1024px) ── */
   @media (max-width: 1024px) {
     body { font-size: 13px; }
@@ -1320,21 +1358,19 @@
       <div class="btn-footnote" id="export-footnote">Single pass · <span id="export-desc">Start → End</span> · <span id="export-dur">8s</span></div>
     </div>
 
-    <!-- Bloob Haus snippet -->
-    <div class="summary-section">
-      <div class="panel-section-title bloob-title-row" style="margin-bottom:10px;">
-        <span>Bloob Haus Snippet</span>
-        <button class="info-btn" id="bloob-info-btn" type="button" aria-label="What is this?" aria-expanded="false">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5"/>
-            <path d="M8 7.5v4M8 4.7v0.1" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="info-popover" id="bloob-info-popover" hidden>
-        This snippet works as a visualization on any <a href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a> site. Paste it into a markdown file and upload your image alongside it (matching the filename) — the page will render this exact Ken Burns animation.
-      </div>
-      <div style="position:relative;">
+    <!-- Bloob Haus Visual (collapsed by default) -->
+    <div class="summary-section bloob-section collapsed" id="bloob-section">
+      <button class="bloob-toggle" id="bloob-toggle" type="button" aria-expanded="false">
+        <span class="panel-section-title">Bloob Haus Visual</span>
+        <svg class="bloob-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M3 5l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="bloob-body" id="bloob-body">
+        <div class="bloob-explain">
+          A Bloob Haus Visual renders this exact Ken Burns animation on any <a href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a> site. Paste it into a markdown file and upload your image alongside it (matching the filename).
+        </div>
+        <div style="position:relative;">
         <pre class="summary-pre" id="bloob-pre">::: ken-burns-zoom
 // drop an image to begin
 :::</pre>
@@ -1350,6 +1386,7 @@
           cursor: pointer;
           transition: all 0.15s;
         ">copy</button>
+        </div>
       </div>
     </div>
 
@@ -1890,13 +1927,12 @@ function initPreview() {
   previewPlaying = true;
   previewEngine  = new KenBurnsEngine(previewViewport, previewAnimImg, buildEngineConfig());
   previewEngine.onTick(t => {
-    const elapsed = getElapsedSec();
-    const total   = getTotalPreviewDuration();
-    const progress = state.playback === 'loop'
-      ? (elapsed % total) / total
-      : Math.min(1, elapsed / total);
-    previewFill.style.width  = (progress * 100) + '%';
-    previewTimeEl.textContent = elapsed.toFixed(1) + 's';
+    // Drive the timeline from the engine's normalized position (0..1), which
+    // already resets to 0 on loop, holds at 1, or bounces per playback mode.
+    // (Previously it used wall-clock elapsed, so the counter climbed forever
+    // instead of returning to 0 at the end.)
+    previewFill.style.width   = (t * 100) + '%';
+    previewTimeEl.textContent = (t * state.duration).toFixed(1) + 's';
     syncCaptionOverlay(t);
   });
   resetElapsed();
@@ -2771,25 +2807,15 @@ function flashFootnote(msg) {
 })();
 
 // ─────────────────────────────────────────────
-// Bloob Haus snippet info popover
+// Bloob Haus Visual — collapsible section (collapsed by default)
 // ─────────────────────────────────────────────
-(function setupBloobInfo() {
-  const btn = document.getElementById('bloob-info-btn');
-  const pop = document.getElementById('bloob-info-popover');
-  if (!btn || !pop) return;
-
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const open = pop.hidden;
-    pop.hidden = !open;
-    btn.setAttribute('aria-expanded', String(open));
-  });
-
-  document.addEventListener('click', e => {
-    if (pop.hidden) return;
-    if (pop.contains(e.target) || btn.contains(e.target)) return;
-    pop.hidden = true;
-    btn.setAttribute('aria-expanded', 'false');
+(function setupBloobVisual() {
+  const sec = document.getElementById('bloob-section');
+  const btn = document.getElementById('bloob-toggle');
+  if (!sec || !btn) return;
+  btn.addEventListener('click', () => {
+    const collapsed = sec.classList.toggle('collapsed');
+    btn.setAttribute('aria-expanded', String(!collapsed));
   });
 })();
 

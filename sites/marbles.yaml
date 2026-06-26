@@ -18,3 +18,5 @@ permalinks:
 features:
   search: true   # Pagefind search index — enables search bar on homepage
   magic_machines: true
+  date_from_filename: true   # YYYY-MM-DD- filename prefix → date_created (date stays in URL)
+  # date_prefix_slugs: false # (default) strip the YYYY-MM-DD- prefix from the URL slug — off for now

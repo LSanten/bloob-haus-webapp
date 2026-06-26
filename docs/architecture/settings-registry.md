@@ -132,6 +132,8 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
 | `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
 | `features.transclusion_indicators` | `true` | Site-wide default for transclusion indicator display. When `false`, all `![[embeds]]` across the site are inlined seamlessly. Override per-page with `transclusion_indicators:` frontmatter. |
+| `features.date_from_filename` | `false` | Jekyll-style date-prefixed filenames. When `true`, a leading `YYYY-MM-DD-` on a filename supplies `date_created` when frontmatter omits one (frontmatter always wins). The prefix **stays in the URL**. Set in `sites/*.yaml`. Enabled for marbles. |
+| `features.date_prefix_slugs` | `false` | Strip a leading `YYYY-MM-DD-` from the URL slug (`2026-06-24-my-post.md` → `/my-post/`). Independent of `date_from_filename`. Set in `sites/*.yaml`. Off everywhere for now (keeps the date in the URL). |
 
 #### Graph Extra Fields
 

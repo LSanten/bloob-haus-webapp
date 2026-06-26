@@ -8,6 +8,7 @@ import path from "path";
 import { glob } from "glob";
 import matter from "gray-matter";
 import { getSlugFunction } from "./slug-strategy.js";
+import { stripDatePrefix } from "./date-prefix.js";
 
 /**
  * Strips inline markdown from a heading string.
@@ -99,10 +100,13 @@ function slugify(title) {
  * @param {string} contentDir - Path to content directory
  * @param {Object} [options] - Optional configuration
  * @param {string} [options.slugStrategy] - Slug strategy name ("slugify" or "preserve-case")
+ * @param {boolean} [options.stripDatePrefix] - When true, a leading YYYY-MM-DD- on a
+ *        filename is removed before slugifying (Jekyll-style clean URLs).
  * @returns {Object} Index with pages and lookup maps
  */
 export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
   const slugFn = options.slugStrategy ? getSlugFunction(options.slugStrategy) : slugify;
+  const useDatePrefix = options.stripDatePrefix === true;
   console.log(`[index] Building index for ${publishedFiles.length} files`);
 
   const pages = {}; // slug → page info
@@ -121,8 +125,15 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
 
     // For index files, fall back to prettified folder name rather than "index" or "_index"
     const isIndex = filename === "index" || filename === "_index";
+
+    // Jekyll-style date prefix: when enabled, strip a leading YYYY-MM-DD- so the
+    // slug and filename-derived title use the clean name ("my-post"), not
+    // "2026-06-24-my-post". The original filename is still indexed below so
+    // wiki-links written against the on-disk name keep resolving.
+    const slugBase = useDatePrefix ? stripDatePrefix(filename).name : filename;
+
     const titleFallback =
-      isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : filename;
+      isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : slugBase;
     const title = extractTitle(frontmatter, body, titleFallback);
     const titleMd = extractTitleMd(frontmatter, body, titleFallback);
 
@@ -137,7 +148,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     // "resources/index.md" is indexed as "resources", not "index".
     const slug = (isIndex && hasFolder)
       ? slugFn(path.basename(folderPath))
-      : slugFn(filename);
+      : slugFn(slugBase);
 
     // index.md files use the folder URL (e.g. resources/index.md → /resources/)
     // matching the Eleventy permalink injected by preprocess-content.js
@@ -177,6 +188,12 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const normalizedFilename = filename.toLowerCase().replace(/[^a-z0-9]/g, "");
     if (normalizedFilename !== filename.toLowerCase()) {
       filenameLookup[normalizedFilename] = fullSlug;
+    }
+
+    // When a date prefix was stripped, also resolve links written against the
+    // clean name (e.g. [[my-post]] as well as [[2026-06-24-my-post]]).
+    if (useDatePrefix && slugBase.toLowerCase() !== filename.toLowerCase()) {
+      filenameLookup[slugBase.toLowerCase()] = fullSlug;
     }
   }
 

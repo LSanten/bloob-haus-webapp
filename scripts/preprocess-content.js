@@ -35,6 +35,7 @@ import { stripLeadingTitleHeading, stripInlineMarkdown } from "./utils/title-ded
 import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
+import { stripDatePrefix } from "./utils/date-prefix.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
 import { resolveRedirect } from "./utils/redirect-resolver.js";
@@ -171,13 +172,20 @@ export async function preprocessContent({
   // Step 3: Build file index
   console.log("\n--- Step 3: Building file index ---");
   const slugStrategy = process.env.SLUG_STRATEGY || "slugify";
+  // Jekyll-style date-prefixed filenames — two independent opt-in behaviors:
+  //   date_from_filename: a leading YYYY-MM-DD- supplies date_created when
+  //     frontmatter omits one; the prefix STAYS in the URL slug.
+  //   date_prefix_slugs: strip that prefix from the URL slug (clean URLs).
+  // A site can enable either, both, or neither.
+  const dateFromFilename = siteConfig.features?.date_from_filename === true;
+  const datePrefixSlugs = siteConfig.features?.date_prefix_slugs === true;
   // In status_field mode, draft files are excluded from publishing but their URLs
   // are stable and should resolve when referenced via wiki-links (e.g. card-preview).
   // In blocklist/allowlist modes, excluded files are private and must not be indexed.
   const draftFiles = filterConfig.publishMode === "status_field"
     ? excluded.filter(f => f.isDraft)
     : [];
-  const fileIndex = await buildFileIndex([...published, ...draftFiles], contentDir, { slugStrategy });
+  const fileIndex = await buildFileIndex([...published, ...draftFiles], contentDir, { slugStrategy, stripDatePrefix: datePrefixSlugs });
 
   // Step 4: Build attachment index
   console.log("\n--- Step 4: Building attachment index ---");
@@ -625,6 +633,15 @@ export async function preprocessContent({
     // but no H1 was stripped (e.g. user wrote title: _Italic_ in frontmatter directly).
     if (!outputFrontmatter.title_md && pageInfo?.title_md) {
       outputFrontmatter.title_md = pageInfo.title_md;
+    }
+
+    // Jekyll-style date prefix (opt-in via features.date_from_filename): a leading
+    // YYYY-MM-DD- on the filename supplies date_created when frontmatter omits one.
+    // Frontmatter always wins — this only fills a missing value. Independent of
+    // date_prefix_slugs (which controls whether the prefix is kept in the URL).
+    if (dateFromFilename && outputFrontmatter.date_created == null) {
+      const { date: filenameDate } = stripDatePrefix(path.basename(file.relativePath, ".md"));
+      if (filenameDate) outputFrontmatter.date_created = filenameDate;
     }
 
     // Normalize calendar-date fields to plain YYYY-MM-DD strings.

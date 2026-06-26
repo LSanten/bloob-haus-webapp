@@ -6,6 +6,28 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 51 — June 25, 2026
+**Worked on:** Jekyll-style date-prefixed filenames — two independent opt-in behaviors.
+
+**Problem:** Marbles notes are named `2026-06-24-title.md`. The author wants that date "picked up" into `date_created` (when frontmatter omits it) **while keeping the date in the URL**. Stripping the date from the URL is a separate capability that should exist for other vaults but stay off for now.
+
+**Shared pipeline (upstream-eligible), two separate `features.*` flags (both default off):**
+- `features.date_from_filename` — a leading `YYYY-MM-DD-` supplies `date_created` when frontmatter omits one (**frontmatter always wins**); the prefix stays in the URL.
+- `features.date_prefix_slugs` — strips the `YYYY-MM-DD-` prefix from the URL slug. Independent of the above; off everywhere for now.
+- New `scripts/utils/date-prefix.js`: `stripDatePrefix(filename)` splits a strict `YYYY-MM-DD-` prefix (month 01–12, day 01–31, non-empty remainder) into `{ date, name }`.
+- `file-index-builder.js`: with `stripDatePrefix` option, slugs + filename-derived titles use the de-prefixed name; both on-disk and clean names registered in `filenameLookup` so `[[2026-06-24-x]]` and `[[x]]` resolve.
+- `preprocess-content.js`: reads both flags; passes `stripDatePrefix` to `buildFileIndex`; fills `date_created` when `date_from_filename` is on.
+- `lib/eleventyComputed.js`: `permalink()` strips the prefix only when `date_prefix_slugs` is set (regex duplicated inline — this file is copied standalone into each `src-(site)/_data/` and can't import from `scripts/`).
+- `tests/utils/date-prefix.test.js`: 6 cases (valid/invalid ranges, spaces, empty remainder, further date-like segments).
+
+**Site config:**
+- `sites/marbles.yaml`: `features.date_from_filename: true` (date in URL + picked up as `date_created`). `date_prefix_slugs` left off.
+
+**Docs:**
+- `settings-registry.md`: rows for both flags.
+
+**Verified:** single-page marbles preprocess → slug keeps the date (`2026-06-24-language-to-describe-music`), `date_created: '2026-06-24'` set; `eleventyComputed.permalink` keeps the date without `date_prefix_slugs` and strips it when toggled on. Full suite 491 passing.
+
 ### Session 50 — June 25, 2026
 **Worked on:** Date frontmatter convention — `date_lastchanged` → `date_updated`, marbles vault cleanup, universal date support
 

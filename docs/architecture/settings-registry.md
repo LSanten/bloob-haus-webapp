@@ -132,8 +132,10 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
 | `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
 | `features.transclusion_indicators` | `true` | Site-wide default for transclusion indicator display. When `false`, all `![[embeds]]` across the site are inlined seamlessly. Override per-page with `transclusion_indicators:` frontmatter. |
-| `features.date_from_filename` | `false` | Jekyll-style date-prefixed filenames. When `true`, a leading `YYYY-MM-DD-` on a filename supplies `date_created` when frontmatter omits one (frontmatter always wins). The prefix **stays in the URL**. Set in `sites/*.yaml`. Enabled for marbles. |
-| `features.date_prefix_slugs` | `false` | Strip a leading `YYYY-MM-DD-` from the URL slug (`2026-06-24-my-post.md` → `/my-post/`). Independent of `date_from_filename`. Set in `sites/*.yaml`. Off everywhere for now (keeps the date in the URL). |
+| `features.date_from_filename` | `false` | Jekyll-style date-prefixed filenames. When `true`, a leading `YYYY-MM-DD-` on a filename supplies `date_created` when frontmatter omits one (frontmatter always wins), and the prefix **stays in the URL** (`/2026-06-24-my-post/`). Set in `sites/*.yaml`. Enabled for marbles. |
+| `features.date_prefix_slugs` | `false` | When `true`, strip the leading `YYYY-MM-DD-` from the URL (`2026-06-24-my-post.md` → `/my-post/`). Combine with `date_from_filename` to also pick up the date. Set in `sites/*.yaml`. Off for now. |
+
+> **Why both flags exist / how the URL is controlled:** Eleventy *natively* strips a leading `YYYY-MM-DD-` from `fileSlug`/`filePathStem` and treats it as the page date — so by default the date is dropped from the URL no matter what. When either flag is set, `preprocess-content.js` pins an explicit `permalink` (the index's computed URL) on date-prefixed, non-index files, which overrides Eleventy's native stripping: `date_from_filename` (without `date_prefix_slugs`) keeps the date in the URL; `date_prefix_slugs` strips it intentionally. This also guarantees the served URL matches what internal links resolve to.
 
 #### Graph Extra Fields
 

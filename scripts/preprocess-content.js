@@ -635,13 +635,27 @@ export async function preprocessContent({
       outputFrontmatter.title_md = pageInfo.title_md;
     }
 
-    // Jekyll-style date prefix (opt-in via features.date_from_filename): a leading
-    // YYYY-MM-DD- on the filename supplies date_created when frontmatter omits one.
-    // Frontmatter always wins — this only fills a missing value. Independent of
-    // date_prefix_slugs (which controls whether the prefix is kept in the URL).
-    if (dateFromFilename && outputFrontmatter.date_created == null) {
-      const { date: filenameDate } = stripDatePrefix(path.basename(file.relativePath, ".md"));
-      if (filenameDate) outputFrontmatter.date_created = filenameDate;
+    // Jekyll-style date prefix handling for a leading YYYY-MM-DD- on the filename.
+    // Two opt-in behaviors, both keyed off the date prefix:
+    const { date: filenameDate } = stripDatePrefix(path.basename(file.relativePath, ".md"));
+
+    //   date_from_filename: supply date_created when frontmatter omits one
+    //   (frontmatter always wins — this only fills a missing value).
+    if (dateFromFilename && filenameDate && outputFrontmatter.date_created == null) {
+      outputFrontmatter.date_created = filenameDate;
+    }
+
+    //   URL control: Eleventy NATIVELY strips a leading YYYY-MM-DD- from the
+    //   fileSlug/filePathStem (it treats the date as the page date), so by default
+    //   the date is dropped from the URL no matter what. To make that a real,
+    //   two-way setting we pin an explicit permalink to the index's computed URL
+    //   (which already honors date_prefix_slugs): off → keep the date in the URL,
+    //   on → strip it. Only for date-prefixed, non-index files on opt-in sites, so
+    //   default sites keep Eleventy's native behavior. This also keeps the served
+    //   URL identical to the one internal links resolve to (pageInfo.url).
+    if (filenameDate && (dateFromFilename || datePrefixSlugs)
+        && pageInfo?.url && outputFrontmatter.permalink == null) {
+      outputFrontmatter.permalink = pageInfo.url;
     }
 
     // Normalize calendar-date fields to plain YYYY-MM-DD strings.

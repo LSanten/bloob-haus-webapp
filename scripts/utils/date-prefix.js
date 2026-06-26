@@ -10,9 +10,10 @@
  * Opt-in only — backwards compatible with sites that intentionally keep dates
  * in their URLs. See docs/architecture/settings-registry.md.
  *
- * NOTE: this regex is duplicated inline in lib/eleventyComputed.js because that
- * file is copied standalone into each per-site `src-(site)/_data/` dir and
- * cannot import from scripts/. Keep the two in sync.
+ * NOTE: Eleventy itself natively strips a leading YYYY-MM-DD- from fileSlug /
+ * filePathStem and uses it as the page date, so by default the date is dropped
+ * from the URL regardless. preprocess-content.js pins an explicit permalink for
+ * date-prefixed files to make that a real, two-way setting.
  */
 
 // Strict month (01-12) and day (01-31) ranges so we don't mistake an arbitrary

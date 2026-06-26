@@ -11,22 +11,24 @@ Development session history and completed work.
 
 **Problem:** Marbles notes are named `2026-06-24-title.md`. The author wants that date "picked up" into `date_created` (when frontmatter omits it) **while keeping the date in the URL**. Stripping the date from the URL is a separate capability that should exist for other vaults but stay off for now.
 
-**Shared pipeline (upstream-eligible), two separate `features.*` flags (both default off):**
-- `features.date_from_filename` — a leading `YYYY-MM-DD-` supplies `date_created` when frontmatter omits one (**frontmatter always wins**); the prefix stays in the URL.
-- `features.date_prefix_slugs` — strips the `YYYY-MM-DD-` prefix from the URL slug. Independent of the above; off everywhere for now.
+**Root cause found:** Eleventy *natively* strips a leading `YYYY-MM-DD-` from `fileSlug`/`filePathStem` and treats it as the page date — so the date was being dropped from the URL by Eleventy itself, regardless of our code (this is why the clean URL appeared all along, and why the live `…/language-to-describe-music/` URL had no date). The fix is to pin an explicit `permalink` for date-prefixed files so the setting actually controls the URL both ways.
+
+**Shared pipeline (upstream-eligible), two `features.*` flags (both default off):**
+- `features.date_from_filename` — a leading `YYYY-MM-DD-` supplies `date_created` when frontmatter omits one (**frontmatter always wins**); the date **stays in the URL**.
+- `features.date_prefix_slugs` — strips the prefix from the URL. Independent; off everywhere for now.
 - New `scripts/utils/date-prefix.js`: `stripDatePrefix(filename)` splits a strict `YYYY-MM-DD-` prefix (month 01–12, day 01–31, non-empty remainder) into `{ date, name }`.
-- `file-index-builder.js`: with `stripDatePrefix` option, slugs + filename-derived titles use the de-prefixed name; both on-disk and clean names registered in `filenameLookup` so `[[2026-06-24-x]]` and `[[x]]` resolve.
-- `preprocess-content.js`: reads both flags; passes `stripDatePrefix` to `buildFileIndex`; fills `date_created` when `date_from_filename` is on.
-- `lib/eleventyComputed.js`: `permalink()` strips the prefix only when `date_prefix_slugs` is set (regex duplicated inline — this file is copied standalone into each `src-(site)/_data/` and can't import from `scripts/`).
-- `tests/utils/date-prefix.test.js`: 6 cases (valid/invalid ranges, spaces, empty remainder, further date-like segments).
+- `file-index-builder.js`: with the `stripDatePrefix` option, slugs + filename-derived titles use the de-prefixed name (so `pageInfo.url` honors `date_prefix_slugs`); both on-disk and clean names registered in `filenameLookup` so `[[2026-06-24-x]]` and `[[x]]` resolve.
+- `preprocess-content.js`: reads both flags; fills `date_created` (`date_from_filename`); for date-prefixed non-index files on an opt-in site, pins `permalink = pageInfo.url` to override Eleventy's native stripping — keeping the date (`date_from_filename`) or stripping it (`date_prefix_slugs`), and keeping the served URL identical to what internal links resolve to.
+- `lib/eleventyComputed.js`: unchanged (an earlier slug-strip attempt there was a no-op because Eleventy hands it the already-stripped `filePathStem`; reverted).
+- `tests/utils/date-prefix.test.js`: 6 cases.
 
 **Site config:**
 - `sites/marbles.yaml`: `features.date_from_filename: true` (date in URL + picked up as `date_created`). `date_prefix_slugs` left off.
 
 **Docs:**
-- `settings-registry.md`: rows for both flags.
+- `settings-registry.md`: rows for both flags + an explainer on Eleventy's native stripping and the permalink pin.
 
-**Verified:** single-page marbles preprocess → slug keeps the date (`2026-06-24-language-to-describe-music`), `date_created: '2026-06-24'` set; `eleventyComputed.permalink` keeps the date without `date_prefix_slugs` and strips it when toggled on. Full suite 491 passing.
+**Verified (full marbles build):** output path `_site/tender-fleck/2026-06-24-language-to-describe-music/` (date kept), `feed.xml`/canonical use the date URL, `date_created: 2026-06-24` set. Index builder confirms the other mode: `stripDatePrefix=true` → `/tender-fleck/my-post/`. Full suite 491 passing.
 
 ### Session 50 — June 25, 2026
 **Worked on:** Date frontmatter convention — `date_lastchanged` → `date_updated`, marbles vault cleanup, universal date support

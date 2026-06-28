@@ -530,6 +530,18 @@
     box-shadow: 0 1px 4px oklch(0.40 0.04 55 / 0.08);
   }
   .btn-secondary:hover { background: oklch(1 0 0 / 0.75); border-color: var(--accent); color: var(--accent); }
+  /* "armed" = a video is rendered and cached, waiting for a fresh tap to share to
+     Photos (iOS gesture can't survive a long encode — see DECISIONS.md). */
+  .btn-secondary.armed {
+    background: var(--accent); color: white; border-color: transparent;
+    box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2);
+    animation: kb-armed-pulse 1.6s ease-in-out infinite;
+  }
+  .btn-secondary.armed:hover { background: oklch(0.55 0.15 42); color: white; border-color: transparent; }
+  @keyframes kb-armed-pulse {
+    0%, 100% { box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2); }
+    50%      { box-shadow: 0 2px 20px oklch(0.60 0.17 42 / 0.70), inset 0 1px 0 oklch(1 0 0 / 0.2); }
+  }
   .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
   .btn-footnote { font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: center; margin-top: 9px; line-height: 1.5; }
 
@@ -1971,6 +1983,7 @@ document.querySelector('.preview-progress-track').addEventListener('click', e =>
 function updateSummary() {
   updateBloobSnippet();
   updateExportFootnote();
+  refreshShareButton();
   if (previewEngine) previewEngine.configure(buildEngineConfig());
 }
 
@@ -2290,6 +2303,7 @@ function syncCaptionOverlay(t) {
 const btnDownload    = document.getElementById('btn-download');
 const btnLabel       = document.getElementById('btn-download-label');
 const btnShare       = document.getElementById('btn-share');
+const btnShareLabel  = document.getElementById('btn-share-label');
 const exportProg     = document.getElementById('export-progress');
 const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
@@ -2306,6 +2320,36 @@ const shareSupported = !!(navigator.canShare &&
 // caching, a second tap of Share reuses the file and calls share() instantly in
 // a fresh gesture — long enough for iOS to offer "Save Video".
 let lastEncode = null; // { key, blob, filename }
+
+// iOS Web Share needs a live user gesture, which Safari expires ~5s after the
+// tap — but a full encode can take a minute or more, so we can NEVER share()
+// straight after a long encode (the gesture is long gone → NotAllowedError).
+// Instead we "arm" the Share button once the video is rendered and cached: its
+// next tap is a fresh gesture, and the warm cache lets share() fire instantly
+// *inside that tap*, so iOS offers "Save Video". This works for any encode length.
+let shareArmed = false;
+
+function armShareSave() {
+  shareArmed = true;
+  btnShare.classList.add('armed');
+  btnShareLabel.textContent = 'Save to Photos';
+  btnShare.disabled = false;
+}
+
+function disarmShareSave() {
+  shareArmed = false;
+  btnShare.classList.remove('armed');
+  btnShareLabel.textContent = 'Share Video';
+}
+
+// If the user changed any setting since the cached render, the armed file is
+// stale — drop the armed state so "Save to Photos" never lies. Called from
+// updateSummary() (the central per-change hook).
+function refreshShareButton() {
+  if (shareArmed && (!lastEncode || lastEncode.key !== outputStateKey())) {
+    disarmShareSave();
+  }
+}
 
 function outputStateKey() {
   return JSON.stringify({
@@ -2558,15 +2602,25 @@ async function deliver(mode, blob, filename) {
   if (mode === 'share' && canShareFile) {
     dbg('Sharing via Web Share API', 'ok');
     try {
-      await navigator.share({ files: [makeFile()], title: 'Ken Burns Animation' });
+      // Share the file ALONE — no title/text/url. On iOS, including any of those
+      // fields makes the share sheet treat this as a generic content share and
+      // suppresses the media-specific "Save Video" action (so you only get
+      // Files/Drive). Sharing files-only makes iOS recognize it as a video and
+      // offer "Save Video" → Photos/Camera Roll.
+      await navigator.share({ files: [makeFile()] });
+      disarmShareSave();              // shared — restore the normal button
     } catch (e) {
       if (e?.name === 'AbortError') {
+        // Sheet dismissed by the user. The cache is still warm, so keep the
+        // button armed for an immediate retry.
         dbg('Share cancelled', 'warn');
+        armShareSave();
       } else if (e?.name === 'NotAllowedError') {
-        // Gesture expired during the encode. The file is cached now, so a second
-        // tap reuses it and shares instantly within a fresh gesture.
-        dbg('Share needs a fresh tap — encode cached', 'warn');
-        flashFootnote('✓ Ready — tap "Share Video" again to save to Photos');
+        // Gesture expired during a long encode. The file is cached now, so arm
+        // the button — the next tap is a fresh gesture and shares instantly.
+        dbg('Share gesture expired — arming "Save to Photos" for next tap', 'warn');
+        armShareSave();
+        flashFootnote('✓ Video ready — tap “Save to Photos” to save it');
       } else {
         dbg(`Share failed: ${e.message}`, 'error');
       }
@@ -2591,7 +2645,8 @@ async function exportVideo(mode = 'download') {
   await document.fonts.ready;
   btnDownload.disabled = true;
   btnShare.disabled = true;
-  btnLabel.textContent = mode === 'share' ? 'Preparing…' : 'Exporting…';
+  if (mode === 'share') { btnShare.classList.remove('armed'); btnShareLabel.textContent = 'Rendering…'; }
+  else btnLabel.textContent = 'Exporting…';
   exportProg.classList.add('visible');
 
   const { w: outW, h: outH, clamped } = computeOutputSize();
@@ -2760,6 +2815,9 @@ async function exportVideo(mode = 'download') {
     btnDownload.disabled = false;
     btnShare.disabled = !shareSupported;
     btnLabel.textContent = 'Download Video';
+    // Keep the "Save to Photos" label if we armed it for a save retry; otherwise
+    // restore the default Share label.
+    if (!shareArmed) btnShareLabel.textContent = 'Share Video';
   }
 }
 

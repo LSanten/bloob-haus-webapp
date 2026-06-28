@@ -56,15 +56,25 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** two explicit buttons. `exportVideo(mode)` takes `'download'` (default — primary button, always `<a download>` to disk) or `'share'` (secondary button — Web Share sheet). The Share button is feature-detected at load (`shareSupported`) and stays hidden when files can't be shared, so Windows/Linux desktop sees Download only.
 - Share-sheet dismissal rejects with `AbortError` — caught and treated as a no-op, not an export failure.
 
-### Saving to the iOS Photo Library — two-step share + encode cache
-- **Problem:** on iPhone, `<a download>` can only reach Files/Drive, never Photos. The only web route to the Photo Library is the share sheet's "Save Video". But `navigator.share()` needs a live user gesture that expires ~5s into the (slower) phone encode, so a one-tap Share would gesture-fail and (previously) fall back to a Files download — never offering Photos.
-- **Fix:** cache the last encode keyed by `outputStateKey()` (everything affecting the frames). On Share, if the cache is warm, `deliver()` calls `share()` synchronously inside the *current* tap's fresh gesture → iOS shows "Save Video". On a cold cache the first tap encodes; if the gesture has since expired we DON'T download — we prompt "tap Share again", and the now-warm cache makes the second tap fire share() instantly.
-- `deliver(mode, blob, filename)` is the single delivery path for both buttons and both the cached fast-path and post-encode path. Keeps share/download logic in one place.
+### Saving to the iOS Photo Library — encode cache + "armed" Save button
+- **Problem:** on iPhone, `<a download>` can only reach Files/Drive, never Photos. The only web route to the Photo Library is the share sheet's "Save Video". But `navigator.share()` needs a live user gesture that Safari expires **~5s** after the tap — and a full encode often takes a **minute or more**. So you can *never* call `share()` at the end of a long encode; the gesture is long gone.
+- **Fix (two-phase, gesture-safe for any encode length):**
+  1. Cache the last encode keyed by `outputStateKey()` (everything affecting the frames) in `lastEncode = {key, blob, filename}`.
+  2. On a Share tap with a **warm** cache, `deliver()` calls `share()` synchronously inside that tap's fresh gesture → iOS shows "Save Video" in one tap.
+  3. On a **cold** cache the tap renders; when the encode finishes the gesture has usually expired, so instead of a doomed `share()` or a silent Files download, we **arm the Share button**: `armShareSave()` turns it into a pulsing accent-colored **"Save to Photos"** button. The user's next tap is a *fresh* gesture, the cache is now warm, and `share()` fires instantly → "Save Video".
+- **Why an explicit armed button, not just a footnote:** the old approach only flashed "tap Share again" in the footnote — easy to miss after staring at a 60s+ progress bar. The button itself now changes label + pulses, so the second tap is obvious. `refreshShareButton()` (called from `updateSummary()`) disarms it the moment any setting changes, so "Save to Photos" never points at a stale render.
+- `deliver(mode, blob, filename)` is the single delivery path for both buttons and both the cached fast-path and post-encode path. `armShareSave()`/`disarmShareSave()` own the button state. Keeps share/download logic in one place.
+
+### Share sheet shows only "Save to Files"/Drive — never "Save Video" (title field)
+- **Symptom:** on iPhone the Share button opened the share sheet, but it only offered "Save to Files" / Google Drive / app targets — never "Save Video" (the only route to Photos/Camera Roll). The MP4 was already a valid faststart H.264 (`fastStart: 'in-memory'`), so the container wasn't the problem.
+- **Cause:** the share call passed `title: 'Ken Burns Animation'` alongside `files`. On iOS, including any of `title`/`text`/`url` next to `files` makes the share sheet treat the payload as a *generic content share* and **suppresses the media-specific "Save Video"/"Save Image" action**. Sharing the file *alone* makes iOS recognize it as a video and surface "Save Video" → Photos.
+- **Fix:** `navigator.share({ files: [file] })` — files only, no title/text/url.
+- Note: our feature-probe (`shareSupported`) already used `canShare({ files })` only; only the real share call carried the stray `title`.
 
 ### Web Share fails after a slow encode — `NotAllowedError` (gesture expired)
 - **Symptom:** `navigator.share()` threw `NotAllowedError: Must be handling a user gesture` — but only sometimes. It worked on a 4.6s Windows encode and failed on a 5.8s Mac encode of the same kind of image.
 - **Cause:** Web Share requires *transient user activation*, which Chrome expires **~5 seconds** after the click. Encoding happens between the button click and the `share()` call, so a long encode outlives the activation window and the share is blocked.
-- **Fix:** on `NotAllowedError`, fall back to `saveByDownload()` so the file is never lost. (We can't reliably keep the gesture alive across multi-second encoding; the dedicated Download button is the gesture-free path, and Share degrades to it.)
+- **Fix:** on `NotAllowedError` we no longer download silently — we `armShareSave()` (see "encode cache + armed Save button" above). The file is cached, so the next tap fires `share()` in a fresh gesture and reaches Photos. The dedicated Download button remains the gesture-free path for Files/disk. (We can't keep one gesture alive across a multi-second/minute encode — arming the button is the reliable substitute.)
 
 ---
 

@@ -1472,18 +1472,42 @@ const debugLogEl    = document.getElementById('debug-log');
 const debugCountEl  = document.getElementById('debug-count');
 const debugToggleEl = document.getElementById('debug-toggle');
 
-function dbg(msg, level = 'info') {
-  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
-  debugEntries.push({ ts, level, msg });
+// Persist the log to localStorage so it survives reloads (collect timing data
+// across several export runs / sessions without losing it). Capped to the most
+// recent entries to stay small.
+const DEBUG_LS_KEY = 'kb-debug-log';
+const DEBUG_LS_MAX = 1000;
+function persistDebug() {
+  try { localStorage.setItem(DEBUG_LS_KEY, JSON.stringify(debugEntries.slice(-DEBUG_LS_MAX))); } catch {}
+}
+
+function appendDebugEl({ ts, level, msg }) {
   const el = document.createElement('div');
-  el.className = `debug-entry ${level}`;
+  el.className = `debug-entry ${level || 'info'}`;
   el.textContent = `[${ts}] ${msg}`;
   debugLogEl.appendChild(el);
+}
+
+function restoreDebug() {
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(DEBUG_LS_KEY) || '[]'); } catch {}
+  if (!Array.isArray(saved) || !saved.length) return;
+  for (const e of saved) { debugEntries.push(e); appendDebugEl(e); }
+  appendDebugEl({ ts: '──────', level: 'info', msg: '──── new session ────' });
+  debugCountEl.textContent = debugEntries.length;
+  if (saved.some(e => e.level === 'error')) debugToggleEl.classList.add('has-error');
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+}
+
+function dbg(msg, level = 'info') {
+  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+  const entry = { ts, level, msg };
+  debugEntries.push(entry);
+  appendDebugEl(entry);
   debugLogEl.scrollTop = debugLogEl.scrollHeight;
   debugCountEl.textContent = debugEntries.length;
-  if (level === 'error') {
-    debugToggleEl.classList.add('has-error');
-  }
+  if (level === 'error') debugToggleEl.classList.add('has-error');
+  persistDebug();
 }
 
 debugToggleEl.addEventListener('click', () => debugPanel.classList.toggle('open'));
@@ -1493,15 +1517,72 @@ document.getElementById('debug-clear-btn').addEventListener('click', () => {
   debugLogEl.innerHTML = '';
   debugCountEl.textContent = '0';
   debugToggleEl.classList.remove('has-error');
+  try { localStorage.removeItem(DEBUG_LS_KEY); } catch {}
 });
+
+// Synchronous execCommand fallback (clipboard API is blocked in some iOS
+// WebViews / non-focused states). Must run inside the click gesture.
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.readOnly = true;
+  ta.contentEditable = 'true';      // iOS needs an editable, selectable field
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+  document.body.appendChild(ta);
+  const range = document.createRange();
+  range.selectNodeContents(ta);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  sel.removeAllRanges();
+  ta.remove();
+  return ok;
+}
+
+// Last resort: a full-screen, pre-selected textarea the user copies manually
+// (long-press → Copy). Guaranteed to work everywhere.
+function showLogOverlay(text) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:oklch(0.20 0.02 55 / 0.96);display:flex;flex-direction:column;gap:10px;padding:16px;';
+  const hint = document.createElement('div');
+  hint.style.cssText = 'color:white;font-family:var(--sans);font-size:13px;';
+  hint.textContent = 'Select all, then Copy — or Share:';
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'flex:1;width:100%;font-family:var(--mono);font-size:11px;padding:10px;border-radius:8px;border:none;';
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px;';
+  const shareBtn = document.createElement('button');
+  shareBtn.textContent = 'Share log';
+  shareBtn.className = 'btn-secondary';
+  shareBtn.onclick = () => { if (navigator.share) navigator.share({ text }).catch(() => {}); };
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Close';
+  closeBtn.className = 'btn-secondary';
+  closeBtn.onclick = () => ov.remove();
+  row.append(shareBtn, closeBtn);
+  ov.append(hint, ta, row);
+  document.body.appendChild(ov);
+  ta.focus(); ta.select();
+}
+
 document.getElementById('debug-copy-btn').addEventListener('click', () => {
   const text = debugEntries.map(e => `[${e.ts}] [${e.level.toUpperCase()}] ${e.msg}`).join('\n');
   const btn = document.getElementById('debug-copy-btn');
-  navigator.clipboard.writeText(text)
-    .then(() => { btn.textContent = '✓ copied'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); })
-    .catch(() => { btn.textContent = 'failed'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); });
+  const flash = (m) => { btn.textContent = m; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); };
+  // Tier 1: async Clipboard API. Tier 2: execCommand. Tier 3: manual overlay.
+  const fallback = () => { if (legacyCopy(text)) flash('✓ copied'); else { showLogOverlay(text); flash('select/share'); } };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => flash('✓ copied')).catch(fallback);
+  } else {
+    fallback();
+  }
 });
 
+restoreDebug();   // bring back logs from previous sessions before this run's lines
 dbg('Page loaded — ken-burns-zoom-builder v0.2');
 dbg(`User agent: ${navigator.userAgent}`);
 dbg(`SharedArrayBuffer available: ${typeof SharedArrayBuffer !== 'undefined'}`);

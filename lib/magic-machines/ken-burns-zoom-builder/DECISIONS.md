@@ -71,6 +71,10 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** `navigator.share({ files: [file] })` — files only, no title/text/url.
 - Note: our feature-probe (`shareSupported`) already used `canShare({ files })` only; only the real share call carried the stray `title`.
 
+### Debug log — localStorage persistence + iOS-safe copy
+- **Persistence:** the log lives in `debugEntries` and renders into `#debug-log`; it's now also mirrored to `localStorage['kb-debug-log']` (capped to the last 1000 entries) on every `dbg()`. `restoreDebug()` replays prior sessions on load and inserts a `──── new session ────` divider, so timing data survives reloads and accumulates across runs. Clear wipes the key too.
+- **Copy fallback (iOS):** `navigator.clipboard.writeText` silently fails in some iOS WebViews / unfocused states (user reported "Copy log" not working on iPhone). Copy now cascades: Clipboard API → `legacyCopy()` (`execCommand('copy')` on a selected `contentEditable` textarea, run inside the click gesture) → `showLogOverlay()` (full-screen pre-selected textarea with a **Share log** button using `navigator.share({text})`, plus manual select/copy). Guaranteed to work everywhere.
+
 ### Save feedback UX — progress + two-step + success toast
 - **Problem:** even with Save-to-Photos working, the flow felt opaque: a long silent render, an easy-to-miss "tap again" hint, and no confirmation it saved.
 - **Fix (three feedback layers, grounded in standard mobile UX guidance):**

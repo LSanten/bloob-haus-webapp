@@ -71,6 +71,14 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** `navigator.share({ files: [file] })` — files only, no title/text/url.
 - Note: our feature-probe (`shareSupported`) already used `canShare({ files })` only; only the real share call carried the stray `title`.
 
+### Save feedback UX — progress + two-step + success toast
+- **Problem:** even with Save-to-Photos working, the flow felt opaque: a long silent render, an easy-to-miss "tap again" hint, and no confirmation it saved.
+- **Fix (three feedback layers, grounded in standard mobile UX guidance):**
+  1. **Determinate progress** during the encode: headline carries the **percentage** ("Rendering your video… 62%"), sub-line shows **estimated time remaining + frame count** ("~12s left · frame 112/180"). Fill smooths to 96% during frames, 98% at finalize, 100% at delivery — so it never stalls at "done" then jumps. ETA is computed from measured pace after 3 frames, throttled to ~2 Hz.
+  2. **Guided two-step button:** idle "Save to Photos" → disabled "Rendering…" → armed pulsing **"✓ Ready — Tap to Save"** (action-oriented label, not just "Save to Photos") → brief **"✓ Saved" success state** before reverting. Makes the required second tap unmistakable.
+  3. **Success toast** (`showToast()`): one-line, bottom-center, fades after ~3s. "✓ Saved to Photos" on share, "✓ Saved to Files"/"✓ Video downloaded" on download, plus the arming hint and export-failure toast.
+- `showToast()` reuses a single fixed-position element; `showShareSuccess()` owns the post-share success state. The `finally` in `exportVideo()` only clears the transient "Rendering…" label so armed/"✓ Saved" states survive.
+
 ### On iOS, "Save to Photos" must be the *primary* button
 - **Symptom:** a user on Chrome-for-iOS tapped the big orange **Download Video** button expecting it to save to the camera roll; it opened Chrome's Files saver instead (log ended at `Saving file via download`, no share path). The route to Photos (Share → "Save Video") was the *secondary* button and got ignored.
 - **Cause:** the default layout makes Download primary (works on every platform) and Share secondary. That's right for desktop, wrong for iOS — where download literally cannot reach Photos.

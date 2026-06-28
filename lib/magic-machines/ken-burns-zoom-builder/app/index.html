@@ -623,13 +623,43 @@
   }
   .export-progress { margin-top: 9px; display: none; }
   .export-progress.visible { display: block; }
+  .export-progress-head {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    text-align: center;
+  }
   .export-progress-text {
     font-family: var(--mono);
     font-size: 10px;
     color: var(--muted);
-    margin-bottom: 5px;
+    margin-top: 6px;
     text-align: center;
   }
+  /* Toast — one-line confirmation, bottom-center, auto-fades (~3s). */
+  .kb-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    transform: translate(-50%, 16px);
+    background: oklch(0.30 0.03 55 / 0.96);
+    color: white;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px oklch(0.20 0.03 55 / 0.35);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    max-width: min(90vw, 360px);
+    text-align: center;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+  }
+  .kb-toast.show { opacity: 1; transform: translate(-50%, 0); }
   .export-progress-track {
     height: 3px;
     background: oklch(0.60 0.04 55 / 0.15);
@@ -1361,10 +1391,11 @@
       </button>
 
       <div class="export-progress" id="export-progress">
-        <div class="export-progress-text" id="export-progress-text">Rendering frames…</div>
+        <div class="export-progress-head" id="export-progress-head">Rendering your video…</div>
         <div class="export-progress-track">
           <div class="export-progress-fill" id="export-progress-fill"></div>
         </div>
+        <div class="export-progress-text" id="export-progress-text">Preparing…</div>
       </div>
 
       <div class="btn-footnote" id="export-footnote">Single pass · <span id="export-desc">Start → End</span> · <span id="export-dur">8s</span></div>
@@ -2305,8 +2336,25 @@ const btnLabel       = document.getElementById('btn-download-label');
 const btnShare       = document.getElementById('btn-share');
 const btnShareLabel  = document.getElementById('btn-share-label');
 const exportProg     = document.getElementById('export-progress');
+const exportProgHead = document.getElementById('export-progress-head');
 const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
+
+// Toast — single reused element, bottom-center, auto-fades. For confirming a
+// completed action ("Saved to Photos") — see DECISIONS.md "Save feedback UX".
+let toastEl = null, toastTimer = null;
+function showToast(msg, ms = 3000) {
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.className = 'kb-toast';
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = msg;
+  void toastEl.offsetWidth;            // reflow so the transition replays
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
 
 // Feature-detect Web Share with files (probe with a tiny dummy mp4). When absent
 // (most desktop Chrome on Windows/Linux), the Share button stays hidden and only
@@ -2343,8 +2391,19 @@ let shareArmed = false;
 function armShareSave() {
   shareArmed = true;
   btnShare.classList.add('armed');
-  btnShareLabel.textContent = 'Save to Photos';
+  // Action-oriented label so the required second tap is unmistakable.
+  btnShareLabel.textContent = '✓ Ready — Tap to Save';
   btnShare.disabled = false;
+  showToast('✓ Video ready — tap “Save to Photos”', 5000);
+}
+
+// Brief success state on the share button before it reverts to idle.
+function showShareSuccess() {
+  shareArmed = false;
+  btnShare.classList.remove('armed');
+  btnShareLabel.textContent = '✓ Saved';
+  showToast(isIOS ? '✓ Saved to Photos' : '✓ Shared');
+  setTimeout(() => { if (!shareArmed) btnShareLabel.textContent = shareIdleLabel; }, 1600);
 }
 
 function disarmShareSave() {
@@ -2623,6 +2682,7 @@ async function deliver(mode, blob, filename) {
     // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
     // desktop browsers that need time to copy the file before the URL is freed.
     setTimeout(() => URL.revokeObjectURL(url), 60000);
+    showToast(isIOS ? '✓ Saved to Files' : '✓ Video downloaded');
   };
 
   if (mode === 'share' && canShareFile) {
@@ -2634,7 +2694,7 @@ async function deliver(mode, blob, filename) {
       // Files/Drive). Sharing files-only makes iOS recognize it as a video and
       // offer "Save Video" → Photos/Camera Roll.
       await navigator.share({ files: [makeFile()] });
-      disarmShareSave();              // shared — restore the normal button
+      showShareSuccess();             // ✓ Saved state + toast, then revert
     } catch (e) {
       if (e?.name === 'AbortError') {
         // Sheet dismissed by the user. The cache is still warm, so keep the
@@ -2646,7 +2706,6 @@ async function deliver(mode, blob, filename) {
         // the button — the next tap is a fresh gesture and shares instantly.
         dbg('Share gesture expired — arming "Save to Photos" for next tap', 'warn');
         armShareSave();
-        flashFootnote('✓ Video ready — tap “Save to Photos” to save it');
       } else {
         dbg(`Share failed: ${e.message}`, 'error');
       }
@@ -2674,6 +2733,9 @@ async function exportVideo(mode = 'download') {
   if (mode === 'share') { btnShare.classList.remove('armed'); btnShareLabel.textContent = 'Rendering…'; }
   else btnLabel.textContent = 'Exporting…';
   exportProg.classList.add('visible');
+  exportProgHead.textContent = 'Rendering your video…';
+  exportProgText.textContent = 'Preparing…';
+  exportProgFill.style.width = '0%';
 
   const { w: outW, h: outH, clamped } = computeOutputSize();
   if (clamped) {
@@ -2756,6 +2818,8 @@ async function exportVideo(mode = 'download') {
     const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 
     exportProgText.textContent = 'Encoding…';
+    const encodeStart = performance.now();
+    let lastEtaShown = 0;
     for (let i = 0; i < totalFrames; i++) {
       // bounce: 0→1 forward, then 1→0 backward (ping-pong)
       let t;
@@ -2801,8 +2865,22 @@ async function exportVideo(mode = 'download') {
       encoder.encode(frame, { keyFrame: i % 30 === 0 });
       frame.close();
 
-      exportProgFill.style.width = Math.round((i + 1) / totalFrames * 90) + '%';
-      exportProgText.textContent = `Encoding ${i + 1} / ${totalFrames}`;
+      // Determinate fill, smooth to 96% (last 4% reserved for finalize/share so
+      // the bar never stalls at "done" then jumps). Headline carries the %.
+      const done = i + 1;
+      const frac = done / totalFrames;
+      exportProgFill.style.width = (frac * 96).toFixed(1) + '%';
+      exportProgHead.textContent = `Rendering your video… ${Math.round(frac * 100)}%`;
+      // Estimated time remaining from measured pace (after a few frames so the
+      // estimate isn't wild). Update at most ~once a second to avoid jitter.
+      const elapsed = (performance.now() - encodeStart) / 1000;
+      if (done > 3 && elapsed - lastEtaShown > 0.5) {
+        lastEtaShown = elapsed;
+        const eta = Math.max(0, Math.ceil(elapsed / frac - elapsed));
+        exportProgText.textContent = `~${eta}s left · frame ${done}/${totalFrames}`;
+      } else if (done <= 3) {
+        exportProgText.textContent = `frame ${done}/${totalFrames}`;
+      }
       // Back-pressure: wait when encoder queue is too deep.
       // Without this, frames pile up in memory and iOS kills the tab mid-export.
       while (encoder.encodeQueueSize > 5) {
@@ -2811,6 +2889,9 @@ async function exportVideo(mode = 'download') {
       if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
     }
 
+    exportProgHead.textContent = 'Finishing up…';
+    exportProgText.textContent = 'Packaging video';
+    exportProgFill.style.width = '98%';
     await encoder.flush();
     encoder.close();
     muxer.finalize();
@@ -2829,21 +2910,24 @@ async function exportVideo(mode = 'download') {
     await deliver(mode, blob, filename);
 
     exportProgFill.style.width = '100%';
-    exportProgText.textContent = '✓ Done';
+    exportProgHead.textContent = '✓ Done';
+    exportProgText.textContent = '';
     setTimeout(() => { exportProg.classList.remove('visible'); exportProgFill.style.width = '0%'; }, 2000);
 
   } catch (err) {
     const msg = err?.message || String(err);
     dbg(`Export failed: ${msg}`, 'error');
     if (err?.stack) dbg(err.stack, 'error');
-    exportProgText.textContent = '⚠ Export failed — open debug log';
+    exportProgHead.textContent = '⚠ Export failed';
+    exportProgText.textContent = 'Open the debug log for details';
+    showToast('⚠ Export failed — see debug log', 4000);
   } finally {
     btnDownload.disabled = false;
     btnShare.disabled = !shareSupported;
-    btnLabel.textContent = 'Download Video';
-    // Keep the "Save to Photos" label if we armed it for a save retry; otherwise
-    // restore the resting Share label.
-    if (!shareArmed) btnShareLabel.textContent = shareIdleLabel;
+    btnLabel.textContent = isIOS ? 'Download to Files' : 'Download Video';
+    // Only clear the transient "Rendering…" loading label here; leave armed /
+    // "✓ Saved" labels that deliver() set so the success/two-step states survive.
+    if (btnShareLabel.textContent === 'Rendering…') btnShareLabel.textContent = shareIdleLabel;
   }
 }
 

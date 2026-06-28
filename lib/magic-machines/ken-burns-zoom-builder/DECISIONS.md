@@ -71,6 +71,11 @@ Specific technical decisions, browser quirks, and non-obvious implementation cho
 - **Fix:** `navigator.share({ files: [file] })` — files only, no title/text/url.
 - Note: our feature-probe (`shareSupported`) already used `canShare({ files })` only; only the real share call carried the stray `title`.
 
+### On iOS, "Save to Photos" must be the *primary* button
+- **Symptom:** a user on Chrome-for-iOS tapped the big orange **Download Video** button expecting it to save to the camera roll; it opened Chrome's Files saver instead (log ended at `Saving file via download`, no share path). The route to Photos (Share → "Save Video") was the *secondary* button and got ignored.
+- **Cause:** the default layout makes Download primary (works on every platform) and Share secondary. That's right for desktop, wrong for iOS — where download literally cannot reach Photos.
+- **Fix:** `isIOS` detection (UA `iPhone/iPad/iPod` + iPadOS-as-Mac `MacIntel && maxTouchPoints>1`, covers Chrome-for-iOS since it's WebKit/UA still says iPhone). On iOS, `promoteShareForIOS()` swaps the classes so **"Save to Photos"** is the primary button, relabels Download to **"Download to Files"**, and reorders Save-to-Photos to the top. `shareIdleLabel` holds the platform resting label so arm/disarm restore the right text.
+
 ### Web Share fails after a slow encode — `NotAllowedError` (gesture expired)
 - **Symptom:** `navigator.share()` threw `NotAllowedError: Must be handling a user gesture` — but only sometimes. It worked on a 4.6s Windows encode and failed on a 5.8s Mac encode of the same kind of image.
 - **Cause:** Web Share requires *transient user activation*, which Chrome expires **~5 seconds** after the click. Encoding happens between the button click and the `share()` call, so a long encode outlives the activation window and the share is blocked.

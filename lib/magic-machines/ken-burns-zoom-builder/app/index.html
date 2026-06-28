@@ -532,12 +532,12 @@
   .btn-secondary:hover { background: oklch(1 0 0 / 0.75); border-color: var(--accent); color: var(--accent); }
   /* "armed" = a video is rendered and cached, waiting for a fresh tap to share to
      Photos (iOS gesture can't survive a long encode — see DECISIONS.md). */
-  .btn-secondary.armed {
+  .btn-primary.armed, .btn-secondary.armed {
     background: var(--accent); color: white; border-color: transparent;
     box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2);
     animation: kb-armed-pulse 1.6s ease-in-out infinite;
   }
-  .btn-secondary.armed:hover { background: oklch(0.55 0.15 42); color: white; border-color: transparent; }
+  .btn-primary.armed:hover, .btn-secondary.armed:hover { background: oklch(0.55 0.15 42); color: white; border-color: transparent; }
   @keyframes kb-armed-pulse {
     0%, 100% { box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2); }
     50%      { box-shadow: 0 2px 20px oklch(0.60 0.17 42 / 0.70), inset 0 1px 0 oklch(1 0 0 / 0.2); }
@@ -2314,6 +2314,17 @@ const exportProgFill = document.getElementById('export-progress-fill');
 const shareSupported = !!(navigator.canShare &&
   navigator.canShare({ files: [new File([new Blob()], 'probe.mp4', { type: 'video/mp4' })] }));
 
+// iPhone/iPad (incl. Chrome-for-iOS, which is WebKit). On iOS the ONLY route to
+// the camera roll is the share sheet's "Save Video" — a plain download reaches
+// Files/Drive only. So on iOS we promote Share to the primary button and demote
+// Download, otherwise users tap the big "Download" button and never reach Photos.
+const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// The Share button's resting label. iOS calls it "Save to Photos"; elsewhere
+// (macOS Safari etc.) it's a generic "Share Video".
+let shareIdleLabel = 'Share Video';
+
 // Cache of the last encode, keyed by everything that affects the rendered video.
 // This is what makes iOS "save to Photos" reliable: navigator.share() must run
 // inside a live user gesture (expires ~5s), but encoding outlives that. By
@@ -2339,7 +2350,7 @@ function armShareSave() {
 function disarmShareSave() {
   shareArmed = false;
   btnShare.classList.remove('armed');
-  btnShareLabel.textContent = 'Share Video';
+  btnShareLabel.textContent = shareIdleLabel;
 }
 
 // If the user changed any setting since the cached render, the armed file is
@@ -2372,7 +2383,22 @@ function checkVideoExport() {
     btnShare.style.display = '';
     btnShare.disabled = false;
     dbg('Web Share API available — Share button enabled', 'ok');
+    if (isIOS) promoteShareForIOS();
   }
+}
+
+// On iOS, make "Save to Photos" (share) the primary action and demote the
+// download (Files-only) to secondary. Reorders so Save-to-Photos sits on top.
+function promoteShareForIOS() {
+  shareIdleLabel = 'Save to Photos';
+  btnShareLabel.textContent = shareIdleLabel;
+  btnShare.classList.remove('btn-secondary');
+  btnShare.classList.add('btn-primary');
+  btnDownload.classList.remove('btn-primary');
+  btnDownload.classList.add('btn-secondary');
+  btnLabel.textContent = 'Download to Files';
+  btnShare.parentNode.insertBefore(btnShare, btnDownload);
+  dbg('iOS detected — Save to Photos promoted to primary', 'ok');
 }
 
 function computeOutputSize() {
@@ -2816,8 +2842,8 @@ async function exportVideo(mode = 'download') {
     btnShare.disabled = !shareSupported;
     btnLabel.textContent = 'Download Video';
     // Keep the "Save to Photos" label if we armed it for a save retry; otherwise
-    // restore the default Share label.
-    if (!shareArmed) btnShareLabel.textContent = 'Share Video';
+    // restore the resting Share label.
+    if (!shareArmed) btnShareLabel.textContent = shareIdleLabel;
   }
 }
 

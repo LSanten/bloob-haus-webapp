@@ -2728,6 +2728,7 @@ async function exportVideo(mode = 'download') {
   }
 
   await document.fonts.ready;
+  const exportT0 = performance.now();   // wall-clock anchor for timing logs
   btnDownload.disabled = true;
   btnShare.disabled = true;
   if (mode === 'share') { btnShare.classList.remove('armed'); btnShareLabel.textContent = 'Rendering…'; }
@@ -2820,6 +2821,9 @@ async function exportVideo(mode = 'download') {
     exportProgText.textContent = 'Encoding…';
     const encodeStart = performance.now();
     let lastEtaShown = 0;
+    // Log the ETA vs reality at quarter marks so the estimator can be tuned
+    // later (bounce ≈ 2× frames of non-bounce — confirm the per-frame pace holds).
+    const etaLogMarks = new Set([0.25, 0.5, 0.75].map(p => Math.max(1, Math.round(totalFrames * p))));
     for (let i = 0; i < totalFrames; i++) {
       // bounce: 0→1 forward, then 1→0 backward (ping-pong)
       let t;
@@ -2881,6 +2885,9 @@ async function exportVideo(mode = 'download') {
       } else if (done <= 3) {
         exportProgText.textContent = `frame ${done}/${totalFrames}`;
       }
+      if (etaLogMarks.has(done) && elapsed > 0) {
+        dbg(`ETA @ ${Math.round(frac * 100)}% (frame ${done}/${totalFrames}): ${elapsed.toFixed(1)}s elapsed → predict ${(elapsed / frac).toFixed(1)}s total encode`);
+      }
       // Back-pressure: wait when encoder queue is too deep.
       // Without this, frames pile up in memory and iOS kills the tab mid-export.
       while (encoder.encodeQueueSize > 5) {
@@ -2889,12 +2896,17 @@ async function exportVideo(mode = 'download') {
       if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
     }
 
+    const encodeSec = (performance.now() - encodeStart) / 1000;
+    dbg(`Encode done: ${totalFrames} frames (${state.playback}) in ${encodeSec.toFixed(1)}s = ${(encodeSec * 1000 / totalFrames).toFixed(1)} ms/frame @ ${outW}×${outH} ${state.fps}fps`, 'ok');
+
     exportProgHead.textContent = 'Finishing up…';
     exportProgText.textContent = 'Packaging video';
     exportProgFill.style.width = '98%';
+    const finalizeStart = performance.now();
     await encoder.flush();
     encoder.close();
     muxer.finalize();
+    dbg(`Finalize (flush + mux): ${((performance.now() - finalizeStart) / 1000).toFixed(2)}s`);
 
     const { buffer: rawBuffer } = target;
     dbg(`Encoded: ${(rawBuffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
@@ -2909,6 +2921,7 @@ async function exportVideo(mode = 'download') {
     lastEncode = { key, blob, filename };
     await deliver(mode, blob, filename);
 
+    dbg(`Total export: ${((performance.now() - exportT0) / 1000).toFixed(1)}s wall (encode + finalize + deliver) · ${(blob.size / 1024 / 1024).toFixed(1)} MB · mode=${mode}`, 'ok');
     exportProgFill.style.width = '100%';
     exportProgHead.textContent = '✓ Done';
     exportProgText.textContent = '';

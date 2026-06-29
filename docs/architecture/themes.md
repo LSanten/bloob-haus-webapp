@@ -130,6 +130,37 @@ This is the right pattern when a theme has its own internal naming convention.
 
 **Reference:** The full rationale and load order is in `docs/architecture/visualizers.md` under "CSS Token Standard".
 
+### Article-shape sizing tokens (optional — fall back to sane defaults)
+
+The shared `article` shape (`lib/visualizers/article/styles.css`, used by any page with
+`bloob-shape: article`) reads its **font sizes and body leading from tokens**, each with a
+built-in fallback. A theme that sets none of them gets the shared defaults below and looks
+fine. But because typefaces differ in apparent size (a face with a tall x-height — e.g.
+Satoshi — reads larger than its nominal `1rem`), **a new theme should review these and set
+the ones that need tuning to suit its body font.** They are optional, not required: omit a
+token and the shape uses its fallback.
+
+```css
+:root {
+  /* Article shape — sizing (optional; shown values are the shared fallbacks) */
+  --article-title-size:       clamp(1.75rem, 4vw, 2.6rem); /* header title */
+  --article-subtitle-size:    clamp(1rem, 2vw, 1.15rem);   /* header subtitle */
+  --article-body-size:        1rem;                        /* base reading size (p, li, quotes) */
+  --article-body-line-height: 1.7;                         /* leading for p (li fallback is 1.65) */
+  --article-h1-size:          clamp(1.55rem, 3.5vw, 2rem); /* in-body headings ↓ */
+  --article-h2-size:          clamp(1.25rem, 3vw, 1.65rem);
+  --article-h3-size:          1.2rem;
+  --article-h4-size:          1rem;
+  --article-h5-size:          0.9rem;
+  --article-h6-size:          0.82rem;
+}
+```
+
+Title/subtitle *colors* are tuned separately via `--article-title-color` /
+`--article-subtitle-color` (default to `--text-color`). `alter-engineers` is the reference
+implementation — see its `main.css` `:root` for a worked example (it nudges `--article-body-size`
+down to `0.95rem` and tightens leading to `1.6` to compensate for Satoshi's x-height).
+
 ---
 
 ## `theme.yaml` — Theme Metadata and Feature Declarations

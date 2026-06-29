@@ -31,7 +31,7 @@
 
 .article-title {
   font-family: var(--font-heading, sans-serif);
-  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  font-size: var(--article-title-size, clamp(1.75rem, 4vw, 2.6rem));
   font-weight: 700;
   line-height: 1.15;
   color: var(--article-title-color, var(--text-color, #1a1a1a));
@@ -40,7 +40,7 @@
 
 .article-subtitle {
   font-family: var(--font-body, sans-serif);
-  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-size: var(--article-subtitle-size, clamp(1rem, 2vw, 1.15rem));
   color: var(--article-subtitle-color, var(--text-color, #555));
   opacity: 0.72;
   margin: 0 0 0.75rem;
@@ -73,6 +73,13 @@
 }
 
 /* ── Body typography ────────────────────────────────────────────────────── */
+/* Base reading size. All body text (p, li, blockquote) inherits this; headings
+   set their own size below. Themes tune via --article-body-size — see the
+   "Article-shape sizing tokens" section in docs/architecture/themes.md. */
+.article-body {
+  font-size: var(--article-body-size, 1rem);
+}
+
 .article-body h1,
 .article-body h2,
 .article-body h3,
@@ -87,18 +94,18 @@
   color: var(--text-color, #1a1a1a);
 }
 
-.article-body h1 { font-size: clamp(1.55rem, 3.5vw, 2rem); }
-.article-body h2 { font-size: clamp(1.25rem, 3vw, 1.65rem); }
-.article-body h3 { font-size: 1.2rem; }
-.article-body h4 { font-size: 1rem; }
-.article-body h5 { font-size: 0.9rem; }
-.article-body h6 { font-size: 0.82rem; }
+.article-body h1 { font-size: var(--article-h1-size, clamp(1.55rem, 3.5vw, 2rem)); }
+.article-body h2 { font-size: var(--article-h2-size, clamp(1.25rem, 3vw, 1.65rem)); }
+.article-body h3 { font-size: var(--article-h3-size, 1.2rem); }
+.article-body h4 { font-size: var(--article-h4-size, 1rem); }
+.article-body h5 { font-size: var(--article-h5-size, 0.9rem); }
+.article-body h6 { font-size: var(--article-h6-size, 0.82rem); }
 
 .article-body :is(h1, h2, h3):first-child { margin-top: 0; }
 
 .article-body p {
   margin: 0 0 1rem;
-  line-height: 1.7;
+  line-height: var(--article-body-line-height, 1.7);
   color: var(--text-color, #333);
 }
 
@@ -116,7 +123,7 @@
   margin-bottom: 1rem;
 }
 
-.article-body li { margin-bottom: 0.35rem; line-height: 1.65; }
+.article-body li { margin-bottom: 0.35rem; line-height: var(--article-body-line-height, 1.65); }
 
 .article-body blockquote {
   border-left: 3px solid var(--accent-color, #888);

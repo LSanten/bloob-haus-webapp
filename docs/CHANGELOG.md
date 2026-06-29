@@ -6,6 +6,30 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 53 — June 29, 2026
+**Worked on:** Tokenize the shared `article` shape's font sizes + adopt tuned values in alter-engineers.
+
+**Problem:** `bloob-shape: article` (`lib/visualizers/article/styles.css`) hardcoded every font
+size; only width and colors were tokenized. The body inherited the standard `1rem`, which on
+alter-engineers' Satoshi (tall x-height) read too large, and themes had no clean knob to tune it.
+
+**Shared pipeline (upstream-eligible):**
+- `lib/visualizers/article/styles.css` — replaced hardcoded title/subtitle/body/h1–h6 sizes and
+  body `line-height` with `var(--article-*, <original value>)` tokens. **Every fallback is the
+  prior value**, so any theme that sets none of the tokens renders byte-for-byte identical.
+- New tokens: `--article-title-size`, `--article-subtitle-size`, `--article-body-size`,
+  `--article-body-line-height`, `--article-h1-size` … `--article-h6-size`. All optional.
+- Docs: `docs/architecture/themes.md` ("Article-shape sizing tokens" — optional contract +
+  worked example), `docs/architecture/settings-registry.md` (token table under Universal
+  Capabilities), and a new `lib/visualizers/article/DECISIONS.md` (rationale + backward-compat).
+
+**alter-engineers (fork-only):**
+- `themes/alter-engineers/assets/css/main.css` `:root` sets `--article-body-size: 0.95rem`,
+  `--article-body-line-height: 1.6`, and tightened title/h1/h2/h3 caps to suit Satoshi.
+
+**Why split:** shape + docs in one commit (cherry-pickable upstream), AE token values in a
+separate commit (stays on the fork) — per the commit-hygiene rule.
+
 ### Session 52 — June 26, 2026
 **Worked on:** Security-by-obscurity convention for client-facing / unlisted content — documentation + AI guardrails.
 

@@ -264,6 +264,31 @@ return `<section class="my-section${extraClass}"${styleAttr}>...</section>`;
 
 ---
 
+### Article-shape sizing tokens (`bloob-shape: article`)
+
+The shared `article` shape (`lib/visualizers/article/styles.css`) reads its font sizes and
+body leading from CSS tokens, **each with a built-in fallback**. They are **optional** — a
+theme that sets none renders with the shared defaults — but a theme should tune them to suit
+its body typeface (faces with a tall x-height read larger than their nominal size).
+
+| Token | Default (fallback) | Controls |
+|-------|--------------------|----------|
+| `--article-title-size` | `clamp(1.75rem, 4vw, 2.6rem)` | Header title |
+| `--article-subtitle-size` | `clamp(1rem, 2vw, 1.15rem)` | Header subtitle |
+| `--article-body-size` | `1rem` | Base reading size (p, li, blockquote) |
+| `--article-body-line-height` | `1.7` (p) / `1.65` (li) | Body leading |
+| `--article-h1-size` | `clamp(1.55rem, 3.5vw, 2rem)` | In-body `# h1` |
+| `--article-h2-size` | `clamp(1.25rem, 3vw, 1.65rem)` | In-body `## h2` |
+| `--article-h3-size` | `1.2rem` | In-body `### h3` |
+| `--article-h4-size` | `1rem` | In-body `#### h4` |
+| `--article-h5-size` | `0.9rem` | In-body `##### h5` |
+| `--article-h6-size` | `0.82rem` | In-body `###### h6` |
+
+**Theme contract:** optional. Set in the theme's `main.css` `:root`. Full guidance and a worked
+example (alter-engineers) are in `themes.md` → "Article-shape sizing tokens".
+
+---
+
 ## Visualizer Settings
 
 Settings that apply to specific visualizers regardless of theme.

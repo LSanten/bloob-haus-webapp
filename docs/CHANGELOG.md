@@ -6,6 +6,25 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 52 — June 26, 2026
+**Worked on:** Security-by-obscurity convention for client-facing / unlisted content — documentation + AI guardrails.
+
+**New shared doc: `docs/architecture/security-by-obscurity.md`** (upstream-eligible). Defines how to publish content at an unguessable URL while keeping it out of all public discovery:
+- **Mandatory user-facing flag:** this is security by obscurity — *as safe as a Google "anyone with the link" share, not access control.* The doc instructs any AI to state this every time.
+- **Two vehicles, different safety:** raw `.html` passthrough files (never a collection item → never in sitemap; but builder never parses them, so no auto-`noindex` and no tracker stripping — obscured path is the only protection) vs. rendered `.md`/`.njk` pages (`visibility: unlisted` → universal `noindex,nofollow` + excluded from sitemap/RSS/search/collections).
+- **Step-by-step:** top-level container + cryptographically-random hex token folder (token-first so the only guessable segment is followed by 128 bits of entropy); suppress the top-level folder-index auto-stub (`_`-prefix or `_index.md` marked unlisted); per-vehicle hardening; build-time verification.
+- **URL leak vectors + dependency trust tiers:** A self-hosted/inlined (safe) · B passive cross-origin subresource (origin-only leak under default `Referrer-Policy`) · C active third-party script/analytics (leaks the **full** secret path via `window.location` — defeats obscurity) · D embeds. Notes the base theme's Google Fonts as a built-in Tier-B dependency on every rendered page.
+- **Mandatory AI pre-ship dependency scan:** grep every file that will be hosted (incl. the theme `<head>`) for external refs, classify by tier, flag Tier C/D loudly.
+- **When obscurity isn't enough:** Cloudflare Access (real auth) + `X-Robots-Tag` header for folder-wide noindex.
+
+**Wiring (so an AI always applies it):**
+- `CLAUDE.md` — added item 6 to the required-reading list, a dedicated "Client-Facing / Unlisted Content" trigger section (read the doc + state the flag + run the scan), and a Documentation-Rules routing line.
+- `docs/architecture/settings-registry.md` — cross-reference note under the unlisted wiring tables.
+
+**Tech debt logged (#32, #33):** Step 9.5 folder-index stub is generated for top-level folders that contain only attachments (spurious empty `/folder/` page in the sitemap); base theme loads Google Fonts from a third-party CDN on every page (Tier-B leak vector + offline/privacy dependency).
+
+**No code changed** — documentation + guardrails only. Convention uses existing `visibility: unlisted` / `_bloob_unlisted` wiring.
+
 ### Session 51 — June 25, 2026
 **Worked on:** Jekyll-style date-prefixed filenames — two independent opt-in behaviors.
 

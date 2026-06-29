@@ -11,6 +11,7 @@ This file is read automatically by Claude Code at session start. It contains dev
 3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/`, `scripts/utils/inject-container-raw.js`, or any `:::` container / code fence behavior. Pay special attention to: `data-vis-raw` pipeline, `browser.js` ownership convention, settings flow, and `inject-container-raw.js` utility.
 4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens. Contains the **required CSS token contract** — every theme's `main.css` must declare `--accent-color`, `--bg-color`, `--text-color`, `--border-color`, `--card-bg`, `--font-body`, `--font-heading`, and `--pagefind-ui-*` so all shared visualizers pick up the right colors. Missing tokens = visualizers fall back to warm-kitchen defaults silently.
 5. **`docs/architecture/settings-registry.md`** — before adding any new per-page frontmatter or site-wide setting to any theme. This is the authoritative list of all settings across all themes (universal vs theme-specific).
+6. **`docs/architecture/security-by-obscurity.md`** — **READ THIS** before doing or advising on *anything* that makes content "private", "unlisted", "client-only", "hidden", "not on Google", "share by link", or "just for one client". It defines the obscured-path + `unlisted` convention, the mandatory user-facing flag (this is security by obscurity — as safe as a Google "anyone with the link" share, **not** access control), and the **mandatory pre-ship dependency scan** an AI must run on every file that will be hosted.
 
 The session checklists below are a reminder for the END of the session.
 
@@ -77,6 +78,7 @@ All scripts and `package.json` commands must work on both Mac/Linux and Windows.
 - Project status → `docs/CLAUDE_CONTEXT.md`
 - Architecture patterns → `docs/architecture/` (visualizers, magic-machines, search, etc.)
 - New or changed settings (any theme) → `docs/architecture/settings-registry.md`
+- Privacy / unlisted / client-facing-by-obscurity → `docs/architecture/security-by-obscurity.md`
 - **Per-tool decisions** → `lib/magic-machines/[name]/DECISIONS.md` or `lib/visualizers/[name]/DECISIONS.md`. Use these for browser quirks, non-obvious implementation choices, and debugging war stories specific to one tool. Global cross-cutting decisions still go in `docs/implementation-plans/DECISIONS.md`.
 
 ## File Identity Convention
@@ -98,6 +100,18 @@ Both dev and prod use the same orchestration steps via `scripts/dev-local.js` an
 - `preprocess-content.js` loads site config itself; callers don't need to pre-set env vars
 - `blocklist_tag` accepts both `tag` and `#tag` formats — the `#` is stripped at filter entry
 - **Any change to publish filtering must be tested with actual private-tagged files**
+
+## Client-Facing / Unlisted Content (security by obscurity)
+**Trigger:** any request to make content private, unlisted, client-only, hidden, "not on Google",
+"share by link", or "for one client" → **read `docs/architecture/security-by-obscurity.md` first.**
+- This convention *publishes* content at an **unguessable URL** (random-token folder) + marks rendered
+  pages `unlisted` (`visibility: unlisted` → universal `noindex,nofollow` + excluded from sitemap/RSS/
+  search/collections). It is the opposite of `blocklist_tag`, which *removes* content from the build.
+- **Always flag to the user:** this is security by obscurity — as safe as a Google "anyone with the
+  link" share, **not** access control. Anyone who obtains the URL has permanent access.
+- **Always run the pre-ship dependency scan** (in that doc) on every file that will be hosted: active
+  third-party scripts/analytics/embeds leak the secret URL and defeat obscurity. Raw `.html` files are
+  copied verbatim — the builder cannot add `noindex` or strip trackers for you.
 
 ## Key Commands
 ```bash

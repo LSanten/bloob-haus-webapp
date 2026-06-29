@@ -88,6 +88,11 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 | `warm-kitchen` | ✓ | ✓ | — |
 | `melt` | ✓ | ✓ | — |
 
+> **Hosting unlisted/client-facing content at an unguessable URL** (security by obscurity, raw HTML
+> passthrough files, third-party-dependency leak vectors): see
+> [security-by-obscurity.md](security-by-obscurity.md). Note that `unlisted` only protects rendered
+> `.md`/`.njk` pages — raw `.html` files are passthrough-copied and rely on the obscured path alone.
+
 ### Site-Wide (top-level keys in `_bloob-settings.md`)
 
 #### Logo & Favicon

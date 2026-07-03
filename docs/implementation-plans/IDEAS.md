@@ -24,6 +24,7 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 - [ ] Reserved root folder validation — prevent user vault folders from colliding with system directories (`assets/`, `og/`, `_data/`, `_includes/`). Becomes more important with multi-user/multi-vault support.
 
 ### Ecosystem / Integrations
+- [ ] **Automated GoatCounter provisioning (magic-machine)** — today a site owner creates their own GoatCounter site and pastes the `<script>` into the `goat-counter-tracking` fence (see Session 54 snippet-injection work). A future magic-machine could use the [GoatCounter API](https://www.goatcounter.com/help/api) to auto-create a counter per Bloob site and inject the code automatically, so users get analytics with zero setup. Raw-snippet path stays as the manual fallback.
 - [ ] Theme marketplace
 - [ ] Plugin/visualizer marketplace
 - [ ] Obsidian plugin for Bloob Haus sync (push/pull with GitHub)

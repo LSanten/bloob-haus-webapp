@@ -6,6 +6,26 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 54 — July 3, 2026
+**Worked on:** Snippet-injection architecture — paste raw code snippets into `_bloob-settings.md`, inject site-wide. First use case: GoatCounter analytics.
+
+**Design:** A single primitive — "inject this raw block at location X on every page" — with named fences as friendly aliases over two buckets (`head`, `bodyEnd`). GoatCounter is a plain head snippet (no special-casing); embeds record their natural `/slug/embed/` path. Chose raw fence extraction over structured frontmatter because the user authors snippets by pasting (confirmed by their `goat-counter-tracking` fence). Per-page tokens solve FastComments' filename-as-`urlId` need (matches the old Jekyll `page.file_name` behavior + File Identity Convention). Full plan: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
+
+**Shared pipeline (upstream-eligible):**
+- `scripts/utils/bloob-settings-reader.js` — `parseEmbedFences()` extracts named fences from the settings **body** (empty fence = off); `EMBED_TARGETS` maps fence → `head`/`bodyEnd`. Every fence exposed as `site.embeds[name]`.
+- `scripts/assemble-src.js` — writes `site.embeds` + concatenated `site.snippets.{head,bodyEnd}` into `src/_data/site.js`.
+- `eleventy.config.js` — `injectPageVars` filter substitutes `{{ page_id }}` (`page.fileSlug`), `{{ page_url }}`, `{{ page_title }}`. Scoped vocabulary only — pasted HTML is never re-run through Nunjucks.
+- New shared partials `themes/_base/partials/site-snippets-{head,footer}.njk`, wired into all four theme heads + base layouts.
+- `themes/_base/_bloob-settings.template.md` — canonical author-facing scaffold.
+- Tests: `tests/utils/bloob-settings-reader.test.js` (fence parser + target map, 8 cases).
+- Docs: `settings-registry.md` (Snippets & Embeds settings + wiring guide).
+
+**Backwards-compatible:** no fences → empty snippets → no output. Verified end-to-end against the local melt vault (real GoatCounter `<script>` lands before `</head>` on every page). Marbles/buffbaby unaffected.
+
+**Deferred:** FastComments placement at content-bottom + `comments: false` opt-out (Milestone B — plumbing already in place). Auto-provisioning GoatCounter sites via its API → future magic-machine (see IDEAS.md).
+
+**Note:** live GoatCounter on melt requires pushing the melt vault's `_bloob-settings.md` edit (deploy build clones from GitHub).
+
 ### Session 53 — June 29, 2026
 **Worked on:** Tokenize the shared `article` shape's font sizes + adopt tuned values in alter-engineers.
 

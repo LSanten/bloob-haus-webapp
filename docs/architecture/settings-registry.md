@@ -8,7 +8,7 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
-**Last Updated:** 2026-06-03
+**Last Updated:** 2026-07-03
 
 ---
 
@@ -154,6 +154,29 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 |-----|---------|-------------|
 | `media.convert_gif_to_mp4` | `true` | Auto-convert GIF files to MP4 at build time. GIFs are removed from the deployed output; photo-grid renders them as `<video autoplay loop muted playsinline>`. Videos play in the PhotoSwipe lightbox when clicked. On iOS Low Power Mode where autoplay is blocked, a ▶ play overlay appears; a "Play all animations" button is injected if any videos are paused. Set to `false` to keep GIFs rendered as `<img>` tags. |
 
+#### Snippets & Embeds (raw code fences in the `_bloob-settings.md` **body**)
+
+Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `_bloob-settings.md` (never in frontmatter — a raw `<script>` would break the YAML). Parsed by `parseEmbedFences()` in `scripts/utils/bloob-settings-reader.js`. **An empty fence is ignored** — that is how a user turns a snippet off ("present means on"). Every fence is exposed to templates as `site.embeds['<name>']`; fences in `EMBED_TARGETS` are additionally concatenated into `site.snippets.{head,bodyEnd}` and auto-injected.
+
+| Fence name | Injected at | Notes |
+|-----------|-------------|-------|
+| `header-snippet` | `<head>` | Generic head injection (meta tags, `<link>`, verification tags) |
+| `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
+| `footer-snippet` | before `</body>` | Generic end-of-body injection |
+| `embed-endofbody` | before `</body>` | Generic end-of-body injection |
+| `fast-comments-embed` | *(not auto-injected)* | Reserved for FastComments — exposed as `site.embeds['fast-comments-embed']` for placement at content-bottom by the page layout (Milestone B, not yet wired). |
+| `embed-*` (any name) | *(not auto-injected)* | Available as `{{ site.embeds['embed-x'] \| safe }}` for manual placement anywhere in a theme. |
+
+**Per-page tokens** (substituted inside any snippet by the `injectPageVars` filter — a fixed vocabulary, *not* full template eval):
+
+| Token | Resolves to | Source |
+|-------|-------------|--------|
+| `{{ page_id }}` | page filename/slug (stable across URL changes) | `page.fileSlug` |
+| `{{ page_url }}` | page URL path | `page.url` |
+| `{{ page_title }}` | page title | `title` |
+
+Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
+
 ---
 
 ## Universal Capabilities — Theme Wiring Guide
@@ -208,6 +231,30 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 | `marbles-pouch` | ✓ | ✓ |
 | `alter-engineers` | ✓ | ✓ |
 | `warm-kitchen` | ✗ missing | ✗ missing |
+
+### Snippet injection — `site.snippets` / `site.embeds`
+
+Raw snippets pasted into `_bloob-settings.md` fences (see "Snippets & Embeds" above) are injected via two shared `_base` partials. A theme wires them by including each partial once.
+
+**Every theme's `partials/head.njk` must include (just before `</head>`):**
+```njk
+{% include "partials/site-snippets-head.njk" %}
+```
+
+**Every theme's `layouts/base.njk` must include (just before `</body>`):**
+```njk
+{% include "partials/site-snippets-footer.njk" %}
+```
+
+Both partials no-op when no fences are present, so wiring them is always safe. The embed layout (`themes/_base/layouts/embed.njk`) already includes the shared `head.njk`, so embed versions inherit head snippets automatically.
+
+**Theme implementation status:**
+| Theme | head include | footer include |
+|-------|--------------|----------------|
+| `warm-kitchen` (`_base` head) | ✓ | ✓ |
+| `marbles-pouch` | ✓ | ✓ |
+| `melt` | ✓ | ✓ |
+| `alter-engineers` | ✓ | ✓ |
 
 ### `bg=` / `color=` — Section Color Pairs
 

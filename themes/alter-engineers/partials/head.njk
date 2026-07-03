@@ -66,4 +66,6 @@
     {% for vis in visualizers %}{% if vis.hasCss %}
     <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
     {% endif %}{% endfor %}
+
+    {% include "partials/site-snippets-head.njk" %}
 </head>

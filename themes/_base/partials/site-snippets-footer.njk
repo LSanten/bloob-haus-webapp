@@ -1,0 +1,5 @@
+{# Raw end-of-body snippets from _bloob-settings.md fences (footer-snippet, embed-endofbody).
+   Empty when no fences are present. See docs plan: snippet-injection-analytics. #}
+{% if site.snippets.bodyEnd %}
+{{ site.snippets.bodyEnd | injectPageVars(page, title) | safe }}
+{% endif %}

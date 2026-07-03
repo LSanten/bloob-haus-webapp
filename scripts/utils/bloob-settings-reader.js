@@ -11,6 +11,64 @@ import matter from "gray-matter";
 const SETTINGS_FILENAME = "_bloob-settings.md";
 
 /**
+ * Maps known snippet fence names to the location where they are auto-injected.
+ * Every fence found in the body is exposed as `site.embeds[name]`; only the fences
+ * listed here are concatenated into `site.snippets.{head,bodyEnd}` for automatic
+ * injection by the shared partials. Fences not listed (e.g. `fast-comments-embed`,
+ * custom `embed-*`) are still available as `site.embeds[name]` for manual placement.
+ */
+export const EMBED_TARGETS = {
+  "header-snippet": "head",
+  "goat-counter-tracking": "head",
+  "footer-snippet": "bodyEnd",
+  "embed-endofbody": "bodyEnd",
+  // "fast-comments-embed" is intentionally omitted — comments are placed at
+  // content-bottom by the page layout, not blindly before </body> (see Milestone B).
+};
+
+/**
+ * Parses named fenced code blocks out of a markdown body into a map of raw snippets.
+ * Only fences with a name token are captured (e.g. ```goat-counter-tracking). Empty
+ * fences are skipped — an empty fence is how a user leaves a feature off.
+ *
+ * @param {string} markdownBody - The body (non-frontmatter) portion of _bloob-settings.md
+ * @returns {Object} Map of `{ [fenceName]: rawContent }`, empty fences omitted
+ */
+export function parseEmbedFences(markdownBody) {
+  const embeds = {};
+  if (!markdownBody) return embeds;
+
+  const lines = markdownBody.split(/\r?\n/);
+  let currentName = null;
+  let buffer = [];
+
+  for (const line of lines) {
+    if (currentName === null) {
+      // Opening fence must carry a name token, e.g. ```goat-counter-tracking
+      const open = line.match(/^```+\s*([\w-]+)\s*$/);
+      if (open) {
+        currentName = open[1];
+        buffer = [];
+      }
+      continue;
+    }
+
+    // Inside a fence — a bare closing fence ends it
+    if (/^```+\s*$/.test(line)) {
+      const raw = buffer.join("\n").trim();
+      if (raw) embeds[currentName] = raw;
+      currentName = null;
+      buffer = [];
+      continue;
+    }
+
+    buffer.push(line);
+  }
+
+  return embeds;
+}
+
+/**
  * Reads and parses _bloob-settings.md from a content directory.
  * @param {string} contentDir - Path to the content directory
  * @returns {Object|null} Parsed frontmatter settings, or null if file not found
@@ -27,9 +85,16 @@ export async function readBloobSettings(contentDir) {
 
   try {
     const content = await fs.readFile(settingsPath, "utf-8");
-    const { data: frontmatter } = matter(content);
+    const { data: frontmatter, content: body } = matter(content);
+
+    // Snippet fences live in the body (never frontmatter — raw <script> would break YAML).
+    frontmatter._embeds = parseEmbedFences(body);
 
     console.log(`[bloob-settings] Found settings for: ${frontmatter.name || "unnamed site"}`);
+    const embedNames = Object.keys(frontmatter._embeds);
+    if (embedNames.length) {
+      console.log(`[bloob-settings] Found ${embedNames.length} snippet fence(s): ${embedNames.join(", ")}`);
+    }
 
     return frontmatter;
   } catch (error) {
@@ -122,6 +187,11 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
   // and falls through to page.njk — so declaring a future shape name is safe.
   if (bloobSettings.default_shape) {
     merged.default_shape = bloobSettings.default_shape;
+  }
+
+  // Snippet embeds — raw code fences parsed from the settings body (see parseEmbedFences).
+  if (bloobSettings._embeds && Object.keys(bloobSettings._embeds).length) {
+    merged.embeds = { ...siteConfig.embeds, ...bloobSettings._embeds };
   }
 
   // Theme-specific settings — opaque bag passed through to site.theme_settings in templates

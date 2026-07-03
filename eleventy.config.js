@@ -298,6 +298,19 @@ export default async function (eleventyConfig) {
       .replace(/^-|-$/g, "");
   });
 
+  // Substitutes per-page tokens inside a raw snippet (from _bloob-settings.md fences).
+  // Only a fixed vocabulary is replaced — pasted HTML is NOT re-rendered through Nunjucks
+  // (a stray {{ or {% would crash the build). See docs plan: snippet-injection-analytics.
+  eleventyConfig.addFilter("injectPageVars", function (str, page, title) {
+    if (!str) return "";
+    const tokens = {
+      page_id: page?.fileSlug || "",
+      page_url: page?.url || "",
+      page_title: title || "",
+    };
+    return String(str).replace(/\{\{\s*(page_id|page_url|page_title)\s*\}\}/g, (_, key) => tokens[key] ?? "");
+  });
+
   // HTML content extraction filters — useful for themes that need to separate
   // heading, images, and body text into distinct layout regions at build time.
 

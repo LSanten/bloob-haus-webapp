@@ -12,6 +12,9 @@ description: one-line site description
 author: your name
 language: en-us
 theme: marbles-pouch            # marbles-pouch | melt | warm-kitchen | alter-engineers
+default_shape: note             # fallback shape for pages with no bloob-shape: — governs their
+                                # layout AND commentability. Falls through to page.njk (commentable)
+                                # until the named shape is built. Optional; see docs/architecture/shapes.md
 url:                            # how URLs are built — see docs/architecture/urls-and-ids.md
   base: https://example.bloob.haus
   case: lower                   # lower (lowercase) | preserve (keep capitals)

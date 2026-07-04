@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-07-03
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -31,6 +31,10 @@
 | Configurable slug strategies (slugify, preserve-case) | ✅ COMPLETE |
 | Per-file exclude_files list | ✅ COMPLETE |
 | Reserved directory filtering in section discovery | ✅ COMPLETE |
+| Snippet injection (`goat-counter-tracking`, `fast-comments-embed`, header/footer fences in `_bloob-settings.md`) | ✅ COMPLETE |
+| Consolidated `url:` block + canonical page ID (lowercased host+path, `bloob-page-id` override, `<meta name="bloob-page-id">`) | ✅ COMPLETE |
+| Comments as a shape behavior (partial in shape `layout.njk`; article commentable; per-page `comments:false`) | ✅ COMPLETE |
+| Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | 📋 PLANNED — see phase-2 plan |
 
 **LIVE SITES:**
 - https://buffbaby.bloob.haus (Buff Baby Kitchen)
@@ -395,6 +399,17 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
+**As of 2026-07-03:** Comments (FastComments), GoatCounter analytics, and the URL/page-ID
+contract shipped (see CHANGELOG Sessions 54–55). **Next up: the bloob-shapes unification** —
+`_bloob-types.md` → `_bloob-shapes.md`, drop the `layout` column, make `fastcomments` /
+`showvisitorcount` declared per-shape behaviors. Context seed + plan:
+`docs/implementation-plans/phases/phase-2/2026-07-03_bloob-shapes-unification.md`. Also pending
+on the vault side: push the marbles/melt/buffbaby `_bloob-settings.md` edits, confirm the
+FastComments tenant + domain allowlist. The AE items below may be stale — verify against the
+current AE repo before acting.
+
+---
+
 **alter-engineers is the active focus.** All homepage sections now render from `index.md` via `{{ content | safe }}`. Dev command now points to the live content vault at `G:/Shared drives/.../Website/_live-website-content-obsidian-repo`. Detailed plan: `docs/implementation-plans/phases/ae-launch/2026-04-28_ae-launch-sprint.md`.
 
 **Bug fixes (priority order):**
@@ -435,6 +450,12 @@ docs/
 │   ├── magic-machines.md       ← Write/transform AI tools
 │   ├── search.md              ← Search, tags, and Pagefind
 │   ├── themes.md              ← Theme contract, CSS tokens, bloob-objects system
+│   ├── theme-standards.md     ← Theme standards
+│   ├── bring-your-own-theme.md ← Custom theme onboarding
+│   ├── ontology.md            ← The why/what of shapes (design brief)
+│   ├── shapes.md              ← The how of shapes (incl. "Comments — a shape behavior")
+│   ├── urls-and-ids.md        ← Canonical URL contract + page-ID + FastComments setup
+│   ├── security-by-obscurity.md ← Unlisted/client-facing content convention
 │   └── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
 │
 └── implementation-plans/

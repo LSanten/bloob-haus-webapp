@@ -96,6 +96,30 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 
 ### Site-Wide (top-level keys in `_bloob-settings.md`)
 
+#### URL Contract (`url:` block)
+
+The single source of truth for how URLs are built. Consolidates settings that were previously
+split between `_bloob-settings.md` and `sites/*.yaml`. Full spec: **`docs/architecture/urls-and-ids.md`**.
+
+```yaml
+url:
+  base: https://leons.bloob.haus   # subdomain or custom domain
+  case: preserve                   # preserve | lower
+  date_prefix: keep                # keep | strip | none
+  mount_path: ""                   # optional subpath, e.g. "marbles"
+```
+
+| Key | Values | Maps to | Description |
+|-----|--------|---------|-------------|
+| `url.base` | full URL | `site.url` | Site origin. |
+| `url.case` | `preserve` / `lower` | `permalinks.strategy` | `lower`→slugify (lowercase), `preserve`→preserve-case. |
+| `url.date_prefix` | `keep` / `strip` / `none` | `features.date_from_filename` + `date_prefix_slugs` | Leading `YYYY-MM-DD-` handling: keep in URL / strip from URL / ignore. |
+| `url.mount_path` | string | `mount_path` | Mount site under a subpath. Empty = root. |
+
+Legacy flat keys (`permalink_strategy`, and `sites/*.yaml` values) still work; the `url:` block
+wins when present. The derived **canonical page ID** = lowercased `host + path` — used as the
+FastComments `urlId` and exposed as `<meta name="bloob-page-id">`. See the contract doc.
+
 #### Logo & Favicon
 
 | Key | Type | Description |
@@ -172,8 +196,9 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 
 | Token | Resolves to | Source |
 |-------|-------------|--------|
-| `{{ page_id }}` | page filename/slug (stable across URL changes) | `page.fileSlug` |
+| `{{ page_id }}` | canonical page ID — lowercased `host + path` (domain-unique; see `docs/architecture/urls-and-ids.md`) | `derivePageId(site.url, page.url)` |
 | `{{ page_url }}` | page URL path | `page.url` |
+| `{{ page_full_url }}` | absolute page URL (preserve-case) | `site.url + page.url` |
 | `{{ page_title }}` | page title | `title` |
 
 Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.

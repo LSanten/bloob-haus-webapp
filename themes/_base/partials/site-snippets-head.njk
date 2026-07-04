@@ -2,5 +2,5 @@
    Injected on every page including the /slug/embed/ version. Empty when no fences present.
    See docs plan: snippet-injection-analytics. #}
 {% if site.snippets.head %}
-{{ site.snippets.head | injectPageVars(page, title) | safe }}
+{{ site.snippets.head | injectPageVars(page, title, site.url) | safe }}
 {% endif %}

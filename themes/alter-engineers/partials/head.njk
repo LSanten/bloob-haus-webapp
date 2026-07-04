@@ -12,6 +12,7 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+    <meta name="bloob-page-id" content="{{ page | bloobPageId(site.url) }}" />
 
     {% if website_status == "unlisted" %}
     <meta name="robots" content="noindex" />

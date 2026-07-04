@@ -202,5 +202,43 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     };
   }
 
+  // Consolidated URL contract (see docs/architecture/urls-and-ids.md). Single declarative
+  // source of truth for how URLs are built. Maps onto the existing config shape so the rest
+  // of the pipeline is unchanged. Wins over the legacy flat keys handled above.
+  if (bloobSettings.url && typeof bloobSettings.url === "object") {
+    const u = bloobSettings.url;
+
+    // base → site.url (supports subdomain or custom domain)
+    if (u.base) {
+      merged.site = { ...merged.site, url: u.base };
+    }
+
+    // case → permalinks.strategy ("lower" → slugify, "preserve" → preserve-case;
+    // raw strategy names pass through for flexibility)
+    if (u.case) {
+      const strategy =
+        u.case === "lower" ? "slugify" : u.case === "preserve" ? "preserve-case" : u.case;
+      merged.permalinks = { ...merged.permalinks, strategy };
+    }
+
+    // date_prefix → date_from_filename / date_prefix_slugs feature flags
+    //   keep  = date stays in the URL      (date_from_filename, no strip)
+    //   strip = date used but removed from URL (date_from_filename + date_prefix_slugs)
+    //   none  = leading date ignored        (default)
+    if (u.date_prefix) {
+      const dp = u.date_prefix;
+      merged.features = {
+        ...merged.features,
+        date_from_filename: dp === "keep" || dp === "strip",
+        date_prefix_slugs: dp === "strip",
+      };
+    }
+
+    // mount_path → subpath mount (empty string means "no mount")
+    if (u.mount_path !== undefined && u.mount_path !== "") {
+      merged.mount_path = u.mount_path;
+    }
+  }
+
   return merged;
 }

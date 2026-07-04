@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseEmbedFences, EMBED_TARGETS } from '../../scripts/utils/bloob-settings-reader.js';
+import { parseEmbedFences, EMBED_TARGETS, mergeBloobSettings } from '../../scripts/utils/bloob-settings-reader.js';
 
 describe('parseEmbedFences', () => {
   it('returns an empty object for empty/null input', () => {
@@ -83,5 +83,55 @@ describe('EMBED_TARGETS', () => {
 
   it('does NOT auto-inject fast-comments-embed (placed by page layout)', () => {
     expect(EMBED_TARGETS['fast-comments-embed']).toBeUndefined();
+  });
+});
+
+describe('mergeBloobSettings — url: block', () => {
+  it('maps url.base/case/date_prefix/mount_path onto config', () => {
+    const merged = mergeBloobSettings({ site: { name: 'X' } }, {
+      url: {
+        base: 'https://leons.bloob.haus',
+        case: 'preserve',
+        date_prefix: 'keep',
+        mount_path: 'marbles',
+      },
+    });
+    expect(merged.site.url).toBe('https://leons.bloob.haus');
+    expect(merged.permalinks.strategy).toBe('preserve-case');
+    expect(merged.features.date_from_filename).toBe(true);
+    expect(merged.features.date_prefix_slugs).toBe(false);
+    expect(merged.mount_path).toBe('marbles');
+  });
+
+  it('maps case: lower → slugify and date_prefix: none → no date flags', () => {
+    const merged = mergeBloobSettings({}, {
+      url: { base: 'https://melt.bloob.haus', case: 'lower', date_prefix: 'none' },
+    });
+    expect(merged.permalinks.strategy).toBe('slugify');
+    expect(merged.features.date_from_filename).toBe(false);
+  });
+
+  it('date_prefix: strip → date_from_filename + date_prefix_slugs', () => {
+    const merged = mergeBloobSettings({}, { url: { date_prefix: 'strip' } });
+    expect(merged.features.date_from_filename).toBe(true);
+    expect(merged.features.date_prefix_slugs).toBe(true);
+  });
+
+  it('empty mount_path does not set a mount', () => {
+    const merged = mergeBloobSettings({}, { url: { mount_path: '' } });
+    expect(merged.mount_path).toBeUndefined();
+  });
+
+  it('url: block wins over legacy permalink_strategy', () => {
+    const merged = mergeBloobSettings({}, {
+      permalink_strategy: 'preserve-case',
+      url: { case: 'lower' },
+    });
+    expect(merged.permalinks.strategy).toBe('slugify');
+  });
+
+  it('legacy permalink_strategy still works when no url: block', () => {
+    const merged = mergeBloobSettings({}, { permalink_strategy: 'slugify' });
+    expect(merged.permalinks.strategy).toBe('slugify');
   });
 });

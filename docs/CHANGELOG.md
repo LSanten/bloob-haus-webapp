@@ -6,6 +6,25 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 55 — July 3, 2026
+**Worked on:** URL standardization + canonical page ID (foundation for domain-wide FastComments + future plugin/linking work).
+
+**Problem:** URL-affecting settings were split between `_bloob-settings.md` (`permalink_strategy`) and `sites/*.yaml` (full `url`, date flags, `mount_path`), so nothing could compute a page's URL from the vault alone — the root cause of Obsidian-plugin bug #5 *and* the blocker for a domain-unique comment ID (one FastComments account is shared across all subdomains).
+
+**Shared pipeline (upstream-eligible):**
+- New `url:` block in `_bloob-settings.md` (`base`, `case`, `date_prefix`, `mount_path`) as the single source of truth. `scripts/utils/bloob-settings-reader.js` maps it onto the existing config shape (`permalinks.strategy`, `features.date_*`, `mount_path`, `site.url`); wins over legacy flat keys, which still work (non-breaking).
+- New `scripts/utils/page-id.js` `derivePageId(siteUrl, pageUrl)` — canonical ID = lowercased `host + path`, no scheme/trailing slash (e.g. `leons.bloob.haus/marbles/my-note`). Domain-unique, human-readable, no random IDs. Lowercasing is ID-only (visible URLs unchanged; marbles stays preserve-case).
+- `eleventy.config.js`: redefined the `{{ page_id }}` token to the canonical ID (was raw `page.fileSlug`), added `{{ page_full_url }}`, and a `bloobPageId` filter. `injectPageVars` now takes `site.url` (partials updated).
+- `<meta name="bloob-page-id">` in all four theme heads so every page carries its ID for tooling.
+- Docs: new authoritative `docs/architecture/urls-and-ids.md` (URL algorithm + ID derivation — the contract the plugin must match); settings-registry `url:` block + token table; `_base` template models the `url:` block.
+- Tests: `page-id.test.js` (6) + `url:`-block mapping in `bloob-settings-reader.test.js`. 511 total pass.
+
+**Vaults migrated (separate repos, files edited not committed — user pushes):** marbles (`case: preserve`, `date_prefix: keep`), melt + buffbaby (`case: lower`, `date_prefix: none`).
+
+**Verified:** local melt build → `<meta name="bloob-page-id" content="melt.bloob.haus/about-melt">`, FastComments `urlId` resolves to the same, URLs still lowercased via `url.case`, embed versions excluded from comments.
+
+**Deferred:** Obsidian plugin copy-link fix (#5 — implement this contract in the plugin repo); bloob↔bloob linking; Cloudflare case-insensitive URLs.
+
 ### Session 54 — July 3, 2026
 **Worked on:** Snippet-injection architecture — paste raw code snippets into `_bloob-settings.md`, inject site-wide. First use case: GoatCounter analytics.
 

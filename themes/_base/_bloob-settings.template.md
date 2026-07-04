@@ -12,7 +12,11 @@ description: one-line site description
 author: your name
 language: en-us
 theme: marbles-pouch            # marbles-pouch | melt | warm-kitchen | alter-engineers
-permalink_strategy: slugify     # slugify | preserve-case
+url:                            # how URLs are built — see docs/architecture/urls-and-ids.md
+  base: https://example.bloob.haus
+  case: lower                   # lower (lowercase) | preserve (keep capitals)
+  date_prefix: none             # keep | strip | none
+  mount_path: ""                # optional subpath, e.g. "marbles"
 publish_mode: blocklist         # blocklist | allowlist
 blocklist_tag: private
 visualizers: []
@@ -43,8 +47,9 @@ a snippet off. See `docs/architecture/settings-registry.md` and the implementati
 
 | Token            | Becomes             |
 |------------------|---------------------|
-| `{{ page_id }}`  | the page's filename (slug) — stable across URL changes |
+| `{{ page_id }}`  | canonical page ID — lowercased host + path (domain-unique; use for FastComments `urlId`) |
 | `{{ page_url }}` | the page's URL path |
+| `{{ page_full_url }}` | the page's absolute URL |
 | `{{ page_title }}` | the page's title  |
 
 > ⚠️ Snippets are injected as raw HTML (you own them). A malformed paste can break a page.

@@ -13,6 +13,7 @@ import {
   resolveSiteName,
 } from "./scripts/utils/config-loader.js";
 import { formatDate } from "./scripts/utils/format-date.js";
+import { derivePageId } from "./scripts/utils/page-id.js";
 
 // Auto-discover magic machines from lib/magic-machines/
 // Each machine needs a manifest.json with a "route" field and an app.entry path.
@@ -301,14 +302,25 @@ export default async function (eleventyConfig) {
   // Substitutes per-page tokens inside a raw snippet (from _bloob-settings.md fences).
   // Only a fixed vocabulary is replaced — pasted HTML is NOT re-rendered through Nunjucks
   // (a stray {{ or {% would crash the build). See docs plan: snippet-injection-analytics.
-  eleventyConfig.addFilter("injectPageVars", function (str, page, title) {
+  eleventyConfig.addFilter("injectPageVars", function (str, page, title, siteUrl) {
     if (!str) return "";
     const tokens = {
-      page_id: page?.fileSlug || "",
+      // Canonical, domain-unique, lowercased page ID (see scripts/utils/page-id.js).
+      page_id: derivePageId(siteUrl, page?.url),
       page_url: page?.url || "",
+      page_full_url: (siteUrl || "") + (page?.url || ""),
       page_title: title || "",
     };
-    return String(str).replace(/\{\{\s*(page_id|page_url|page_title)\s*\}\}/g, (_, key) => tokens[key] ?? "");
+    return String(str).replace(
+      /\{\{\s*(page_id|page_url|page_full_url|page_title)\s*\}\}/g,
+      (_, key) => tokens[key] ?? ""
+    );
+  });
+
+  // Canonical page ID as a standalone filter — used for the <meta name="bloob-page-id"> tag
+  // so every page carries its ID for tooling. Same derivation as the page_id token above.
+  eleventyConfig.addFilter("bloobPageId", function (page, siteUrl) {
+    return derivePageId(siteUrl, page?.url);
   });
 
   // HTML content extraction filters — useful for themes that need to separate

@@ -77,3 +77,5 @@ layout: layouts/base.njk
        {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
   {% endif %}{% endfor %}
 </article>
+
+{% include "partials/comments.njk" %}

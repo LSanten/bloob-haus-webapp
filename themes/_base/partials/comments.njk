@@ -1,0 +1,11 @@
+{# Comment embed (e.g. FastComments) from the _bloob-settings.md `fast-comments-embed` fence.
+   Placed at content-bottom by each theme's page layout — kept outside <article> so it is not
+   indexed by search. Opt out per-page with `comments: false`. No-op when the fence is absent,
+   so sites without comments are unaffected.
+   The `{{ page_id }}` token inside the snippet resolves to the page slug (see injectPageVars),
+   which is how FastComments' urlId locks a thread to the file. #}
+{% if site.embeds['fast-comments-embed'] and comments != false %}
+<section class="bloob-comments" data-pagefind-ignore>
+  {{ site.embeds['fast-comments-embed'] | injectPageVars(page, title) | safe }}
+</section>
+{% endif %}

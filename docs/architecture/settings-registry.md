@@ -33,6 +33,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `visibility` | string | — | Per-page visibility shorthand. `private` = excluded from build entirely. `unlisted` = built but hidden from all indexes (RSS, search, sitemap, noindex). Works in any `publish_mode`. Sets `_bloob_unlisted: true` internally. |
 | `website_status` | string | depends on `publish_by_default` | Used when `publish_mode: status_field`. `draft` = excluded from build. `unlisted` = built, hidden from all indexes. `archived` = built, Google-indexable, hidden from listings. `public` = fully published. Absent field = excluded if `publish_by_default: false`, treated as public if `true` (default). |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
+| `comments` | bool | `true` | When `false`, suppresses the comment embed (`fast-comments-embed` fence) on this page. No effect unless the site has a `fast-comments-embed` snippet. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
 
@@ -164,7 +165,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 | `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
 | `footer-snippet` | before `</body>` | Generic end-of-body injection |
 | `embed-endofbody` | before `</body>` | Generic end-of-body injection |
-| `fast-comments-embed` | *(not auto-injected)* | Reserved for FastComments — exposed as `site.embeds['fast-comments-embed']` for placement at content-bottom by the page layout (Milestone B, not yet wired). |
+| `fast-comments-embed` | content-bottom of `page.njk` (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. Opt out per-page with `comments: false`. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). |
 | `embed-*` (any name) | *(not auto-injected)* | Available as `{{ site.embeds['embed-x'] \| safe }}` for manual placement anywhere in a theme. |
 
 **Per-page tokens** (substituted inside any snippet by the `injectPageVars` filter — a fixed vocabulary, *not* full template eval):
@@ -246,15 +247,20 @@ Raw snippets pasted into `_bloob-settings.md` fences (see "Snippets & Embeds" ab
 {% include "partials/site-snippets-footer.njk" %}
 ```
 
-Both partials no-op when no fences are present, so wiring them is always safe. The embed layout (`themes/_base/layouts/embed.njk`) already includes the shared `head.njk`, so embed versions inherit head snippets automatically.
+**Every theme's `layouts/page.njk` must include (just after `</article>`, for the `fast-comments-embed` fence):**
+```njk
+{% include "partials/comments.njk" %}
+```
+
+All three partials no-op when no fences are present, so wiring them is always safe. The embed layout (`themes/_base/layouts/embed.njk`) includes the shared `head.njk` (so embed versions inherit head snippets) but not `comments.njk` (so embed versions never show comments).
 
 **Theme implementation status:**
-| Theme | head include | footer include |
-|-------|--------------|----------------|
-| `warm-kitchen` (`_base` head) | ✓ | ✓ |
-| `marbles-pouch` | ✓ | ✓ |
-| `melt` | ✓ | ✓ |
-| `alter-engineers` | ✓ | ✓ |
+| Theme | head include | footer include | comments include |
+|-------|--------------|----------------|------------------|
+| `warm-kitchen` (`_base` head) | ✓ | ✓ | ✓ |
+| `marbles-pouch` | ✓ | ✓ | ✓ |
+| `melt` | ✓ | ✓ | ✓ |
+| `alter-engineers` | ✓ | ✓ | ✓ |
 
 ### `bg=` / `color=` — Section Color Pairs
 

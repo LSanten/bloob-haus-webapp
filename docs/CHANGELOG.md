@@ -22,7 +22,9 @@ Development session history and completed work.
 
 **Backwards-compatible:** no fences → empty snippets → no output. Verified end-to-end against the local melt vault (real GoatCounter `<script>` lands before `</head>` on every page). Marbles/buffbaby unaffected.
 
-**Deferred:** FastComments placement at content-bottom + `comments: false` opt-out (Milestone B — plumbing already in place). Auto-provisioning GoatCounter sites via its API → future magic-machine (see IDEAS.md).
+**FastComments (Milestone B) — also done this session:** new `themes/_base/partials/comments.njk` renders the `fast-comments-embed` fence at content-bottom (after `</article>`) on all four themes' `page.njk`. Per-page opt-out via `comments: false`; excluded from embed versions, folder indexes, and home. `{{ page_id }}` resolves to the page slug for the FastComments `urlId` (thread locked to the file). Verified end-to-end against the local melt vault with a temporary filled fence (`urlId` → `About-MELT`, absent from `/embed/`), then the vault fence was restored to empty. No comment **backend** built — the snippet is BYO (bring-your-own FastComments/other embed).
+
+**Deferred:** Auto-provisioning GoatCounter sites via its API → future magic-machine (see IDEAS.md). Own-backend comment system explored but not built (frictionless no-account commenting → needs Turnstile/Akismet spam pipeline; self-hosted Isso/Remark42 noted as lower-effort alternatives).
 
 **Note:** live GoatCounter on melt requires pushing the melt vault's `_bloob-settings.md` edit (deploy build clones from GitHub).
 

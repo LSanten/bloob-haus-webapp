@@ -215,6 +215,64 @@ The default is "on" (include renders unless explicitly opted out). Users opt out
 - Layout templates read from a single `shape_settings` object, making it obvious which keys come from shape config vs page metadata
 - See DECISIONS.md 2026-06-05 for the full rationale
 
+## Comments — a shape behavior
+
+Whether a page shows comments, and *where* the comment thread sits, is a **shape decision** —
+not a global one. This realizes the `commentable?` behavior named in [`ontology.md`](ontology.md)
+(Q1, "What is a marble?").
+
+**Mechanism.** The reusable partial `themes/_base/partials/comments.njk` renders the site's
+`fast-comments-embed` snippet (authored in `_bloob-settings.md`). A shape:
+
+- **opts in** by including the partial in its `layout.njk`, at whatever position it wants;
+- **opts out** by simply not including it.
+
+```njk
+{# article shape places the thread right after the body #}
+</article>
+{% include "partials/comments.njk" %}
+```
+
+Key properties:
+
+- **Placement is the shape's choice.** The partial is position-agnostic — a shape can put
+  comments at content-bottom, in a sidebar slot, above a footer, etc. A container shape could
+  even place them per-region.
+- **Commentable = include the partial; not commentable = omit it.** Reading shapes (`article`,
+  and the default `page.njk`) include it; index/utility shapes (`folder-preview`, `rss-feed`)
+  omit it. The default `page.njk` is commentable so the "undefined pile" (see ontology) gets
+  comments before any shape is declared.
+- **The partial self-guards** — it renders nothing unless the site has a `fast-comments-embed`
+  snippet *and* the page hasn't set `comments: false`. Including it is always safe (no-op when
+  the site has no comments configured).
+- **Per-page override:** `comments: false` in frontmatter suppresses comments on any one page.
+- **Never on embed fragments:** the embed layout does not include the partial, so `/slug/embed/`
+  versions never carry comments.
+- The `{{ page_id }}` token inside the snippet resolves to the canonical page ID (and honors the
+  `bloob-page-id:` override) — see [`urls-and-ids.md`](urls-and-ids.md).
+
+**How commentability resolves (the fallback chain).** A page's commentability follows the
+**effective shape**, resolved in this order:
+
+1. **Explicit `bloob-shape:`** whose layout includes (or omits) the comments partial.
+2. **The vault's `default_shape`** (declared in `_bloob-settings.md`) — the fallback shape for
+   any page that doesn't declare one. Its layout's choice applies.
+3. **`page.njk`** — the ultimate fallback when the effective shape has no built layout (as with
+   the not-yet-built `marble` / `note` / `page` / `video` shapes). It is commentable by default,
+   so the "undefined pile" gets comments before any shape is built.
+4. **Per-page `comments: false`** always wins — it suppresses comments on that page regardless
+   of shape.
+
+So a vault steers undefined pages by its `default_shape`, and once that shape is built its layout
+(or, later, its manifest flag) decides commentability. Until then the `page.njk` fallback is
+commentable, which is the desired default for the current vaults.
+
+**Future formalization (deferred).** Per the three-tier declaration model, a shape could declare
+`commentable: true/false` (and a default placement) in its `manifest.json`, read by the layout —
+the natural home for this behavior, and the clean way for a vault's `default_shape` to turn
+undefined-page comments on or off without touching `page.njk`. Not needed yet: every current
+vault wants its default (`page.njk`) pages commentable.
+
 ## Shapes vs. callouts — the boundary
 
 `:::` blocks and `>` callouts coexist in the same content; they serve different purposes and don't compete.

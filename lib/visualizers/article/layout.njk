@@ -30,3 +30,7 @@ layout: layouts/base.njk
     {{ content | safe }}
   </div>
 </article>
+
+{# The article shape is commentable — it places the comment thread right after the body.
+   Placement is the shape's choice; see docs/architecture/shapes.md "Comments — a shape behavior". #}
+{% include "partials/comments.njk" %}

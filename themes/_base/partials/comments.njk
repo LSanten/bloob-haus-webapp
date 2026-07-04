@@ -6,6 +6,6 @@
    which is how FastComments' urlId locks a thread to the file. #}
 {% if site.embeds['fast-comments-embed'] and comments != false %}
 <section class="bloob-comments" data-pagefind-ignore>
-  {{ site.embeds['fast-comments-embed'] | injectPageVars(page, title, site.url) | safe }}
+  {{ site.embeds['fast-comments-embed'] | injectPageVars(page, title, site.url, bloobPageId) | safe }}
 </section>
 {% endif %}

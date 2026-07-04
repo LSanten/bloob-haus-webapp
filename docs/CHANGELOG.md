@@ -23,7 +23,12 @@ Development session history and completed work.
 
 **Verified:** local melt build → `<meta name="bloob-page-id" content="melt.bloob.haus/about-melt">`, FastComments `urlId` resolves to the same, URLs still lowercased via `url.case`, embed versions excluded from comments.
 
-**Deferred:** Obsidian plugin copy-link fix (#5 — implement this contract in the plugin repo); bloob↔bloob linking; Cloudflare case-insensitive URLs.
+**Follow-on (same session):**
+- **`bloob-page-id:` frontmatter override** — pins a note's ID to an explicit value (computed in `lib/eleventyComputed.js`, honored by the `{{ page_id }}` token + meta tag). Primary use: move/rename a note, set its `bloob-page-id` to the *old* ID, and the FastComments thread follows — no dashboard migration. Tests in `eleventy-computed-page-id.test.js`.
+- **FastComments enabled on marbles, melt, buffbaby** — snippet added to each vault's `fast-comments-embed` fence (tenant `dI13cVRENXn`, `urlId: "{{ page_id }}"`). Verified render + urlId on melt.
+- **Docs:** FastComments setup + comment-migration + styling (iframe isolation → `customCSS`, optionally driven by theme tokens) documented in `urls-and-ids.md`; `bloob-page-id` added to settings-registry.
+
+**Deferred:** Obsidian plugin copy-link fix (#5 — implement this contract in the plugin repo); bloob↔bloob linking; Cloudflare case-insensitive URLs; dynamic theme-token `customCSS` for FastComments (selectors need tuning against their docs).
 
 ### Session 54 — July 3, 2026
 **Worked on:** Snippet-injection architecture — paste raw code snippets into `_bloob-settings.md`, inject site-wide. First use case: GoatCounter analytics.

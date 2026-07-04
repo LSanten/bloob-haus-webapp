@@ -302,11 +302,12 @@ export default async function (eleventyConfig) {
   // Substitutes per-page tokens inside a raw snippet (from _bloob-settings.md fences).
   // Only a fixed vocabulary is replaced — pasted HTML is NOT re-rendered through Nunjucks
   // (a stray {{ or {% would crash the build). See docs plan: snippet-injection-analytics.
-  eleventyConfig.addFilter("injectPageVars", function (str, page, title, siteUrl) {
+  eleventyConfig.addFilter("injectPageVars", function (str, page, title, siteUrl, pageId) {
     if (!str) return "";
     const tokens = {
-      // Canonical, domain-unique, lowercased page ID (see scripts/utils/page-id.js).
-      page_id: derivePageId(siteUrl, page?.url),
+      // Canonical, domain-unique, lowercased page ID. Prefer the computed `bloobPageId`
+      // (honors the `bloob-page-id` frontmatter override); fall back to deriving from the URL.
+      page_id: pageId || derivePageId(siteUrl, page?.url),
       page_url: page?.url || "",
       page_full_url: (siteUrl || "") + (page?.url || ""),
       page_title: title || "",
@@ -315,12 +316,6 @@ export default async function (eleventyConfig) {
       /\{\{\s*(page_id|page_url|page_full_url|page_title)\s*\}\}/g,
       (_, key) => tokens[key] ?? ""
     );
-  });
-
-  // Canonical page ID as a standalone filter — used for the <meta name="bloob-page-id"> tag
-  // so every page carries its ID for tooling. Same derivation as the page_id token above.
-  eleventyConfig.addFilter("bloobPageId", function (page, siteUrl) {
-    return derivePageId(siteUrl, page?.url);
   });
 
   // HTML content extraction filters — useful for themes that need to separate

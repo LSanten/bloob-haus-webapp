@@ -79,7 +79,24 @@ Properties:
   difference in how the URL was reached.
 - **Human-readable, no random IDs** — it *is* the page's address.
 - **Stability:** renaming/moving a note re-keys its ID (and its comments). This matches the
-  existing File Identity Convention (`CLAUDE.md`). Rename-stable identity is deferred to Phase 3+.
+  existing File Identity Convention (`CLAUDE.md`). To keep comments after a move, use the
+  frontmatter override below — no Phase-3 identity system required for the common case.
+
+### Overriding the ID per note (`bloob-page-id:` frontmatter)
+
+Set `bloob-page-id:` in a note's frontmatter to pin its ID to an explicit value instead of the
+URL-derived one. The value is lowercased + trailing-slash-trimmed like any ID.
+
+```yaml
+---
+bloob-page-id: leons.bloob.haus/marbles/old-location
+---
+```
+
+Primary use: **comment migration after a move/rename.** Move `old-location.md` →
+`new-location.md`, set its `bloob-page-id:` to the *old* ID, and the FastComments thread stays
+attached — no dashboard migration needed. Computed in `lib/eleventyComputed.js` (`bloobPageId`),
+which feeds both the `{{ page_id }}` token and the `<meta name="bloob-page-id">` tag.
 
 Inspired by Obsidian's name+path referencing, but always fully-qualified (host + full path),
 so it is unique by construction rather than "disambiguated only when a collision appears."
@@ -93,6 +110,46 @@ so it is unique by construction rather than "disambiguated only when a collision
 - **On every rendered page:** `<meta name="bloob-page-id" content="…">` in `head.njk`, so
   external tooling can read the ID without recomputing it.
 - **FastComments:** set `urlId: "{{ page_id }}"` to lock a comment thread to the page.
+
+## FastComments setup
+
+Comments are a **bring-your-own embed** — the pipeline renders the snippet and supplies the ID;
+FastComments (or any engine) provides the backend. No comment backend is built into Bloob Haus.
+
+**Enable on a site:** paste this into the `fast-comments-embed` fence in the vault's
+`_bloob-settings.md`. It renders at content-bottom on every content page (not on `/embed/`
+versions, folder indexes, or home). Opt out per page with `comments: false`.
+
+```
+```fast-comments-embed
+<div id="fastcomments-widget"></div>
+<script src="https://cdn.fastcomments.com/js/embed-v2.min.js"></script>
+<script>
+  FastCommentsUI(document.getElementById('fastcomments-widget'), {
+    tenantId: "YOUR_TENANT_ID",
+    urlId: "{{ page_id }}"
+  });
+</script>
+```
+```
+
+- **`tenantId`** — your FastComments account. One account can serve all bloob.haus subdomains
+  (add each subdomain to the account's allowed-domains list). Leon's account: `dI13cVRENXn`.
+- **`urlId: "{{ page_id }}"`** — the canonical lowercased `host + path` ID (domain-unique).
+  Omitting `urlId` also works (FastComments defaults to the full page URL), but the explicit
+  token is stable/lowercased and supports the `bloob-page-id:` override.
+
+**Comment migration when a page moves:** two options —
+1. **Frontmatter override (preferred):** set `bloob-page-id:` on the moved note to its old ID.
+   Zero dashboard work; the thread follows the file.
+2. **FastComments migration tool:** their dashboard has a self-service *from urlId → to urlId*
+   mover (and an API for live migration). Use this if you can't/won't set the override.
+
+**Styling:** the widget renders in an **iframe**, so page CSS can't reach it. Style it via the
+`customCSS` config param or FastComments' `customize-widget` dashboard. Because the snippet is
+JS, `customCSS` can be built dynamically from the page's theme tokens
+(`getComputedStyle(document.documentElement).getPropertyValue('--accent-color')`, etc.) so the
+widget matches whatever theme/page it renders on. Selectors come from FastComments' docs.
 
 ## Deferred / related (not in this contract yet)
 

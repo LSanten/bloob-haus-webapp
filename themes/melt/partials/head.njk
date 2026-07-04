@@ -6,7 +6,7 @@
 
     <meta name="description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
-    <meta name="bloob-page-id" content="{{ page | bloobPageId(site.url) }}" />
+    <meta name="bloob-page-id" content="{{ bloobPageId }}" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

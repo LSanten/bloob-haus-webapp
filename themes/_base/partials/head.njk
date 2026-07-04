@@ -14,7 +14,7 @@
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
 
     <!-- Canonical Bloob Haus page ID (host + path, lowercased) — see docs/architecture/urls-and-ids.md -->
-    <meta name="bloob-page-id" content="{{ page | bloobPageId(site.url) }}" />
+    <meta name="bloob-page-id" content="{{ bloobPageId }}" />
 
     {% if _bloob_unlisted %}
     <meta name="robots" content="noindex,nofollow" />

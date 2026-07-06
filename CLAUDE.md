@@ -126,9 +126,18 @@ npm run test:watch        # Watch mode
 ## Dev Server Rule
 **Stop the dev server before editing any files, then restart it after.** Never leave a dev server running in the background while making edits. Kill it first (`Ctrl+C` or `pkill -f "dev-local.js"`), make the changes, then start it again.
 
-## Git Remotes (AE fork only)
+## Git Remotes — depends on which clone/machine
 
-This repo is a fork. Two remotes are set:
+**Run `git remote -v` first. The remote layout differs by machine — do not assume the fork setup.**
+
+- **Leon's personal MacBook** (hostname `leons-mbp.lan` — this is where Leon himself runs it): `origin` → `LSanten/bloob-haus-webapp` directly, and there is **no `upstream` remote**. Push shared work straight to `origin main`. There is no AE fork on this machine — the "AE fork clone" rules below do NOT apply here.
+- **AE fork clone**: `origin` → `altron-alters/bloob-haus-webapp`, `upstream` → `LSanten/bloob-haus-webapp`. The fork workflow below applies.
+
+How to tell which you're on: `git remote get-url origin` (`LSanten/...` = Leon's MacBook, push to origin normally; `altron-alters/...` = AE fork). Either way, **pushing to `LSanten/bloob-haus-webapp` is always safe/intended** — it is Leon's own repo. **Never** run `git push upstream main` from the AE fork clone (it would overwrite Leon's repo with AE-specific commits); from Leon's MacBook there is no `upstream` to worry about.
+
+### AE fork clone workflow
+
+On the AE fork clone, two remotes are set:
 
 | Remote | Repo | Purpose |
 |--------|------|---------|

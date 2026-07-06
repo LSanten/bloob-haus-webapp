@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-07-03
+**Last Updated:** 2026-07-06
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -34,6 +34,7 @@
 | Snippet injection (`goat-counter-tracking`, `fast-comments-embed`, header/footer fences in `_bloob-settings.md`) | ✅ COMPLETE |
 | Consolidated `url:` block + canonical page ID (lowercased host+path, `bloob-page-id` override, `<meta name="bloob-page-id">`) | ✅ COMPLETE |
 | Comments as a shape behavior (partial in shape `layout.njk`; article commentable; per-page `comments:false`) | ✅ COMPLETE |
+| Cross-origin embed auto-height (namespaced postMessage, `*.bloob.haus` trust) + `font` embed URL param | ✅ COMPLETE |
 | Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | 📋 PLANNED — see phase-2 plan |
 
 **LIVE SITES:**

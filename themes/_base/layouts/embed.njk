@@ -18,6 +18,11 @@
           b.style.setProperty('--surface-text-color', text, 'important');
           b.style.setProperty('color', text, 'important');
         }
+        var font = p.get('font');
+        if (font) {
+          b.style.setProperty('--font-body', font, 'important');
+          b.style.setProperty('--font-heading', font, 'important');
+        }
         if (p.get('title') === '0') b.classList.add('embed--no-title');
         if (p.get('share') === '0') b.classList.add('embed--no-share');
       })();

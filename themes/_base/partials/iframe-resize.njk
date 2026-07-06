@@ -33,6 +33,48 @@
       iframes.forEach(resizeIframe);
     }, 150);
   });
+
+  // ── Cross-origin embed protocol ─────────────────────────────────────────────
+  // The reader above only works for SAME-origin children. For cross-origin
+  // embeds (e.g. one *.bloob.haus subdomain embedding another) we use a tiny
+  // namespaced postMessage handshake: the child broadcasts its height, the
+  // parent applies it. Namespacing (__bloobEmbed) keeps us from reacting to
+  // unrelated postMessage traffic from other widgets.
+
+  // SENDER: when this page is itself framed, broadcast our height to the parent.
+  if (window.parent !== window) {
+    var lastSent = 0;
+    var sendHeight = function () {
+      var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+      if (h && h !== lastSent) {
+        lastSent = h;
+        parent.postMessage({ __bloobEmbed: 'height', height: h, path: location.pathname }, '*');
+      }
+    };
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sendHeight);
+    if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.documentElement);
+  }
+
+  // RECEIVER: apply heights posted by trusted cross-origin *.bloob.haus children.
+  var bloobTrusted = function (origin) {
+    try {
+      var host = new URL(origin).hostname;
+      return host === 'bloob.haus' || host.slice(-11) === '.bloob.haus';
+    } catch (e) { return false; }
+  };
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.__bloobEmbed !== 'height' || !bloobTrusted(e.origin)) return;
+    var h = parseInt(e.data.height, 10);
+    if (!(h > 0 && h < 20000)) return;
+    for (var i = 0; i < iframes.length; i++) {
+      if (iframes[i].contentWindow === e.source) {
+        iframes[i].style.height = h + 'px';
+        break;
+      }
+    }
+  });
 })();
 </script>
 {% endif %}

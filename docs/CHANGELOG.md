@@ -6,6 +6,18 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 56 — July 6, 2026
+**Worked on:** Cross-origin embed auto-height + font matching (so `bloob-haus-homepage` can embed a live marble that resizes itself).
+
+**Shared pipeline:**
+- `themes/_base/partials/iframe-resize.njk`: added a namespaced postMessage protocol on top of the existing same-origin resizer. A framed page now **broadcasts** its height (`{__bloobEmbed:'height',…}` on load / `ResizeObserver` / `fonts.ready`) and any page **receives** heights from trusted `*.bloob.haus` children (origin allowlist + height clamp + `contentWindow===e.source` match). Fixes subdomain↔subdomain embeds silently never resizing. Same `features.iframe_resize` flag.
+- `themes/_base/layouts/embed.njk`: new `font` embed URL param (mirrors `bg`/`text`) → sets `--font-body`/`--font-heading`.
+- Docs: DECISIONS entry (protocol); CLAUDE.md git-remotes section clarified per-machine (Leon's MacBook pushes `origin`→`LSanten` directly, no `upstream`).
+
+**Verified:** single-page `dev:marbles --page=…` build → sender/receiver/font code present in generated + served embed HTML (200); 12/12 receiver logic tests (trust, spoof rejection, clamp, source match); `npm test` 514 pass. Not observed in a real browser (no headless env) — confirmed via build/serve + unit tests only.
+
+**Consumer (separate repo, pushed):** `bloob-haus-homepage` index.html — embeds the live marble, listens for the height message, drops fixed `height=500`. Auto-height/font are inert until this platform change is built + deployed.
+
 ### Session 55 — July 3, 2026
 **Worked on:** URL standardization + canonical page ID (foundation for domain-wide FastComments + future plugin/linking work).
 

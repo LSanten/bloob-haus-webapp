@@ -2,6 +2,14 @@
 
 Tracked items with severity, impact, and target resolution phase.
 
+> ⚠️ **This inventory is stale — treat `⬜ Open` with suspicion (last flagged 2026-07-07).**
+> A lot of the items still marked `⬜ Open` have very likely been addressed already in later
+> sessions; the statuses simply weren't updated as work happened. This has drifted into an
+> **un-triaged running note** rather than an accurate ledger. **Before acting on any item here,
+> verify against the current codebase** — don't assume `⬜ Open` means unresolved. A dedicated
+> triage pass (re-check each row, mark real completions ✅, delete dead ones) is itself outstanding
+> and would restore this file's value. New items added since this flag (#35–38) are current.
+
 | # | Item | Severity | Impact | Target | Status |
 |---|------|----------|--------|--------|--------|
 | 1 | vercel.json still present | Low | Confusion | Next session | ✅ Done 2026-02-19 |
@@ -39,6 +47,10 @@ Tracked items with severity, impact, and target resolution phase.
 | 32 | Folder-index stub generated for top-level folders that contain only attachments (no pages) | Low | `preprocess-content.js` Step 9.5 comment says "subdirectory that has pages" but the code never checks — a top-level folder holding only raw `.html`/media gets a spurious empty `/folder/` index page that lands in `collections.all` and `sitemap.xml`, publicly advertising the folder. Relevant to security-by-obscurity (see `docs/architecture/security-by-obscurity.md`). Workaround today: `_`-prefix the folder or add an `_index.md` marked `visibility: unlisted`. | Skip stub when the folder contains no buildable pages (only attachments) | ⬜ Open |
 | 33 | Base theme `head.njk` loads Google Fonts from a third-party CDN on every page | Low | `themes/_base/partials/head.njk` requests `fonts.googleapis.com`/`fonts.gstatic.com` for all rendered pages, including `unlisted` ones — a Tier-B (origin-only) URL-leak vector and a general privacy/offline dependency. See `docs/architecture/security-by-obscurity.md`. | Offer a self-hosted-fonts option / per-site toggle; for sensitive client work prefer self-contained raw HTML | ⬜ Open |
 | 34 | `bloob-type` / `bloob-shape` duplication + `_bloob-types.md` `layout` column | Medium | Two words for one concept (ontology says they're the same); the registry's `layout` column duplicates what the shape now owns and is clumsy for users; `default_shape` is overridden by any `bloob-type`'s registry layout (why melt's `default_shape: article` is inert). | Bloob-shapes unification plan: `docs/implementation-plans/phases/phase-2/2026-07-03_bloob-shapes-unification.md` (unify on `bloob-shape`, drop `layout` col, `fastcomments`/`showvisitorcount` as behaviors) | ⬜ Open |
+| 35 | No sandboxing for untrusted **build-time** shape/machine code | High (future) | Blocks a fully open shape/machine marketplace where strangers' *build-time* renderers (`index.js`, run in our Node build job) execute safely. V1 sidesteps this via the client-side-only line + public-PR approval; but true self-service publishing of build-time code needs isolated per-tenant jobs (zero ambient credentials, no network egress). | Phase 4+ (with MCP/marketplace). Until then: enforce runtime-only (`browser.js`) for third-party shapes; keep build-time renderers approval-gated. See phase-3 doc → extensibility model. | ⬜ Open (future) |
+| 36 | Canonical `schema.md` template not written | Medium | Shapes accrete inconsistent schema formats; blocks reliable AI-authoring, MCP wrapping, and marketplace consistency. Highest-leverage cheap fix (a template, not code). | Phase 2, alongside bloob-shapes-unification. Write the template + serve schemas at stable URLs (`shapes.bloob.haus/<shape>/schema.md`). Resolves shapes.md open Q3. | ⬜ Open |
+| 37 | Build pipeline does not scan the vault's `_bloob-shapes/` folder | Medium | The "vault-local shapes folder (decided)" — the gateway from *creator* shapes to *user* shapes — has no pipeline support: only `lib/visualizers/` built-ins are discovered. Both authoring paths (Claude Code / webapp) depend on this. | Phase 3+: scan built-ins + `_bloob-shapes/`, local shapes win on name collision. See shapes.md open Q7 + "User-authored shapes". | ⬜ Open |
+| 38 | No Terms of Service / Acceptable-Use / DSA takedown for user-hosted content | Medium (legal) | Once the platform hosts others' shapes/apps at `*.bloob.haus`, it's a hosting provider (EU **DSA** notice-and-takedown obligations; abuse/reputation risk to the apex domain). Fine at the friends/trust stage; a blocker before any public launch. *(Not legal advice — get a lawyer before public launch.)* | Before public (non-friends) launch: ToS + AUP + takedown process; CSP on user-hosted pages as the technical brake. | ⬜ Open (pre-launch) |
 
 ## Notes
 

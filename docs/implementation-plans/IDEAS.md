@@ -27,7 +27,11 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 ### Ecosystem / Integrations
 - [ ] **Automated GoatCounter provisioning (magic-machine)** — today a site owner creates their own GoatCounter site and pastes the `<script>` into the `goat-counter-tracking` fence (see Session 54 snippet-injection work). A future magic-machine could use the [GoatCounter API](https://www.goatcounter.com/help/api) to auto-create a counter per Bloob site and inject the code automatically, so users get analytics with zero setup. Raw-snippet path stays as the manual fallback.
 - [ ] Theme marketplace
-- [ ] Plugin/visualizer marketplace
+- [ ] **Bloob-shapes marketplace** — users author shapes in `_bloob-shapes/`, test them, publish, and *reuse anyone's already-published shape* (core "reuse what already exists" value). Safety model + naming settled 2026-07-07: see `docs/architecture/shapes.md` → "User-authored shapes & the marketplace" and phase-3 doc → "The extensibility & user-authored-code model". Client-side-only + public-PR approval is the V1 gate; full build-time sandboxing is a future TODO (TECH-DEBT #35).
+- [ ] **Magic-machine marketplace** — same idea for frontmatter-automation machines (`ken-burns`, `scene-nav`, GoatCounter-provisioning). ken-burns/scene-nav are client-side; approval via public GitHub PR so all machine code stays public/auditable.
+- [ ] **"Upload your little client-side app → your subdomain, fast"** — a fast path to host a pure client-side HTML/JS app at `username.bloob.haus/...`. Technically low-risk (client-side only, no backend access); residual risk is abuse/reputation/legal → needs CSP + ToS/AUP + DSA takedown before any public (non-friends) launch. Depends on early subdomain provisioning (now a phase-3 spike milestone).
+- [ ] **Generative-visual ("TouchDesigner-flavored") shape** — realtime GPU visuals in `browser.js` via WebGL/WebGPU/shaders/Three.js/p5.js/Hydra/cables.gl. Prime *killer-visualizer* territory; already supported by the runtime-shape model (no arch change). TouchDesigner itself can't be hosted (desktop app) — author there, export, host the output.
+- [ ] **Autopoiesis horizon** — shapes affecting each other, generating new shapes, shape "DNA" propagating across users/vaults. Years out; the `_bloob-shapes/` folder is the first step. See conceptual doc "The horizon: autopoiesis (not now)".
 - [ ] Obsidian plugin for Bloob Haus sync (push/pull with GitHub)
 - [ ] Obsidian plugin for Cooklang syntax preview
 - [ ] VS Code extension

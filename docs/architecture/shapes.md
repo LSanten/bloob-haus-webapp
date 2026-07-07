@@ -414,6 +414,74 @@ Convert one shape at a time, starting with shapes that are actively being used a
 
 ---
 
+## User-authored shapes & the marketplace (2026-07-07 — direction settled, mostly not built)
+
+The long-term goal: **anyone (human or AI) can create a shape, test it, publish it, and any other
+user can reuse a shape already published on the internet.** This aligns with the core "reuse what
+already exists" value and turns a top-down taxonomy into a bottom-up ecology (see the conceptual doc
+`bloobhaus-notes/.../2026-05-31-BLOOB-HAUS-SHAPES-ARCHITECTURE.md` → "The vault-local shapes folder
+(decided)" and "autopoiesis"). Direction is settled; almost none of it is built. This section records
+what to hold true *now* so the future stays cheap. Backend implications live in the Phase-3 doc
+(`docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` →
+"The extensibility & user-authored-code model").
+
+### Naming — settled
+
+Two distinct things, deliberately given coexisting names (a file and a folder can share a stem):
+
+| Name | Kind | Holds |
+|------|------|-------|
+| `_bloob-shapes.md` | file (registry) | Table mapping `bloob-shape` → metadata (display_name, image, banner_text, description, `fastcomments`, `showvisitorcount`). The `_bloob-types.md` successor — see the bloob-shapes-unification plan. |
+| `_bloob-shapes/` | folder (definitions) | One subfolder per shape: `manifest.json`, `schema.md`, renderer JS (`browser.js` / `index.js`), optional `styles.css`, optional examples. The vault-local shapes folder. |
+
+*(The conceptual doc calls the folder `/bloob-haus-shapes/`; we standardize on `_bloob-shapes/` to
+match the `_bloob-*` system-file convention.)*
+
+### Two authoring paths, one identical structure
+
+A user can create/edit a shape **either** by editing the vault repo on-machine (Claude Code, or hand)
+**or** by declaring/uploading it through the webapp UI. Both paths produce the **identical**
+`_bloob-shapes/<name>/` layout, and the backend stores it the same way in Object Storage. This
+sameness is what lets a shape port cleanly between Repo Mode and the webapp, and lets a shape be a
+"folder you can zip, share, fork." **The build pipeline must scan both built-in shapes
+(`lib/visualizers/`) and the vault's `_bloob-shapes/` folder** (local shapes win on name collision).
+That pipeline scanning is not yet implemented — see open question #7 below and TECH-DEBT.
+
+### The safety model — one hard line
+
+> **User-authored shape code runs client-side only. Build-time renderers (Node, run in *our* build
+> job) are reserved for shapes we authored or explicitly approved. Third-party & reused shapes are
+> runtime-only (`browser.js`).**
+
+- **Why the split:** `index.js` `transform()` / `renderFilescope()` run in the build job (your
+  server). Untrusted build-time code there is the dangerous "run a stranger's server code" class.
+  `browser.js` runs in the *visitor's* browser — same trust model as any website's own JS.
+- **The one residual risk of reuse:** a shape authored by user A running on user B's site is
+  XSS-as-a-service. Mitigate with the approval gate + CSP on hosted pages, and keep reuse
+  provenance-visible.
+- **Approval gate (V1):** shapes/magic-machines are published via **public GitHub pull request** —
+  all code is public and auditable, Leon reviews & merges. A miner or exfil attempt is obvious in a
+  diff. No open self-service upload of build-time/server code.
+- **Provenance:** the webapp ledger records `author` + `approver` + `visibility` per shape so reuse
+  is attributable and revocable.
+
+Full untrusted-**build-time**-code sandboxing (isolated per-tenant jobs, zero ambient credentials) is
+a **future TODO**, not needed while the client-side-only line holds.
+
+### `schema.md` is the contract — write the canonical template EARLY
+
+This is the highest-leverage cheap task for the whole ecosystem (it's a template, not code) and it
+resolves open question #3 below. It makes shapes human-consistent, AI-authorable, and MCP-wrappable.
+
+- Every shape's `schema.md` follows one template (candidate sections in open question #3).
+- **Serve schemas at stable URLs** (e.g. `shapes.bloob.haus/<shape>/schema.md`) so AIs can crawl
+  them; expose "how to create a shape" via the **future MCP** — but the truth lives in `schema.md`,
+  MCP is a thin wrapper.
+- Do this in Phase 2 alongside the bloob-shapes-unification plan, before 20 shapes accrete
+  inconsistent schemas.
+
+---
+
 ## Open architectural questions (living section — refine as we learn)
 
 These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-06-05.

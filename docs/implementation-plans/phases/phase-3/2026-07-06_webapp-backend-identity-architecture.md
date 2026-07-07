@@ -146,7 +146,9 @@ Explicitly deferred so the first spec stays shippable:
 - Quick Mode paste-to-URL UI
 - The `/api/render` fast single-page render path
 - Custom domains (Cloudflare for SaaS)
-- Wildcard subdomains (`username.bloob.haus`) — path-based URLs (`bloob.haus/{handle}/…`) for V1
+- ~~Wildcard subdomains (`username.bloob.haus`) — path-based URLs (`bloob.haus/{handle}/…`) for V1~~
+  **↑ REVERSED 2026-07-07:** subdomain auto-provisioning is now an *early* spike milestone (see
+  "Scope change" in the 2026-07-07 section). Path-based URLs are the fallback, not the V1 target.
 - Billing / pricing tiers
 - The killer visualizer
 - MCP / REST public API
@@ -162,13 +164,149 @@ Explicitly deferred so the first spec stays shippable:
 5. **Build trigger** — how the Next app kicks off a Serverless Job (on dashboard action, on GitHub push webhook for Repo Mode, on Quick Mode save).
 6. **GitHub token storage** — encrypting/storing per-user GitHub OAuth tokens (repo scope) in Postgres; refresh handling.
 7. **EU-sovereignty nuance of Google/GitHub OAuth** — both are US identity providers. They only see *that* a user logged in (email + event), never content (which stays in the EU). Acceptable for V1. Future option: email/password or a European IdP for privacy-maximalist users.
-8. **Path-based vs subdomain for V1** — leaning path-based (`bloob.haus/{handle}/{room}/{marble}`); subdomains turned out cheap/easy, so revisit as an early V2 upgrade.
+8. ~~**Path-based vs subdomain for V1** — leaning path-based; revisit as an early V2 upgrade.~~
+   **RESOLVED 2026-07-07:** subdomain auto-provisioning at account setup is now an *early* target
+   (not V2). New open work it introduces: automated **Scaleway ↔ Cloudflare DNS/API wiring**
+   (hostname + Worker route + cert issued automatically on signup). Path-based URLs remain the
+   fallback. See the 2026-07-07 "Scope change" section.
 9. **Custom domains** — Cloudflare for SaaS ($0.10/hostname). Deferred; architecture already supports it.
 10. **`bloob.haus` homepage / root haus view** — the front door and the auto-generated "all my rooms" overview. Design-led (see vision plan Section E/F). Deferred.
 11. **When to introduce the Cloudflare public layer within the spike** — decision was "full split via the spike," but the exact build order (Scaleway-serves-everything first for a day, then front it with Cloudflare?) is an implementation-sequencing call.
 12. **API-key / agent auth details** — token format, scoping (per-user, per-room, read vs write), rotation/revocation, and how it coexists with Better Auth sessions. Needed for MCP later; the *capability* should exist from day one.
 13. **Account-linking safety** — auto-linking Google + GitHub by verified email has a known attack surface (unverified-email spoofing). Confirm Better Auth's linking config only trusts verified emails; otherwise require explicit in-session linking.
 14. **Incremental GitHub scope** — request minimal scope at login vs `repo` scope only at "Connect a repo." UX vs simplicity tradeoff; decide at implementation.
+
+---
+
+---
+
+## 2026-07-07 — session refinements, scope updates & the extensibility model
+
+A follow-up brainstorming session resolved several of the open questions above, changed one
+sequencing decision, and added the **user-authored-code / marketplace** vision as an explicit
+design axis. This section is the current resting point; where it conflicts with text above, this
+section wins.
+
+### Backend refinements (resolved)
+
+- **Postgres stays Scaleway — confirmed.** Managed Postgres (DEV-S), same region as the container.
+  A "serverless Postgres" (e.g. Neon) has EU regions but is a **US company**, so the CLOUD Act
+  attaches to the *company's jurisdiction* — reintroducing exactly the exposure we're avoiding
+  (this is open question #7 applied to the DB). Scaleway is EU-jurisdiction and co-located with the
+  app (every request hits the DB for session + visibility). The €11/mo always-on cost is inherent
+  to relational DBs and accepted.
+- **Frontend is JavaScript/TypeScript end-to-end — confirmed.** One language across DB → API → UI,
+  a shared service layer, and full reuse of the existing JS ecosystem (Eleventy, visualizers,
+  shapes). **No Python in V1.** If a Python-only library is ever genuinely required, isolate it as
+  its *own* Scaleway Serverless Function behind an HTTP boundary — never co-mingle a second runtime
+  into the Node app.
+- **"Fully serverless" clarified.** We build *container images* but run them on serverless
+  primitives: the Next.js app = a **Serverless Container** (scales toward zero when idle), builds =
+  **Serverless Jobs** (run then terminate), routing = **Cloudflare Worker** (bills CPU, not wait).
+  **Postgres is the one always-on, non-serverless piece.** Two implications carried forward:
+  (a) **cold starts are accepted for now** — watch only the private-page proxy path, the one a
+  visitor waits on; (b) **statelessness is mandatory** — no in-memory state between requests
+  (already satisfied: session lives in cookies + Postgres).
+- **Apple OAuth deferred.** Google + GitHub cover both personas. Apple's per-app private-relay email
+  breaks auto-link-by-verified-email anyway; revisit with explicit in-session linking if demanded.
+- **Live render (`/api/render`) alignment — protected, not built.** The pure-function visualizer
+  contract (`parser(md)→data`, `renderer(data)→html`, no DOM/FS side-effects) is what makes
+  instant paste-to-render possible; it is **load-bearing and must stay sacred**. "Breaking up the
+  build script" concretely means **extracting a thin render core** (visualizer parsers + markdown-it
+  + theme CSS tokens → HTML fragment) out of the full-build orchestration, callable by both the
+  Eleventy build and a future `/api/render`. That is the already-settled "core logic in a service
+  layer" rule — a factoring, not a rewrite. Still deferred past the spike.
+- **Image derived-asset caching — reserve the namespace now, build later.** Generalize the existing
+  favicon hash-cache (`.favicon-hash`): content-hash each source image → derived variants (optimized
+  sizes + OG image) keyed by that hash → skip `sharp` on cache hit, so a text-only edit reprocesses
+  zero images. **Critical serverless constraint:** a build job's local filesystem is *ephemeral*, so
+  the cache MUST live in **Object Storage** (a hash-keyed `_processed/` prefix), not on disk, to
+  survive between builds. Reserve that namespace when designing the storage layout. (Tracks
+  TECH-DEBT #15 for the current CI pipeline; fix #17/#18 broken-image bugs before caching output.)
+
+### Scope change: subdomain provisioning moves EARLY (was deferred to V2)
+
+**Decision reversed.** `username.bloob.haus` subdomain creation is now an **early spike milestone**,
+automated as one of the first things that happens at account setup — not a V2 upgrade. Rationale:
+the phase-3 doc already found subdomains are *cheap* (own-zone wildcard DNS + Worker routing, no
+per-hostname fee), and automated fast subdomain setup is a high-value "wow" moment for onboarding.
+The new work this pulls forward: **automated Scaleway ↔ Cloudflare DNS/API wiring** (the app,
+on account creation, provisions the hostname + routing so the user's haus is live immediately).
+Expect this to be fiddly (DNS propagation, Worker route registration, cert issuance) — prototype it
+early rather than discovering it late. Path-based URLs (`bloob.haus/{handle}/…`) remain the fallback
+if provisioning isn't ready, but subdomain-at-signup is now the target. *(Supersedes "Out of scope →
+Wildcard subdomains" and open question #8 below.)*
+
+### The extensibility & user-authored-code model (new design axis)
+
+Bloob Haus is heading toward an **ecosystem**: users author their own shapes, magic machines, and
+small client-side apps, and — crucially — **reuse each other's**. This aligns with the core "reuse
+what already exists" value. The architecture must stay compatible with it now, even though almost
+none of it is built.
+
+**The one hard line that keeps all of this safe:**
+
+> **User-authored code runs client-side only. Nothing user-authored runs in the build/server
+> environment without explicit human review + approval.**
+
+Hold that line and "reuse anyone's shape/app" becomes a *review + provenance* problem (tractable),
+not a *sandbox untrusted server code* problem (a whole product). Client-side-only collapses the
+technical blast radius — user code can't reach your infra, secrets, DB, or other users' data. What
+remains is abuse/reputation/legal risk (e.g. a client-side crypto-miner steals a *visitor's* CPU and
+harms your domain's reputation; a phishing page on a `*.bloob.haus` subdomain can get the apex domain
+flagged), addressed by review + Terms of Service, not by sandboxing.
+
+**Shapes** (see `docs/architecture/shapes.md` → "User-authored shapes & marketplace" for the full detail):
+- **Naming, settled:** `_bloob-shapes.md` = the **registry** (table of shape → metadata; the
+  `_bloob-types.md` successor). `_bloob-shapes/` = the **definitions folder** (each subfolder =
+  one shape: `manifest.json`, `schema.md`, renderer JS, `styles.css`). A file and a folder coexist.
+- **Two authoring paths, one structure:** editing the vault repo on-machine (Claude Code) *or*
+  uploading via the webapp both produce the **identical** `_bloob-shapes/<name>/` layout; the
+  backend stores it the same way in Object Storage. This is what makes shapes port cleanly between
+  Repo Mode and the webapp.
+- **Trust split by where the renderer runs:** build-time renderers (`index.js` — run in *your* Node
+  build job) are reserved for **your own / approved** shapes. Third-party & reused shapes are
+  **runtime-only** (`browser.js`, run in the visitor's browser). This lets reuse proceed safely
+  before any sandboxing exists.
+
+**Magic machines** (frontmatter automation like `scene-nav`, `ken-burns`):
+- ken-burns and scene-nav are **fully client-side apps** — lower risk.
+- **Approval via public GitHub pull request.** All shape/machine code stays **public and auditable**;
+  Leon reviews and merges. This is the V1 trust gate (a crypto-miner or exfil attempt is obvious in a
+  diff). No open self-service upload of build-time/server code.
+
+**schema.md is the contract — write the canonical template EARLY:**
+- It's the single highest-leverage cheap task for the whole ecosystem: it makes shapes
+  human-consistent, AI-authorable, and MCP-wrappable. It's a *template*, not code.
+- **Serve schemas at stable URLs** (e.g. `shapes.bloob.haus/<shape>/schema.md`) so AIs can crawl
+  them, and expose them via the future **MCP** ("how to create a shape") — but the underlying truth
+  always lives in `schema.md`, with the MCP a thin wrapper. Do this in Phase 2 alongside the
+  bloob-shapes-unification plan, not Phase 3.
+
+**Marketplace safety — good-enough-for-now ideas (documented; full hardening is a future TODO):**
+1. **Provenance in the ledger** — record `author` + `approver` + shape/app `visibility` in Postgres,
+   so reuse can be attributed and revoked.
+2. **Public-PR approval gate** — nothing third-party is publishable to others until reviewed & merged;
+   all code public.
+3. **Runtime-only for third parties** — reused shapes/machines ship `browser.js` only; no untrusted
+   build-time Node execution.
+4. **Content Security Policy on user-hosted pages** — restrict script origins, block obvious miner
+   endpoints, limit outbound connections; a CSP is the cheapest technical brake on client-side abuse.
+5. **Provenance-visible reuse** — when a user reuses another's shape, keep the origin visible (credit
+   + link back) so the ecosystem is legible, not anonymous copy-paste.
+6. **Terms of Service / Acceptable Use + takedown** — *before any public (non-friends) launch*, add a
+   ToS/AUP and a notice-and-takedown process (EU **DSA** hosting-provider obligations apply once you
+   host others' content). *(Not legal advice — get a lawyer's eyes before public launch.)*
+
+Full untrusted-code sandboxing (running third-party **build-time** renderers safely, isolated
+per-tenant jobs with zero ambient credentials) is explicitly a **future TODO** (see TECH-DEBT) —
+the client-side-only line means we don't need it to start.
+
+**TouchDesigner-adjacent visuals:** TouchDesigner itself can't be hosted (proprietary desktop GPU
+app, not a web runtime), but the *kind of thing* it does — realtime generative/interactive GPU
+visuals — maps directly onto a shape's `browser.js` via WebGL/WebGPU/shaders/Three.js/p5.js/Hydra/
+cables.gl. A "generative-visual" shape is prime *killer-visualizer* territory. No architecture change
+needed; it's already supported by the runtime-shape model.
 
 ---
 

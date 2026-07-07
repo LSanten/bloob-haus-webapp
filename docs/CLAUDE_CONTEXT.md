@@ -36,6 +36,7 @@
 | Comments as a shape behavior (partial in shape `layout.njk`; article commentable; per-page `comments:false`) | ✅ COMPLETE |
 | Cross-origin embed auto-height (namespaced postMessage, `*.bloob.haus` trust) + `font` embed URL param | ✅ COMPLETE |
 | Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | 📋 PLANNED — see phase-2 plan |
+| Phase 3: Webapp backend & identity architecture (design) | ✅ DESIGNED 2026-07-06 — see phase-3 plan |
 
 **LIVE SITES:**
 - https://buffbaby.bloob.haus (Buff Baby Kitchen)
@@ -399,6 +400,8 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 ---
 
 ## What to Do Next
+
+**As of 2026-07-06:** Brainstormed and locked the **Phase 3 webapp backend & identity architecture** (design only, no code) — Scaleway EU backend from day one, one Next.js app, Better Auth (Google + GitHub), markdown-in-object-storage + Postgres ledger, Cloudflare Worker public/private split (existing sites untouched), API-first for future MCP. See `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` (settled design + 14 open questions) and DECISIONS 2026-07-06. **Next:** turn the V1 spike (Google login → 1 public + 1 private marble) into a detailed implementation plan via writing-plans.
 
 **As of 2026-07-03:** Comments (FastComments), GoatCounter analytics, and the URL/page-ID
 contract shipped (see CHANGELOG Sessions 54–55). **Next up: the bloob-shapes unification** —

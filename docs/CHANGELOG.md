@@ -6,6 +6,17 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 57 — July 6, 2026
+**Worked on:** Brainstormed + locked the Phase 3 **webapp backend & identity architecture** (design only — no code).
+
+**Decisions reached:** backend on **Scaleway EU from day one** (privacy-first; 0 infra today ⇒ no build-then-migrate risk — Leon's central worry); **one Next.js app** (dashboard UI + API + auth) in a Scaleway Serverless Container; **Better Auth** with Google + GitHub + account linking (supersedes the May vision plan's NextAuth — Lucia deprecated, Auth.js frozen); content = **markdown files in Object Storage** (vault-shaped), ledger = **Postgres**; **Cloudflare Worker + KV** public/private split (existing sites untouched); **API-first** (UI only ever calls the API ⇒ MCP is a thin Phase-4 wrapper). V1 = thin vertical spike (Google login → 1 public + 1 private marble).
+
+**Wrote:** `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` — settled design + cost (~€15–20/mo) + 14 open questions. DECISIONS entry added. `docs/next-steps.md` created as the next-session launch point.
+
+**Left incomplete (by design):** the detailed V1 implementation plan (write when the build starts, via writing-plans); open questions incl. mount_path #16 / multi-repo rooms, note IDs, session-across-proxy, API-key auth details.
+
+**Verified:** `npm test` 514 pass (no code changed).
+
 ### Session 56 — July 6, 2026
 **Worked on:** Cross-origin embed auto-height + font matching (so `bloob-haus-homepage` can embed a live marble that resizes itself).
 

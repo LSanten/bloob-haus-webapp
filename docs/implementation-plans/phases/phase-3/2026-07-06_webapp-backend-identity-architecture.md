@@ -169,7 +169,11 @@ Explicitly deferred so the first spec stays shippable:
    (not V2). New open work it introduces: automated **Scaleway ↔ Cloudflare DNS/API wiring**
    (hostname + Worker route + cert issued automatically on signup). Path-based URLs remain the
    fallback. See the 2026-07-07 "Scope change" section.
-9. **Custom domains** — Cloudflare for SaaS ($0.10/hostname). Deferred; architecture already supports it.
+9. ~~**Custom domains** — Cloudflare for SaaS ($0.10/hostname). Deferred; architecture already supports it.~~
+   **REVERSED 2026-07-07:** coming soon → moved to *early* support. See the 2026-07-07 "Custom domains"
+   section: two cheap architectural must-dos now (domain-agnostic Worker host lookup + hostname-
+   parameterized URL generation) + a minimal MVP (set domain → rebuild). CF-for-SaaS API integration
+   is the one new piece; certs are auto-issued.
 10. **`bloob.haus` homepage / root haus view** — the front door and the auto-generated "all my rooms" overview. Design-led (see vision plan Section E/F). Deferred.
 11. **When to introduce the Cloudflare public layer within the spike** — decision was "full split via the spike," but the exact build order (Scaleway-serves-everything first for a day, then front it with Cloudflare?) is an implementation-sequencing call.
 12. **API-key / agent auth details** — token format, scoping (per-user, per-room, read vs write), rotation/revocation, and how it coexists with Better Auth sessions. Needed for MCP later; the *capability* should exist from day one.
@@ -236,6 +240,91 @@ Expect this to be fiddly (DNS propagation, Worker route registration, cert issua
 early rather than discovering it late. Path-based URLs (`bloob.haus/{handle}/…`) remain the fallback
 if provisioning isn't ready, but subdomain-at-signup is now the target. *(Supersedes "Out of scope →
 Wildcard subdomains" and open question #8 below.)*
+
+### Subdomains + OAuth — the design that keeps multi-tenant auth simple
+
+The multi-tenant subdomain model (`bloob.haus` + `leon.bloob.haus` + `whitney.bloob.haus` …) is the
+same pattern Substack / Notion sites / Webflow use — and it **reuses the Worker already in this
+design**, it is not new infrastructure:
+
+- **DNS:** one wildcard record `*.bloob.haus` → the Worker covers *all* subdomains.
+- **TLS:** Cloudflare Universal SSL issues a `*.bloob.haus` wildcard cert **automatically & free** at
+  the *first* level (`leon.bloob.haus` ✓; a second level like `a.b.bloob.haus` would need paid
+  Advanced Certificate Manager — not wanted).
+- **Routing:** the Worker reads the `Host` header → subdomain → user/room → serves their content.
+  This is the *same* "Worker reads host + path → visibility map" already specified; subdomain routing
+  just extends that host lookup. (This is why subdomain provisioning could be pulled early cheaply.)
+
+**The one hard fact that dictates the auth design: Google/GitHub do NOT allow wildcard OAuth redirect
+URIs.** `*.bloob.haus` cannot be a callback — redirect URIs must be exact. Therefore **auth is
+centralized on ONE domain** (e.g. `app.bloob.haus` or `bloob.haus`): register that single set of exact
+redirect URIs, and everyone logs in there. This is the standard multi-tenant pattern and it makes
+OAuth *simpler* (one auth surface), not harder. Never run login on arbitrary `username.bloob.haus`.
+
+**Session propagation is the fiddly part — and it's already open question #1 (the highest-risk spike).**
+Two cases:
+- **Editing / dashboard** → lives on the central `app.bloob.haus`, so the session is already present.
+  No cross-domain problem.
+- **Viewing a *private* page on `username.bloob.haus`** → that content subdomain must know the visitor
+  to auth-check. Solved by a **parent-domain cookie** (`Domain=.bloob.haus`, sent to all subdomains)
+  **or** by the **Worker forwarding the session** to origin. This is exactly the "session surviving
+  the proxy boundary" spike — prove it first.
+
+**Security tie-in:** a `.bloob.haus` cookie reaches *every* subdomain, which is only safe because
+**user code is client-side only and every subdomain is served by our infra** (no untrusted server on a
+subdomain to see the cookie; httpOnly keeps user JS from reading it). The clean rule that follows:
+keep authenticated **editing on `app.bloob.haus`**, keep public content subdomains **read-only /
+cookie-less**, and forward the session to a content subdomain *only* for the private-page case.
+
+**The WordPress-like "edit your page" layer — two models, sequence them apart:**
+- **Model A — separate dashboard (V1-era, not hard):** edit at `app.bloob.haus` (a normal authed app)
+  → save to Object Storage → build regenerates the `username.bloob.haus` site. Substack/Ghost/Webflow
+  model. It *is* the dashboard we're building anyway; the subdomain is just the output.
+- **Model B — in-context overlay (Phase-4+):** "Edit" on the live `username.bloob.haus` page opens an
+  editing layer with instant preview (the WordPress-customizer experience). Needs (1) the session on
+  the content subdomain (the cookie work above) and (2) live re-rendering — precisely the deferred
+  **`/api/render`** path. Build A now; A + the render-core extraction grows naturally into B. Don't
+  design B now, just don't foreclose it (the current plan doesn't).
+
+### Custom domains — early architectural requirement + minimal MVP (was deferred)
+
+**Scope signal (2026-07-07):** a user bringing their *own* domain (e.g. `whitneymassage.com`) and
+serving their Bloob-built site on it *will* happen soon. So custom domains move from "deferred"
+(open question #9 / Out of scope) toward **early support** — at minimum the two cheap architectural
+must-dos below now, plus a minimal MVP feature (log in → set domain → click rebuild → nothing else).
+The architecture already anticipates it: the `domains` table (`hostname → user`) and the Worker's
+host-based routing are the *same seams as subdomains*.
+
+**How it works — Cloudflare for SaaS ("Custom Hostnames"):**
+- The user points their domain at us: `CNAME whitneymassage.com → cname.bloob.haus` (apex/root
+  domains are fiddlier — CNAME-at-root is restricted, so they need Cloudflare apex proxying or an
+  A record to a CF anycast IP; plan hand-holding UX for that).
+- We register their hostname via the **Cloudflare for SaaS API**; Cloudflare **auto-issues and
+  auto-renews the TLS cert** for a domain we don't own (the historically hard part — fully handled).
+- The Worker (already host-routing) looks the hostname up in `domains` → owner → serves their built
+  site. Same host→tenant lookup as subdomains, different key.
+
+**Difficulty: medium but bounded / well-trodden.** The scary part (certs for domains you don't own)
+is outsourced to CF for SaaS. New work is small: (1) the CF-for-SaaS API integration (register
+hostname, poll/webhook validation + cert status); (2) a small dashboard UI (enter domain → show the
+DNS record → show `pending → active`). Routing and the build job are unchanged — the build just
+outputs to a different hostname.
+
+**Minimal MVP is a reasonable early scope** because it's mostly things already being built: auth (the
+spike) + a `domains` row + CF-for-SaaS registration (the one new piece) + a rebuild button that
+triggers the existing per-room Serverless Job + the existing Worker host-lookup.
+
+**Two cheap must-dos NOW (do them while building subdomain routing — they make custom domains a
+drop-in later, not a refactor):**
+1. **Worker host lookup is domain-agnostic** — resolve *any* hostname via the `domains` table; do NOT
+   parse a `.bloob.haus` prefix. Then a custom domain is just another row, zero routing changes.
+2. **Never hardcode `bloob.haus` in the build's URL generation** — canonical URLs, sitemaps, OG tags,
+   absolute links must read the site's configured **canonical hostname** from its domain/room record.
+   (The builder already takes `site.url`, so this is mostly true — just ensure it reads from the
+   domain record, not a constant.)
+
+**Cost:** Cloudflare for SaaS is **$0.10/custom hostname/mo, first 100 free** — effectively free until
+100+ custom-domain customers.
 
 ### The extensibility & user-authored-code model (new design axis)
 

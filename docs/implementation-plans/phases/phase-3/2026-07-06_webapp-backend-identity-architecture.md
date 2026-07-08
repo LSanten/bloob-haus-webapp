@@ -228,6 +228,34 @@ section wins.
   survive between builds. Reserve that namespace when designing the storage layout. (Tracks
   TECH-DEBT #15 for the current CI pipeline; fix #17/#18 broken-image bugs before caching output.)
 
+### Provider choice & portability (2026-07-08 focused check)
+
+A time-boxed check of the EU-sovereign provider landscape confirmed Scaleway — and surfaced one
+decision-relevant fact that *strengthens* the choice rather than just permitting it:
+
+- **Scaleway is the only EU-sovereign provider with true scale-to-zero serverless containers.**
+  Alternatives offer "serverless containers" that are effectively always-on, or nothing at all. Our
+  near-€0-when-idle cost model *depends* on scale-to-zero — so Scaleway is uniquely fit here, not
+  merely acceptable.
+- **Feature-fit confirmed:** Serverless Containers (scale to zero after ~15 min idle), Serverless Jobs
+  (batch builds), Managed Postgres **DEV-S €11/mo** (dev tier; production → PRO tiers ~€80+/mo,
+  optionally HA), S3-compatible Object Storage (~€0.01/GB), **custom domains on containers**, three EU
+  regions (Paris / Amsterdam / Warsaw). Account **country = Germany** (billing/legal — the account
+  holder's country, *separate* from hosting region); hosting region = `fr-par`.
+- **Lock-in is bounded by design (the hedge):** content = markdown in **S3-compatible** storage; app =
+  **Next.js in a Docker container**; ledger = **standard Postgres**; builds = **containerized jobs**.
+  Only the Cloudflare Worker is provider-specific (and small). Re-hosting is a bounded migration, not
+  a rewrite — which is *why* it's safe to commit now and revisit later.
+- **EU-sovereign fallback shortlist (documented Plan B):** OVHcloud (managed Postgres near-RDS +
+  strong certifications, but always-on compute), Exoscale (Swiss; managed Postgres), Hetzner (cheapest
+  compute, DIY databases — no managed services), DanubeData (newer; managed stack on Hetzner, ~½ OVH
+  DB pricing). No EU provider has an Aurora-equivalent distributed/scale-to-zero DB — but we don't need
+  one (standard Postgres is the design).
+- **Decision:** commit to Scaleway for the spike and V1. Revisit only if scale-to-zero pricing or the
+  EU-sovereignty posture materially changes. **Do not re-shop providers before the spike ships** (the
+  portable design makes later migration cheap; re-shopping now trades momentum for a low-value snapshot
+  in a slow-moving category).
+
 ### Scope change: subdomain provisioning moves EARLY (was deferred to V2)
 
 **Decision reversed.** `username.bloob.haus` subdomain creation is now an **early spike milestone**,

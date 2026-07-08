@@ -10,6 +10,11 @@
 
 **Prerequisite reading:** `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` — especially the V1 spike section, "Subdomains + OAuth", and open questions #1 (session across proxy), #4 (visibility→KV), #5 (build trigger). This plan is the concrete build of that spike.
 
+> **Progress (2026-07-08, Session 58) — build STARTED in `../bloob-haus-cloud/`:**
+> ✅ **Done offline:** Worker `decideRoute` + `handleRequest` (12 tests); Next.js app with Better Auth Google login + gated `/m/[slug]` (**proven locally on SQLite**); Google OAuth client created (`dev.bloob@gmail.com`).
+> ⏳ **Blocked on the Scaleway account** (billing country-change ticket pending): Task 1 cookie-boundary proof, container deploy, Postgres migration, Worker deploy, E2E (Tasks 1–2, deploy halves of 3–5, and 6).
+> Local dev uses SQLite; prod switches to Postgres via `DATABASE_URL` — no code change. **Deploy gotcha to watch:** `auth.ts` imports `better-sqlite3`, so the Next standalone Docker image must load it (use a glibc base e.g. `node:20-slim`, or lazy-load it) even though prod uses Postgres.
+
 ## Global Constraints
 
 - **Runtime:** Node.js 20+. TypeScript throughout. Cross-platform (macOS dev) — no inline `VAR=value cmd` env syntax; pass env via `.env` files or the container/Worker config.

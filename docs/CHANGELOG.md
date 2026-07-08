@@ -6,6 +6,17 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 58 — July 8, 2026
+**Worked on:** Wrote the Phase 3 **V1 spike implementation plan** and **started the backend build** in a new separate repo `../bloob-haus-cloud/` (kept out of this Eleventy builder — "don't mix").
+
+**Built (in bloob-haus-cloud):** Cloudflare **Worker** routing — `decideRoute` (fail-closed: unknown `/m/*` ⇒ private) + injectable `handleRequest` (public→edge asset, private→proxy w/ cookie forwarding, `no-store`), 12 offline Vitest tests. Next.js **app** — Better Auth (Google) + session-gated `/m/[slug]`; `auth.ts` env-switches SQLite (local) ↔ Postgres (`DATABASE_URL`, prod) with no code change. **Google login proven locally.** OAuth client created under `dev.bloob@gmail.com`.
+
+**Decided (docs committed here):** identity = free Gmail `dev.bloob@gmail.com` for Google+Scaleway (`admin@bloob.haus` = Cloudflare forward, not a Google account); Scaleway confirmed (only EU-sovereign provider w/ true scale-to-zero); billing country = where you are (sovereignty = *provider* choice, not billing address); subdomains + custom domains moved *early*; centralized auth on `auth.bloob.haus` (no wildcard OAuth redirect URIs).
+
+**Blocked (needs Scaleway account — billing country-change ticket pending):** container deploy, the real cross-subdomain cookie proof (spike Task 1 — the crux), Postgres migration, Worker deploy, E2E.
+
+**Verified:** builder `npm test` 514 pass; bloob-haus-cloud 12 worker tests pass + local Google login works.
+
 ### Session 57 — July 6, 2026
 **Worked on:** Brainstormed + locked the Phase 3 **webapp backend & identity architecture** (design only — no code).
 

@@ -12,7 +12,8 @@
 
 > **Progress (2026-07-08, Session 58) — build STARTED in `../bloob-haus-cloud/`:**
 > ✅ **Done offline:** Worker `decideRoute` + `handleRequest` (12 tests); Next.js app with Better Auth Google login + gated `/m/[slug]` (**proven locally on SQLite**); Google OAuth client created (`dev.bloob@gmail.com`).
-> ⏳ **Blocked on the Scaleway account** (billing country-change ticket pending): Task 1 cookie-boundary proof, container deploy, Postgres migration, Worker deploy, E2E (Tasks 1–2, deploy halves of 3–5, and 6).
+> ✅ **Unblocked (same day):** the Scaleway billing-country ticket was bypassed, not resolved — a *new* Scaleway account under the same `dev.bloob@gmail.com` identity was created with country = US set correctly at signup, payment attached. Old (Germany) account abandoned. See DECISIONS.md 2026-07-08 and `../bloob-haus-cloud/NOTES-infra.md`.
+> ⏳ **Next up:** Task 0 Steps 2, 4–6 (CLI installs/login, Postgres instance, Container Registry namespace, Cloudflare KV namespace + `BETTER_AUTH_SECRET`), then Task 1 — the cookie-boundary proof (the crux).
 > Local dev uses SQLite; prod switches to Postgres via `DATABASE_URL` — no code change. **Deploy gotcha to watch:** `auth.ts` imports `better-sqlite3`, so the Next standalone Docker image must load it (use a glibc base e.g. `node:20-slim`, or lazy-load it) even though prod uses Postgres.
 
 ## Global Constraints
@@ -26,6 +27,53 @@
 - **Auth:** Better Auth, Google provider only (GitHub deferred). Login is centralized on `auth.bloob.haus` — Google's redirect URIs are exact, no wildcards.
 - **Spike simplifications (faithful, documented):** (a) **no Object Storage** — the public marble is a static asset in the Worker, the private marble is inline HTML in an origin route; (b) **KV visibility seeded manually** via `wrangler` (build→KV sync is open question #4, deferred); (c) **safe default = private** — any `/m/*` path not explicitly `public` in KV is treated private (fail closed).
 - **Verification style:** this is infrastructure work. Where there is pure logic (the Worker's route decision) use test-first Vitest. Everywhere else, each task defines an **expected observable** (a `curl`/browser result) *before* making it true, then verifies with the exact command.
+
+---
+
+## Secrets & Credential Hygiene (operational security — READ before Task 0 generates any secret)
+
+> **Why this is binding, not optional.** The moment Task 0 runs, real credentials exist: a Google client secret, a Postgres password, a Scaleway secret key, a Better Auth signing secret. Soon after, **real people's accounts (emails, session tokens) live behind them.** A single leaked secret lets an attacker impersonate the app, read the whole database, or run up the cloud bill. Treat this section as binding as the Global Constraints above. This is also a teaching section — the "how" is spelled out on purpose so the owner can be a responsible custodian.
+
+### The secret inventory — every sensitive value in this project
+
+| Secret | What it unlocks if leaked | Where it must live | How to rotate |
+|---|---|---|---|
+| **Google OAuth client secret** | Sign in *as* your app | `app/.env.local` (dev) → Scaleway **secret** env var (prod) | Google Cloud Console → regenerate client secret |
+| **`BETTER_AUTH_SECRET`** | Forge or read *any* user's session cookie | `app/.env.local` (dev) → Scaleway **secret** env var (prod) | `openssl rand -base64 32` → redeploy (logs everyone out) |
+| **`DATABASE_URL`** (holds the Postgres password) | Full read/write of **all user data** | `app/.env.local` (dev) → Scaleway **secret** env var (prod) | `scw rdb` change password → update the URL everywhere |
+| **Scaleway API key** (access + secret) | Create/destroy/bill *all* cloud resources | `~/.config/scw/config.yaml` on disk (see below) | IAM → API Keys → revoke + regenerate |
+| **Cloudflare token** (from `wrangler login`) | Edit DNS, deploy Workers, read KV | `~/.config/.wrangler/…` on disk | Cloudflare dashboard → roll token / re-login |
+
+### Five rules that prevent ~99% of leaks
+
+1. **Never in git.** Secrets live only in gitignored files (`.env*`, `worker/.dev.vars`) or the cloud's own secret store — never in tracked files, never in `wrangler.toml` `[vars]`, never in a Dockerfile, never in `NOTES-infra.md` (placeholders only). Verify *before every commit* (see scanner below).
+2. **Never in a logged command.** Don't paste a secret as a Bash argument in this chat, and don't type it where it lands in shell history. (zsh history dodge: prefix the command with a space, with `setopt HIST_IGNORE_SPACE` set.)
+3. **Never baked into an image.** Docker images get pushed to a registry and cached forever. Secrets are injected at **runtime** via Scaleway `secret-environment-variables.*` (encrypted) — never `environment-variables.*` (plaintext, visible in the console) and never `COPY .env` into the image.
+4. **Least privilege.** The *running app* gets the minimum: a **non-superuser** Postgres role scoped to its one database, and a scoped token — not your org-admin key. Your personal admin keys are for provisioning by hand, not for the deployed app.
+5. **Assume-leaked drill.** If a secret ever touches a screenshot, a chat, a public repo, or a pasted log — **rotate it, don't rationalize.** Rotation is cheap; a live leaked key is not.
+
+### Dev vs. prod must use different secrets
+- The dev DB (SQLite / a throwaway Postgres) and prod DB use **different** credentials, so a leaked dev secret can never open prod. `app/.env.local` is dev-only; prod secrets are set directly on the Cloudflare/Scaleway side and never leave it.
+
+### Where these CLIs just stashed credentials on THIS laptop (know your attack surface)
+- `~/.config/scw/config.yaml` — **your Scaleway secret key, in PLAINTEXT.** Anything that reads this file owns your cloud account and bill. Lock it: `chmod 600 ~/.config/scw/config.yaml`.
+- `~/.config/.wrangler/…` — Cloudflare OAuth token (revocable; better than a raw key, still sensitive).
+- `~/.docker/config.json` (once Docker is installed) — registry creds, base64-encoded = **not** encrypted.
+- `app/.env.local`, `worker/.dev.vars` — your local secret files. Confirm each is gitignored (`git check-ignore <file>` must print the path).
+
+### Keep the laptop itself safe (secrets are only as safe as the disk under them)
+- [ ] **FileVault ON** — full-disk encryption. Without it, a lost/stolen laptop hands over every file above in cleartext. (System Settings → Privacy & Security → FileVault.)
+- [ ] **Require password on wake + a short auto-lock.**
+- [ ] **A password manager as the source of truth** (1Password / Bitwarden): store the master copy of each secret there; the on-disk files are just working copies you can rotate away.
+- [ ] **A leak scanner in the loop** — `brew install gitleaks`, then run `gitleaks detect` before pushing (or wire it as a pre-commit hook) so a secret can't slip into a commit unnoticed.
+- [ ] **Don't paste secrets into LLM chats — including this assistant.** It only ever needs the non-secret IDs/endpoints.
+
+### When real people use the app (production posture — revisit before the first real user)
+- You now hold **PII** (users' emails, session tokens) in Postgres. Keep it **Scaleway Managed** (encryption at rest + backups handled) — don't roll your own DB.
+- **Give the app a scoped DB role, not the superuser** — only the privileges Better Auth needs on its one database.
+- **Rotating `BETTER_AUTH_SECRET` is your kill-switch** — it invalidates every session and forces re-login if you suspect compromise.
+- **Graduate off raw env vars as it grows:** a real secret manager (Scaleway Secret Manager, or Doppler/Infisical) adds rotation, audit logs, and access control. Not needed for the spike — noted for when the app is real.
+- **Have a leak runbook:** (1) rotate the leaked key, (2) redeploy, (3) check access logs for misuse, (4) if sessions may be exposed, rotate `BETTER_AUTH_SECRET` to force everyone to re-login.
 
 ---
 

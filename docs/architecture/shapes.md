@@ -88,15 +88,25 @@ The future Obsidian plugin may provide an "extract" gesture — possibly "give i
 
 ## What a complete shape carries
 
+A shape has **one core** (the saved data) and up to two faces over it: a **renderer** (read) and an
+optional **builder** (write — a GUI that authors the core; see `ontology.md`).
+
 ```
 lib/visualizers/[name]/
-  manifest.json       required — identity, type, defaultLayout (file-scope only)
-  schema.md           required — human + AI readable contract (settings, examples)
+  manifest.json       required — identity, type, defaultLayout (file-scope only), authors[]
+  schema.md           required — human + AI readable contract (settings, examples, builder, authors)
   index.js            renderFilescope shapes only — build-time transform() and/or renderFilescope()
   browser.js          when needed — runtime rendering from graph.json or DOM
   styles.css          when needed — scoped CSS using theme CSS tokens (see "Token-based styles.css" below)
   layout.njk          file-scope shapes only — default page layout template
+  assets/             when the shape ships its own static files (icons, sprites) — copied into build
+                      output like JS/CSS; NOT served from a central CDN (keeps sites self-contained)
+  builder/            when the shape has a GUI author (a "shape builder") — a single self-contained,
+                      file://-openable index.html that reads AND writes this shape's core format
 ```
+
+First shapes to exercise the new folders: `garden` (both `assets/` and `builder/`), `scene-nav`
+(`builder/`, once migrated out of `lib/magic-machines/`).
 
 ## Conversion checklist per shape type
 
@@ -432,7 +442,7 @@ Two distinct things, deliberately given coexisting names (a file and a folder ca
 | Name | Kind | Holds |
 |------|------|-------|
 | `_bloob-shapes.md` | file (registry) | Table mapping `bloob-shape` → metadata (display_name, image, banner_text, description, `fastcomments`, `showvisitorcount`). The `_bloob-types.md` successor — see the bloob-shapes-unification plan. |
-| `_bloob-shapes/` | folder (definitions) | One subfolder per shape: `manifest.json`, `schema.md`, renderer JS (`browser.js` / `index.js`), optional `styles.css`, optional examples. The vault-local shapes folder. |
+| `_bloob-shapes/` | folder (definitions) | One subfolder per shape: `manifest.json`, `schema.md`, renderer JS (`browser.js` / `index.js`), optional `styles.css`, optional `assets/` (shape-shipped static files), optional `builder/` (a self-contained GUI author), optional examples. The vault-local shapes folder. |
 
 *(The conceptual doc calls the folder `/bloob-haus-shapes/`; we standardize on `_bloob-shapes/` to
 match the `_bloob-*` system-file convention.)*
@@ -467,6 +477,13 @@ That pipeline scanning is not yet implemented — see open question #7 below and
 
 Full untrusted-**build-time**-code sandboxing (isolated per-tenant jobs, zero ambient credentials) is
 a **future TODO**, not needed while the client-side-only line holds.
+
+**Builders sit on the safe side of this line.** A shape builder is client-side — it runs in the
+author's browser, same trust model as `browser.js`. The one new surface: a builder that **saves to a
+vault** makes authenticated network calls (the draft-to-vault promotion flow). That auth is the
+platform's, invoked by the user's *own* session — not third-party code gaining credentials — but it is
+why a reused/third-party builder must call only the platform's own save API, never arbitrary endpoints
+(enforce with CSP on the builder page).
 
 ### `schema.md` is the contract — write the canonical template EARLY
 
@@ -537,6 +554,9 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## Examples (complete .md file mockups)
 ## Translation behavior (what happens to non-native content)
 ## Closed-state visual (how this shape looks as an icon when referenced from elsewhere)
+## Builder (does this shape have a GUI author? where it lives, what core it reads/writes)
+## Authors (creator name(s) + URL — an array; renders in the shape catalog)
+## Assets (static files the shape ships, if any)
 ```
 
 **Open question:** write the canonical template before building the next shape, or extract it from the first three complete shapes retroactively? Argument for writing it now: prevents inconsistency across 20 shapes. Argument for retroactively: real usage reveals what the template actually needs.

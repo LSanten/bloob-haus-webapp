@@ -34,7 +34,7 @@ A pond is a pond. It behaves like a pond. It does what ponds do to the things th
 
 A `bloob-type` (old terminology for `bloob-shape`), a `visualizer`, and an inline `:::` block are the same thing at different scopes: declarations of a **shape**. A shape is a kind of _bloob_ with its own visual identity, internal rules, and policy on what enters it. A pond, a garden, a marble, a book, a card, a map, a house, a room.
 
-"Shape" is the right word because it carries no implementation baggage. The renderer that produces a shape's visual is the *visualizer* — that is code. The user encounters a shape.
+"Shape" is the right word because it carries no implementation baggage. A shape has **one core** (the saved data — the thing that *is* the marble or garden) and up to **two faces** over it: a **renderer** that turns core → visual (read mode; the *visualizer* — that is code) and an optional **builder** that turns GUI → core (write mode). Because both faces read and write the *same* core through the *same* schema, they cannot drift — the builder is a face of the shape, not a separate app. The user encounters a shape; they never see which face they are touching.
 
 **There are two kinds of shape, and conflating them is the trap.** The one-concept story is true for *authoring* (one syntax, one mental model, one word) but the *contract* differs:
 

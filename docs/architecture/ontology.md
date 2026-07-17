@@ -152,6 +152,11 @@ Two halves of one idea:
 
 Frontmatter stays for stable identity metadata (title, date, tags, author, `bloob-shape:`). Configuration lives in the body where the writing happens.
 
+Two refinements, learned from `garden` (the first shape-named block — see `shapes.md` → "Shape-named blocks"):
+
+- **The block need not be YAML.** `:::settings` is the default path for key/value knobs; a shape with a real grammar declares a shape-named block (`::: garden`) and parses it itself.
+- **A full-page shape may keep identity in its body.** When a shape owns the entire page (`chrome: none`), its block *is* the whole surface — so `title`/`author` live inside the block as the single source of truth, and frontmatter carries only `bloob-shape:`. One place to hand-edit, byte-identical to what the builder writes. The frontmatter rule above holds for every shape that shares the page with prose.
+
 ---
 
 ## The six questions, answered

@@ -108,6 +108,15 @@ content
   });
 
   describe("spacing variants", () => {
+    it("closes the block when the closer has trailing whitespace", () => {
+      // Regression: "::: " previously failed the closer equality AND counted
+      // as a nested opener, swallowing the rest of the body into the block.
+      const md = "::: settings\nkey: value\n:::  \n\nBody after.";
+      const { settings, body } = extractSettingsBlock(md);
+      expect(settings.key).toBe("value");
+      expect(body.trim()).toBe("Body after.");
+    });
+
     it("matches :::settings without space", () => {
       const md = `:::settings
 key: value

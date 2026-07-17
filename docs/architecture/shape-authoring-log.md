@@ -17,6 +17,58 @@
 
 ---
 
+## 2026-07-17 — Garden: writing the contract forced three divergences (and settled a fourth call)
+
+Source: garden Task 1 (the `schema.md` contract, written 2026-07-15) and its reconciliation back into
+`shapes.md` / `ontology.md` (Task 0, done today). The divergences are now *the documented rule*, not
+divergences — recorded here so the why survives.
+
+### Contract gaps found
+
+- **The canonical `schema.md` template had no home for a fence grammar or parsing rules** — the two
+  things garden spent the most design effort on. Any shape with non-trivial body syntax needs both.
+  → added to the template (shapes.md open question #3).
+- **The docs assumed every shape's block is `:::settings` YAML.** Garden's block is not YAML and
+  *cannot* be: its element list (`- mature-tree "Title" @240,225` + nested page bullets) parses as a
+  YAML *sequence* (consumers expect a mapping), and tab-indented children are illegal YAML —
+  `extract-settings-block.js` throws, catches, and silently returns `{}`. This is the concrete proof
+  a shape may need its own parser. → new shapes.md section "Shape-named blocks"; only fence-boundary
+  discovery is shared.
+
+### The three divergences, reconciled (now rules, not exceptions)
+
+1. **Identity in the body for full-page shapes.** `ontology.md` said frontmatter holds `title`/`author`.
+   A `chrome: none` shape owns its entire page, so its block is the whole surface — one in-body source
+   of truth is what keeps it hand-editable and byte-identical to what the builder writes. Frontmatter
+   carries only `bloob-shape: garden`. The frontmatter rule still holds for shapes sharing a page with
+   prose.
+2. **Shape-named block (`::: garden`), parsed by the shape itself.** Copy-paste-portable between
+   file-scope and inline; bypasses the YAML extractor by construction.
+3. **Element ids derived from title-slugs**, not stored (`"Deep-Rooted Endeavors"` →
+   `deep-rooted-endeavors`). Builder-minted, unique via `-2`/`-3`, and the stable anchor the future
+   `note: "[[Title]]"` swap hangs on. The prototype's opaque `el_<ts>_<rand>` ids die.
+
+### Decisions settled
+
+- **Page fidelity: prose-only (Leon, 2026-07-17).** Her page editor gives each element multiple
+  *positioned* text boxes — but the template positions are just a vertical stack (paragraph order in
+  coordinates), the drag feature is rarely load-bearing, and the future `note: "[[Wikilink]]"`
+  direction has no coordinates at all. So the core stores markdown prose only, order preserved; the
+  builder auto-stacks on reopen. Artistic drag-layouts flatten — accepted cost.
+
+### Platform gotchas (hard facts)
+
+- **`extract-settings-block.js` treated a closer with trailing whitespace (`"::: "`) as an OPENER.**
+  The closer test was `trimmed === ":::"` after `trimStart()` only — so `"::: "` failed the equality,
+  fell into the `else`, and *incremented depth*. One trailing space = the block never closes and the
+  whole rest of the body is swallowed as settings. Fixed (trailing-whitespace-tolerant closer) + test.
+  Lesson for every fence parser: **tolerate trailing whitespace on both opener and closer.**
+- **Never hardcode a tab width when parsing nested bullets.** Any deeper indentation (tabs or spaces)
+  is nesting. This is what makes a fence format survive Obsidian's tab/space setting — the whitespace
+  brittleness that motivated garden's format in the first place.
+
+---
+
 ## 2026-07-13 — Garden: the first shape with a builder
 
 Source: converting Odalys Benitez's [GardenVisualizer](https://github.com/odalysbest/GardenVisualizer)

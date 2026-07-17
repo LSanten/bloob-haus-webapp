@@ -225,6 +225,29 @@ The default is "on" (include renders unless explicitly opted out). Users opt out
 - Layout templates read from a single `shape_settings` object, making it obvious which keys come from shape config vs page metadata
 - See DECISIONS.md 2026-06-05 for the full rationale
 
+## Shape-named blocks — a shape may own its parsing
+
+The `:::settings` path above assumes per-instance configuration is YAML key/values. That is the
+**default, not a law.** A shape whose body syntax is not valid YAML declares a **shape-named block**
+(`::: garden`) and parses it itself:
+
+- The block is the shape's **single source of truth** — configuration *and* content in one surface.
+  For full-page `chrome: none` shapes this includes identity metadata (`title`/`author`), with
+  frontmatter carrying only `bloob-shape:` (see `ontology.md` → "Configuration and content are one
+  surface" for the reconciliation).
+- The parser lives in the shape's own `index.js`. **Only fence-boundary discovery is shared** — find
+  the opener (`:::` + name), find the matching closer, depth-aware, tolerant of trailing whitespace.
+  Everything inside is the shape's grammar, documented in its `schema.md` (fence-format +
+  parsing-rules sections).
+- **Why not force YAML:** garden's element list (`- mature-tree "Title" @240,225` + nested page
+  bullets) parses as a YAML *sequence*, not the mapping consumers expect — and tab-indented children
+  are illegal YAML and throw. Real shapes have real grammars.
+- Parsing rule worth copying: **never hardcode a tab width.** Treat any deeper indentation (tabs or
+  spaces) as nesting, so the format survives Obsidian's tab/space setting.
+
+`garden` is the precedent (see its `schema.md`). Shapes with plain key/value knobs should keep using
+`:::settings` — don't invent a grammar you don't need.
+
 ## Comments — a shape behavior
 
 Whether a page shows comments, and *where* the comment thread sits, is a **shape decision** —
@@ -378,35 +401,36 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 
 ## Current shape status
 
-| Shape | Type | Complete? | Gaps |
-|-------|------|-----------|------|
-| `article` | layout-only | ✓ | First layout-only shape; reference implementation |
-| `collection` | hybrid | Partial | Phase 1 (metadata mode) shipped: cards, list, slider, bubbles, marbles display modes. Phase 2 (Pagefind full-text) deferred — needs browser testing. No `layout.njk` yet (file-scope use emits runtime placeholder only). |
-| `folder-preview` | hybrid + file-scope | ✓ | — |
-| `foldable` | inline (build-time + runtime) | Not yet built | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
-| `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |
-| `card-preview` | build-time | Partial | Missing `schema.md` |
-| `checkbox-tracker` | runtime | Partial | — |
-| `citations` | runtime (CSS-only) | ✓ | — |
-| `circular-nav` | hybrid | Partial | Missing `schema.md` |
-| `fridge-magnets` | hybrid | Partial | Missing `schema.md` |
-| `graph` | hybrid | Partial | Missing `schema.md` |
-| `heading-and-paragraph` | build-time | Partial | Missing `schema.md` |
-| `image-grid` | build-time | Partial | Missing `schema.md` |
-| `image-text` | build-time | ✓ | — |
-| `ken-burns-zoom` | unknown | Incomplete | Missing `manifest.json` entirely |
-| `latex` | runtime | Partial | Missing `schema.md` |
-| `marble` | — | Not yet built | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
-| `note` | — | Not yet built | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
-| `page-preview` | runtime | Partial | — |
-| `photo-grid` | build-time | Partial | — |
-| `quotes-stack` | hybrid | Partial | Missing `schema.md` |
-| `scene-nav` | hybrid | Partial | — |
-| `search` | hybrid | Partial | Missing `schema.md` |
-| `services` | build-time | Partial | Missing `schema.md` |
-| `slideshow` | build-time | ✓ | — |
-| `tags` | hybrid | Partial | Missing `schema.md` |
-| `testimonials` | hybrid | Partial | — |
+| Shape | Type | Complete? | Builder | Gaps |
+|-------|------|-----------|---------|------|
+| `article` | layout-only | ✓ | — | First layout-only shape; reference implementation |
+| `collection` | hybrid | Partial | — | Phase 1 (metadata mode) shipped: cards, list, slider, bubbles, marbles display modes. Phase 2 (Pagefind full-text) deferred — needs browser testing. No `layout.njk` yet (file-scope use emits runtime placeholder only). |
+| `folder-preview` | hybrid + file-scope | ✓ | — | — |
+| `foldable` | inline (build-time + runtime) | Not yet built | — | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
+| `garden` | hybrid + file-scope | In progress | ✓ `builder/` | External creator's shape (Odalys Benitez), converted in its own repo — `schema.md` done; renderer + builder in progress. Plan: `bloob-haus-cloud/docs/implementation-plans/2026-07-13_garden-shape-and-builder.md` |
+| `rss-feed` | file-scope | Partial | — | Missing `layout.njk`, `schema.md`, `styles.css` |
+| `card-preview` | build-time | Partial | — | Missing `schema.md` |
+| `checkbox-tracker` | runtime | Partial | — | — |
+| `citations` | runtime (CSS-only) | ✓ | — | — |
+| `circular-nav` | hybrid | Partial | (in-page `debug: on` mode) | Missing `schema.md` |
+| `fridge-magnets` | hybrid | Partial | — | Missing `schema.md` |
+| `graph` | hybrid | Partial | — | Missing `schema.md` |
+| `heading-and-paragraph` | build-time | Partial | — | Missing `schema.md` |
+| `image-grid` | build-time | Partial | — | Missing `schema.md` |
+| `image-text` | build-time | ✓ | — | — |
+| `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
+| `latex` | runtime | Partial | — | Missing `schema.md` |
+| `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
+| `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
+| `page-preview` | runtime | Partial | — | — |
+| `photo-grid` | build-time | Partial | — | — |
+| `quotes-stack` | hybrid | Partial | — | Missing `schema.md` |
+| `scene-nav` | hybrid | Partial | planned (migrate `scene-nav-builder` out of `lib/magic-machines/` → `builder/`) | — |
+| `search` | hybrid | Partial | — | Missing `schema.md` |
+| `services` | build-time | Partial | — | Missing `schema.md` |
+| `slideshow` | build-time | ✓ | — | — |
+| `tags` | hybrid | Partial | — | Missing `schema.md` |
+| `testimonials` | hybrid | Partial | — | — |
 
 ## The next file-scope shape to convert: rss-feed
 
@@ -521,6 +545,9 @@ A shape is the painting. The site chrome (nav, footer, site header) is the frame
 - When the shape requests `chrome: none` but the theme doesn't support it, what's the fallback? Silent fall-through to full chrome?
 - Is "chrome" even the right word user-facing, or is it too jargony?
 
+**First real exercise:** `garden` declares `chrome: none` (a full-bleed, self-contained canvas).
+Expect this shape to settle the mechanism.
+
 ---
 
 ### 2. The three-tier declaration model — who owns what?
@@ -548,6 +575,8 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## What this shape is
 ## What goes inside (allowable native contents)
 ## Settings (table: key / type / default / description)
+## Fence format / grammar (shapes with non-trivial body syntax: what each line means)
+## Parsing rules (how the shape parses its block — see "Shape-named blocks" above)
 ## Chrome preference (and override behavior)
 ## Content policy (override identity vs. preserve identity for contained shapes)
 ## Placement system (which system, vocabulary, defaults)
@@ -560,6 +589,10 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ```
 
 **Open question:** write the canonical template before building the next shape, or extract it from the first three complete shapes retroactively? Argument for writing it now: prevents inconsistency across 20 shapes. Argument for retroactively: real usage reveals what the template actually needs.
+
+The **fence-grammar** and **parsing-rules** sections were proven necessary by `garden` — the first
+shape whose block is not YAML. They were the two things that shape spent the most design effort on,
+and the template had no home for either. Garden's `schema.md` is the reference implementation of both.
 
 ---
 

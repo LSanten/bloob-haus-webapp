@@ -33,7 +33,9 @@ export function extractSettingsBlock(markdown) {
 
     if (startIdx !== -1) {
       if (/^:::/.test(trimmed)) {
-        if (trimmed === ":::") {
+        // Tolerate trailing whitespace on the closer — "::: " must not fall
+        // through to the else branch and count as a nested opener.
+        if (trimmed.trimEnd() === ":::") {
           depth--;
           if (depth === 0) { endIdx = i; break; }
         } else {

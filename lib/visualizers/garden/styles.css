@@ -165,6 +165,9 @@ body.garden-body {
   position: absolute;
   white-space: nowrap;
   pointer-events: none;
+  /* Matches the builder's label default (garden-elements.js addLabel) so an
+     omitted color: attr (the common case — non-defaults only) renders identically. */
+  color: #2c2c2c;
 }
 
 /* --- Element pages (markdown prose, auto-stacked) --------------------- */

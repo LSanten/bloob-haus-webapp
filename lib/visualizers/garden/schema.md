@@ -75,9 +75,12 @@ Order matters for elements: **document order is stacking (z) order** — later i
 | `title` | string | *(required)* | The garden's title. The renderer emits it as the page `<title>` and OG title. |
 | `author` | markdown link | — | The garden's author, e.g. `"[Name](https://…)"`. Distinct from the *shape's* `manifest.authors[]`. Quote it (the `[` would otherwise read as a list). |
 | `canvas` | `WxH` | `1000x600` | Logical coordinate space. The renderer scales the whole garden proportionally to fit its container (aspect preserved), capped so it never dominates. |
-| `sky` | hex color | `#87CEEB` | **Quote it** — the leading `#` is otherwise a comment/heading. |
-| `ground` | token | *(none)* | `soil` → sky fills 65%, soil the bottom 35%. Omit → full-height sky. |
+| `sky` | hex **or** preset token | `#87CEEB` | One key, two forms: a quoted hex color (`"#9CC3DB"`) or a preset — `clouds` (blue gradient + clouds), `sunny` (gold→blue gradient + sun), `rainy` (grey gradient + rain clouds). Picking a preset replaces the color, exactly like her UI. |
+| `ground` | texture token | *(none)* | `dirt` \| `grass` \| `gravel` \| `sand` (her four soil textures), or `soil` (plain brown) → sky fills 65%, ground the bottom 35%. Omit → full-height sky. |
 | `painting` | media path | — | Background image, `media/garden/…`. A **path, never base64** (see Images). |
+
+> **The builder writes only non-defaults.** Every attribute below is optional with a sensible default,
+> so a simple garden's fence stays as small as the example — full fidelity never costs clean files.
 
 ### Elements
 
@@ -90,12 +93,22 @@ Order matters for elements: **document order is stacking (z) order** — later i
 - **`"<title>"`** — for objects, the page title; for a `label`, the displayed text.
 - **`@<x>,<y>`** — top-left position in the canvas logical space. The `@` is what marks the line as an
   element (vs. a `key: value` setting).
-- **attrs** (optional, space-separated `key:value`):
+- **attrs** (optional, space-separated `key:value`, plus bare flags):
   - `size:N` — a **label**'s font size (no `x`).
-  - `size:WxH` — an element **dimension** override (has `x`); default is the type's own size.
-  - `src:media/garden/…` — the image for a `custom` (and, later, uploaded) element.
-- **nested bullets** under an element = its **page**, as markdown prose (one bullet per paragraph). A
-  `label` takes no page.
+  - `size:WxH` — a **dimension** override (has `x`); default is the type's own size (for a drawn
+    label: its image size).
+  - `src:media/garden/…` — the image for a `custom` element, or a **drawn label**
+    (`label "" @x,y src:… size:WxH` — a decorative image, not clickable).
+  - `hover:none|scale|glow|bounce` — element hover effect (default `scale`).
+  - `glow:#hex` — element glow color (a drop-shadow halo; default off).
+  - **label styling:** `font:georgia|arial|courier|verdana|palatino|trebuchet` (default `georgia`),
+    `color:#hex` (default `#2c2c2c`), and the bare flags `bold` `italic` `highlight` (yellow
+    highlighter behind the text).
+- **nested bullets** under an element = its **page**, as markdown prose (one bullet per paragraph).
+  An optional **first child** `- page: key:value …` sets page-level presentation:
+  `font:` (same six tokens), `bg:"#hex"` (page background), `layout:stacked|columns` (default
+  `stacked`). Per-paragraph sizing/color is deliberately NOT spellable — that's what markdown itself
+  (headings, emphasis) is for. A `label` takes no page.
 
 The eight shipped icon types (default sizes are the renderer's fallback when `size:` is omitted):
 
@@ -158,7 +171,9 @@ It is the anchor the future container graduation hangs on: a later
    width** — this is what makes the format robust to Obsidian's tab/space setting (the whitespace
    sensitivity that motivated this format).
 3. **Classify each top-level item:** `key: value` with no `@` → a setting; `<word> "…" @x,y …` → an
-   element, whose child items are its page.
+   element, whose child items are its page. Among an element's children, a first `page: …` item is
+   page settings; every other child is a prose paragraph. On element lines, `key:value` tokens are
+   attrs and bare words (`bold`, `italic`, `highlight`) are flags.
 4. **Unknown top-level lines are ignored** (freeform-tolerant, per shapes.md open question #4).
 5. **There is no shared parsing script.** This parser lives in garden's `index.js`. Other shapes parse
    their own blocks; this is a documented *convention*, not enforced shared code — because a garden's
@@ -252,16 +267,23 @@ bloob-shape: garden
 :::
 ```
 
-Image syntax (not in the example above — a garden with a painted background and one drawn element):
+Image syntax and the full attribute surface (not in the example above):
 
 ```markdown
 ::: garden
 - title: My Garden
 - canvas: 1000x600
+- sky: sunny
+- ground: grass
 - painting: media/garden/dawn-field-a3f9.png
 
-- custom "A sketch I drew" @300,200 src:media/garden/sketch-b2c8.png size:180x140
+- custom "A sketch I drew" @300,200 src:media/garden/sketch-b2c8.png size:180x140 hover:bounce glow:#ffd700
+	- page: font:palatino bg:"#fffaf0" layout:columns
 	- Why did I draw this here?
+	- A second paragraph, in the second column.
+
+- label "hand-lettered title" @620,80 size:34 font:trebuchet color:#b03030 bold highlight
+- label "" @150,90 src:media/garden/doodle-c4d1.png size:120x80
 :::
 ```
 

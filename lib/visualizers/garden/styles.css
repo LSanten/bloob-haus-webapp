@@ -79,8 +79,71 @@ body.garden-body {
   object-fit: contain;
 }
 
-.garden-element:not(.garden-element--static):hover {
+/* Hover effects (her four: none / scale / glow / bounce; scale is default) */
+.garden-element.hover-scale:not(.garden-element--static):hover {
   transform: scale(1.15);
+}
+
+.garden-element.hover-glow:not(.garden-element--static):hover {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+}
+
+.garden-element.hover-bounce:not(.garden-element--static):hover {
+  animation: garden-bounce 0.5s ease;
+}
+
+@keyframes garden-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* The ground strip — bottom 35%, her soil palette with light CSS texture */
+.garden-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 35%;
+  z-index: 0;
+}
+
+.garden-ground--soil {
+  background: linear-gradient(to bottom, #8a6d4b, #6f5539);
+}
+
+.garden-ground--dirt {
+  background-color: #8B6914;
+  background-image: radial-gradient(rgba(122, 92, 16, 0.9) 1px, transparent 1.6px);
+  background-size: 14px 14px;
+}
+
+.garden-ground--grass {
+  background-color: #4a8c3f;
+  background-image: repeating-linear-gradient(
+    92deg,
+    rgba(61, 122, 51, 0.65) 0 1px,
+    transparent 1px 6px
+  );
+}
+
+.garden-ground--gravel {
+  background-color: #9e9e9e;
+  background-image:
+    radial-gradient(rgba(176, 176, 176, 0.9) 2px, transparent 2.6px),
+    radial-gradient(rgba(136, 136, 136, 0.8) 1.4px, transparent 2px);
+  background-size: 17px 17px, 11px 11px;
+  background-position: 0 0, 6px 8px;
+}
+
+.garden-ground--sand {
+  background-color: #e8d68e;
+  background-image: radial-gradient(rgba(212, 194, 122, 0.9) 0.8px, transparent 1.2px);
+  background-size: 9px 9px;
+}
+
+.garden-label--drawn {
+  pointer-events: none;
+  object-fit: contain;
 }
 
 .garden-element-fallback {
@@ -132,6 +195,19 @@ body.garden-body {
 .garden-page-prose p {
   line-height: 1.7;
   margin: 0 0 16px;
+}
+
+/* layout:columns — paragraphs flow into two columns (her columns layout) */
+.garden-page--columns .garden-page-prose {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .garden-page--columns .garden-page-prose {
+    grid-template-columns: 1fr;
+  }
 }
 
 .garden-back-btn {

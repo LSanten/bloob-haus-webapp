@@ -1,0 +1,19 @@
+{
+  "name": "garden",
+  "type": "hybrid",
+  "filescope": true,
+  "chrome": "none",
+  "defaultLayout": "layouts/garden.njk",
+  "description": "A full-bleed, interactive garden canvas: place elements on a scene, give each a reflective page, and publish it as a self-contained site.",
+  "authors": [
+    {
+      "name": "Odalys Benitez",
+      "url": "https://odalysbenitez.com"
+    }
+  ],
+  "builder": {
+    "entry": "builder/dist/index.html",
+    "source": "builder/",
+    "description": "GUI author for the garden core format — reads and writes the ::: garden fence. Ships as a single self-contained file://-openable HTML file (vite-plugin-singlefile, Task 4)."
+  }
+}

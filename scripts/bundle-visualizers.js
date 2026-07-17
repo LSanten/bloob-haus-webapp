@@ -15,6 +15,7 @@ import {
   readdirSync,
   existsSync,
   copyFileSync,
+  cpSync,
   mkdirSync,
   writeFileSync,
 } from "fs";
@@ -77,6 +78,17 @@ for (const name of visualizerDirs) {
     copyFileSync(engineFile, join(JS_OUT_DIR, `${name}.engine.js`));
     entry.hasEngine = true;
     console.log(`[bundle] ${name}: engine.js → ${JS_OUT_DIR}/${name}.engine.js`);
+  }
+
+  // Copy shape-shipped static assets (icons, sprites) into the build output —
+  // per shapes.md "What a complete shape carries": copied like JS/CSS, never
+  // served from a central CDN. URL: /assets/visualizers/<name>/…
+  const assetsDir = join(dir, "assets");
+  if (existsSync(assetsDir)) {
+    const assetsOut = join(SRC, "assets", "visualizers", name);
+    cpSync(assetsDir, assetsOut, { recursive: true, dereference: true });
+    entry.hasAssets = true;
+    console.log(`[bundle] ${name}: assets/ → ${assetsOut}`);
   }
 
   manifest.push(entry);

@@ -1,0 +1,152 @@
+/**
+ * styles.css — the garden shape.
+ *
+ * Adapted from the builder's exporter CSS. Uses the theme CSS token contract
+ * with hard fallbacks — garden is chrome: none and must look right standalone.
+ */
+
+body.garden-body {
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-color, #f5f0e8);
+  font-family: var(--font-body, Georgia, serif);
+  color: var(--text-color, #333333);
+}
+
+.garden-shape {
+  width: 100%;
+}
+
+/* --- The garden view ------------------------------------------------- */
+
+.garden-view {
+  width: 100%;
+}
+
+/* JS sets this wrapper to the scaled size; the scene scales inside it. */
+.garden-scale {
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.garden-scene {
+  position: relative;
+  transform-origin: top left;
+}
+
+.garden-painting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.garden-elements {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.garden-element {
+  position: absolute;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+  border-radius: 4px;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.garden-element--static {
+  cursor: default;
+}
+
+.garden-element img,
+.garden-element svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.garden-element:not(.garden-element--static):hover {
+  transform: scale(1.15);
+}
+
+.garden-element-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px dashed var(--border-color, #999);
+  border-radius: 8px;
+}
+
+.garden-label {
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* --- Element pages (markdown prose, auto-stacked) --------------------- */
+
+.garden-pages {
+  width: 100%;
+  max-width: var(--article-width, 820px);
+  margin: 0 auto;
+}
+
+.garden-page {
+  min-height: 100vh;
+  padding: 40px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--card-bg, #ffffff);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.garden-page-title {
+  font-size: 2rem;
+  font-family: var(--font-heading, Georgia, serif);
+  margin: 0 0 24px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 12px;
+}
+
+.garden-page-prose p {
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+
+.garden-back-btn {
+  padding: 8px 16px;
+  background: var(--accent-color, #4a7c59);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+  margin-bottom: 20px;
+  transition: opacity 0.15s;
+}
+
+.garden-back-btn:hover {
+  opacity: 0.85;
+}

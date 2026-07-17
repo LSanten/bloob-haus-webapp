@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {# chrome: none — a bare standalone document, no site nav/footer. The fence's
+     own title (identity lives in the block) is applied by browser.js; the
+     frontmatter/filename title is the no-JS fallback. #}
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/assets/css/visualizers/garden.css">
+</head>
+<body class="garden-body">
+  {{ content | safe }}
+  <script src="/assets/js/visualizers/garden.js"></script>
+</body>
+</html>

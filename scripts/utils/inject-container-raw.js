@@ -46,7 +46,9 @@ export function injectContainerRaw(markdown) {
       while (j < lines.length) {
         const inner = lines[j].trimStart();
         if (/^:::/.test(inner)) {
-          if (inner === ":::") {
+          // Tolerate trailing whitespace on the closer — same fix as
+          // extract-settings-block.js: "::: " must not count as a nested opener.
+          if (inner.trimEnd() === ":::") {
             depth--;
             if (depth === 0) break;
           } else {

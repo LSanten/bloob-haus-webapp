@@ -42,6 +42,7 @@ import { resolveRedirect } from "./utils/redirect-resolver.js";
 import {
   readBloobObjects,
   normalizeBloobObject,
+  resolveIdentityKey,
   parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
 
@@ -420,8 +421,9 @@ export async function preprocessContent({
       };
     }
 
-    // 6h: Normalize bloob-object/bloob-type (both accepted; bloob-type takes priority)
-    const bloobObject = normalizeBloobObject(frontmatter["bloob-type"] || frontmatter["bloob-object"]);
+    // 6h: Resolve the page's bloob identity. `bloob-shape` is the forward-facing key;
+    // `bloob-type` / `bloob-object` remain accepted as legacy identity keys (they win when set).
+    const bloobObject = normalizeBloobObject(resolveIdentityKey(frontmatter));
 
     // Resolve redirect frontmatter (supports bare URLs, [[wiki-links]], [text](url)).
     // Accept both `redirect:` and `Redirect:` (YAML is case-sensitive; vault authors may use either).

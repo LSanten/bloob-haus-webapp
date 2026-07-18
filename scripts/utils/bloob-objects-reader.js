@@ -179,3 +179,28 @@ export function normalizeBloobObject(value) {
     .replace(/^#/, "")
     .toLowerCase();
 }
+
+/**
+ * Resolves which frontmatter key supplies a page's bloob identity (banner image,
+ * text, icon), in precedence order:
+ *   1. `bloob-type`   — legacy explicit identity key
+ *   2. `bloob-object` — oldest legacy alias
+ *   3. `bloob-shape`  — the single forward-facing key; used as the identity fallback
+ *      so a note that declares ONLY `bloob-shape:` still resolves its identity from
+ *      the registry (keyed by the shape name). The explicit legacy keys win when
+ *      present, letting a note render as one shape but identify as another.
+ *
+ * Returns the raw (un-normalized) value; pass it through normalizeBloobObject() for lookup.
+ *
+ * @param {Record<string, any>|null|undefined} frontmatter
+ * @returns {string|null} Raw identity key value, or null if none present.
+ */
+export function resolveIdentityKey(frontmatter) {
+  if (!frontmatter || typeof frontmatter !== "object") return null;
+  return (
+    frontmatter["bloob-type"] ||
+    frontmatter["bloob-object"] ||
+    frontmatter["bloob-shape"] ||
+    null
+  );
+}

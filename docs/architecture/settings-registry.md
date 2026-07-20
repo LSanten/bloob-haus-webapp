@@ -8,7 +8,7 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
-**Last Updated:** 2026-07-03
+**Last Updated:** 2026-07-20
 
 ---
 
@@ -23,9 +23,10 @@ These settings work identically across every theme. They are part of the Bloob H
 | `hide_nav` | bool | `false` | Hide the site navigation bar on this page |
 | `hide_footer` | bool | `false` | Hide the site footer on this page |
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
-| `layout` | string | layout from `bloob-type` or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-type`) |
-| `bloob-type` | string | — | Content type for this page (e.g. `note`, `guide`). Controls layout, graph icon, and banner display. Defined in `_bloob-types.md`. Alias: `bloob-object` (legacy). |
-| `bloob-shape` | string | — | Rendering shape for this page. Routes the entire page body through the named shape's `renderFilescope()` renderer in `lib/visualizers/[name]/index.js`. Separate from `bloob-type:` — a file can have both. Shape config goes in a `::: settings` block in the body (not in frontmatter). See `docs/architecture/visualizers.md` — File-scope Shapes section. |
+| `layout` | string | shape layout, or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-shape`) |
+| `bloob-shape` | string | — | **Primary identity + rendering key.** Names the page's shape and drives (a) layout selection, (b) `renderFilescope()` body rendering (`lib/visualizers/[name]/index.js`), and (c) identity — banner image/text, graph icon, display name — looked up in `_bloob-shapes.md`. Identity resolves via `resolveIdentityKey` (precedence below). Shape config goes in a `::: settings` block in the body, not frontmatter. See `docs/architecture/shapes.md` + `visualizers.md`. |
+| `bloob-type` | string | — | **Legacy identity alias** for `bloob-shape` (older vaults; registry `_bloob-types.md`). Still accepted, and **wins for identity when explicitly set** — precedence `bloob-type` > `bloob-object` > `bloob-shape` — so a page may render as one shape while identifying as another. New content should use `bloob-shape:`. |
+| `bloob-object` | string | — | Oldest legacy identity alias (registry `_bloob-objects.md`). Same precedence rules as `bloob-type`. New content should use `bloob-shape:`. |
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `date_created` | string | — | Creation date (`YYYY-MM-DD`). Available to every theme via the data cascade; rendered as a pill only where a theme wires it up. Written by the bloob-haus Obsidian plugin. |
@@ -140,6 +141,21 @@ Both fields accept the same value formats:
 | `default_shape` | string | — | Fallback shape for pages with no `bloob-shape:` in frontmatter. Governs their **layout** and, through it, their **commentability** (see `docs/architecture/shapes.md` → "Comments — a shape behavior"). Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` (which is commentable). This lets you declare a future shape name without breaking the build. Optional — an undeclared page is a valid "undefined pile" state. Example: `default_shape: marble`. |
 
 **How to wire in a new theme:** No theme-level changes needed. Layout selection is handled entirely by the preprocessor — it reads the shape's `manifest.json.defaultLayout`, copies the shape's `layout.njk` into `src/_includes/layouts/`, and injects the `layout:` key into each page's frontmatter automatically.
+
+#### Shape identity registry (`_bloob-shapes.md`)
+
+`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `themes/_base/_bloob-shapes.template.md`. Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
+
+| Column | Description |
+|--------|-------------|
+| `bloob-shape` | Shape/identity key (legacy header: `object_type`). |
+| `display_name` | Human label (defaults to the key). |
+| `image` | `none` \| `default` (site favicon) \| `[[file.png]]` \| `/assets/objects/x.png`. |
+| `banner_text` | Prose shown in the page banner. |
+| `description` | Longer text (shape catalog / banner modal). |
+| `fastcomments` | Per-shape comment behavior (`true`/`false`, default `true`). **Parsed into the registry today; per-shape gating is not yet wired** — comments are currently controlled by whether a shape's `layout.njk` includes `partials/comments.njk` and by per-page `comments:`. |
+| `showvisitorcount` | Per-shape visitor-count behavior (`true`/`false`, default `true`). Parsed today; **gating deferred** — GoatCounter is currently site-wide. |
+| `layout` *(legacy)* | Optional per-shape layout override — only `_bloob-types.md` vaults use it. Omit in `_bloob-shapes.md`; layout is the shape's job (`lib/visualizers/<shape>/layout.njk`, else `page.njk`). |
 
 #### Publish Mode
 
@@ -421,7 +437,7 @@ Settings that only exist in the `alter-engineers` theme. They have no effect on 
 #### Notes
 
 - `hide_nav` and `hide_footer` are universal (defined above) and fully implemented in `themes/alter-engineers/layouts/base.njk`
-- Bloob-object `project-profile` maps to `layouts/project.njk` via `_bloob-objects.md` in the content repo
+- Shape `project-profile` maps to `layouts/project.njk` via the `layout` column in `_bloob-objects.md` (legacy registry; `_bloob-shapes.md` is the current name) in the content repo
 
 ---
 

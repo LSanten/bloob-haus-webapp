@@ -148,7 +148,7 @@ a.internal-link:hover {
 
 **Opt-out:** Add `data-no-pills` to any container (e.g. the connections graph, nav) to exclude its links from pill detection.
 
-**How icons work:** `_bloob-objects.md` declares types with an `image`. `generate-bloob-icons.js` (called from `assemble-src.js` Step 10) resizes each image to 24×24 PNG (transparency preserved) and writes it to `src/assets/objects/bloob-icons/[type]-icon.png`. `preprocess-content.js` stores the path on each page's graph node. `internal-links.js` reads `graph.json` and injects the icon `<img>` when adding the pill class.
+**How icons work:** the shape registry (`_bloob-shapes.md`, or legacy `_bloob-types.md` / `_bloob-objects.md`) declares each shape with an `image`. `generate-bloob-icons.js` (called from `assemble-src.js` Step 10) resizes each image to 24×24 PNG (transparency preserved) and writes it to `src/assets/objects/bloob-icons/[type]-icon.png`. `preprocess-content.js` stores the path on each page's graph node. `internal-links.js` reads `graph.json` and injects the icon `<img>` when adding the pill class.
 
 **`image` field values in `_bloob-objects.md`:**
 
@@ -160,7 +160,7 @@ a.internal-link:hover {
 | `[[filename.png]]` | Wiki-link — resolved to `src/media/filename.png` |
 | `/assets/objects/marble.png` | Plain URL path from `src/` |
 
-Pages with no `bloob-object` frontmatter set get a plain pill with no icon.
+Pages with no `bloob-shape:` (or legacy `bloob-object:` / `bloob-type:`) frontmatter set get a plain pill with no icon.
 
 ### 3. Date created pill
 

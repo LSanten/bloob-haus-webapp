@@ -2,7 +2,7 @@
 
 Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
-**Last updated:** 2026-07-08
+**Last updated:** 2026-07-20
 
 ---
 
@@ -15,6 +15,7 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 ## What's Done
 
+- **Bloob-shapes unification — DONE** (2026-07-20, Session 59). Reader reads `_bloob-shapes.md` (`bloob-shape` column) ahead of legacy `_bloob-types.md`/`_bloob-objects.md`; `publish-filter.js` excludes any `_bloob-*` file; docs reconciled (`bloob-shape:` = single forward-facing identity+rendering key); melt is a clean reference; `_base` scaffold added. Resolves TECH-DEBT #34. Deferred: per-shape behavior *gating* (steps 3–4 → IDEAS). Plan in `_completed/`.
 - **Phase 3 V1 spike — plan written + backend build STARTED** (2026-07-08, Session 58). New **separate repo `../bloob-haus-cloud/`**: Cloudflare Worker routing (12 offline tests) + Next.js Better Auth **Google login proven locally** (SQLite); OAuth client + identity settled (`dev.bloob@gmail.com`); Scaleway confirmed (only EU provider w/ true scale-to-zero). **Cloud deploy blocked on the Scaleway account.** See the spike plan + CHANGELOG 58.
 - **Phase 3 refinements + extensibility model — documented** (2026-07-07). Postgres confirmed on Scaleway, JS-only/no-Python, Apple deferred; subdomain provisioning + custom domains moved *early*; user-authored shapes/machines/apps — `_bloob-shapes.md` (registry) vs `_bloob-shapes/` (definitions), client-side-only trust line, public-PR approval, schema.md-as-contract. See phase-3 doc "2026-07-07 refinements", DECISIONS, TECH-DEBT #35–38.
 - **Phase 3 backend & identity architecture — designed** (2026-07-06). Scaleway EU; one Next.js app; Better Auth; markdown-in-object-storage + Postgres ledger; Cloudflare Worker public/private split; API-first.
@@ -23,7 +24,6 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 ## Not started / still open
 
 - Canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36) — Phase 2, high-leverage.
-- Bloob-shapes unification (`_bloob-types.md` → `_bloob-shapes.md`) — separate phase-2 plan.
 - Vault-local `_bloob-shapes/` folder pipeline scanning (TECH-DEBT #37).
 - Marketplace safety hardening / build-time-code sandboxing (TECH-DEBT #35) + pre-launch ToS/DSA (TECH-DEBT #38) — future.
 - Standing Phase-3 open questions: mount_path #16 / multi-repo rooms, note IDs, API-key auth details, `bloob.haus` homepage.

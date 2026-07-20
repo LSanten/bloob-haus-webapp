@@ -198,17 +198,19 @@ default_object: "note"
 
 ---
 
-## `_bloob-objects.md` — Object Identity System
+## Object Identity System (`_bloob-shapes.md`, legacy `_bloob-objects.md`)
+
+> **Reconciliation (2026-07-20).** `_bloob-shapes.md` (key column `bloob-shape`) is the forward-facing successor to `_bloob-types.md` (`object_type`) and `_bloob-objects.md`; all three are still read, first found wins. A page declares identity with **`bloob-shape:`** — the same key that drives its rendering. Legacy `bloob-type:` / `bloob-object:` are still accepted and **win for identity when explicitly set** (precedence `bloob-type` > `bloob-object` > `bloob-shape`, resolved by `resolveIdentityKey`). **The registry is OPTIONAL for a normal user:** with no row for a shape, the banner image/icon degrade to the theme's `assets/objects/<shape>.png` (then `_base`, then no image) — a registry row only *adds* banner prose, a custom icon, a display name, and the banner modal. The generated `bloobObjects.json` data file and the `bloobObjects` / `bloob_object` template names are kept for backwards compatibility. Canonical concept: [`shapes.md`](shapes.md) / [`ontology.md`](ontology.md). The examples below use the legacy `_bloob-objects.md` name and `object_type` column; the mechanism is byte-identical for `_bloob-shapes.md` with `object_type` → `bloob-shape`.
 
 **Location:** Content repo root (alongside `_bloob-settings.md`)
-**Purpose:** Maps object types to identity images, banner text, and descriptions.
+**Purpose:** Maps shapes to identity images, banner text, and descriptions.
 
-Every markdown note can declare its object type via frontmatter:
+Every markdown note can declare its shape via frontmatter:
 ```yaml
-bloob-object: marble
+bloob-shape: marble
 ```
 
-If no `bloob-object` is set, the theme's `default_object` is used.
+If no shape is set, the theme's `default_object` is used.
 
 ### `_bloob-objects.md` format
 

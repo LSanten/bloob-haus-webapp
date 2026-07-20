@@ -6,6 +6,20 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 59 — July 20, 2026
+**Worked on:** Finished the **bloob-shapes unification** plan (`_bloob-types.md` → `_bloob-shapes.md`), now in `_completed/`. Resolves TECH-DEBT #34.
+
+**Built / fixed (shared pipeline, TDD):**
+- Reader (`bloob-objects-reader.js`) now reads `_bloob-shapes.md` (`bloob-shape` key column) with precedence over legacy `_bloob-types.md` / `_bloob-objects.md`; `layout` column optional; per-shape `fastcomments` / `showvisitorcount` parsed (7 new tests).
+- `publish-filter.js` now skips **any** `_bloob-*` file (reserved system-file prefix) — also stops `_bloob-auto-tagging.md` leaking as a page (hit marbles too); `_index.md` guarded (2 new tests).
+- New `themes/_base/_bloob-shapes.template.md` scaffold + cross-link from `_bloob-settings.template.md`.
+- Docs reconciled — "visualizer ≡ shape", `bloob-shape` = single forward-facing identity+rendering key: `visualizers.md`, `shapes.md`, `ontology.md`, `settings-registry.md`, `themes.md`, `theme-standards.md`.
+- melt is a clean reference — deleted its `_bloob-types.md` (left uncommitted in the `melt-website` repo for Leon).
+
+**Left deferred (per original plan):** steps 3–4 — per-shape behavior *gating* (columns parsed, templates don't consume them yet). Tracked in IDEAS.md.
+
+**Verified:** `npm test` 532 pass.
+
 ### Session 58 — July 8, 2026
 **Worked on:** Wrote the Phase 3 **V1 spike implementation plan** and **started the backend build** in a new separate repo `../bloob-haus-cloud/` (kept out of this Eleventy builder — "don't mix").
 

@@ -186,7 +186,7 @@ default_shape: marble
 The preprocessor resolves the layout in this priority order (highest wins):
 
 1. Explicit `layout: layouts/…` in the file's frontmatter
-2. Layout from the `bloob-type` registry (`_bloob-objects.md`)
+2. Layout from the shape registry's optional `layout` column (`_bloob-shapes.md`, or legacy `_bloob-types.md` / `_bloob-objects.md`). The forward-facing `_bloob-shapes.md` omits this column — layout is the shape's job (step 3/4 below)
 3. `bloobShapeLayout` — set when shape has no `renderFilescope` (layout-only shapes: `bloob-shape: article` → `layouts/article.njk`)
 4. `shapeManifestLayout` — read from `manifest.json.defaultLayout` when the shape has `renderFilescope` (e.g. `folder-preview` → `layouts/folder-index.njk`)
 5. Default: `layouts/page.njk` (or `layouts/base.njk` for `index.md` files)
@@ -194,6 +194,16 @@ The preprocessor resolves the layout in this priority order (highest wins):
 Steps 3 and 4 use `effectiveShape` — so both an explicitly declared shape and the site's `default_shape` can supply a layout through these steps.
 
 **A user only needs `bloob-shape: folder-preview`** — no `layout:` required. The preprocessor reads the manifest and injects the correct layout automatically. For index.md files the preprocessor also auto-injects `folder`, `folder_display`, and `title` from the directory name when the user hasn't provided them.
+
+## How the preprocessor resolves identity
+
+Layout is one face of a shape; **identity** (banner image, banner text, icon, display name) is the other. Both now resolve from the same forward-facing key, `bloob-shape:`. The preprocessor calls `resolveIdentityKey(frontmatter)` (`scripts/utils/bloob-objects-reader.js`), which picks the identity key in precedence order:
+
+1. `bloob-type:` — legacy explicit identity key (wins when set)
+2. `bloob-object:` — oldest legacy alias
+3. `bloob-shape:` — the single forward-facing key; used as the identity fallback so a note that declares **only** `bloob-shape:` still resolves its identity from the registry (`_bloob-shapes.md`, keyed by the shape name)
+
+The resolved name is looked up in the shape registry for banner/icon metadata. The legacy keys win when present, so a note can still render as one shape but identify as another. See `ontology.md` → "What a shape is" for why identity and rendering are two faces of one shape.
 
 ## The `shape_settings` mechanism
 

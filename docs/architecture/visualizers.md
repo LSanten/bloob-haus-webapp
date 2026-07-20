@@ -2,9 +2,11 @@
 
 **Status:** Modular architecture with auto-discovery. Four activation methods including `:::` containers. `data-vis-raw` pipeline fully implemented (2026-03-23).
 **Location:** `docs/architecture/`
-**Updated:** 2026-03-23
+**Updated:** 2026-07-20
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
+
+> **A visualizer is the *renderer face of a shape*.** "Visualizer", an inline `:::` block, and a `bloob-shape:` file are the same thing at different **scopes** — not different kinds of thing. This doc covers the *rendering* mechanics; the concept itself is owned by [`shapes.md`](shapes.md) (line 3) and [`ontology.md`](ontology.md) → "What a shape is". The "four types" and "file-scope" headings below are **activation triggers / scopes** (where and how a visualizer runs), not distinct species.
 
 ---
 
@@ -12,8 +14,9 @@ Visualizers are the core of Bloob Haus - "little machines" that transform text i
 
 | Concept | Definition |
 |---------|------------|
+| **Shape** | The unifying concept — a visualizer, an inline `:::` block, and a `bloob-shape:` file are one shape at different scopes. Owned by [`shapes.md`](shapes.md) / [`ontology.md`](ontology.md). |
 | **Marble** | A note/object that can be held, shared, embedded |
-| **Visualizer** | A machine that transforms content into an experience |
+| **Visualizer** | A shape's **renderer face** — the code that transforms content into an experience |
 | **Room** | A container for marbles (maps to folders/sections) |
 | **Haus** | A user's site (subdomain like `leon.bloob.haus`) |
 
@@ -38,6 +41,8 @@ This enables:
 ---
 
 ## Four Types of Visualizers
+
+These are four **activation triggers** — how and where a shape's renderer runs — not four kinds of thing. What differs is *what triggers rendering* (code fence, `:::` container, auto-detect) and *where the code runs* (build-time Node vs. runtime browser). All four are shapes at different scopes; see the framing note at the top of this doc.
 
 ### Build-time Visualizers
 Run during preprocessing (Node.js). Parse custom markdown syntax into data, then render to HTML.
@@ -221,6 +226,8 @@ Container settings (e.g., `time=3s`) are parsed at build time by `renderer.js` a
 
 **Status: Implemented — `rss-feed` is the first live shape (2026-05-31).**
 
+This is the whole-page **scope**: instead of a code fence or `:::` block inside a page, the `bloob-shape:` frontmatter key makes the shape own the entire page. Same shape concept, page scope — and identity resolves from that same key (see the stale-note correction below and [`shapes.md`](shapes.md) → "How the preprocessor resolves identity").
+
 A file-scope shape owns the *entire page*. Instead of a block inside a page, the shape IS the page. The file declares `bloob-shape: [name]` in frontmatter and configures the shape via a `::: settings` block at the top of the body.
 
 ```
@@ -256,7 +263,7 @@ Key points:
 - The `::: settings` block is stripped from the body before `injectContainerRaw` runs — it never appears in rendered output.
 - YAML values in `::: settings` can use markdown link syntax `[text](url)` — the extractor pre-quotes these before handing to js-yaml (YAML treats bare `[` as an inline sequence).
 - The body text after the settings block is passed to `renderFilescope` as the second argument. Most shapes ignore it; some may use it for supplemental prose.
-- `bloob-shape:` is independent of `bloob-type:` — a file can have both. `bloob-type:` still controls banner image and graph icon; `bloob-shape:` controls rendering.
+- `bloob-shape:` is the single forward-facing key: it drives rendering **and** identity (banner image, graph icon, display name). The preprocessor resolves identity from it via `resolveIdentityKey` (see [`shapes.md`](shapes.md) → "How the preprocessor resolves identity"). `bloob-type:` / `bloob-object:` remain accepted as **legacy identity aliases** and win when explicitly set, so a file may declare both — rendering as one shape while identifying as another.
 
 **Shape module contract (`lib/visualizers/[name]/index.js`):**
 

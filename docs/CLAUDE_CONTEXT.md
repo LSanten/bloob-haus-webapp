@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-07-08
+**Last Updated:** 2026-07-20
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -35,7 +35,7 @@
 | Consolidated `url:` block + canonical page ID (lowercased host+path, `bloob-page-id` override, `<meta name="bloob-page-id">`) | ✅ COMPLETE |
 | Comments as a shape behavior (partial in shape `layout.njk`; article commentable; per-page `comments:false`) | ✅ COMPLETE |
 | Cross-origin embed auto-height (namespaced postMessage, `*.bloob.haus` trust) + `font` embed URL param | ✅ COMPLETE |
-| Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | 📋 PLANNED — see phase-2 plan |
+| Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | ✅ DONE 2026-07-20 (reader + `_bloob-*` publish-filter + docs + scaffold; per-shape behavior *gating* deferred → IDEAS) |
 | Phase 3: Webapp backend & identity architecture (design) | ✅ DESIGNED 2026-07-06 — see phase-3 plan |
 | Phase 3: V1 spike build (separate `bloob-haus-cloud` repo) | 🔨 IN PROGRESS 2026-07-08 — Worker routing + Google login proven locally; cloud deploy blocked on Scaleway account |
 
@@ -248,7 +248,7 @@ bloob-haus-webapp/
   - `nodes: [{ id, title, section, type, image?, bloobIcon? }]`
     - `id` — page URL path (e.g. `/projects/campbell-library/`)
     - `image` — OG image URL, only present if page body contains an image (auto-extracted from first image in markdown body, NOT from frontmatter)
-    - `bloobIcon` — 24×24 icon path for the page's bloob-object type; absent if no bloob-object
+    - `bloobIcon` — 24×24 icon path for the page's shape (`bloob-shape:`, or legacy `bloob-type:`/`bloob-object:`); absent if the shape has no registry image
     - `excerpt` / `description` — NOT in graph.json nodes; only in tag index (`_data/tagIndex.json`)
   - `links: [{ source, target }]` — bidirectional, deduplicated, anchors stripped
 - `/graph-settings.json` — vault-wide settings from `.bloob/graph.yaml`, defaults applied
@@ -402,10 +402,12 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
+**As of 2026-07-20:** Shipped the **bloob-shapes unification** (Session 59) — the reader reads `_bloob-shapes.md` (`bloob-shape` key column) ahead of legacy `_bloob-types.md`/`_bloob-objects.md`; `publish-filter.js` now excludes any `_bloob-*` system file; docs reconciled so `bloob-shape:` is the single forward-facing identity+rendering key. melt is a clean reference. Per-shape `fastcomments`/`showvisitorcount` *gating* deferred (IDEAS). Resolves TECH-DEBT #34.
+
 **As of 2026-07-06:** Brainstormed and locked the **Phase 3 webapp backend & identity architecture** (design only, no code) — Scaleway EU backend from day one, one Next.js app, Better Auth (Google + GitHub), markdown-in-object-storage + Postgres ledger, Cloudflare Worker public/private split (existing sites untouched), API-first for future MCP. See `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` (settled design + 14 open questions) and DECISIONS 2026-07-06. **Next:** turn the V1 spike (Google login → 1 public + 1 private marble) into a detailed implementation plan via writing-plans.
 
 **As of 2026-07-03:** Comments (FastComments), GoatCounter analytics, and the URL/page-ID
-contract shipped (see CHANGELOG Sessions 54–55). **Next up: the bloob-shapes unification** —
+contract shipped (see CHANGELOG Sessions 54–55). **The bloob-shapes unification** (✅ shipped 2026-07-20, Session 59) —
 `_bloob-types.md` → `_bloob-shapes.md`, drop the `layout` column, make `fastcomments` /
 `showvisitorcount` declared per-shape behaviors. Context seed + plan:
 `docs/implementation-plans/phases/phase-2/2026-07-03_bloob-shapes-unification.md`. Also pending
@@ -454,14 +456,16 @@ docs/
 │   ├── visualizers.md          ← Read/display components
 │   ├── magic-machines.md       ← Write/transform AI tools
 │   ├── search.md              ← Search, tags, and Pagefind
-│   ├── themes.md              ← Theme contract, CSS tokens, bloob-objects system
+│   ├── themes.md              ← Theme contract, CSS tokens, object identity system (`_bloob-shapes.md`)
 │   ├── theme-standards.md     ← Theme standards
 │   ├── bring-your-own-theme.md ← Custom theme onboarding
 │   ├── ontology.md            ← The why/what of shapes (design brief)
 │   ├── shapes.md              ← The how of shapes (incl. "Comments — a shape behavior")
+│   ├── shape-authoring-log.md ← Per-shape authoring notes / war stories
 │   ├── urls-and-ids.md        ← Canonical URL contract + page-ID + FastComments setup
 │   ├── security-by-obscurity.md ← Unlisted/client-facing content convention
-│   └── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
+│   ├── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
+│   └── melt-handoff.md        ← melt theme handoff notes (historical)
 │
 └── implementation-plans/
     ├── ROADMAP.md              ← Phase overview & priorities

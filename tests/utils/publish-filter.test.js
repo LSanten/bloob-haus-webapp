@@ -275,6 +275,35 @@ describe('filterPublishableFiles', () => {
       expect(published[0].relativePath).toBe(path.join('recipes', 'good.md'));
     });
 
+    it('skips every _bloob-* system file (convention: settings, registries, auto-tagging, future)', async () => {
+      // `_bloob-*` is the reserved system-file prefix — none of these are content,
+      // so none may render as pages (registries, settings, auto-tagging rules, and
+      // any future _bloob-* config file). See the `_bloob-*` convention in shapes.md.
+      await writeFile('_bloob-settings.md', '---\nbloob-settings: settings\n---\nx');
+      await writeFile('_bloob-objects.md', '---\nbloob-settings: objects\n---\n| a |');
+      await writeFile('_bloob-types.md', '---\nbloob-settings: types\n---\n| a |');
+      await writeFile('_bloob-shapes.md', '---\nbloob-settings: types\n---\n| a |');
+      await writeFile('_bloob-auto-tagging.md', '## Auto tagging rules\n\n| keyword | tag |');
+      await writeFile('_bloob-future-thing.md', '---\n---\nsome future config');
+      await writeFile('recipes/good.md', '---\ntitle: Good\n---\nHello');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'blocklist',
+        blocklistTag: 'not-for-public',
+      });
+      expect(published).toHaveLength(1);
+      expect(published[0].relativePath).toBe(path.join('recipes', 'good.md'));
+    });
+
+    it('does NOT skip a folder index (_index.md) — only the _bloob-* prefix is reserved', async () => {
+      await writeFile('notes/_index.md', '---\ntitle: Notes\n---\nIndex body');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'blocklist',
+        blocklistTag: 'not-for-public',
+      });
+      expect(published).toHaveLength(1);
+      expect(published[0].relativePath).toBe(path.join('notes', '_index.md'));
+    });
+
     it('handles files with no frontmatter', async () => {
       await writeFile('notes/bare.md', 'Just plain markdown content');
       const { published } = await filterPublishableFiles(tmpDir, {

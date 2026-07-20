@@ -30,9 +30,10 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 
-// Accepted filenames in priority order — _bloob-types.md is the preferred name,
-// _bloob-objects.md is the legacy alias kept for backwards compatibility.
-const TYPES_FILENAMES = ["_bloob-types.md", "_bloob-objects.md"];
+// Accepted filenames in priority order (first match wins) — _bloob-shapes.md is
+// the forward-facing name (matches the `bloob-shape` vocabulary); _bloob-types.md
+// and _bloob-objects.md are legacy aliases kept for backwards compatibility.
+const TYPES_FILENAMES = ["_bloob-shapes.md", "_bloob-types.md", "_bloob-objects.md"];
 
 /**
  * Parses a Markdown table into an array of row objects.
@@ -76,7 +77,25 @@ function parseMarkdownTable(tableText) {
 }
 
 /**
- * Reads and parses `_bloob-objects.md` from the content repo root.
+ * Parses a registry table cell into a boolean. Accepts true/false/yes/no/1/0/on/off
+ * (case-insensitive). Empty or unrecognized values fall back to defaultValue.
+ *
+ * @param {string|undefined} value - Raw cell value
+ * @param {boolean} defaultValue - Fallback when absent/unrecognized
+ * @returns {boolean}
+ */
+function parseRegistryBoolean(value, defaultValue) {
+  if (value === undefined || value === null) return defaultValue;
+  const v = String(value).trim().toLowerCase();
+  if (v === "") return defaultValue;
+  if (["true", "yes", "1", "on"].includes(v)) return true;
+  if (["false", "no", "0", "off"].includes(v)) return false;
+  return defaultValue;
+}
+
+/**
+ * Reads and parses the bloob registry (`_bloob-shapes.md`, or legacy
+ * `_bloob-types.md` / `_bloob-objects.md`) from the content repo root.
  *
  * @param {string} contentDir - Absolute path to the content repo root
  * @returns {Object} Registry keyed by object_type. Empty object if file is missing.
@@ -113,10 +132,12 @@ export async function readBloobObjects(contentDir) {
     return {};
   }
 
-  // Build registry keyed by object_type (lowercase, trimmed)
+  // Build registry keyed by the shape/type name (lowercase, trimmed).
+  // `bloob-shape` is the forward-facing key column; `object_type` is the legacy
+  // header — accept either so old and new registry files both parse.
   const registry = {};
   for (const row of rows) {
-    const type = row.object_type?.toLowerCase().trim();
+    const type = (row["bloob-shape"] || row.object_type)?.toLowerCase().trim();
     if (!type) continue;
 
     registry[type] = {
@@ -124,8 +145,15 @@ export async function readBloobObjects(contentDir) {
       image: row.image || "",
       banner_text: row.banner_text || "",
       description: row.description || "",
-      // Optional layout column — gracefully absent if column not in table
+      // Optional layout column — gracefully absent if column not in table.
+      // The forward-facing _bloob-shapes.md omits it (layout is the shape's job
+      // now); legacy _bloob-types.md may set it per row.
       layout: row.layout || "",
+      // Per-shape behaviors (default on). Consumption is deferred — see the
+      // bloob-shapes-unification plan, steps 3–4 — but the columns are parsed
+      // here so the registry faithfully represents _bloob-shapes.md.
+      fastcomments: parseRegistryBoolean(row.fastcomments, true),
+      showvisitorcount: parseRegistryBoolean(row.showvisitorcount, true),
     };
   }
 

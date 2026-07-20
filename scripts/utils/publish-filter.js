@@ -123,9 +123,13 @@ export async function filterPublishableFiles(contentDir, options = {}) {
       continue;
     }
 
-    // Skip system files that should never be published
+    // Skip `_bloob-*` system files — never published as pages. This is the
+    // reserved system-file prefix (settings, the identity/shape registries
+    // `_bloob-shapes.md` / `_bloob-types.md` / `_bloob-objects.md`, auto-tagging
+    // rules, and any future config file). The `_index.md` folder-index convention
+    // is deliberately NOT matched. See the `_bloob-*` convention in shapes.md.
     const baseName = path.basename(filePath, ".md");
-    if (baseName === "_bloob-settings" || baseName === "_bloob-objects") {
+    if (baseName.startsWith("_bloob-")) {
       continue;
     }
 

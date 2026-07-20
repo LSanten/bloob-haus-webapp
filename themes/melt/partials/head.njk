@@ -8,6 +8,12 @@
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
     <meta name="bloob-page-id" content="{{ bloobPageId }}" />
 
+    {% if redirect %}
+    <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
+    <meta http-equiv="refresh" content="0; url={{ redirect }}" />
+    <script>window.location.replace("{{ redirect }}");</script>
+    {% endif %}
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="{{ site.title }}" />

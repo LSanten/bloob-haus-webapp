@@ -18,6 +18,12 @@
     <meta name="robots" content="noindex,nofollow" />
     {% endif %}
 
+    {% if redirect %}
+    <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
+    <meta http-equiv="refresh" content="0; url={{ redirect }}" />
+    <script>window.location.replace("{{ redirect }}");</script>
+    {% endif %}
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% if layout %}article{% else %}website{% endif %}" />
     <meta property="og:site_name" content="{{ site.title }}" />

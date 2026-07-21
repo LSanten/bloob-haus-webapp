@@ -452,6 +452,12 @@ docs/
 ├── TECH-DEBT.md                ← Technical debt inventory
 ├── CHANGELOG.md                ← Session history & milestones
 │
+├── onboarding/                 ← Fork-your-own-bloob-haus guided path (public, travels with forks)
+│   ├── README.md               ← Start here
+│   ├── prepare-your-vault.md   ← Content-first; the canonical home for the media convention
+│   └── fork-deploy-and-workflow.md
+├── collaborators/              ← Collaborator kit (field-log + CLAUDE.local + deploy-odalys templates)
+│
 ├── architecture/               ← How systems work
 │   ├── visualizers.md          ← Read/display components
 │   ├── magic-machines.md       ← Write/transform AI tools

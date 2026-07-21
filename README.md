@@ -184,6 +184,7 @@ Site configs live in `sites/*.yaml`. Themes live in `themes/`. Content stays in 
 
 ## Documentation
 
+- [`docs/onboarding/`](docs/onboarding/) — **start here to fork and run your own bloob haus** (guided path)
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — session-by-session build history
 - [`docs/CLAUDE_CONTEXT.md`](docs/CLAUDE_CONTEXT.md) — architecture overview and project status
 - [`docs/implementation-plans/DECISIONS.md`](docs/implementation-plans/DECISIONS.md) — why things are the way they are

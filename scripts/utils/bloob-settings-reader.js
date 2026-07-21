@@ -128,6 +128,9 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     // Logo/favicon: wiki-link [[filename]] or plain path; resolved to /media/ URL by assemble-src
     logo: bloobSettings.logo || siteConfig.site?.logo,
     favicon: bloobSettings.favicon || siteConfig.site?.favicon,
+    // Background image: wiki-link [[filename]], [alt](path), or plain path; resolved to an
+    // optimized /media/optimized/ URL by generate-background.js (see assemble-src.js).
+    background_image: bloobSettings.background_image || siteConfig.site?.background_image,
   };
 
   // Theme

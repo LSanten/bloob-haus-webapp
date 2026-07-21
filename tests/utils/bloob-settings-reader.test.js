@@ -86,6 +86,20 @@ describe('EMBED_TARGETS', () => {
   });
 });
 
+describe('mergeBloobSettings — background_image passthrough', () => {
+  it('copies background_image from _bloob-settings.md into merged.site', () => {
+    const merged = mergeBloobSettings({ site: { name: 'X' } }, {
+      background_image: '[[MELT website background-MEDIUM-SIZE.png.jpg]]',
+    });
+    expect(merged.site.background_image).toBe('[[MELT website background-MEDIUM-SIZE.png.jpg]]');
+  });
+
+  it('leaves background_image undefined when not set in _bloob-settings.md', () => {
+    const merged = mergeBloobSettings({ site: { name: 'X' } }, { name: 'X' });
+    expect(merged.site.background_image).toBeUndefined();
+  });
+});
+
 describe('mergeBloobSettings — url: block', () => {
   it('maps url.base/case/date_prefix/mount_path onto config', () => {
     const merged = mergeBloobSettings({ site: { name: 'X' } }, {

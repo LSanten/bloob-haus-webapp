@@ -3,6 +3,7 @@
  * Clones or pulls the content repository from GitHub.
  */
 
+import { isMainModule } from "./utils/is-main.js";
 import { execSync } from "child_process";
 import fs from "fs-extra";
 import path from "path";
@@ -134,7 +135,7 @@ async function cloneFresh(repoUrl, branch) {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Load environment variables from .env.local
   const envPath = path.join(ROOT_DIR, ".env.local");
   if (fs.existsSync(envPath)) {

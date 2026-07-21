@@ -8,6 +8,7 @@
  *   SITE_NAME=buffbaby node scripts/build-site.js
  */
 
+import { isMainModule } from "./utils/is-main.js";
 import { execSync } from "child_process";
 import fs from "fs-extra";
 import path from "path";
@@ -233,7 +234,7 @@ function loadEnv() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   buildSite();
 }
 

@@ -3,6 +3,7 @@
  * Converts [[wiki-links]] to standard markdown links with resolved URLs.
  */
 
+import { isMainModule } from "./is-main.js";
 import { slugifyHeading } from "./slug-strategy.js";
 
 /**
@@ -80,7 +81,7 @@ function resolveLinkTarget(target, index) {
 // slugifyHeading is imported from slug-strategy.js
 
 // Test if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Simple test
   const testContent = `
 # Test Page

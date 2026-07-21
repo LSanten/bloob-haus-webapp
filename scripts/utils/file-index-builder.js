@@ -3,6 +3,7 @@
  * Builds lookup maps for pages and attachments to enable link resolution.
  */
 
+import { isMainModule } from "./is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
@@ -333,7 +334,7 @@ export function resolveLink(target, index) {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const contentDir = process.argv[2] || "./content-source";
 
   // Simple test - scan all md files directly

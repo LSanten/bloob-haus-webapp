@@ -3,6 +3,7 @@
  * Filters markdown files based on publish mode (allowlist or blocklist).
  */
 
+import { isMainModule } from "./is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
@@ -195,7 +196,7 @@ export async function removeExcludedFiles(excludedFiles) {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Load environment variables from .env.local
   const rootDir = path.resolve(
     path.dirname(new URL(import.meta.url).pathname),

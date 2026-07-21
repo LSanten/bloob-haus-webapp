@@ -29,6 +29,7 @@ All scripts and `package.json` commands must work on both Mac/Linux and Windows.
 - **Never use `cross-env` unless already a dependency** — prefer CLI args or `process.env` set inside the script itself.
 - **Use `path.join` / `path.resolve` for all file paths** — never string-concatenate with `/` or `\`.
 - When shelling out with `execSync`, pass env vars via the `env` option object, not inline shell syntax.
+- **For a script's "run directly" guard, use `isMainModule(import.meta.url)` from `scripts/utils/is-main.js`** — never `import.meta.url === \`file://${process.argv[1]}\``. The naive form silently fails on Windows paths (backslashes / drive letters never match), disabling the script's standalone entry there. See TECH-DEBT #25.
 
 ## Development Principles
 1. **Don't build infrastructure for users you don't have yet** — build what makes current sites better today

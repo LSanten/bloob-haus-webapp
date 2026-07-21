@@ -16,12 +16,38 @@ import { glob } from "glob";
 import matter from "gray-matter";
 import { createHash } from "crypto";
 import { fileURLToPath } from "url";
+import os from "os";
+import { mapWithConcurrency } from "./utils/map-concurrent.js";
+import { isMainModule } from "./utils/is-main.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
 const getSrcDirPath = () => process.env.SRC_DIR || path.join(ROOT_DIR, "src");
 const MAX_SIZE_BYTES = 300 * 1024; // 300KB target for WhatsApp
 const OG_WIDTH = 1200;
+
+/**
+ * How many OG images to resize at once. Sharp/libvips already thread internally,
+ * so this is capped to speed cold builds without oversubscribing the CPU.
+ *
+ * Precedence:
+ *   1. OG_CONCURRENCY env — explicit override, always wins.
+ *   2. CI (GitHub Actions etc. set CI=true) — a conservative 2. CI runners are
+ *      small/shared and containerized builders can MISREPORT core count (report
+ *      host cores while capped to 1-2 CPUs + tight memory), so we never scale to
+ *      os.cpus() there. 2 is still ~2x the old sequential path, and safe.
+ *   3. Local dev — up to 8 (or the machine's cores), where the speedup matters
+ *      for authors regenerating a vault's images.
+ *
+ * Read at call time (not module load) so env vars set by the caller take effect.
+ */
+function getOgConcurrency() {
+  const fromEnv = parseInt(process.env.OG_CONCURRENCY || "", 10);
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
+  if (process.env.CI) return 2;
+  const cpus = os.cpus()?.length || 4;
+  return Math.max(2, Math.min(cpus, 8));
+}
 
 /**
  * Load tracking data from previous run.
@@ -183,35 +209,48 @@ export async function generateOgImages() {
 
   console.log(`[og] Found ${imageSources.size} unique images to process\n`);
 
+  // Process images with bounded concurrency (sharp is CPU-bound; sequential
+  // left most cores idle on cold builds). Each task is independent — it reads
+  // one source and writes one OG file — so the only shared state is collected
+  // from the returned outcomes afterward, never mutated concurrently.
+  const concurrency = getOgConcurrency();
+  console.log(`[og] Processing with concurrency ${concurrency}\n`);
+
+  const outcomes = await mapWithConcurrency(
+    [...imageSources.entries()],
+    concurrency,
+    async ([baseName, sourceFile]) => {
+      const sourcePath = path.join(SRC_DIR, sourceFile);
+      const hash = await fileHash(sourcePath);
+      const ext = path.extname(sourceFile).toLowerCase();
+      // GIFs → extract first frame as JPEG (animated GIFs are too large for OG;
+      // sharp reads frame 0 by default when resizing, so no extra config needed).
+      const outputFormat = ext === ".png" ? "png" : "jpeg";
+      // Filename on disk uses raw characters (spaces, @, etc.) — NOT URL-encoded.
+      // The URL in frontmatter is encodeURIComponent'd, so browser decodes it back
+      // to the raw name, which the static server then finds on disk.
+      const outputFilename = `${baseName}-og.${outputFormat}`;
+      const outputPath = path.join(OG_DIR, outputFilename);
+
+      // Skip if unchanged
+      if (
+        previousTracking[sourceFile] === hash &&
+        (await fs.pathExists(outputPath))
+      ) {
+        return { sourceFile, hash, status: "skipped" };
+      }
+
+      await generateSingleOgImage(sourcePath, outputPath, outputFormat);
+      return { sourceFile, hash, status: "generated" };
+    },
+  );
+
   let generated = 0;
   let skipped = 0;
-
-  for (const [baseName, sourceFile] of imageSources) {
-    const sourcePath = path.join(SRC_DIR, sourceFile);
-    const hash = await fileHash(sourcePath);
-    const ext = path.extname(sourceFile).toLowerCase();
-    // GIFs → extract first frame as JPEG (animated GIFs are too large for OG;
-    // sharp reads frame 0 by default when resizing, so no extra config needed).
-    const outputFormat = ext === ".png" ? "png" : "jpeg";
-    // Filename on disk uses raw characters (spaces, @, etc.) — NOT URL-encoded.
-    // The URL in frontmatter is encodeURIComponent'd, so browser decodes it back
-    // to the raw name, which the static server then finds on disk.
-    const outputFilename = `${baseName}-og.${outputFormat}`;
-    const outputPath = path.join(OG_DIR, outputFilename);
-
+  for (const { sourceFile, hash, status } of outcomes) {
     newTracking[sourceFile] = hash;
-
-    // Skip if unchanged
-    if (
-      previousTracking[sourceFile] === hash &&
-      (await fs.pathExists(outputPath))
-    ) {
-      skipped++;
-      continue;
-    }
-
-    await generateSingleOgImage(sourcePath, outputPath, outputFormat);
-    generated++;
+    if (status === "generated") generated++;
+    else skipped++;
   }
 
   // Clean up orphaned OG images
@@ -249,7 +288,7 @@ export async function generateOgImages() {
 }
 
 // Run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   generateOgImages().catch((error) => {
     console.error("OG image generation failed:", error.message);
     process.exit(1);

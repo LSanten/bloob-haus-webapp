@@ -8,6 +8,7 @@
  *   SITE_NAME=buffbaby node scripts/assemble-src.js
  */
 
+import { isMainModule } from "./utils/is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -427,7 +428,7 @@ export default {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const siteName = resolveSiteName();
   console.log(`[assemble] Loading config for site: ${siteName}`);
 

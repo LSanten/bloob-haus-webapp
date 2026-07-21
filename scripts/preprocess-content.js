@@ -3,6 +3,7 @@
  * Orchestrates all preprocessing steps: filter, index, resolve links, copy attachments.
  */
 
+import { isMainModule } from "./utils/is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
@@ -883,7 +884,7 @@ export async function preprocessContent({
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Load environment variables from .env.local
   const envPath = path.join(ROOT_DIR, ".env.local");
   if (fs.existsSync(envPath)) {

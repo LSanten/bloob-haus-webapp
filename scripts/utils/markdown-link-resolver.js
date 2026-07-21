@@ -3,6 +3,7 @@
  * Resolves standard markdown links like [text](file.md) to proper URLs.
  */
 
+import { isMainModule } from "./is-main.js";
 import { slugifyHeading } from "./slug-strategy.js";
 
 /**
@@ -104,7 +105,7 @@ function resolveLinkTarget(target, index, fullPath = null) {
 // slugifyHeading is imported from slug-strategy.js
 
 // Test if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Simple test with URL-encoded links like in your recipes
   const testContent = `
 # Our Favorites

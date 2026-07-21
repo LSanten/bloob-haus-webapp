@@ -3,6 +3,7 @@
  * Extracts last modified date from git history for files.
  */
 
+import { isMainModule } from "./is-main.js";
 import { execSync } from 'child_process';
 import path from 'path';
 
@@ -41,7 +42,7 @@ export function getLastModifiedDate(filePath, repoPath) {
 }
 
 // Test if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const testFile = process.argv[2];
   const repoPath = process.argv[3] || process.cwd();
 

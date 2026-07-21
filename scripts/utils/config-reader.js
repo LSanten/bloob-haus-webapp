@@ -3,6 +3,7 @@
  * Reads .obsidian/app.json to extract vault configuration.
  */
 
+import { isMainModule } from "./is-main.js";
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -58,7 +59,7 @@ export async function readObsidianConfig(contentDir) {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const contentDir = process.argv[2] || './content-source';
 
   readObsidianConfig(contentDir)

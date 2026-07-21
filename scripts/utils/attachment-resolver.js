@@ -3,6 +3,7 @@
  * Resolves image and file references, copies attachments to static folder.
  */
 
+import { isMainModule } from "./is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
@@ -259,7 +260,7 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
 }
 
 // Test if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const testContent = `
 # Recipe
 

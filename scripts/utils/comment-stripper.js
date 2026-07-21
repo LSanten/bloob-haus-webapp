@@ -1,3 +1,4 @@
+import { isMainModule } from "./is-main.js";
 /**
  * Comment Stripper
  * Removes Obsidian-style comments (%% ... %%) and HTML comments from markdown.
@@ -27,7 +28,7 @@ export function stripComments(content) {
 }
 
 // Test if run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const testContent = `
 # Recipe Title
 

@@ -18,7 +18,11 @@ Development session history and completed work.
 
 **Left deferred (per original plan):** steps 3–4 — per-shape behavior *gating* (columns parsed, templates don't consume them yet). Tracked in IDEAS.md.
 
-**Verified:** `npm test` 532 pass.
+**Follow-ups (same session, for onboarding a Windows author):**
+- **Parallelized OG image generation** — `generate-og-images.js` now processes images with bounded concurrency (new tested `scripts/utils/map-concurrent.js`) instead of one at a time; big win on cold builds. Default `min(cpus, 8)` locally, **capped at 2 in CI** (`process.env.CI`) so shared/containerized runners can't oversubscribe; override with `OG_CONCURRENCY`. Output verified byte-identical to sequential.
+- **Windows cross-platform fix (TECH-DEBT #25)** — replaced the `import.meta.url === \`file://${process.argv[1]}\`` direct-run idiom (silently broke on Windows paths, killing theme hot-reload) with a tested `isMainModule()` helper (`pathToFileURL`-based) across all 13 scripts.
+
+**Verified:** `npm test` 543 pass; marbles + buffbaby full builds render in headless Chrome; melt/marbles registry reads confirmed.
 
 ### Session 58 — July 8, 2026
 **Worked on:** Wrote the Phase 3 **V1 spike implementation plan** and **started the backend build** in a new separate repo `../bloob-haus-cloud/` (kept out of this Eleventy builder — "don't mix").

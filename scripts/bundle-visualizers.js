@@ -6,6 +6,10 @@
  * 2. Copies styles.css → src/assets/css/visualizers/<name>.css
  * 3. Copies engine.js → src/assets/js/visualizers/<name>.engine.js (plain copy, no bundle)
  *    engine.js is a self-contained IIFE shared by the visualizer and its paired magic machine.
+ * 4. Bundles builder/index.js → src/assets/js/visualizers/<name>-builder.js (via esbuild),
+ *    if present. This is a debug-only overlay bundle (e.g. scene-nav's admin builder) that
+ *    browser.js lazy-loads via dynamic import() — it is intentionally NOT added to the
+ *    manifest/visualizers.json, so normal visitors never fetch it.
  *
  * Adding a new visualizer = adding a new folder in lib/visualizers/.
  * No changes to this script needed.
@@ -64,6 +68,21 @@ for (const name of visualizerDirs) {
     });
     entry.hasJs = true;
     console.log(`[bundle] ${name}: browser.js → ${JS_OUT_DIR}/${name}.js`);
+  }
+
+  // Bundle builder/index.js with esbuild (debug-only overlay, dynamically imported
+  // by browser.js — not part of the manifest, so it's excluded from visualizers.json)
+  const builderEntry = join(dir, "builder", "index.js");
+  if (existsSync(builderEntry)) {
+    await build({
+      entryPoints: [builderEntry],
+      bundle: true,
+      outfile: join(JS_OUT_DIR, `${name}-builder.js`),
+      format: "iife",
+      minify: process.env.NODE_ENV === "production",
+      sourcemap: process.env.NODE_ENV !== "production",
+    });
+    console.log(`[bundle] ${name}: builder/index.js → ${JS_OUT_DIR}/${name}-builder.js`);
   }
 
   // Copy styles.css

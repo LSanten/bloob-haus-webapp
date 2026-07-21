@@ -20,10 +20,17 @@
 #                          (her token, her repo).
 #
 # ── Prerequisites on Leon's side ──
-#   • A Cloudflare Pages project named exactly `odalys` (must match --project-name below).
+#   • The Cloudflare Pages PROJECT is named `odalys-bloob` (its .pages.dev is
+#     odalys-bloob.pages.dev; the plain `odalys` name was already taken globally).
+#     `--project-name` below MUST equal the project name, NOT the subdomain or SITE_NAME.
+#   • NOTE the three distinct "odalys" names, do not conflate:
+#       SITE_NAME=odalys        → the build config (sites/odalys.yaml, src-odalys/). Unchanged.
+#       odalys.bloob.haus       → the public subdomain / site.url. Unchanged.
+#       --project-name=odalys-bloob → the Cloudflare Pages project. This is the one that differs.
 #   • `sites/odalys.yaml` exists in the fork, pointing at Odalys's content vault + theme.
-#   • DNS for odalys.bloob.haus (Leon sets up — see docs, added as a custom domain on
-#     the `odalys` Pages project; same-account so Cloudflare auto-creates the record).
+#   • DNS for odalys.bloob.haus (Leon sets up — added as a custom domain on the
+#     `odalys-bloob` Pages project → CNAME odalys → odalys-bloob.pages.dev, auto-created
+#     because zone + project are in the same account).
 #
 # ── Confirm before use ──
 #   • The `github.repository` guard below must match Odalys's actual fork path.
@@ -78,9 +85,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 
-      - name: Deploy to Cloudflare Pages (Leon's account, project "odalys")
+      - name: Deploy to Cloudflare Pages (Leon's account, project "odalys-bloob")
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy _site --project-name=odalys
+          command: pages deploy _site --project-name=odalys-bloob

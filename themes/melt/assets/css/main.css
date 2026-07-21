@@ -151,7 +151,10 @@ body {
 }
 
 .home-logo {
-  margin-bottom: 20px;
+  /* h1 element (accessible heading via logo alt text) — reset heading defaults */
+  margin: 0 0 20px;
+  font-size: 0;
+  line-height: 0;
 }
 
 .home-logo img { width: 240px; height: auto; }

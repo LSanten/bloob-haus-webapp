@@ -2,7 +2,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>{% if page.url == "/" %}{{ site.title }}{% else %}{{ title }} · {{ site.title }}{% endif %}</title>
+    {# Homepage tab title prefers the page's own `title:` frontmatter (e.g. _index.md)
+       so it can carry the full wordmark; falls back to site.title from _bloob-settings #}
+    <title>{% if page.url == "/" %}{{ title or site.title }}{% else %}{{ title }} · {{ site.title }}{% endif %}</title>
 
     <meta name="description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
@@ -18,7 +20,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="{{ site.title }}" />
     <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
-    <meta property="og:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
+    <meta property="og:title" content="{% if page.url == '/' %}{{ title or site.title }}{% else %}{{ title }}{% endif %}" />
     <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
     {% if image %}
     <meta property="og:image" content="{{ site.url }}{{ image }}" />

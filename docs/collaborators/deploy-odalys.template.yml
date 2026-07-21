@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATE — Odalys's fork-only deploy workflow.
+#
+# This file is NOT part of the upstream builder. Leon drops it into ODALYS'S FORK
+# at `.github/workflows/deploy-odalys.yml`. It mirrors the AE pattern, where
+# `deploy-alter-engineers.yml` lives only in the AE fork, never upstream.
+#
+# Model (B1, decided 2026-07-20): Odalys BUILDS in her OWN GitHub Actions (so the
+# processing + logs are on her side), then deploys the built site to LEON'S
+# Cloudflare Pages project. She sees every run; Leon owns the hosting.
+#
+# ── Secrets to set in the FORK (Settings → Secrets and variables → Actions) ──
+#   CLOUDFLARE_API_TOKEN   A DEDICATED, REVOCABLE token for Leon's Cloudflare
+#                          account. NOTE: Cloudflare Pages tokens are account-
+#                          scoped (Pages:Edit reaches ALL of Leon's projects), so
+#                          treat it as sensitive and rotate/revoke it when Odalys's
+#                          collaborator access ends. Do NOT reuse Leon's main token.
+#   CLOUDFLARE_ACCOUNT_ID  Leon's Cloudflare account ID.
+#   CONTENT_REPO_TOKEN     A GitHub PAT that can READ Odalys's private content vault
+#                          (her token, her repo).
+#
+# ── Prerequisites on Leon's side ──
+#   • A Cloudflare Pages project named exactly `odalys` (must match --project-name below).
+#   • `sites/odalys.yaml` exists in the fork, pointing at Odalys's content vault + theme.
+#   • DNS for odalys.bloob.haus (Leon sets up — see docs, added as a custom domain on
+#     the `odalys` Pages project; same-account so Cloudflare auto-creates the record).
+#
+# ── Confirm before use ──
+#   • The `github.repository` guard below must match Odalys's actual fork path.
+#     Placeholder assumes `odalysbest/bloob-haus-webapp` — VERIFY the fork owner.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy Odalys
+
+on:
+  # Fork changes on main (skip doc-only edits)
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '.gitignore'
+
+  # Content repo webhook — Odalys's VAULT repo fires repository_dispatch on push
+  # (same mechanism marbles/buffbaby/melt use). This replaces a Cloudflare Deploy Hook.
+  repository_dispatch:
+    types: [deploy-odalys]
+
+  # Manual trigger from the GitHub UI
+  workflow_dispatch:
+
+jobs:
+  test-build-deploy:
+    # Safety: only run inside Odalys's fork. If this file ever leaks upstream, it
+    # no-ops in Leon's repo instead of double-deploying.
+    if: ${{ github.repository == 'odalysbest/bloob-haus-webapp' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout builder repo (the fork)
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build odalys site
+        run: SITE_NAME=odalys node scripts/build-site.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - name: Deploy to Cloudflare Pages (Leon's account, project "odalys")
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=odalys

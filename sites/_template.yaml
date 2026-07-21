@@ -1,0 +1,45 @@
+# Bloob Haus Site Config — TEMPLATE
+# ---------------------------------------------------------------------------
+# Copy this file to sites/<yourname>.yaml and fill it in.
+#   cp sites/_template.yaml sites/yourname.yaml
+#
+# This file holds INFRASTRUCTURE settings only — which vault, which theme,
+# which build features. Your AUTHOR settings (site title, author name, comment
+# embeds, default shape, publish mode) live in `_bloob-settings.md` at the root
+# of your content vault, NOT here.
+#
+# Files beginning with "_" (like this one) are ignored as real site configs by
+# the build — so this template never deploys anything.
+# ---------------------------------------------------------------------------
+
+# The public URL your site will be served at. The subdomain also determines the
+# name of the generated `src-*/` working directory (e.g. yourname.bloob.haus →
+# src-yourname/).
+site:
+  url: "https://yourname.bloob.haus"
+
+# Your content vault: the GitHub repo the builder clones and reads. Keep it
+# private — your content stays yours. The builder needs a GITHUB_TOKEN (in
+# .env.local locally, or a Cloudflare build env var in prod) to read it.
+content:
+  repo: "your-github-username/your-vault-repo"
+  branch: "main"
+
+# The theme that styles your site. Must match a folder in themes/<name>/.
+# Starting out? Use an existing theme (e.g. "melt") and adjust gradually.
+# See docs/architecture/bring-your-own-theme.md to adapt an existing HTML design.
+theme: "melt"
+
+# How filenames become URL slugs.
+#   preserve-case → keep original filename casing, spaces become hyphens
+# This is the common default; see docs/architecture/urls-and-ids.md for details.
+permalinks:
+  strategy: preserve-case
+
+# Build features — turn on only what you use. Every available flag and setting
+# is documented in the single source of truth:
+#   docs/architecture/settings-registry.md
+features:
+  search: true          # Pagefind full-text search index + search bar
+  # magic_machines: true       # enable standalone browser tools at /magic-machine/*
+  # date_from_filename: true   # YYYY-MM-DD- filename prefix → date_created

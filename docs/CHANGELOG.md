@@ -6,6 +6,28 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 60 — July 20, 2026
+**Worked on:** Designed and wrote the **onboarding documentation** so external forkers (starting with collaborator **Odalys**) can stand up their own bloob haus. Design spec: `docs/implementation-plans/2026-07-20_onboarding-docs.md`.
+
+**Structure — two audience buckets (deliberate separation):**
+- **Bucket 1 — public onboarding** (`docs/onboarding/`): `README.md` (guided-path entry), `prepare-your-vault.md` (content-first; the "`bloob-shape:` is the only load-bearing YAML" thesis; **now the canonical home for the media convention**), `fork-deploy-and-workflow.md`. Plus annotated `sites/_template.yaml`. Travels with every fork; stranger-safe; zero collaborator specifics.
+- **Bucket 2 — collaborator kit** (`docs/collaborators/`): `README.md` + three templates (`collaborating`, `field-notes`, `CLAUDE.local`). Quarantined from the public path.
+
+**Anti-sprawl rule enforced:** onboarding docs *link into* the architecture SSOTs (`ontology.md`, `shapes.md`, `themes.md`, `settings-registry.md`, `urls-and-ids.md`) and never restate them.
+
+**Field-log mechanism (solves "her AI, not mine"):** a *tracked* `<name>-field-notes.md` (reaches Leon via PR) driven by a *gitignored* `CLAUDE.local.md` (exists only on her clone — Leon's AI never sees it). `CLAUDE.local.md` added to `.gitignore`. `CLAUDE.local.md` verified as current/non-deprecated Claude Code "Local instructions" scope.
+
+**SSOT fixes:** media convention given a canonical home (was homeless); documented the *real* verified media behavior (copied from anywhere; wiki `![[x]]` embeds resolve by basename only → collision risk; single-`media/`-folder recommended). Stale test counts corrected — README "195+" and CLAUDE_CONTEXT "297/16 files" → **534 across 30 files**.
+
+**Confirmed with Leon:** melt is the starter theme handed to Odalys.
+
+**Deploy model — B1 chosen (Leon):** Odalys builds in *her* GitHub Actions, deploys to *Leon's* Cloudflare (project `odalys`). Accepted secrets tradeoff (dedicated revocable CF token in her fork). DNS near-automatic under B1 (same-account Custom Domain auto-creates the CNAME).
+- **Fork-isolation guard APPLIED** — `if: github.repository == 'LSanten/bloob-haus-webapp'` added to every job in `deploy-marbles/buffbaby/melt.yml`, `preview-buffbaby.yml`, and `rebuild-all.yml`'s deploy job. Inert in any fork (no failed-run noise); Leon's own deploys unaffected (condition true in his repo).
+- **`docs/collaborators/deploy-odalys.template.yml` written** — fork-only, guarded to `odalysbest/bloob-haus-webapp` (VERIFY fork owner), documents required secrets. Leon drops it into her fork.
+- Public deploy doc's "Model 2" updated to match B1 (build-in-fork + `repository_dispatch`, not a CF Deploy Hook).
+
+**Not yet done / next:** commit whole session together (repo also has unrelated in-flight `scripts/` changes — commit will be curated, not blanket); real-session dry-run of the `CLAUDE.local.md` logging trigger in an actual forked clone; DNS click-steps once the `odalys` Pages project exists; confirm Odalys's fork owner.
+
 ### Session 59 — July 20, 2026
 **Worked on:** Finished the **bloob-shapes unification** plan (`_bloob-types.md` → `_bloob-shapes.md`), now in `_completed/`. Resolves TECH-DEBT #34.
 

@@ -27,3 +27,8 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# Personal collaborator AI instructions — copied from a template per-clone, never
+# committed. This is what keeps a forker's field-log instruction on their machine
+# only. See docs/collaborators/. (The tracked field-notes file is NOT ignored.)
+CLAUDE.local.md

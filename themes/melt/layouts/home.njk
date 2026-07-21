@@ -2,15 +2,21 @@
 layout: layouts/base.njk
 ---
 <div class="home-wrapper">
-  {# Logo placeholder — Whitney drops in real art here #}
-  <div class="home-logo" aria-hidden="true">
+  {# Logo is the page's accessible heading now that the text h1 is hidden —
+     its alt text (site.logoAlt) must stay exposed to screen readers #}
+  <h1 class="home-logo">
     {% if site.logo %}
-    <img src="{{ site.logo }}" alt="{{ site.title }}" class="no-zoom" />
+    <img src="{{ site.logo }}" alt="{{ site.logoAlt or site.title }}" class="no-zoom" />
     {% endif %}
-  </div>
+  </h1>
 
-  <h1 class="home-title">{{ site.title }}</h1>
-  <p class="home-tagline">{{ site.description }}</p>
+  {# Text title hidden — the logo image already carries the "MELT" wordmark.
+     Re-enable by uncommenting the line below. #}
+  {# <h1 class="home-title">{{ site.title }}</h1> #}
+
+  {# Tagline prefers `subtitle:` frontmatter from the homepage .md (e.g. _index.md);
+     falls back to site.description from _bloob-settings #}
+  <p class="home-tagline">{{ subtitle or site.description }}</p>
 
   {#
     BLOOB SLOT: bubble-nav visualizer

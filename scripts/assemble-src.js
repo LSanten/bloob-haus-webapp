@@ -348,7 +348,7 @@ async function cleanGeneratedFiles() {
  * @param {string} srcDir - SRC_DIR path; used to resolve wiki-link filenames via glob
  * @returns {Promise<string|null>}
  */
-async function resolveLogoUrl(value, srcDir) {
+export async function resolveLogoUrl(value, srcDir) {
   if (!value) return null;
   const s = String(value).trim();
 
@@ -377,10 +377,45 @@ async function resolveLogoUrl(value, srcDir) {
   const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
   if (mdMatch) {
     const p = mdMatch[1]; // keep %20 etc. intact — it's already a valid URL
+    // Decode for disk lookups; a literal % that isn't an escape falls back to the raw string
+    let decoded;
+    try {
+      decoded = decodeURIComponent(p);
+    } catch {
+      decoded = p;
+    }
+    // Literal path exists in src/ (e.g. "media/logo.png") → use it as-is
+    if (fs.existsSync(path.join(srcDir, decoded))) {
+      return p.startsWith("/") ? p : `/${p}`;
+    }
+    // Bare filename or stale path (e.g. "logo.png" when the file lives in media/) →
+    // glob the preprocessed src/ tree, same as the wiki-link branch above
+    const matches = await glob(`**/${decoded}`, {
+      cwd: srcDir,
+      nodir: true,
+      ignore: ["_includes/**", "_data/**", "assets/**", "og/**", "media/optimized/**"],
+    });
+    if (matches.length > 0) {
+      return "/" + matches[0].split(path.sep).map(encodeURIComponent).join("/");
+    }
+    // Nothing found — keep old literal behavior so existing sites are unaffected
     return p.startsWith("/") ? p : `/${p}`;
   }
 
   return s;
+}
+
+/**
+ * Extracts the label of a markdown-link logo/favicon value for use as alt text.
+ *   [A drawing of a marble](logo.png) → "A drawing of a marble"
+ *   [](logo.png), [[logo.png]], plain paths → null (templates fall back to site.title)
+ * @param {string|undefined} value
+ * @returns {string|null}
+ */
+export function extractLogoAlt(value) {
+  if (!value) return null;
+  const m = String(value).trim().match(/^\[(.+?)\]\(.+?\)$/);
+  return m ? m[1] : null;
 }
 
 /**
@@ -392,6 +427,7 @@ async function generateSiteData(config) {
   await fs.ensureDir(dataDir);
 
   const logoUrl = await resolveLogoUrl(config.site.logo || config.site.favicon, SRC_DIR);
+  const logoAlt = extractLogoAlt(config.site.logo || config.site.favicon);
 
   // Snippet embeds: expose every parsed fence as site.embeds[name], and pre-concatenate
   // the auto-injected ones into site.snippets.{head,bodyEnd} for the shared partials.
@@ -413,6 +449,7 @@ export default {
   footer_text: ${JSON.stringify(config.site.footer_text || "")},
   footer_searchbar: ${JSON.stringify(config.site.footer_searchbar || false)},
   logo: ${JSON.stringify(logoUrl)},
+  logoAlt: ${JSON.stringify(logoAlt)},
   year: new Date().getFullYear(),
   permalinks: {
     strategy: ${JSON.stringify(config.permalinks?.strategy || "preserve-case")},

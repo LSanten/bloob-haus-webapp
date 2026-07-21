@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -87,5 +87,65 @@ describe('assemble-src module exports', () => {
   it('exports assembleSrc function', async () => {
     const mod = await import('../../scripts/assemble-src.js');
     expect(mod.assembleSrc).toBeTypeOf('function');
+  });
+});
+
+describe('resolveLogoUrl', () => {
+  let tmpSrc;
+
+  beforeAll(async () => {
+    const os = await import('os');
+    tmpSrc = await fs.mkdtemp(path.join(os.tmpdir(), 'resolve-logo-'));
+    await fs.ensureDir(path.join(tmpSrc, 'media'));
+    await fs.writeFile(path.join(tmpSrc, 'media', 'melt-log-with-text.png'), 'png');
+    await fs.writeFile(path.join(tmpSrc, 'media', 'marble simple.png'), 'png');
+  });
+
+  afterAll(async () => {
+    await fs.remove(tmpSrc);
+  });
+
+  it('md-link with bare filename globs src/ like wiki-links (regression: melt logo 404)', async () => {
+    const { resolveLogoUrl } = await import('../../scripts/assemble-src.js');
+    const url = await resolveLogoUrl(
+      '[A line art drawing of a circle of people](melt-log-with-text.png)',
+      tmpSrc
+    );
+    expect(url).toBe('/media/melt-log-with-text.png');
+  });
+
+  it('md-link with existing vault-relative path keeps literal path (backward compat)', async () => {
+    const { resolveLogoUrl } = await import('../../scripts/assemble-src.js');
+    const url = await resolveLogoUrl('[](media/marble%20simple.png)', tmpSrc);
+    expect(url).toBe('/media/marble%20simple.png');
+  });
+
+  it('md-link path that exists nowhere falls through to literal path (old behavior)', async () => {
+    const { resolveLogoUrl } = await import('../../scripts/assemble-src.js');
+    const url = await resolveLogoUrl('[x](nope/missing.png)', tmpSrc);
+    expect(url).toBe('/nope/missing.png');
+  });
+
+  it('wiki-link still resolves via glob', async () => {
+    const { resolveLogoUrl } = await import('../../scripts/assemble-src.js');
+    const url = await resolveLogoUrl('[[melt-log-with-text.png]]', tmpSrc);
+    expect(url).toBe('/media/melt-log-with-text.png');
+  });
+});
+
+describe('extractLogoAlt', () => {
+  it('extracts the md-link label as alt text', async () => {
+    const { extractLogoAlt } = await import('../../scripts/assemble-src.js');
+    expect(
+      extractLogoAlt('[A line art drawing of a circle of people massaging each other with text below it reading "MELT"](melt-log-with-text.png)')
+    ).toBe('A line art drawing of a circle of people massaging each other with text below it reading "MELT"');
+  });
+
+  it('returns null for empty label, wiki-links, and plain paths', async () => {
+    const { extractLogoAlt } = await import('../../scripts/assemble-src.js');
+    expect(extractLogoAlt('[](media/logo.png)')).toBeNull();
+    expect(extractLogoAlt('[[logo.png]]')).toBeNull();
+    expect(extractLogoAlt('media/logo.png')).toBeNull();
+    expect(extractLogoAlt(undefined)).toBeNull();
   });
 });

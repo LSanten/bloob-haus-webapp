@@ -82,6 +82,45 @@ body {
   background-attachment: fixed;
 }
 
+/* Fixed full-bleed site background — a fixed element, NOT background-attachment:fixed
+   (that property is broken on iOS Safari). Sits behind everything.
+   Note: z-index:-1 alone is not enough — per CSS painting order, a non-positioned
+   element's own background (body's, painted as an in-flow descendant) paints AFTER
+   negative-z-index descendants of the same stacking context, so it would still cover
+   this div. body.has-bg-image below turns off body's own gradient paint so the photo
+   shows through; html keeps its gradient as the true fallback (it paints first/bottom
+   regardless of z-index, so leaving it set is harmless either way). */
+.site-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Scrim: the photo's pale/white patches drop white body text (--color-text) below
+   comfortable contrast on content pages. A flat tint (same dark-purple tone as the
+   nav's gradient) keeps the photo readable as a background while restoring legibility,
+   without touching every text selector individually. */
+.site-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(40, 20, 70, 0.4);
+}
+
+body.has-bg-image {
+  background: none;
+}
+
+/* blend-mode candidates: soft-light, multiply, overlay — tried soft-light on
+   .home-tagline 2026-07-20 (screenshot vs. plain muted-white text on the same
+   background photo). Verdict: reverted. soft-light on the pale/whitish patches
+   of this particular background photo washed the already-low-opacity muted
+   text out to near-invisible — worse, not better. No blend mode applied.
+   Revisit if a different (higher-contrast) background photo is used later. */
+
 /* --- Breadcrumb nav --- */
 .melt-nav {
   position: fixed;

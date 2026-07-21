@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="{{ site.languageCode or 'en' }}">
   {% include "partials/head.njk" %}
-  <body>
+  <body{% if site.backgroundImage %} class="has-bg-image"{% endif %}>
+    {% if site.backgroundImage %}
+    <div class="site-background" aria-hidden="true" style="background-image:url('{{ site.backgroundImage }}')"></div>
+    {% endif %}
     {% include "partials/nav.njk" %}
 
     <main class="site-main">

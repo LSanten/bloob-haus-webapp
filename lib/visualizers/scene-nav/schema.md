@@ -43,11 +43,17 @@ debug: on
   hover label; the target is the image (md-link, `[[wiki-link]]`, or bare path).
 - **Nested bullets = properties**: `background` (bare flag — renders as a background layer),
   `at: x, y` (percent from top-left), `scale` (% of container width), `rotation` (deg),
-  `glow` (#hex), `glowIntensity` (0.2–3), `label` (override), `goto`, `filter`, `onlyShowOn`
+  `glow` (#hex), `glowIntensity` (0.2–3), `goto`, `filter`, `onlyShowOn`
   (desktop/mobile), `flipH`/`flipV` (bare flags), `mobile:` (deeper bullets: `at`/`scale`/`rotation`).
-- **`goto:` derives the action**: internal md-link or URL → link; `#id` → anchor scroll;
-  `filter: tag` instead → in-embed filtering (Shopify). Internal links are resolved to final
-  URLs by the build.
+- **`label` (tri-state)**: absent → the image's alt text (shown on hover); `label: false`/`off` →
+  **no** hover label; `label: Custom text` → override.
+- **`hoverGlow` / `hoverScale`** (v2.1): both default **on**; set `hoverGlow: off` to disable the
+  hover glow and `hoverScale: off` to disable the hover enlarge, per element.
+- **Boolean vocabulary**: any on/off attribute accepts `on`/`true` and `off`/`false`,
+  case-insensitive (so authors don't hit syntax errors).
+- **`goto:` derives the action**: internal md-link `[label](target.md)`, `[[wiki]]` link, or URL →
+  link; `#id` → anchor scroll; `filter: tag` instead → in-embed filtering (Shopify). Internal links
+  are resolved to final URLs by the build.
 
 ## Parsing rules
 

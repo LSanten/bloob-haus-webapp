@@ -258,6 +258,32 @@ The `:::settings` path above assumes per-instance configuration is YAML key/valu
 `garden` is the precedent (see its `schema.md`). Shapes with plain key/value knobs should keep using
 `:::settings` — don't invent a grammar you don't need.
 
+## Authoring & resolution conventions
+
+These apply to **every shape that carries links or images** (scene-nav, garden, …), so they live
+here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-builder-rework-and-resolution.md`.
+
+1. **Dual link syntax, always.** A shape accepts **both** wiki `[[name]]` and markdown `[label](target)`
+   for images *and* note-links. Wiki is auto-enabled and handled gracefully (many authors use only
+   wiki); it carries no inline label, so the label comes from a nested `label:` attribute (or defaults).
+2. **Basename-first resolution (the Obsidian model).** Refs resolve by **bare name, no folder**; a
+   folder is added only to disambiguate when two files share a name. Full/relative paths stay valid.
+3. **A shape resolves its own refs when the general pass can't.** If a shape's grammar uses link forms
+   the general preprocessor skips (e.g. `[alt](x.png)` without the `!`, chosen so Obsidian doesn't embed
+   and clutter the source), the shape resolves them itself. Raw refs are the source-of-truth; resolution
+   is a **render-time projection**, never written back — so a builder can round-trip the exact grammar.
+4. **Literal spaces are authored; encoding is a render concern.** Authors and builders write literal
+   spaces (`Contact us.png`); parsers accept both literal spaces and `%20`. URL-encoding happens only in
+   the resolved output URL.
+5. **Tri-state + boolean vocabulary (all shapes).** Optional attribute: **absent → default**,
+   **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**; `false`/`off` and
+   `true`/`on` accepted case-insensitively so authors don't hit syntax errors. Distinct from **bare
+   flags** (`- background`, `- flipH` → true) and **keyed values** (`- at: x, y`).
+6. **A write-face (builder) emits authorable, markdown-preferred output.** Whatever a builder produces
+   must be something a human could have typed and that re-parses identically. It preserves the authored
+   **target** granularity (full path stays full path; basename stays basename) but normalizes the
+   **wrapper** to markdown `[label](target)` because that form carries the label inline.
+
 ## Comments — a shape behavior
 
 Whether a page shows comments, and *where* the comment thread sits, is a **shape decision** —

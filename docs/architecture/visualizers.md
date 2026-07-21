@@ -8,6 +8,8 @@ Visualizers are the core of Bloob Haus - "little machines" that transform text i
 
 > **A visualizer is the *renderer face of a shape*.** "Visualizer", an inline `:::` block, and a `bloob-shape:` file are the same thing at different **scopes** — not different kinds of thing. This doc covers the *rendering* mechanics; the concept itself is owned by [`shapes.md`](shapes.md) (line 3) and [`ontology.md`](ontology.md) → "What a shape is". The "four types" and "file-scope" headings below are **activation triggers / scopes** (where and how a visualizer runs), not distinct species.
 
+> **Authoring & resolution conventions** (dual wiki+markdown links, basename-first resolution, shapes resolving their own refs, literal spaces, the tri-state / `on·off·true·false` vocabulary, and builder round-trip rules) are shared across all shapes and documented once in [`shapes.md`](shapes.md) → "Authoring & resolution conventions". Don't restate them per visualizer.
+
 ---
 
 ## Core Concepts

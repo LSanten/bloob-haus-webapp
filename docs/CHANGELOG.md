@@ -6,6 +6,13 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 62 — July 21, 2026
+**Worked on:** Scene-nav builder rework — brainstorm → spec → phased plans → executing. Spec `docs/implementation-plans/2026-07-21_scene-nav-builder-rework-and-resolution.md`; decomposed into 3 plans (grammar v2.1 → builder GUI → ref resolution). Branch `scene-nav-builder-rework`.
+
+- **Grammar v2.1 (Plan 1, shared shape code, TDD):** per-element **`hoverGlow`/`hoverScale`** toggles (default on; wired parse → `data-hover-*` attr → `browser.js` `hoverStyles()` → serialize); **`label` tri-state** (`label: false`/`off` suppresses the hover label; value overrides; absent = alt); **`[[wiki]]` goto** support; a shared **`on/off/true/false`** boolean vocabulary. `browser.js` top-level DOM wiring guarded behind `typeof document` so the runtime is unit-testable in Node (new pure `hoverStyles`). scene-nav suite 43 → 54 tests.
+- **Conventions documented once** in `shapes.md` → "Authoring & resolution conventions" (dual wiki+markdown links, basename-first resolution, shapes-resolve-their-own-refs, literal-spaces/encoding-is-render, tri-state vocabulary, builder round-trip rules); cross-linked from `visualizers.md`; DECISIONS entry added. schema.md updated for v2.1 keys.
+- **Deferred to later plans:** Plan 2 (builder GUI rework — foldable sections, hide toggle, ported glow-swatch/flip/show-on controls, new hover/label toggles, mockup upload, round-trip serializer) and Plan 3 (ref resolution — basename/wiki images + goto raw-preservation). Backend image-save for the mockup upload stays deferred until the webapp backend exists.
+
 ### Session 61 — July 20, 2026
 **Worked on:** Scene-nav shape v2 + melt site work. Spec `docs/implementation-plans/2026-07-20_scene-nav-shape-v2-and-melt-background.md`, plan `…/2026-07-20_scene-nav-v2-plan.md` (executed subagent-driven Tasks 1–6, inline 7–10).
 

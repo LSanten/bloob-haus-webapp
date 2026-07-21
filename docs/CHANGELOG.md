@@ -6,6 +6,16 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 61 — July 20, 2026
+**Worked on:** Scene-nav shape v2 + melt site work. Spec `docs/implementation-plans/2026-07-20_scene-nav-shape-v2-and-melt-background.md`, plan `…/2026-07-20_scene-nav-v2-plan.md` (executed subagent-driven Tasks 1–6, inline 7–10).
+
+- **Logo pipeline fixes:** `resolveLogoUrl` md-link bare filenames now glob src/ (melt logo 404 fixed); md-link labels flow to `site.logoAlt` → alt attributes in melt + warm-kitchen.
+- **Melt quick wins:** text h1 hidden (logo img is the accessible h1), homepage tab/og title prefers page `title:`, `subtitle:` frontmatter for the tagline.
+- **Background pipeline (universal, opt-in):** `background_image` in `_bloob-settings.md` → `scripts/generate-background.js` (1920px webp, hash-cached) → `site.backgroundImage`; melt renders fixed full-bleed layer + legibility scrim (scrim opacity = design call to revisit). Also fixed `mergeBloobSettings` dropping the key.
+- **Scene-nav v2 (breaking, migrated):** `::: scene-nav` nested-bullet grammar (md-link images = alt text; `at:`, `goto:`, `background` flag, nested `mobile:` overrides); shape owns its parsing (CRLF-safe); old YAML code fence deprecated (build warns); `serializeBlock` inverse. Both legacy users migrated: marbles core-family page, melt homepage (replaces circular-nav; playlists bubble omitted — no image asset).
+- **Builder consolidation:** `lib/magic-machines/scene-nav-builder/` **deleted**; `lib/visualizers/scene-nav/builder/` debug overlay (drag, side panel, mobile-layout mode) lazy-loaded on `debug: on`; exports `:::` block + Shopify embed HTML (embed reuses the shape's own renderer). Bundler rule: any `builder/index.js` → ESM `[name]-builder.js`.
+- Tests 570 across 32 files. Open follow-ups in `.superpowers/sdd/progress.md` (final-review items: shared `</section>` regex nesting limit, DOMContentLoaded guard, mobile position tuning via builder).
+
 ### Session 60 — July 20, 2026
 **Worked on:** Designed and wrote the **onboarding documentation** so external forkers (starting with collaborator **Odalys**) can stand up their own bloob haus. Design spec: `docs/implementation-plans/2026-07-20_onboarding-docs.md`.
 

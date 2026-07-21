@@ -1,98 +1,84 @@
 # Scene Nav
 
-Interactive image-map navigation. Place transparent PNGs over a background image. Elements glow on hover and trigger actions on click.
+## What this shape is
+
+Interactive image-map navigation: transparent PNGs positioned over a scene (optionally on
+background layers). Elements glow on hover and act on click. v2 grammar (2026-07-20) — the
+old ```scene-nav YAML code fence is **deprecated and no longer rendered** (the build warns).
 
 ## Activation
 
-Place a code fence in your markdown:
+`::: scene-nav` block in the page body (container scope, `data-vis-raw` pipeline).
+File-scope (`bloob-shape: scene-nav`) is not built yet.
+
+## Fence format
 
 ````markdown
-```scene-nav
-background: space-background.png
-elements:
-  - image: bloob.png
-    x: 25
-    y: 30
-    scale: 18
-    label: "Bloob"
-    glow: "#FFD700"
-    action: filter
-    value: "character:bloob"
-```
+::: scene-nav
+aspectRatio: 16/9
+edgeFade: 0.05
+mobile: breakpoint 768, aspectRatio 9/16
+debug: on
+
+- [alt text for the image](media/beach.png)
+	- background
+	- at: 25.1, 30
+	- scale: 75
+- [Resources — a glowing bubble](media/Resources.png)
+	- at: 45.8, -3.6
+	- scale: 18
+	- rotation: 36
+	- glow: #00E5FF
+	- glowIntensity: 1.5
+	- goto: [resources](Resources/index.md)
+	- mobile:
+		- at: 58, 10.3
+		- scale: 29.5
+:::
 ````
 
-Use the **scene-nav-builder** magic machine (`lib/magic-machines/scene-nav-builder/app/index.html`) to build scenes visually and generate this YAML.
+- **Header lines** (before the first bullet): `aspectRatio`, `edgeFade` (0–1, edge fade mask),
+  `mobile: breakpoint N[, aspectRatio A/B]`, `debug: on` (mounts the builder overlay).
+- **Top-level bullet = element.** The md-link label is the image **alt text** and default
+  hover label; the target is the image (md-link, `[[wiki-link]]`, or bare path).
+- **Nested bullets = properties**: `background` (bare flag — renders as a background layer),
+  `at: x, y` (percent from top-left), `scale` (% of container width), `rotation` (deg),
+  `glow` (#hex), `glowIntensity` (0.2–3), `label` (override), `goto`, `filter`, `onlyShowOn`
+  (desktop/mobile), `flipH`/`flipV` (bare flags), `mobile:` (deeper bullets: `at`/`scale`/`rotation`).
+- **`goto:` derives the action**: internal md-link or URL → link; `#id` → anchor scroll;
+  `filter: tag` instead → in-embed filtering (Shopify). Internal links are resolved to final
+  URLs by the build.
 
-## Image files
+## Parsing rules
 
-Images are referenced by filename. Place them in the same folder as your markdown file (or wherever Eleventy will copy them).
+The shape owns its parsing (`parser.js`) — shape-named block, not YAML. Nesting = any
+deeper leading whitespace (tabs or spaces; never a hardcoded tab width). CRLF input is
+normalized. Unparseable blocks warn (`[scene-nav] v2 grammar parse error`) and render
+nothing rather than throwing.
 
-## Fields
+## Container-contents policy
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `background` | string | no | Filename of the background image |
-| `elements` | array | yes | List of positioned elements |
-| `elements[].image` | string | yes | Filename of the element image |
-| `elements[].x` | number | yes | Horizontal position (% from left edge of container) |
-| `elements[].y` | number | yes | Vertical position (% from top edge of container) |
-| `elements[].scale` | number | yes | Width as % of container (height follows natural aspect ratio) |
-| `elements[].label` | string | no | Tooltip text shown on hover |
-| `elements[].glow` | string | no | Hex color for hover glow. Default: `"#FFD700"` |
-| `elements[].glowIntensity` | number | no | Glow strength multiplier. Default: `1`. Range: 0.2–3 |
-| `elements[].action` | string | yes | One of: `filter`, `link`, `anchor` |
-| `elements[].value` | string | no | Tag (filter), URL (link), or element ID (anchor) |
+Override: everything inside is scene-nav's grammar; there is no pass-through content.
 
-## Action types
+## Placement system
 
-| Action | Behavior | `value` example |
-|--------|----------|-----------------|
-| `filter` | Dispatches `bloob:filter` custom event; falls back to Shopify URL filter | `character:bloob` |
-| `link` | Opens URL in new tab | `https://example.com` |
-| `anchor` | Scrolls to element by ID | `section-id` |
+Coordinates (`at: x, y` percentages + `scale`), with independent mobile-layout overrides.
 
-## Glow effect
+## Builder
 
-Uses CSS `filter: drop-shadow()` stacked three times for a convincing glow on transparent PNGs. No canvas or image processing required — works on any image with transparency.
+`builder/` — a debug-mode overlay, lazy-loaded only when a block sets `debug: on`
+(bundled to `assets/js/visualizers/scene-nav-builder.js`, ESM). Drag to position,
+Shift+drag to scale, side panel for all properties and mobile layout. Exports:
+**Copy ::: block** (paste back into Obsidian) and **Copy embed HTML** (self-contained
+snippet for Shopify/any CMS — reuses the shape's own renderer; supports `filter` or/and
+mode). Replaces the deleted `lib/magic-machines/scene-nav-builder` magic machine.
 
-## Examples
+Dev loop: after editing builder code run `node scripts/bundle-visualizers.js`, then reload.
 
-Minimal:
+## Closed-state visual
 
-````markdown
-```scene-nav
-elements:
-  - image: character.png
-    x: 30
-    y: 40
-    scale: 20
-    action: filter
-    value: "character:main"
-```
-````
+Default wikilink pill (TBD — no custom closed-state renderer).
 
-Full scene with background and multiple characters:
+## Authors
 
-````markdown
-```scene-nav
-background: room.png
-elements:
-  - image: bloob.png
-    x: 25.5
-    y: 30.2
-    scale: 18
-    label: "Bloob"
-    glow: "#FFD700"
-    glowIntensity: 1.5
-    action: filter
-    value: "character:bloob"
-  - image: tiger.png
-    x: 60.0
-    y: 45.0
-    scale: 22
-    label: "Tiger"
-    glow: "#FF6B9D"
-    action: link
-    value: "https://example.com/tiger"
-```
-````
+- Leon Santen (bloob.haus)

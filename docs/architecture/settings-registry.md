@@ -126,8 +126,9 @@ FastComments `urlId` and exposed as `<meta name="bloob-page-id">`. See the contr
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `logo` | string | Site logo — used in nav and as favicon source if `favicon` is not set |
+| `logo` | string | Site logo — used in nav and as favicon source if `favicon` is not set. A markdown-link label (`[alt text](file.png)`) becomes `site.logoAlt` — themes render it as the logo's alt attribute |
 | `favicon` | string | Favicon source image — takes priority over `logo` for favicon generation. Generates `favicon.png` (64×64) and `apple-touch-icon.png` (310×310) |
+| `background_image` | string | Optional site background image. Resolved like `logo` (wiki-link/md-link/path), resized to 1920px webp (`scripts/generate-background.js`, hash-cached) → `site.backgroundImage`. Themes decide whether/how to render it — `melt` shows it as a fixed full-bleed layer |
 
 Both fields accept the same value formats:
 - `"[[filename.png]]"` — wiki-link (resolves to `/media/filename.png`)
@@ -477,6 +478,7 @@ No theme-specific page-level settings beyond the universal contract.
 | `date_created_text` | string | `Written on` | `layouts/page.njk` | Custom label for the creation-date pill. |
 | `date_updated` | list of strings | — | `layouts/page.njk` | Renders an "updated" pill from the most recent entry. Hidden when the latest update matches `date_created`. See universal `date_updated`. |
 | `date_updated_text` | string | `Updated on` | `layouts/page.njk` | Custom label for the updated-date pill. |
+| `subtitle` | string | — | `layouts/home.njk` | Homepage tagline under the logo. Falls back to `site.description` from `_bloob-settings.md`. The homepage `title:` also feeds the tab/og title (preferred over `site.title` on `/`). |
 
 ---
 

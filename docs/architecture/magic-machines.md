@@ -101,27 +101,19 @@ function dbg(msg, level = 'info') {
 
 Log these events at minimum: page load, any external library detection, all network fetches (start + size + result), any heavy async operation, and the actual `err.message` + `err.stack` in every catch block.
 
-**Scene Nav Builder** is the first GUI machine and establishes the pattern:
+**Scene Nav Builder — CONSOLIDATED INTO THE SHAPE (2026-07-20).** The former
+`lib/magic-machines/scene-nav-builder/` standalone app is **deleted**. Its functionality
+lives in `lib/visualizers/scene-nav/builder/` — a debug-mode overlay lazy-loaded when a
+`::: scene-nav` block sets `debug: on`. Same two exports (the `:::` block and the Shopify
+embed HTML), but the embed now reuses the shape's own renderer — one source of truth.
+This established the precedent: **a magic machine whose output is a shape's fence is that
+shape's builder** and belongs in the shape's `builder/` folder (see DECISIONS.md 2026-07-20).
 
-```
-lib/magic-machines/scene-nav-builder/
-├── manifest.json
-└── app/
-    └── index.html       ← Standalone vanilla JS builder. Open in any browser.
-```
+### Pairing Convention (historical)
 
-**What it does:** Upload background PNGs + character PNGs → drag to position, set glow effects and click actions → copy a ` ```scene-nav``` ` code fence or standalone embed HTML.
-
-**Paired visualizer:** `lib/visualizers/scene-nav/` reads the ` ```scene-nav``` ` code fences at build time.
-
-### Pairing Convention
-
-When a machine produces output for a visualizer, they share a name prefix:
-
-```
-scene-nav-builder  →  produces  →  ```scene-nav``` fences
-scene-nav          →  renders   →  ```scene-nav``` fences
-```
+When a machine produces output for a visualizer, they share a name prefix — as
+`scene-nav-builder` did for ` ```scene-nav``` ` fences before its consolidation. New GUI
+authors for shapes should go straight into the shape's `builder/` folder instead.
 
 **Naming rule:** The builder and visualizer are distinct things. In markdown frontmatter, always reference the **visualizer** name (e.g. `scene-nav`), not the builder:
 

@@ -435,7 +435,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `page-preview` | runtime | Partial | — | — |
 | `photo-grid` | build-time | Partial | — | — |
 | `quotes-stack` | hybrid | Partial | — | Missing `schema.md` |
-| `scene-nav` | hybrid | Partial | planned (migrate `scene-nav-builder` out of `lib/magic-machines/` → `builder/`) | — |
+| `scene-nav` | hybrid | ✓ | ✓ `builder/` (debug-mode overlay; `:::` block + Shopify embed exports; magic machine deleted 2026-07-20) | v2 nested-bullet grammar; code fence deprecated |
 | `search` | hybrid | Partial | — | Missing `schema.md` |
 | `services` | build-time | Partial | — | Missing `schema.md` |
 | `slideshow` | build-time | ✓ | — | — |

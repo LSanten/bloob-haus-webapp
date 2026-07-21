@@ -4,9 +4,8 @@
   "version": "1.0.0",
   "description": "Interactive image-map navigation. Position transparent PNGs over a background; elements glow on hover and trigger actions (Shopify filter, link, anchor scroll) on click.",
   "activation": {
-    "method": "code-fence",
-    "language": "scene-nav",
-    "description": "Place a ```scene-nav``` code fence in any markdown file. Use the scene-nav-builder magic machine to generate the YAML config visually."
+    "method": "container",
+    "trigger": "scene-nav"
   },
   "files": {
     "transform": "index.js",

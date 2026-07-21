@@ -72,13 +72,15 @@ for (const name of visualizerDirs) {
 
   // Bundle builder/index.js with esbuild (debug-only overlay, dynamically imported
   // by browser.js — not part of the manifest, so it's excluded from visualizers.json)
+  // format: "esm" (not "iife" like browser.js) — browser.js consumes this via
+  // dynamic import() and reads its default export, which only an ESM bundle exposes.
   const builderEntry = join(dir, "builder", "index.js");
   if (existsSync(builderEntry)) {
     await build({
       entryPoints: [builderEntry],
       bundle: true,
       outfile: join(JS_OUT_DIR, `${name}-builder.js`),
-      format: "iife",
+      format: "esm",
       minify: process.env.NODE_ENV === "production",
       sourcemap: process.env.NODE_ENV !== "production",
     });

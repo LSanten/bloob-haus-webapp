@@ -212,6 +212,10 @@ body.has-bg-image {
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin-bottom: 56px;
+  /* long single-line tagline must wrap on narrow screens, not overflow */
+  padding-left: 16px;
+  padding-right: 16px;
+  max-width: 100%;
 }
 
 .home-nav-area { width: 100%; max-width: 560px; }

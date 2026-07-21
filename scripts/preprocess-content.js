@@ -701,6 +701,20 @@ export async function preprocessContent({
     `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
   );
 
+  // Persist the attachment index (basename/vault-path → resolved URL) as build data.
+  // Shapes that carry their own image refs (e.g. scene-nav, whose markdown-link images
+  // the general resolver skips) read this at render to resolve refs themselves. Written
+  // to _data so it is build data, not a served file.
+  const attachmentIndexPath = path.join(tagIndexDir, "attachmentIndex.json");
+  await fs.writeJson(
+    attachmentIndexPath,
+    { byBasename: attachmentIndex.byBasename || {}, byVaultPath: attachmentIndex.byVaultPath || {} },
+    { spaces: 0 },
+  );
+  console.log(
+    `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
+  );
+
   // Step 8: Build and write graph.json + run visualizer preprocess hooks
   console.log("\n--- Step 8: Building graph data + visualizer hooks ---");
   const graphData = buildGraph(perPageLinks, tagIndex);

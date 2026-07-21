@@ -18,6 +18,10 @@ on:
 
 jobs:
   test-build-deploy:
+    # Only runs in Leon's canonical repo. In any fork (e.g. Odalys's) github.repository
+    # differs, so this job is skipped — a fork never triggers Leon's deployments and
+    # produces no failed-run noise. Leon's own deploys are unaffected (condition is true here).
+    if: ${{ github.repository == 'LSanten/bloob-haus-webapp' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

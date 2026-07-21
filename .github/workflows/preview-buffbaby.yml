@@ -10,6 +10,8 @@ on:
 
 jobs:
   preview:
+    # Only runs in Leon's canonical repo — skipped in forks (see deploy-*.yml for rationale).
+    if: ${{ github.repository == 'LSanten/bloob-haus-webapp' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

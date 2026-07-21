@@ -20,6 +20,7 @@ import {
 } from "./utils/config-loader.js";
 import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
+import { generateBackground } from "./generate-background.js";
 import { EMBED_TARGETS } from "./utils/bloob-settings-reader.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -428,6 +429,7 @@ async function generateSiteData(config) {
 
   const logoUrl = await resolveLogoUrl(config.site.logo || config.site.favicon, SRC_DIR);
   const logoAlt = extractLogoAlt(config.site.logo || config.site.favicon);
+  const backgroundImage = await generateBackground({ config, srcDir: SRC_DIR });
 
   // Snippet embeds: expose every parsed fence as site.embeds[name], and pre-concatenate
   // the auto-injected ones into site.snippets.{head,bodyEnd} for the shared partials.
@@ -450,6 +452,7 @@ export default {
   footer_searchbar: ${JSON.stringify(config.site.footer_searchbar || false)},
   logo: ${JSON.stringify(logoUrl)},
   logoAlt: ${JSON.stringify(logoAlt)},
+  backgroundImage: ${JSON.stringify(backgroundImage)},
   year: new Date().getFullYear(),
   permalinks: {
     strategy: ${JSON.stringify(config.permalinks?.strategy || "preserve-case")},

@@ -98,6 +98,8 @@
   position: absolute;
   inset: 0;
   background: var(--snb-overlay) center / cover;
+  /* invert(1) for dark overlays (dark caustics on light art); none for bright/screen */
+  filter: var(--snb-overlay-filter, none);
   -webkit-mask-image: var(--snb-overlay-mask);
           mask-image: var(--snb-overlay-mask);
   -webkit-mask-size: contain;

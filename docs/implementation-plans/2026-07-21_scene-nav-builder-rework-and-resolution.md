@@ -133,9 +133,9 @@ Reorganize `builder/panel.js` into **collapsible sections** mirroring the old GU
 
 ---
 
-## 9b. Builder v2 iteration (2026-07-21, same session — approved)
+## 9b. Builder v2 iteration (2026-07-21, same session — ✅ implemented)
 
-A second round of builder UX, agreed after reviewing v1. Realized in `…_scene-nav-builder-v2-plan.md`.
+A second round of builder UX, agreed after reviewing v1. Implemented per `…_scene-nav-builder-v2-plan.md` (pure logic TDD'd, DOM verified via headless-Chrome harness; single + multi-select confirmed).
 
 - **Icon-first entry (multi-block clarity).** `debug: on` shows a small **"✎ edit" icon** anchored to each scene-nav artboard — **not** an auto-opened sidebar. Clicking opens one shared sidebar **bound to that shape** + a subtle active outline. Fixes the real bug that N debug blocks mounted N overlapping panels. One sidebar at a time; ✕ returns to the icon.
 - **On-canvas transform handles (no hidden modifier keys).** A selected element shows a **resize grip** (scales from the opposite corner) and a **rotate grip** (around center); body-drag still moves. The v1 Shift+drag=scale gesture is retired.

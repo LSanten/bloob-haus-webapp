@@ -73,12 +73,20 @@ Coordinates (`at: x, y` percentages + `scale`), with independent mobile-layout o
 ## Builder
 
 `builder/` — a debug-mode overlay, lazy-loaded only when a block sets `debug: on`
-(bundled to `assets/js/visualizers/scene-nav-builder.js`, ESM). A collapsible right-hand
-side panel with foldable sections: **Scene** (aspectRatio, edgeFade, mobile layout),
-**Add image (mockup)**, **Elements** list, **Selected element** (x/y/scale/rotation sliders,
-flip H/V, glow swatches + custom picker, glowIntensity, hover-glow / hover-enlarge /
-show-label toggles, goto, show-on), **Background layers**, **Export**. Drag to position,
-Shift+drag to scale; a hide/reopen toggle collapses the panel.
+(bundled to `assets/js/visualizers/scene-nav-builder.js`, ESM). **Icon-first:** each
+`debug: on` scene shows a small **"✎ edit" icon** on its artboard (so several debug scenes
+coexist cleanly); clicking opens ONE shared side panel bound to that scene + an active
+outline. Foldable sections: **Scene** (aspectRatio, edgeFade, **mobile breakpoint +
+aspect-ratio + "same as desktop / customized" chip**), **Add image (mockup)**, **Elements**
+list, **Selected element**, **Background layers**, **Export**.
+
+- **Positioning:** drag an element to move; **on-canvas grips** resize (corner) and rotate
+  (top) — no hidden modifier keys. x/y/scale/rotation are editable **number fields** + sliders.
+- **Multi-select:** marquee (drag empty canvas), **Cmd-click** toggle, **Shift-click** range
+  (list + canvas), mirrored. A multi-selection moves/resizes/rotates as a group (relative,
+  about the group center) and bulk-edits simple props.
+- Pure logic (selection, group-transform, mobile-state) is in `builder/selection.js` (tested);
+  transform-handle + marquee pointer wiring in `builder/handles.js`.
 
 - **Mockup upload:** "Add image/background" adds a local object-URL preview element you can
   position immediately; the file is **not** written to the vault (a notice says so — add it

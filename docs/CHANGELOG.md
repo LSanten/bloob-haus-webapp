@@ -15,6 +15,13 @@ Development session history and completed work.
 - **Goto raw-preservation (Plan 3b):** captures each scene-nav block's PRE-resolution raw (`_rawsource` → `data-vis-raw-source`, scene-nav only, inert elsewhere) and sources the debug blob from it, so **"Copy ::: block" reproduces the exact authored `goto: [label](note.md)`** (Obsidian-clickable) while rendering/`data-value` stay resolved (marbles `data-value` verified unchanged). `parser` retains `gotoRaw`; `inject-container-raw` parameterized `{attr, onlyShape}`.
 - **Docs:** shared "Authoring & resolution conventions" block in `shapes.md` (+ `visualizers.md` cross-link); schema.md v2.1 + builder notes; DECISIONS entry. `settings-registry` intentionally untouched (shape-block grammar lives in schema.md). Backend image-save for mockup upload remains the only deferred item.
 
+**Builder v2 (same session — spec §9b, plan `…_scene-nav-builder-v2-plan.md`):** a second UX pass on the debug builder, verified via headless-Chrome harness (single + multi-select).
+- **Icon-first entry:** `debug: on` mounts a per-scene **"✎ edit" icon** (not an auto-opened sidebar); clicking opens ONE shared panel bound to that scene + active outline — fixes the real bug that N debug blocks mounted N overlapping panels, and keeps the layout clean with several debug scenes.
+- **On-canvas transform handles:** selected element shows a resize grip (corner) + rotate grip (top); the v1 Shift+drag=scale gesture is retired (`drag.js` now reports deltas).
+- **Multi-select:** canvas **marquee**, **Cmd-click** toggle, **Shift-click** range (list + canvas), mirrored; **group move / resize / rotate** about the group center; **relative bulk-edit** for a multi-selection (proportional resize, ±rotate, nudge, bulk glow/hover/label). Pure logic (`builder/selection.js`) is unit-tested (+11 tests → 608).
+- **Editable number fields** for x/y/scale/rotation; **mobile breakpoint + aspect-ratio fields + state chip** ("same as desktop" vs "customized (N)").
+- **Mobile-inheritance standard** (cross-shape, `shapes.md` conv. 7): a mobile layout inherits desktop unless the author sets a mobile aspect-ratio or per-element overrides — surfaced so a silently-broken mobile view can't appear unnoticed. Melt's `mobile: … aspectRatio 9/16` is an explicit (untuned) divergence, correctly flagged by the chip. Conventions point 6 corrected: goto is now **preserved verbatim**, not normalized.
+
 ### Session 61 — July 20, 2026
 **Worked on:** Scene-nav shape v2 + melt site work. Spec `docs/implementation-plans/2026-07-20_scene-nav-shape-v2-and-melt-background.md`, plan `…/2026-07-20_scene-nav-v2-plan.md` (executed subagent-driven Tasks 1–6, inline 7–10).
 

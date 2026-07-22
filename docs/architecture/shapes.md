@@ -279,10 +279,19 @@ here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-build
    **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**; `false`/`off` and
    `true`/`on` accepted case-insensitively so authors don't hit syntax errors. Distinct from **bare
    flags** (`- background`, `- flipH` → true) and **keyed values** (`- at: x, y`).
-6. **A write-face (builder) emits authorable, markdown-preferred output.** Whatever a builder produces
-   must be something a human could have typed and that re-parses identically. It preserves the authored
-   **target** granularity (full path stays full path; basename stays basename) but normalizes the
-   **wrapper** to markdown `[label](target)` because that form carries the label inline.
+6. **A write-face (builder) emits authorable output that round-trips.** Whatever a builder produces
+   must be something a human could have typed and that re-parses + re-renders identically. It preserves
+   the authored **target** granularity (full path stays full path; basename stays basename, literal
+   spaces). **Note-links (`goto`) are preserved verbatim** — the exact `[label](note.md)` or `[[wiki]]`
+   the author wrote, so they stay clickable in Obsidian (scene-nav does this via a pre-resolution
+   `data-vis-raw-source` capture; see its schema.md). **Image refs**, which carry no separate label,
+   are emitted in markdown `[alt](target)` form.
+
+7. **A mobile layout inherits desktop by default.** A shape with a responsive/mobile variant treats
+   mobile as identical to desktop **unless the author establishes a divergence** — an explicit mobile
+   aspect-ratio, or per-element mobile position overrides. No divergence → mobile == desktop (same
+   ratio, same positions). A builder should surface this state plainly ("same as desktop" vs
+   "customized") so an author never sees a silently-broken mobile view they didn't create.
 
 ## Comments — a shape behavior
 

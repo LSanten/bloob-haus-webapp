@@ -276,6 +276,12 @@ export async function preprocessContent({
     processedContent = transclusionResult.content;
     stats.transclusions += transclusionResult.transclusions.length;
 
+    // 6b.5: Capture the PRE-resolution raw of scene-nav blocks (before link resolution
+    // rewrites note.md → /url/). Emitted as data-vis-raw-source so the scene-nav builder
+    // can round-trip the authored, un-resolved refs. scene-nav only — inert for all other
+    // shapes/sites (opener never gets _rawsource, container renderer emits nothing).
+    processedContent = injectContainerRaw(processedContent, { attr: "_rawsource", onlyShape: "scene-nav" });
+
     // 6c: Resolve attachments (images, embeds, HTML files)
     const attachmentResult = resolveAttachments(
       processedContent,

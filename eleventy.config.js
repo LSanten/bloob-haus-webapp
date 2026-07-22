@@ -190,10 +190,19 @@ export default async function (eleventyConfig) {
           ? ` data-vis-raw="${rawBase64}"`
           : "";
 
+        // _rawsource is the optional PRE-resolution capture (scene-nav only) — lets a
+        // shape's builder round-trip authored, un-resolved refs. Additive; only present
+        // when inject-container-raw injected it.
+        const rawSourceBase64 = settings._rawsource;
+        delete settings._rawsource;
+        const rawSourceAttr = rawSourceBase64
+          ? ` data-vis-raw-source="${rawSourceBase64}"`
+          : "";
+
         const settingsAttr = Object.keys(settings).length
           ? ` data-vis-settings='${JSON.stringify(settings)}'`
           : "";
-        return `<section class="${cls}"${settingsAttr}${rawAttr}>\n`;
+        return `<section class="${cls}"${settingsAttr}${rawAttr}${rawSourceAttr}>\n`;
       },
     });
   });

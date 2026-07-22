@@ -20,12 +20,21 @@
  */
 
 /**
- * Inject _raw="base64" into every ::: container opener in the markdown.
+ * Inject `${attr}="base64"` into ::: container openers in the markdown.
  *
- * @param {string} markdown  Processed markdown content (after link resolution)
- * @returns {string}          Same markdown with _raw attributes injected
+ * Default (`attr:"_raw"`, all shapes) is the post-resolution capture the container
+ * renderer reads as `data-vis-raw`. Passing `attr:"_rawsource"` + `onlyShape:"scene-nav"`
+ * captures the PRE-resolution raw for scene-nav only (emitted as `data-vis-raw-source`),
+ * so a shape's builder can round-trip the authored, un-resolved refs. Both attributes can
+ * coexist on the same opener (source injected before link resolution, _raw after).
+ *
+ * @param {string} markdown  Markdown content
+ * @param {{ attr?: string, onlyShape?: string|null }} [options]
+ * @returns {string}          Same markdown with the attribute injected
  */
-export function injectContainerRaw(markdown) {
+export function injectContainerRaw(markdown, options = {}) {
+  const attr = options.attr || "_raw";
+  const onlyShape = options.onlyShape || null;
   const lines = markdown.split("\n");
   const result = [];
   let i = 0;
@@ -35,8 +44,12 @@ export function injectContainerRaw(markdown) {
 
     // Match ::: openers that have at least a name — skip bare :::
     // Accepts both :::name and ::: name (space is optional).
-    // Also skip lines that already have _raw= injected (idempotent)
-    const openMatch = /^:::\s*\S/.test(line) && !line.includes("_raw=");
+    // Skip lines that already have this attribute injected (idempotent).
+    const shapeName = (line.match(/^:::\s*(\S+)/) || [])[1] || null;
+    const openMatch =
+      /^:::\s*\S/.test(line) &&
+      !line.includes(attr + "=") &&
+      (!onlyShape || shapeName === onlyShape);
 
     if (openMatch) {
       // Find the matching closing ::: using a depth counter
@@ -63,8 +76,8 @@ export function injectContainerRaw(markdown) {
       const rawContent = innerLines.join("\n");
       const encoded = Buffer.from(rawContent, "utf-8").toString("base64");
 
-      // Inject _raw onto the opener line
-      result.push(line.trimEnd() + ' _raw="' + encoded + '"');
+      // Inject the attribute onto the opener line
+      result.push(line.trimEnd() + " " + attr + '="' + encoded + '"');
 
       // Emit inner content + closing ::: unchanged
       for (let k = i + 1; k <= j && k < lines.length; k++) {

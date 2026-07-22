@@ -2,6 +2,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    {# Preload the full-bleed background so its fetch starts at first-byte (not after the
+       body's inline-style div is parsed) — kills the flash of the html gradient fallback
+       before the CSS background-image decodes. Same URL as .site-background, so no double
+       fetch. Paired with a matching placeholder color on .site-background in main.css. #}
+    {% if site.backgroundImage %}
+    <link rel="preload" as="image" href="{{ site.backgroundImage }}" fetchpriority="high" />
+    {% endif %}
+
     {# Homepage tab title prefers the page's own `title:` frontmatter (e.g. _index.md)
        so it can carry the full wordmark; falls back to site.title from _bloob-settings #}
     <title>{% if page.url == "/" %}{{ title or site.title }}{% else %}{{ title }} · {{ site.title }}{% endif %}</title>

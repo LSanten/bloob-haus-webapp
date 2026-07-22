@@ -94,6 +94,11 @@ body {
   position: fixed;
   inset: 0;
   z-index: -1;
+  /* Placeholder tone = the watercolor's average color, so this div is OPAQUE from first
+     paint and the html gradient can't show through before the image decodes (no flash).
+     The scrim ::after tints it to a muted sage matching the loaded photo. If the
+     background photo is swapped, update this to the new image's average color. */
+  background-color: rgb(152, 209, 154);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

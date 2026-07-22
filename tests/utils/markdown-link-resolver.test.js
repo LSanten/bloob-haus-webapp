@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'fs-extra';
+import path from 'path';
+import os from 'os';
 import { resolveMarkdownLinks } from '../../scripts/utils/markdown-link-resolver.js';
+import { buildFileIndex } from '../../scripts/utils/file-index-builder.js';
 import { createMockIndex } from '../helpers/mock-index.js';
 
 const index = createMockIndex([
@@ -71,6 +75,53 @@ describe('resolveMarkdownLinks', () => {
       const input = '# Heading\n\nJust text.';
       const result = resolveMarkdownLinks(input, index);
       expect(result.content).toBe(input);
+    });
+  });
+
+  // Regression: scene-nav `goto: [_index](Resources/_index.md)` and any other
+  // markdown link to a folder index written with the _index spelling must resolve
+  // to the folder URL — the exact live-site bug. Uses a REAL buildFileIndex so the
+  // folder-index alias registration is exercised, not a hand-rolled mock.
+  describe('folder index links (_index.md) against a real index', () => {
+    let tmpDir;
+    let realIndex;
+
+    beforeEach(async () => {
+      tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'md-link-folder-index-'));
+      // TWO folder indexes: the bare filename "_index" collides in filenameLookup
+      // (last-write-wins), so a fix that leans on the bare filename resolves one of
+      // these to the WRONG folder. Only a path-aware alias (folder/_index) is correct.
+      const files = [
+        { relativePath: 'Resources/_index.md', content: '---\n---\n# Resources' },
+        { relativePath: 'Playlists/_index.md', content: '---\n---\n# Playlists' },
+        { relativePath: 'Resources/Sign up for a MELT.md', content: '---\n---\n# Sign up' },
+      ];
+      const published = [];
+      for (const f of files) {
+        const full = path.join(tmpDir, f.relativePath);
+        await fs.ensureDir(path.dirname(full));
+        await fs.writeFile(full, f.content);
+        published.push({ path: full, relativePath: f.relativePath });
+      }
+      realIndex = await buildFileIndex(published, tmpDir);
+    });
+
+    afterEach(async () => {
+      await fs.remove(tmpDir);
+    });
+
+    it('resolves each folder _index.md to its OWN folder URL (no cross-folder collision)', () => {
+      // Both must resolve to their own folder; pre-fix at most one can be right
+      // because both fall back to the shared bare "_index" key.
+      expect(resolveMarkdownLinks('[_index](Resources/_index.md)', realIndex).content)
+        .toBe('[_index](/resources/)');
+      expect(resolveMarkdownLinks('[_index](Playlists/_index.md)', realIndex).content)
+        .toBe('[_index](/playlists/)');
+    });
+
+    it('still resolves a note inside the same folder', () => {
+      const result = resolveMarkdownLinks('[x](Resources/Sign up for a MELT.md)', realIndex);
+      expect(result.content).toBe('[x](/resources/sign-up-for-a-melt/)');
     });
   });
 });

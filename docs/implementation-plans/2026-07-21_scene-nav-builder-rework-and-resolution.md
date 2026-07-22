@@ -133,6 +133,18 @@ Reorganize `builder/panel.js` into **collapsible sections** mirroring the old GU
 
 ---
 
+## 9b. Builder v2 iteration (2026-07-21, same session — approved)
+
+A second round of builder UX, agreed after reviewing v1. Realized in `…_scene-nav-builder-v2-plan.md`.
+
+- **Icon-first entry (multi-block clarity).** `debug: on` shows a small **"✎ edit" icon** anchored to each scene-nav artboard — **not** an auto-opened sidebar. Clicking opens one shared sidebar **bound to that shape** + a subtle active outline. Fixes the real bug that N debug blocks mounted N overlapping panels. One sidebar at a time; ✕ returns to the icon.
+- **On-canvas transform handles (no hidden modifier keys).** A selected element shows a **resize grip** (scales from the opposite corner) and a **rotate grip** (around center); body-drag still moves. The v1 Shift+drag=scale gesture is retired.
+- **Multi-select.** Canvas **marquee** (drag empty space → select elements inside); **Cmd-click** toggles one; **Shift-click** range-selects (sidebar list); selection mirrored canvas ↔ list. **Drag any selected element → whole group moves.**
+- **Relative multi-edit (the key model).** Single selection = **absolute** controls (x/y/scale/rotation, now typeable). Multi selection = header "**N selected**" and **relative** controls: scale = proportional ×factor about the group center (no absolute value), move = shared delta, rotate = shared Δ°; group handles do the same; simple props (glow, hover toggles, label) bulk-apply.
+- **Editable numbers.** x/y/scale/rotation are `<input type=number>` (type or slide).
+- **Mobile inheritance standard (cross-shape).** A mobile layout **inherits desktop by default**; it *diverges* only where the author sets a mobile aspect-ratio **or** per-element mobile positions — no divergence → identical to desktop. Builder surfaces **breakpoint + mobile aspect-ratio** fields and a state chip (**"same as desktop"** vs **"customized (N)"**). Melt's `mobile: … aspectRatio 9/16` is an explicit (untuned) divergence — the sole cause of its "broken mobile"; flag for the author to keep-and-tune or drop.
+- **Doc fixes.** Conventions point 6 corrected (goto is now **preserved verbatim**, not normalized); new mobile-inheritance standard added to `shapes.md`.
+
 ## 10. Phasing & risks
 
 **Suggested sequence** (also a natural decomposition into two plans if preferred):

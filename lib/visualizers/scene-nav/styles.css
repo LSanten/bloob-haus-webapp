@@ -84,3 +84,36 @@
   right: 0;
   transform: none;
 }
+
+/* Alpha-masked animated overlay (opt-in via `overlay: <id>` grammar).
+   The loop is painted only where the element artwork has opaque pixels
+   (mask = the element's own image) and blended so the loop's dark background
+   disappears. Custom props are set inline by renderer.js from overlays.js. */
+.scene-nav-el.has-overlay {
+  isolation: isolate; /* keep mix-blend-mode contained to this bubble */
+}
+
+.scene-nav-el.has-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--snb-overlay) center / cover;
+  -webkit-mask-image: var(--snb-overlay-mask);
+          mask-image: var(--snb-overlay-mask);
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  mix-blend-mode: var(--snb-overlay-blend, screen);
+  opacity: var(--snb-overlay-opacity, 0.7);
+  pointer-events: none;
+}
+
+/* A GIF can't be paused via CSS — the clean "off" is hiding the overlay layer. */
+@media (prefers-reduced-motion: reduce) {
+  .scene-nav-el.has-overlay::after {
+    display: none;
+  }
+}

@@ -8,6 +8,35 @@
 This is the working agreement between me (**<yourname>**) and the Bloob Haus maintainer while I build my
 own site by forking this repo. It's short on purpose.
 
+## Your setup at a glance
+
+**Fill this in first, before any deploy work.** It is the single place that says *which* setup I'm on,
+so neither I nor my AI assistant has to infer it — the two hosting models in
+[`../onboarding/fork-deploy-and-workflow.md`](../onboarding/fork-deploy-and-workflow.md) §5 have
+genuinely different steps, and guessing wrong wastes a day.
+
+| | |
+|---|---|
+| **Hosting model** | `Model 2 — hosted by maintainer` *(or `Model 1 — self-serve`; delete the wrong one)* |
+| **My site name** (`SITE_NAME`, `sites/<name>.yaml`, `src-<name>/`) | `<yourname>` |
+| **My public URL** | `https://<yourname>.bloob.haus` |
+| **My fork** | `<your-github-user>/bloob-haus-webapp` |
+| **My vault repo** | `<your-github-user>/<your-vault-repo>` |
+| **My theme** | `themes/<yourname>/` |
+| **Cloudflare Pages project** | `<project-name>` — *may differ from the site name; whoever owns the CF account sets it* |
+| **Deploy workflow in my fork** | `.github/workflows/deploy-<yourname>.yml` |
+| **Dispatch event type** | `deploy-<yourname>` |
+
+> **For my AI assistant:** treat the table above as authoritative for this clone. Don't infer the
+> hosting model from the presence of a Cloudflare config, and don't propose Model 1 steps (Pages
+> "Connect to Git", Deploy Hooks) if the model says Model 2. If a row is still a placeholder, ask me
+> rather than assuming.
+
+**Names that look alike but aren't:** the site name, the public subdomain, and the Cloudflare Pages
+project are three separate strings. They often match, and when they don't, conflating them produces a
+deploy that succeeds and serves nothing. `--project-name` in the deploy workflow must equal the
+**Cloudflare Pages project**, never the site name or subdomain.
+
 ## ⚠️ Read this first — everything to the shared repo goes through a pull request
 
 I may currently have **collaborator access** to the shared `LSanten/bloob-haus-webapp` repo. **I do not

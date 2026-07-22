@@ -13,6 +13,14 @@
 I am **<yourname>**, an early collaborator building my own Bloob Haus site by forking this repo. I am
 working through the onboarding path in `docs/onboarding/` (start with `prepare-your-vault.md`).
 
+## Read my setup before advising on deploys
+
+`docs/collaborators/collaborating.md` opens with a **"Your setup at a glance"** table: my hosting model,
+site name, fork, vault repo, Cloudflare Pages project, and dispatch event type. **Read it before saying
+anything about deploying, Cloudflare, DNS, secrets, or GitHub Actions.** It is authoritative for this
+clone — do not infer any of it from the repo contents, and do not mix steps from the hosting model I'm
+*not* on. If a row is still a placeholder, ask me instead of assuming.
+
 ## Keep a field-notes log for the maintainer
 
 There is a tracked file at the repo root named **`<yourname>-field-notes.md`**. It is my onboarding

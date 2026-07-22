@@ -1,14 +1,55 @@
-# Melt Scene-Nav Builder — Next Round (bugs + undo)
+# Melt Scene-Nav Builder — Next Round (bugs + undo + overlay)
 
-**Status:** Planned 2026-07-22. For a FRESH session — the prior session (S62–S63) grew very large.
-**Branch:** `scene-nav-builder-rework` (unpushed, 16 commits, 608 tests). **Read first:** spec
-`2026-07-21_scene-nav-builder-rework-and-resolution.md` §9b + plan `2026-07-21_scene-nav-builder-v2-plan.md`.
-**Resume dev:** `npm run dev:melt` → localhost:8080 → click "✎ Edit scene". **Verify in a REAL browser —
-headless can't drag**, and every bug below is a drag interaction.
+**Status:** Updated 2026-07-22 (S64). For a FRESH session — prior sessions (S62–S64) grew very large.
+**Branch/deploy:** builder v2 + the S64 link fix are on `main` and **deployed** (melt.bloob.haus live).
+**Read first:** spec `2026-07-21_scene-nav-builder-rework-and-resolution.md` §9b + plan
+`2026-07-21_scene-nav-builder-v2-plan.md`.
+**Resume dev:** `npm run dev:melt` → localhost:8080 → click "✎ Edit scene". **Verify drag bugs in a REAL
+browser — headless can't drag.**
 
 ---
 
-## Bugs (must fix, found in hands-on testing)
+## Done in S64 (2026-07-22)
+
+### ✅ Deployed live
+Fast-forwarded builder v2 (builder + image resolution) → `main` → **melt.bloob.haus is LIVE** (HTTP 200,
+scene-nav homepage, 14 elements; vault already in sync).
+
+**`debug: on` is currently live on the public page** — the "✎ Edit scene" pill shows to all visitors, with
+the known B1/B2 bugs. Shipped "as is" for Leon's own testing. For a clean public site: set `debug: off` in
+`melt-website/_index.md` and push the vault (webhook auto-rebuilds). No web-app change needed.
+
+### ✅ Debug-mode gating — DECISION: deferred to backend
+Idea: builder/debug should show only in local dev now, and later when logged-in with edit access. **Decision:**
+the real "logged-in = edit access" gate needs the Phase-3 backend (auth) — building it now would be throwaway,
+and the manual vault `debug` toggle already gives a clean public site. Build the real gate when the backend
+lands (see `bloob-haus-cloud`).
+
+### ✅ FIXED — folder-index link resolution (was the top-priority bug)
+- **Symptom:** `goto: [_index](Resources/_index.md)` (and any markdown link to a folder index by its
+  `_index.md` path) did NOT resolve to `/resources/` in the built/dev site, though Obsidian follows it fine.
+- **Root cause (global, not scene-nav-specific):** `scripts/utils/file-index-builder.js` registered only the
+  `<folder>/index` path alias for folder indexes. A `<folder>/_index` link missed that alias and fell back to
+  the bare `_index` filename key — which **collides across every folder index** (last-write-wins) → resolved
+  to the wrong folder. `resolveMarkdownLinks` (preprocess step 6e) and `resolveLink` both consume this index,
+  so the bug hit all sites/shapes; scene-nav `goto` was just the visible case.
+- **Fix (commit `c4357a2`):** register BOTH `<folder>/index` and `<folder>/_index` aliases for every folder
+  index, regardless of on-disk spelling. Purely additive, backwards-compatible.
+- **Tests:** TDD, 5 regression tests across `tests/utils/file-index-builder.test.js` and
+  `tests/utils/markdown-link-resolver.test.js` (incl. a two-folder collision repro against a REAL
+  `buildFileIndex`). 613/613 green.
+- **Verified:** real melt build renders `data-value="/resources/"`; live site 12/12 samples after deploy.
+- **Known adjacent limitation (NOT fixed, pre-existing):** the path-aware branch matches the raw
+  (un-slugified) folder path, so folders whose **name has spaces** still fall back to the bare filename for
+  path-qualified links. Same limitation already applied to `index.md`; this fix brings `_index` to parity.
+  Fix later if a spaced-folder index link breaks (slugify the folder segment before lookup + tests).
+
+### ✅ STARTED — F2 alpha-masked GIF overlay (Phase A landed; see F2 below)
+Water loop asset pulled in + runtime rendering implemented this session. Builder dropdown (Phase B) pending.
+
+---
+
+## Bugs (still to fix)
 
 ### B1 — Rotation grip doesn't persist (resize does)
 **Symptom:** dragging the top (rotate) grip rotates the element while held, but the rotation reverts on
@@ -40,9 +81,28 @@ owns marquee pointer events, with elements still hit-testable for direct-drag; c
 `requestAnimationFrame`. The selection **math is unit-tested and correct** — only the DOM wiring is
 broken. **Verify interactively** (drag across a cluster → exactly the enclosed bubbles select).
 
+### B3 — Background image "flash of old background" on load (NEW)
+**Symptom:** for a blink, the *old/placeholder* background shows before the melt watercolor
+`background_image` loads in; the new background image should be the only thing ever visible.
+
+**Likely causes (investigate):** the watercolor is a fixed full-bleed `<img>`/layer (theme `background_image`
++ 0.4 dark scrim). Until that image decodes, the page shows the theme default background (or a paint before
+the large image arrives). Candidates: no preload / low fetch priority on the bg image; no matching
+placeholder color underneath; the scrim/layer painting before the image; or a layout/transition reveal.
+
+**Fix approach (pick after confirming the layer):**
+- **Preload** the background image (`<link rel="preload" as="image" href=...>` in the head, or
+  `fetchpriority="high"` on the bg `<img>`) so it's ready at first paint.
+- **Placeholder color:** set the bg container/layer `background-color` to the watercolor's dominant tone (or
+  a tiny inlined LQIP/blurhash data-URI) so any pre-decode frame already looks right, never "old".
+- Ensure the bg layer isn't gated behind a JS/opacity transition that reveals late.
+- This lives in the **melt theme** (`themes/melt/`), not the scene-nav shape — the bg is a theme feature.
+  Confirm whether it's universal (all themes with `background_image`) or melt-only before choosing the layer.
+**Verify:** hard-reload (disable cache, throttle to Slow 3G) → no flash of any other background at any point.
+
 ---
 
-## Feature
+## Features
 
 ### F1 — Undo / redo ("reverse last action")
 A visible **"↶ Undo"** button in the panel (+ `⌘Z` / `⌘⇧Z`, and a redo button).
@@ -53,6 +113,69 @@ number-field change, add/remove element, bulk edit. Undo pops → replace `scene
 rendered DOM (positions/scale/rotation/flip for every element) → `renderPanel()` + `wireCanvas()`. Cap the
 stack (~50); push to a redo stack on undo. Watch the two-model split from Plan 3b: the builder edits the
 **pre-resolution** scene (raw refs) — snapshot that same object.
+
+### F2 — Alpha-masked animated overlay on scene elements
+
+**Goal:** an optional looping overlay (a fine-tuned B&W moving-water loop) painted **only where an element's
+artwork has opaque pixels** — the exact effect from the Studio Bloob shop (header logo + footer waterdog).
+Curated, repo-owned loops; the user picks one per element from a short list — no uploads, no per-user tuning.
+
+**Format decision (S64): GIF.** Leon already has the GIF-making pipeline (ffmpeg grayscale + contrast-crush +
+crossfade-loop, documented in `bloobhaus-notes/studio-bloob-shop-dev/docs/footer-waterdog-overlay.md`), it's
+proven to look good on phone, and the technique is format-agnostic. WebP would be ~5–10× smaller but isn't
+worth diverging the pipeline now — the CSS is identical, so swapping to WebP later is a file swap.
+
+**Proven technique (self-contained CSS, no JS)** — from `footer.liquid`:
+```css
+.el::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: url(<loop.gif>) center / cover;      /* animated loop fills the box */
+  -webkit-mask-image: url(<element artwork>);       /* clip to the artwork's ALPHA */
+          mask-image: url(<element artwork>);       /* opaque px show loop, transparent hides it */
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  mix-blend-mode: screen;                           /* GIF's black bg vanishes; bright ripples show */
+  opacity: .7;
+}
+```
+`mask-image` on a transparent PNG masks by ALPHA (opaque → show). `screen` needs a dark/B&W loop over lighter
+art (melt's watercolor bubbles qualify); near-white art would need `filter: invert(1)` + `mix-blend-mode:
+multiply` instead.
+
+**Phase A — runtime rendering (DONE this session):**
+- **Asset:** `lib/visualizers/scene-nav/assets/overlays/water.gif` (pulled from the Studio Bloob CDN,
+  190×107 B&W loop, ~500 KB). `bundle-visualizers.js` already copies `<shape>/assets/**` → served at
+  `/assets/visualizers/scene-nav/overlays/water.gif` (no pipeline change needed).
+- **Registry:** `lib/visualizers/scene-nav/overlays.js` — `OVERLAYS` map (id → file/label/opacity/blend) +
+  pure `resolveOverlay(id)` → `{ url, opacity, blend, label } | null`. Single source of truth for renderer
+  and the future builder dropdown. Currently one entry: `water`.
+- **Grammar (per element):** `overlay: <id>` (e.g. `overlay: water`); default none. Fits the v2.1 vocab.
+  Parser reads it; `serializeBlock` round-trips it (`- overlay: water`).
+- **Renderer:** when `el.overlay` resolves, add class `has-overlay` and emit CSS custom props on the
+  `.scene-nav-el`: `--snb-overlay` (loop url), `--snb-overlay-mask` (the element's own resolved image),
+  `--snb-overlay-opacity`, `--snb-overlay-blend`. All styling in `styles.css`'s `.scene-nav-el.has-overlay::after`
+  (renderer stays a pure string fn). `isolation: isolate` on `.has-overlay` keeps `screen` contained to the
+  bubble. `@media (prefers-reduced-motion: reduce)` hides the `::after` — the clean "off" (a GIF can't be
+  CSS-paused; hiding the overlay layer is the disable).
+- **Tests (TDD):** `overlays.js` resolution, parser `overlay` key + serialize round-trip, renderer emits
+  `has-overlay` + vars only when set. Full suite green.
+
+**How to try it:** add `- overlay: water` under any bubble in `melt-website/_index.md`, `npm run dev:melt`.
+
+**Phase B — builder GUI (NOT done):** an "Overlay" dropdown in the element panel (None / registry labels),
+sourced from `OVERLAYS`; on change set the same CSS vars live for instant preview + write `overlay: <id>` to
+the grammar. Reuse the existing panel control pattern (glow/flip/hover toggles).
+
+**Scope guard (v1):** elements only (not backgrounds); one curated loop to start; no per-user tuning/upload.
+Add more loops by dropping a file in `assets/overlays/` + a registry entry. Author more B&W loops with the
+ffmpeg recipe in the Studio Bloob doc (seamless crossfade loop is what kills the visible "clip").
+
+**Verify:** a bubble with `overlay: water` shows moving water only on its artwork, nothing on the transparent
+area; looks right on phone; no overlay bleed onto the page bg; reduced-motion hides it; `npx vitest run` green.
+
+**Reference:** `bloobhaus-notes/studio-bloob-shop-dev/sections/footer.liquid` (~lines 51–84) +
+`docs/footer-waterdog-overlay.md` (incl. the seamless-loop ffmpeg recipe & the pure-ASCII `.liquid` gotcha).
 
 ---
 
@@ -67,7 +190,8 @@ stack (~50); push to a redo stack on undo. Watch the two-model split from Plan 3
 - **Pill/label polish:** confirm the green "editing" pill text/label reads clearly at all sizes.
 
 ## Resources
-- **`frontend-design` skill** — invoke for B2's interaction UI + any handle/marquee visual polish.
+- **`frontend-design` skill** — invoke for B2's interaction UI, the F2 Phase-B dropdown, and any
+  handle/marquee visual polish.
 - **WebSearch** — available; use for a robust rubber-band-selection / transform-handle reference.
 - Pure logic (`builder/selection.js`: `elementsInRect`, `groupBBox`, `scaleGroup`, `rotateGroupPositions`,
   `moveGroup`, `mobileState`) is tested — reuse it; bugs live in the DOM wiring (`handles.js`,
@@ -75,4 +199,5 @@ stack (~50); push to a redo stack on undo. Watch the two-model split from Plan 3
 
 ## Definition of done
 Rotation persists on release; marquee selects exactly the enclosed bubbles; undo reverses the last action;
-all verified in a real browser; branch still green (`npx vitest run`); then decide merge/push.
+no background-flash on load; F2 overlay usable from the builder dropdown; all verified in a real browser;
+suite green (`npx vitest run`); then decide merge/push.

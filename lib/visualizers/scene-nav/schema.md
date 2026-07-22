@@ -73,11 +73,21 @@ Coordinates (`at: x, y` percentages + `scale`), with independent mobile-layout o
 ## Builder
 
 `builder/` — a debug-mode overlay, lazy-loaded only when a block sets `debug: on`
-(bundled to `assets/js/visualizers/scene-nav-builder.js`, ESM). Drag to position,
-Shift+drag to scale, side panel for all properties and mobile layout. Exports:
-**Copy ::: block** (paste back into Obsidian) and **Copy embed HTML** (self-contained
-snippet for Shopify/any CMS — reuses the shape's own renderer; supports `filter` or/and
-mode). Replaces the deleted `lib/magic-machines/scene-nav-builder` magic machine.
+(bundled to `assets/js/visualizers/scene-nav-builder.js`, ESM). A collapsible right-hand
+side panel with foldable sections: **Scene** (aspectRatio, edgeFade, mobile layout),
+**Add image (mockup)**, **Elements** list, **Selected element** (x/y/scale/rotation sliders,
+flip H/V, glow swatches + custom picker, glowIntensity, hover-glow / hover-enlarge /
+show-label toggles, goto, show-on), **Background layers**, **Export**. Drag to position,
+Shift+drag to scale; a hide/reopen toggle collapses the panel.
+
+- **Mockup upload:** "Add image/background" adds a local object-URL preview element you can
+  position immediately; the file is **not** written to the vault (a notice says so — add it
+  to your media folder before publishing). Backend persistence is deferred to the webapp.
+- **Export = Copy ::: block:** reproduces the **authored** grammar — raw image refs (basename
+  or path, literal spaces), `label: false`, and the exact `goto: [label](note.md)` / `[[wiki]]`
+  form (via the pre-resolution `data-vis-raw-source` capture), so it round-trips cleanly back
+  into Obsidian. The Shopify embed export (`embed-serializer.js`) stays in the code but is not
+  shown in this UI. Replaces the deleted `lib/magic-machines/scene-nav-builder` magic machine.
 
 Dev loop: after editing builder code run `node scripts/bundle-visualizers.js`, then reload.
 

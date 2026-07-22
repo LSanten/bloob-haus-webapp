@@ -1,6 +1,6 @@
 # Scene-Nav Builder Rework + Ref Resolution — Design Spec
 
-**Status:** Design (brainstormed 2026-07-21, S62). Not yet planned/implemented.
+**Status:** ✅ Implemented 2026-07-21 (S62), branch `scene-nav-builder-rework`. All parts landed (grammar v2.1, image resolution, builder GUI, goto raw-preservation); only backend image-save for mockup upload remains deferred. See CHANGELOG S62.
 **Supersedes/extends:** `2026-07-20_scene-nav-shape-v2-and-melt-background.md` (v2 grammar), `2026-07-20_scene-nav-v2-plan.md` (builder consolidation).
 **Scope:** the `scene-nav` shape (`lib/visualizers/scene-nav/`), its debug-mode builder overlay, and the shared authoring/resolution conventions that this work makes explicit.
 

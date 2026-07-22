@@ -196,7 +196,7 @@ body.has-bg-image {
   line-height: 0;
 }
 
-.home-logo img { width: 240px; height: auto; }
+.home-logo img { width: 312px; height: auto; }
 
 .home-title {
   font-family: var(--font-heading);
@@ -605,7 +605,7 @@ a.internal-link {
 /* --- Mobile --- */
 @media (max-width: 600px) {
   .melt-nav { padding: 12px 14px; font-size: 0.75rem; }
-  .home-logo img { width: 160px; }
+  .home-logo img { width: 208px; }
   .home-tagline { margin-bottom: 40px; }
 
   .home-nav-area li a,

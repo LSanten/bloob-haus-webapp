@@ -112,7 +112,8 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(40, 20, 70, 0.4);
+  /* Darkened 0.4 → 0.62 so white body text stays legible over the pale watercolor. */
+  background: rgba(40, 20, 70, 0.62);
 }
 
 body.has-bg-image {

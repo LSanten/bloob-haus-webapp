@@ -81,24 +81,26 @@ owns marquee pointer events, with elements still hit-testable for direct-drag; c
 `requestAnimationFrame`. The selection **math is unit-tested and correct** — only the DOM wiring is
 broken. **Verify interactively** (drag across a cluster → exactly the enclosed bubbles select).
 
-### B3 — Background image "flash of old background" on load (NEW)
-**Symptom:** for a blink, the *old/placeholder* background shows before the melt watercolor
-`background_image` loads in; the new background image should be the only thing ever visible.
+### B3 — Background "flash of old background" on load — ✅ FIXED (S64)
+**Symptom:** for a blink the old background (the `html --gradient` fallback) showed before the melt
+watercolor `background_image` loaded in.
 
-**Likely causes (investigate):** the watercolor is a fixed full-bleed `<img>`/layer (theme `background_image`
-+ 0.4 dark scrim). Until that image decodes, the page shows the theme default background (or a paint before
-the large image arrives). Candidates: no preload / low fetch priority on the bg image; no matching
-placeholder color underneath; the scrim/layer painting before the image; or a layout/transition reveal.
+**Root cause:** `themes/melt/layouts/base.njk` paints the watercolor via an inline
+`style="background-image:url(...)"` on `<div class="site-background">` — a CSS background image, fetched
+LATE (low priority, only after the body div is parsed) with **no preload**. The optimized image is still
+~1 MB (`/media/optimized/site-background.webp`, 1920×1920). Worse, `.site-background` had **no
+background-color**, so the transparent div let the `html` gradient paint through until the image decoded.
 
-**Fix approach (pick after confirming the layer):**
-- **Preload** the background image (`<link rel="preload" as="image" href=...>` in the head, or
-  `fetchpriority="high"` on the bg `<img>`) so it's ready at first paint.
-- **Placeholder color:** set the bg container/layer `background-color` to the watercolor's dominant tone (or
-  a tiny inlined LQIP/blurhash data-URI) so any pre-decode frame already looks right, never "old".
-- Ensure the bg layer isn't gated behind a JS/opacity transition that reveals late.
-- This lives in the **melt theme** (`themes/melt/`), not the scene-nav shape — the bg is a theme feature.
-  Confirm whether it's universal (all themes with `background_image`) or melt-only before choosing the layer.
-**Verify:** hard-reload (disable cache, throttle to Slow 3G) → no flash of any other background at any point.
+**Fix (melt theme only, commit + deployed):**
+- `themes/melt/partials/head.njk` — preload the bg image (`<link rel="preload" as="image"
+  href="{{ site.backgroundImage }}" fetchpriority="high">`), so the fetch starts at first-byte. Same URL as
+  the div → no double fetch.
+- `themes/melt/assets/css/main.css` — give `.site-background` a `background-color` = the watercolor's own
+  average tone `rgb(152, 209, 154)` (sampled from the image), so the div is **opaque from first paint** and
+  the gradient can never show through; the scrim tints the placeholder to a sage matching the loaded photo.
+**Verify (do in a real browser):** hard-reload with cache disabled + Slow-3G throttle → no gradient flash;
+worst case a brief sage tone matching the photo, then the watercolor. Structural checks (preload present +
+URL match + opaque placeholder) confirmed in the build.
 
 ---
 

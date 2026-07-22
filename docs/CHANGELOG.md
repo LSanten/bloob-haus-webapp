@@ -6,6 +6,13 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 63 — July 22, 2026
+**Worked on:** Scene-nav builder v2 hands-on fixes + next-round handoff (continues S62; branch `scene-nav-builder-rework`, **unpushed**, 608 tests).
+- **Fixed:** the edit affordance is now a clearly-visible "✎ Edit scene" pill (was a tiny corner circle); clicking an element **while editing** no longer follows its link (capture-phase click block); the pill shows a green "editing" state + the active scene gets a dashed outline; melt home logo **+30%** (240→312px, 208 mobile).
+- **Diagnosed + deferred to the next-round plan:** rotation grip doesn't persist (browser.js `mouseenter/mouseleave` clobber `el.style.transform` — same class as the click bug; fix = gate hover when `.snb-active`); marquee rubber-band select is buggy (fragile event model → overlay-based rewrite, use `frontend-design` skill). Also planned: **undo/redo** button.
+- **Notes:** builder drag interactions are **not real-browser-verified** (headless can't drag). A "duplicate scene" scare was a stale `src-melt` build (clean rebuild fixes it), not content.
+- **Handoff:** `docs/implementation-plans/2026-07-22_melt-builder-next-round.md`; TECH-DEBT #39.
+
 ### Session 62 — July 21, 2026
 **Worked on:** Scene-nav builder rework — brainstorm → spec → 3 phased plans → executed all three. Spec `docs/implementation-plans/2026-07-21_scene-nav-builder-rework-and-resolution.md`, Plan 1 `…_scene-nav-grammar-v2.1-plan.md`. Branch `scene-nav-builder-rework`. Suite 570 → 597 tests; verified via melt full build + marbles core-family per-page build + headless Chrome.
 

@@ -51,7 +51,15 @@ Water loop asset pulled in + runtime rendering implemented this session. Builder
 
 ## Bugs (still to fix)
 
-### B1 — Rotation grip doesn't persist (resize does)
+### B1 — Rotation grip doesn't persist — ✅ FIXED (S65)
+**✅ Fixed (S65):** `browser.js` `initElement` now early-returns from mouseenter/mouseleave when the element
+is inside an active builder scene (`el.closest('.scene-nav-container.snb-active, .scene-nav-wrapper.snb-active')`),
+so hover no longer resets `transform` to the base rotation while editing. Runtime-bundle verified (guard
+present); **needs a real-browser check**: rotate a bubble → release → rotation persists; close the builder →
+hover glow still works live. Also this session: **mobile-edit clarity** — in 'edit mobile layout' the
+Selected-element panel now shows only position/size/rotation (the props that actually diverge on mobile) +
+a notice that glow/overlay/flip/label are desktop-shared.
+
 **Symptom:** dragging the top (rotate) grip rotates the element while held, but the rotation reverts on
 release. The corner (resize) grip works and persists.
 
@@ -67,7 +75,14 @@ clobbering the rotation the builder just applied. Resize survives because it cha
 entirely while editing (distracting during layout). **Verify:** rotate a bubble → release → rotation
 persists; then close the builder → normal hover glow still works on the live page.
 
-### B2 — Marquee rubber-band selection is buggy
+### B2 — Marquee rubber-band selection is buggy (improved S65, still needs real-browser verify)
+**S65 improvements (in, compiled):** `isEmptyTarget` widened from `=== container || bg-clip` to
+`!e.target.closest('.scene-nav-el')` (so a press on the bg image / any non-bubble area starts a marquee),
+and a **click on empty canvas now deselects all** (`mountMarquee` gained `onEmptyClick`). These address the
+diagnosed `isEmptyTarget` misfire + missing deselect. **Still unverified in a real browser** — if the
+rubber-band drag itself is still flaky, do the selection-overlay rewrite below (headless can't drag, so this
+is the next-session task).
+
 **Symptom:** click-drag on empty canvas to draw a selection rectangle "completely buggy, not working."
 
 **Likely causes:** `handles.js` `mountMarquee` has a fragile event model — `isEmptyTarget` (target ===
@@ -239,3 +254,56 @@ suite green (`npx vitest run`); then decide merge/push.
 
 ## Additional add ons from leon
 - [ ] the heading h3 shoudl have color  #f1dbff
+- [ ] i would like for the `bloob.haus` in the footer to have a simialr font to how it shows up on `leons.bloob.haus` <a href="https://bloob.haus/" target="_blank" rel="noopener">bloob.haus</a> 
+  - [ ]     --bg-color: #dce8f8;
+  --banner-bg: #ffffff;
+  --text-color: #333333;
+  --text-light: #666666;
+  --surface-text-color: #333333;
+  --accent-color: #914c9a;
+  --accent-dark: #6b2d73;
+  --link-color: #914c9a;
+  --link-hover: #4fd675;
+  --border-color: rgba(145, 76, 154, 0.2);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --footer-bg: #ffffff;
+  --zoom-overlay-bg: rgba(0, 0, 0, 0.85);
+  --border-radius: 12px;
+  --border-radius-sm: 6px;
+  --font-body: "Nunito Sans", sans-serif;
+  --font-heading: "Nunito Sans", sans-serif;
+  --heading-h1-color: #303664;
+  --heading-h3-color: #046d78;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  --max-width: 840px;
+  --pagefind-ui-scale: .8;
+  --pagefind-ui-primary: #393939;
+  --pagefind-ui-text: #393939;
+  --pagefind-ui-background: #ffffff;
+  --pagefind-ui-border: #eeeeee;
+  --pagefind-ui-tag: #eeeeee;
+  --pagefind-ui-border-width: 2px;
+  --pagefind-ui-border-radius: 8px;
+  --pagefind-ui-image-border-radius: 8px;
+  --pagefind-ui-image-box-ratio: 3 / 2;
+  --pagefind-ui-font: system, -apple-system, "BlinkMacSystemFont", ".SFNSText-Regular", "San Francisco", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", "Ubuntu", "arial", sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-align: center;
+  font-size: 0.75rem;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: break-word;
+  font-family: 'Satoshi', sans-serif;
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-decoration: none;
+
+- [ ] VERY IMPORTANT: DO FIRST: we need to have a higher contrast and ligther theme - i wodner two things: (Q1) can we make the background very light and then have the text on top for the whole theme be dark? (Q2) we could engineer a ligth dar mode / day mode thing for themes. becasue maybe someone wants to have it dark. but more importan is q1: we need to have the background canvas very bright and then dark text on top

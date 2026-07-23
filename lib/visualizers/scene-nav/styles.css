@@ -97,9 +97,15 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--snb-overlay) center / cover;
-  /* invert(1) for dark overlays (dark caustics on light art); none for bright/screen */
-  filter: var(--snb-overlay-filter, none);
+  /* Longhand (NOT the `background:` shorthand — that resets background-color). The loop is
+     tinted to --snb-overlay-color via background-blend, then composited onto the artwork via
+     mix-blend. Light/dark path (which loop + which blends) is chosen in overlays.js. */
+  background-image: var(--snb-overlay);
+  background-color: var(--snb-overlay-color, #ffffff);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-blend-mode: var(--snb-overlay-bgblend, multiply);
   -webkit-mask-image: var(--snb-overlay-mask);
           mask-image: var(--snb-overlay-mask);
   -webkit-mask-size: contain;
@@ -108,7 +114,7 @@
           mask-repeat: no-repeat;
   -webkit-mask-position: center;
           mask-position: center;
-  mix-blend-mode: var(--snb-overlay-blend, screen);
+  mix-blend-mode: var(--snb-overlay-blend, multiply);
   opacity: var(--snb-overlay-opacity, 0.7);
   pointer-events: none;
 }

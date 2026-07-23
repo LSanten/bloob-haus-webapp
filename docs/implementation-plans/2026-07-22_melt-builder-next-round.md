@@ -104,6 +104,27 @@ URL match + opaque placeholder) confirmed in the build.
 
 ---
 
+### B4 — Column width: nested shapes don't respect the page/folder column (NEW, deferred)
+**Symptom:** on the Resources folder-index, the folder-preview bubbles + the search bar (and, on content
+pages, the comments section) don't stick to the page's content column — they sit wider / aren't confined.
+
+**Finding:** `themes/melt/assets/css/main.css` defines `--content-max-width: 680px`, but containers don't all
+use it and don't impose it on nested shapes:
+- `.folder-items-area` is capped at a separate `max-width: 640px` and wraps `{{ content | safe }}` — the
+  nested `:::folder-preview`, `:::search`, and comments shapes render inside but set their own widths.
+- `.page-content` uses `--content-max-width`, but comments/search render as their own blocks not constrained
+  to it.
+
+**Fix approach (decide scope):** a shape should govern the width of shapes nested in it. Give the page/folder
+container one column token and make nested shapes (search, folder-preview, comments) inherit it (constrain
+their wrappers to `var(--content-max-width); margin-inline:auto`). Decide **melt-only** (quick CSS in
+`themes/melt`) vs a **bloob-haus-wide** convention for the `page` shape (a shared column token every theme's
+page/folder layout applies + nested shapes respect) — the user wants the shared version eventually. Start
+melt-local; lift to a shared convention when a 2nd theme needs it (Rule of Three).
+**Verify:** Resources index — bubbles + search bar + comments all align to the prose column width.
+
+---
+
 ## Features
 
 ### F1 — Undo / redo ("reverse last action")
@@ -214,3 +235,7 @@ area; looks right on phone; no overlay bleed onto the page bg; reduced-motion hi
 Rotation persists on release; marquee selects exactly the enclosed bubbles; undo reverses the last action;
 no background-flash on load; F2 overlay usable from the builder dropdown; all verified in a real browser;
 suite green (`npx vitest run`); then decide merge/push.
+
+
+## Additional add ons from leon
+- [ ] the heading h3 shoudl have color  #f1dbff

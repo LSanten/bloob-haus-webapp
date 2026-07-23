@@ -6,8 +6,8 @@
        body's inline-style div is parsed) — kills the flash of the html gradient fallback
        before the CSS background-image decodes. Same URL as .site-background, so no double
        fetch. Paired with a matching placeholder color on .site-background in main.css. #}
-    {% if site.backgroundImage %}
-    <link rel="preload" as="image" href="{{ site.backgroundImage }}" fetchpriority="high" />
+    {% if bg %}
+    <link rel="preload" as="image" href="{{ bg }}" fetchpriority="high" />
     {% endif %}
 
     {# Homepage tab title prefers the page's own `title:` frontmatter (e.g. _index.md)
@@ -43,7 +43,7 @@
     <!-- Fonts: Caveat (handwritten headings) + Quicksand (soft rounded body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Theme stylesheet -->
     <link rel="stylesheet" href="{{ "/assets/css/base.css" | url }}" />

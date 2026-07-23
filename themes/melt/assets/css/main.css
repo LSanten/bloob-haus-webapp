@@ -1,26 +1,31 @@
 /* ============================================================
    MELT theme — main.css
    Dreamy, soft, cozy queer/trans safe-space aesthetic.
-   Purple-mauve gradient · Caveat headings · Quicksand body
+   Bright watercolor bg · deep-plum ink · Caveat headings · Quicksand body
    ============================================================ */
 
-/* --- Melt palette --- */
+/* --- Melt palette (LIGHT: bright bg, dark plum text) ---
+   The background is a bright watercolor photo (avg ~rgb(216,249,213), pale mint).
+   Text is deep plum ink for high contrast; accents keep melt's rose/purple identity
+   but are darkened so they read on a light surface. (A future day/dark toggle would
+   add a `:root[data-theme="dark"]` override block — not built yet; Q1 = single light
+   theme is what's shipped.) */
 :root {
-  --color-bg: #7a5090;
-  --color-text: #ffffff;
-  --color-text-muted: rgba(255, 255, 255, 0.6);
-  --color-accent: #e8a4c0;
-  --color-accent-2: #c084c4;
-  --color-surface: rgba(255, 255, 255, 0.08);
-  --color-border: rgba(255, 255, 255, 0.15);
-  --color-link: rgba(255, 255, 255, 0.9);
-  --color-link-hover: #ffffff;
+  --color-bg: #d8f9d5;                            /* pale mint — matches the bright watercolor */
+  --color-text: #2e1a3d;                          /* deep plum ink */
+  --color-text-muted: rgba(46, 26, 61, 0.62);
+  --color-accent: #b8437f;                        /* rich rose — readable on light */
+  --color-accent-2: #7a3f9e;                      /* readable purple — h3 headings */
+  --color-surface: rgba(255, 255, 255, 0.55);     /* frosted-white card on the bright bg */
+  --color-border: rgba(46, 26, 61, 0.16);
+  --color-link: #a83c74;
+  --color-link-hover: #7a3f9e;
 
   /* Semantic color pairs for visualizers */
-  --color-pair-a-bg: rgba(80, 50, 130, 0.65);
-  --color-pair-a-text: #ffffff;
-  --color-pair-b-bg: rgba(180, 160, 220, 0.35);
-  --color-pair-b-text: #ffffff;
+  --color-pair-a-bg: rgba(255, 255, 255, 0.72);
+  --color-pair-a-text: #2e1a3d;
+  --color-pair-b-bg: rgba(180, 160, 220, 0.28);
+  --color-pair-b-text: #2e1a3d;
 
   --font-body: 'Quicksand', sans-serif;
   --font-heading: 'Caveat', cursive;
@@ -38,26 +43,25 @@
   --text-color: var(--color-text);
   --text-light: var(--color-text-muted);
   --border-color: var(--color-border);
-  --surface-text-color: #1a0838;   /* text on light surfaces: modals, cards, popovers */
+  --surface-text-color: #2e1a3d;   /* text on light surfaces: modals, cards, popovers */
   --card-bg: var(--color-surface);
   /* --font-body and --font-heading already use the standard names */
 
   /* Pagefind search UI tokens */
   --pagefind-ui-primary: var(--color-accent);
   --pagefind-ui-text: var(--color-text);
-  --pagefind-ui-background: var(--color-surface);
+  --pagefind-ui-background: rgba(255, 255, 255, 0.72);
   --pagefind-ui-border: var(--color-border);
   --pagefind-ui-tag: var(--color-accent-2);
   --pagefind-ui-font: var(--font-body);
 
-  /* Gradient — used on html, body, and fixed-bg pseudo */
+  /* Gradient — light fallback echoing the watercolor (mint → lilac → sky).
+     Only shows as the pre-decode fallback; .site-background paints the photo. */
   --gradient: linear-gradient(
-    108deg,
-    #4a2272 0%,
-    #72388a 22%,
-    #9a4e80 48%,
-    #ba6455 75%,
-    #c07238 100%
+    135deg,
+    #e6f6e4 0%,
+    #f1e9f4 52%,
+    #e6eef8 100%
   );
 }
 
@@ -96,25 +100,17 @@ body {
   z-index: -1;
   /* Placeholder tone = the watercolor's average color, so this div is OPAQUE from first
      paint and the html gradient can't show through before the image decodes (no flash).
-     The scrim ::after tints it to a muted sage matching the loaded photo. If the
+     Sampled from the BRIGHT background photo (avg rgb(216,249,213), pale mint). If the
      background photo is swapped, update this to the new image's average color. */
-  background-color: rgb(152, 209, 154);
+  background-color: rgb(216, 249, 213);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-/* Scrim: the photo's pale/white patches drop white body text (--color-text) below
-   comfortable contrast on content pages. A flat tint (same dark-purple tone as the
-   nav's gradient) keeps the photo readable as a background while restoring legibility,
-   without touching every text selector individually. */
-.site-background::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* Darkened 0.4 → 0.62 so white body text stays legible over the pale watercolor. */
-  background: rgba(40, 20, 70, 0.62);
-}
+/* No scrim/overlay: the background image is shown straight (per design — deep-plum text
+   sits directly on the raw watercolor). If a specific page's photo ever hurts legibility,
+   handle it on that content, not with a global veil over the image. */
 
 body.has-bg-image {
   background: none;
@@ -141,15 +137,15 @@ body.has-bg-image {
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--color-text-muted);
-  /* subtle blur so nav doesn't fight content */
-  background: linear-gradient(to bottom, rgba(40, 20, 70, 0.25) 0%, transparent 100%);
+  /* subtle light veil so the crumbs read over the bright watercolor without fighting content */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
 }
 
 .melt-nav__home {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(20, 8, 50, 0.75);
+  background: var(--color-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,7 +154,7 @@ body.has-bg-image {
   transition: background 0.2s;
 }
 
-.melt-nav__home:hover { background: rgba(40, 15, 80, 0.9); }
+.melt-nav__home:hover { background: var(--color-accent-2); }
 
 /* White dot inside the home circle */
 .melt-nav__home::after {
@@ -178,8 +174,8 @@ body.has-bg-image {
   transition: color 0.15s;
 }
 
-.melt-nav__crumb:hover { color: white; }
-.melt-nav__crumb--current { color: rgba(255, 255, 255, 0.85); }
+.melt-nav__crumb:hover { color: var(--color-text); }
+.melt-nav__crumb--current { color: var(--color-text); }
 
 /* --- Main content area --- */
 .site-main { padding-top: 54px; } /* clear fixed nav */
@@ -190,9 +186,9 @@ body.has-bg-image {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
-  padding: 80px 24px 60px;
+  padding: 45px 24px 60px;
 }
 
 .home-logo {
@@ -213,10 +209,11 @@ body.has-bg-image {
 }
 
 .home-tagline {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: #ffffff;
+  font-weight: 700;
   margin-bottom: 56px;
   /* long single-line tagline must wrap on narrow screens, not overflow */
   padding-left: 16px;
@@ -313,10 +310,26 @@ body.has-bg-image {
   margin: 0 auto;
 }
 
+/* B4: folder index shares the ONE content column (--content-max-width) with content
+   pages, so the folder-preview cards + search bar line up with the prose column instead
+   of sitting at a separate (narrower) 640px width. Nested shapes render inside this
+   wrapper via {{ content }}, so they inherit the column automatically. */
 .folder-items-area {
-  max-width: 640px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
   padding: 0 24px;
+}
+
+/* B4 (real case): a `page`-shaped folder index (e.g. Resources — bloob-shape: page +
+   is_folder) is assigned layout: base.njk directly, so its shapes render straight into
+   .site-main with NO content column and spill the full viewport width. Confine those bare
+   top-level shapes to the shared column so they line up with prose pages. (Home keeps
+   .home-wrapper full-bleed; content pages keep .page-content — neither is targeted here.) */
+.site-main > .folder-preview-visualizer,
+.site-main > .search-visualizer {
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding-inline: 24px;
 }
 
 /* Fallback: plain list of folder items when folder-preview visualizer not yet adapted */
@@ -334,18 +347,27 @@ body.has-bg-image {
   border-radius: var(--radius);
   padding: 14px 20px;
   text-decoration: none;
-  color: white;
+  color: var(--color-text);
   font-weight: 500;
   transition: background 0.15s;
 }
 
-.folder-items-area li a:hover { background: rgba(255,255,255,0.13); }
+.folder-items-area li a:hover { background: rgba(255,255,255,0.78); }
 
 /* --- Content page --- */
 .page-content {
   max-width: var(--content-max-width);
   margin: 0 auto;
   padding: 60px 24px 120px;
+}
+
+/* B4: comments (partials/comments.njk) render as a full-width <section> sibling AFTER
+   the article — cap them to the same content column + inline padding so the thread lines
+   up with the prose instead of spanning the whole viewport. */
+.bloob-comments {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 24px 80px;
 }
 
 /* Embeds — common layout for all iframes */
@@ -436,14 +458,14 @@ body.has-bg-image {
 .page-body a {
   color: var(--color-link);
   text-decoration: underline;
-  text-decoration-color: rgba(255,255,255,0.35);
+  text-decoration-color: rgba(184, 67, 127, 0.4);
   transition: text-decoration-color 0.15s;
 }
 
-.page-body a:hover { text-decoration-color: white; }
+.page-body a:hover { text-decoration-color: var(--color-accent); }
 
 .page-body blockquote {
-  border-left: 3px solid rgba(255,255,255,0.25);
+  border-left: 3px solid rgba(122, 63, 158, 0.35);
   padding: 4px 0 4px 20px;
   font-style: italic;
   color: var(--color-text-muted);
@@ -519,7 +541,7 @@ body.has-bg-image {
   border-radius: 20px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  color: white;
+  color: var(--color-text);
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 500;
@@ -528,8 +550,8 @@ body.has-bg-image {
 }
 
 .share-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--color-accent);
 }
 
 .share-btn--confirmed {
@@ -539,10 +561,10 @@ body.has-bg-image {
 
 /* --- Transclusion embed --- */
 .transclusion-embed {
-  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  border-left: 2px solid var(--color-border);
   padding: 16px 20px;
   margin: 2em 0;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
@@ -565,8 +587,52 @@ a.internal-link {
   background: var(--color-surface);
 }
 
-/* --- Footer --- */
+/* Required: .button CTA contract (docs/architecture/theme-standards.md).
+   Authored in markdown with no HTML: [Listen on Spotify](url){.button}
+   Filled rose→purple pill, echoing the home bubble-nav CTA gradient — sentence
+   case, not the uppercase/bordered look of the generic contract example, to
+   stay in melt's soft/dreamy register rather than a corporate CTA. Selector
+   specificity matches a.internal-link above so it wins over ".page-body a"
+   regardless of source order. */
+a.button {
+  display: inline-block;
+  padding: 0.65rem 1.6rem;
+  margin: 0.3em 0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  box-shadow: 0 6px 18px rgba(122, 63, 158, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(122, 63, 158, 0.38);
+  text-decoration: none;
+  color: #fff;
+}
+
+a.button:focus-visible {
+  outline: 2px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+
+/* --- Footer ---
+   Footer text sits directly on the fixed watercolor background (see .site-background /
+   "no scrim" note above) — fine for main content, but the footer's dark plum text needs
+   guaranteed contrast regardless of which photo a page uses. Scoped fade, not a global
+   veil: a white gradient behind just the footer band, easing up from solid white at the
+   very bottom to transparent above the footer's top edge. */
 .melt-footer {
+  position: relative;
+  z-index: 0; /* own stacking context, so ::before's z-index:-1 stays scoped to this
+                 element instead of leaking behind .site-background (same painting-order
+                 gotcha documented above) */
   text-align: center;
   padding: 40px 24px 32px;
   font-size: 0.8rem;
@@ -574,29 +640,49 @@ a.internal-link {
   line-height: 1.8;
 }
 
+.melt-footer::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -140px 0 0 0; /* extend upward past the footer's own box for a gradual fade */
+  background: linear-gradient(
+    to top,
+    #fff 0%,
+    #fff 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
 .melt-footer__team {
   font-weight: 600;
-  color: white;
+  color: var(--color-text);
   margin-bottom: 6px;
   font-size: 0.88rem;
 }
 
+/* The "bloob.haus" credit link echoes how it reads on leons.bloob.haus:
+   small-caps, wide tracking, bold, accent color, no underline. (Satoshi isn't loaded
+   here, so we replicate the treatment with the theme's own body font.) */
 .melt-footer__credit a {
-  color: var(--color-text-muted);
+  color: var(--color-accent);
   text-decoration: none;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
 }
 
-.melt-footer__credit a:hover { color: white; }
+.melt-footer__credit a:hover { color: var(--color-accent-2); }
 
 /* --- Pagefind theme overrides (base sizing+color in lib/visualizers/search/styles.css) ---
-   Melt's dark glass aesthetic requires semi-transparent backgrounds instead of --card-bg. */
+   Melt's frosted-glass aesthetic uses light semi-transparent backgrounds over the bright bg. */
 .pagefind-ui__search-input {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
 }
 
 .pagefind-ui__search-input:focus {
-  background: rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 0 0 3px rgba(232, 164, 192, 0.2) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 0 0 3px rgba(184, 67, 127, 0.25) !important;
 }
 
 .pagefind-ui__search-clear:hover {
@@ -604,7 +690,7 @@ a.internal-link {
 }
 
 .pagefind-ui__result {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
   border-radius: var(--radius) !important;
 }
 

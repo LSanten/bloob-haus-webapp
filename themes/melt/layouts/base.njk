@@ -1,9 +1,14 @@
+{# Effective background: a page's `background_image:` frontmatter (resolved to an optimized
+   URL via site.backgroundImages) overrides the site-wide background; otherwise the site
+   default. Set before the head include so the preload uses the same URL. #}
+{%- set _pageBg = site.backgroundImages[background_image] if (background_image and site.backgroundImages) else null -%}
+{%- set bg = _pageBg or site.backgroundImage -%}
 <!doctype html>
 <html lang="{{ site.languageCode or 'en' }}">
   {% include "partials/head.njk" %}
-  <body{% if site.backgroundImage %} class="has-bg-image"{% endif %}>
-    {% if site.backgroundImage %}
-    <div class="site-background" aria-hidden="true" style="background-image:url('{{ site.backgroundImage }}')"></div>
+  <body{% if bg %} class="has-bg-image"{% endif %}>
+    {% if bg %}
+    <div class="site-background" aria-hidden="true" style="background-image:url('{{ bg }}')"></div>
     {% endif %}
     {% include "partials/nav.njk" %}
 

@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
 import sharp from 'sharp';
+import { glob } from 'glob';
 
 let tmpSrc;
 
@@ -51,5 +52,55 @@ describe('generateBackground', () => {
     const config = { site: { background_image: '[a watercolor wash](MELT background.png.jpg)' } };
     const url = await generateBackground({ config, srcDir: tmpSrc });
     expect(url).toBe('/media/optimized/site-background.webp');
+  });
+});
+
+describe('generatePageBackgrounds (per-page overrides)', () => {
+  async function writePage(rel, frontmatter) {
+    const p = path.join(tmpSrc, rel);
+    await fs.ensureDir(path.dirname(p));
+    const fm = Object.entries(frontmatter).map(([k, v]) => `${k}: ${v}`).join('\n');
+    await fs.writeFile(p, `---\n${fm}\n---\n\n# ${rel}\n`);
+  }
+
+  afterEach(async () => {
+    // Remove page .md so each test scans a clean set (keep the source image + optimized cache).
+    const mds = await glob('**/*.md', { cwd: tmpSrc, nodir: true });
+    await Promise.all(mds.map((m) => fs.remove(path.join(tmpSrc, m))));
+  });
+
+  it('optimizes a page background_image override → { value: hashed-webp-url } map', async () => {
+    const { generatePageBackgrounds } = await import('../../scripts/generate-background.js');
+    await writePage('landing.md', { background_image: '"[[MELT background.png.jpg]]"' });
+    const map = await generatePageBackgrounds({ srcDir: tmpSrc });
+    const key = '[[MELT background.png.jpg]]';
+    expect(map[key]).toMatch(/^\/media\/optimized\/bg-[a-f0-9]{32}\.webp$/);
+    const out = path.join(tmpSrc, map[key].replace(/^\//, ''));
+    expect(fs.existsSync(out)).toBe(true);
+    const meta = await sharp(out).metadata();
+    expect(meta.width).toBe(1920);
+    expect(meta.format).toBe('webp');
+  });
+
+  it('returns an empty map when no page sets background_image', async () => {
+    const { generatePageBackgrounds } = await import('../../scripts/generate-background.js');
+    await writePage('plain.md', { title: 'no bg here' });
+    const map = await generatePageBackgrounds({ srcDir: tmpSrc });
+    expect(map).toEqual({});
+  });
+
+  it('dedupes multiple pages referencing the same image to one entry', async () => {
+    const { generatePageBackgrounds } = await import('../../scripts/generate-background.js');
+    await writePage('a.md', { background_image: '"[[MELT background.png.jpg]]"' });
+    await writePage('sub/b.md', { background_image: '"[[MELT background.png.jpg]]"' });
+    const map = await generatePageBackgrounds({ srcDir: tmpSrc });
+    expect(Object.keys(map)).toEqual(['[[MELT background.png.jpg]]']);
+  });
+
+  it('skips (does not throw) when the referenced image is missing', async () => {
+    const { generatePageBackgrounds } = await import('../../scripts/generate-background.js');
+    await writePage('broken.md', { background_image: '"[[does-not-exist.png]]"' });
+    const map = await generatePageBackgrounds({ srcDir: tmpSrc });
+    expect(map).toEqual({});
   });
 });

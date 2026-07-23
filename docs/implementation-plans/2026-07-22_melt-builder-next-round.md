@@ -165,9 +165,20 @@ multiply` instead.
 
 **How to try it:** add `- overlay: water` under any bubble in `melt-website/_index.md`, `npm run dev:melt`.
 
-**Phase B — builder GUI (NOT done):** an "Overlay" dropdown in the element panel (None / registry labels),
-sourced from `OVERLAYS`; on change set the same CSS vars live for instant preview + write `overlay: <id>` to
-the grammar. Reuse the existing panel control pattern (glow/flip/hover toggles).
+**Color/strength model (S64, DONE + live):** `overlayColor` (default white) picks how the grayscale loop
+reads — a LIGHT color → `screen` (bright ripples on dark art); a DARK color → `filter:invert(1)` + `multiply`
+(dark caustics on light art, e.g. melt's watercolor bubbles). `overlayStrength` (0–100) → opacity. Pure
+`resolveOverlay(id,{color,strength})` + `colorLuminance` in `overlays.js`. Melt's 7 bubbles use
+`overlayColor:#3f3f3f`, `overlayStrength:55` (dark grey water). Also darkened the melt bg scrim 0.4→0.62
+(`themes/melt/assets/css/main.css`) for white-text legibility. **Tune** hue/darkness per bubble via the
+builder or by editing the vault.
+
+**Phase B — builder GUI (S64, DONE + live):** the Selected-element panel has a "water overlay" control —
+loop dropdown (None / `OVERLAYS` labels), color swatches (bright / dark grey / black + a color input) and a
+strength slider. Edits `el.overlay`/`overlayColor`/`overlayStrength` and live-previews via `applyOverlayToDom`
+(recomputes the renderer's CSS vars on the node); Copy ::: block round-trips them. **Needs real-browser
+verification** (headless can't drive the builder): open with `debug: on` → ✎ Edit scene → select a bubble →
+change overlay/color/strength → watch the live preview → Copy block includes the settings.
 
 **Scope guard (v1):** elements only (not backgrounds); one curated loop to start; no per-user tuning/upload.
 Add more loops by dropping a file in `assets/overlays/` + a registry entry. Author more B&W loops with the

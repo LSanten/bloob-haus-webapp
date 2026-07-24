@@ -240,7 +240,10 @@
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
+  /* Same fix + rationale as lib/visualizers/folder-preview/styles.css: this bubble is a
+     light glassmorphism fill, not a dark backdrop — hardcoded white was illegible on light
+     themes. Token-driven so each theme's own text color applies. */
+  color: var(--text-light, rgba(0, 0, 0, 0.55));
   margin-bottom: 5px;
   pointer-events: none;
 }
@@ -249,7 +252,7 @@
   display: block;
   font-size: 0.82rem;
   font-weight: 600;
-  color: white;
+  color: var(--text-color, #1a1a1a);
   line-height: 1.3;
   pointer-events: none;
 }
@@ -306,12 +309,15 @@
 .fp-marble__title {
   position: relative;
   z-index: 1;
-  color: white;
+  /* Same fix + rationale as folder-preview's .fp-marble__title: no background of its own,
+     shows the page background through at low opacity, so dark theme text (not white) is
+     what's actually legible. Shadow flipped to a light halo to match. */
+  color: var(--text-color, #1a1a1a);
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.3;
   padding: 0 14px;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 6px rgba(255, 255, 255, 0.7);
   pointer-events: none;
 }
 

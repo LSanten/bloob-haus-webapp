@@ -1,7 +1,10 @@
 # Melt Scene-Nav Builder — Next Round (bugs + undo + overlay)
 
-**Status:** Updated 2026-07-22 (S64). For a FRESH session — prior sessions (S62–S64) grew very large.
-**Branch/deploy:** builder v2 + the S64 link fix are on `main` and **deployed** (melt.bloob.haus live).
+**Status:** Updated 2026-07-23 (S66). For a FRESH session — prior sessions (S62–S65) grew very large.
+**Branch/deploy:** builder v2 + S64 link fix + S66 work (below, `.button` contract, footer fade,
+homepage spacing, per-page `background_image` override) are all on `main` as of commit `a5529af`,
+pushed 2026-07-23. Deploy/live status on melt.bloob.haus not reconfirmed after this push — check before
+assuming it's live.
 **Read first:** spec `2026-07-21_scene-nav-builder-rework-and-resolution.md` §9b + plan
 `2026-07-21_scene-nav-builder-v2-plan.md`.
 **Resume dev:** `npm run dev:melt` → localhost:8080 → click "✎ Edit scene". **Verify drag bugs in a REAL
@@ -46,6 +49,44 @@ lands (see `bloob-haus-cloud`).
 
 ### ✅ STARTED — F2 alpha-masked GIF overlay (Phase A landed; see F2 below)
 Water loop asset pulled in + runtime rendering implemented this session. Builder dropdown (Phase B) pending.
+
+---
+
+## Done in S66 (2026-07-23)
+
+### ✅ `.button` CTA contract implemented (theme was missing a Tier-1 requirement)
+`docs/architecture/theme-standards.md` already documented `.button` as required in every theme's
+`main.css` (author syntax in markdown: `[text](url){.button}` via `markdown-it-attrs`, already wired
+into the pipeline) — melt just hadn't implemented it yet. Added `a.button` in
+`themes/melt/assets/css/main.css`: a rose→purple gradient pill matching the homepage bubble-nav CTA
+gradient, with a hover lift and a `focus-visible` outline. First real use: the new
+`melt-website/resources/Playlists.md` page (5 Spotify links converted from plain links to buttons).
+
+### ✅ Footer contrast fix — scoped white fade
+Footer text sits directly on the fixed watercolor background photo (no scrim by design — see the
+`.site-background` note above), so contrast varied by page/photo. Added a `.melt-footer::before`
+gradient — solid white at the very bottom of the page, fading to transparent starting ~140px above the
+footer — scoped to the footer band only, not a global veil over the content.
+
+### ✅ Homepage logo — removed dead top space
+`.home-wrapper` was `justify-content: center` + `padding-top: 80px`, vertically centering the logo
+inside a `min-height: 100vh` box (pushing it further down than intended). Changed to
+`justify-content: flex-start` + `padding-top: 45px` (tuned live in-browser) so the logo sits close
+under the nav instead of mid-page.
+
+### ✅ Per-page `background_image` override — shipped + actually wired into melt's content
+This is the bloob-haus-wide feature Leon asked for below ("Additional add ons" → background_image
+item) — the code existed uncommitted at the start of this session (`generatePageBackgrounds` in
+`scripts/generate-background.js`, wired through `scripts/assemble-src.js` → `site.backgroundImages` →
+`themes/melt/layouts/base.njk`'s `_pageBg` resolution) but hadn't been committed or connected to real
+content. Committed + pushed this session. Melt now uses it: `_bloob-settings.md` sets the sitewide
+`background_image` to the new BRIGHT variant, and `_index.md` (homepage) overrides it back to the
+original MEDIUM variant via its own `background_image:` frontmatter.
+
+### ✅ Pushed to `main`
+`scene-nav-builder-rework` fast-forwarded into `main` on `bloob-haus-webapp` (commit `a5529af`, no
+merge conflicts — main was a strict ancestor). `melt-website` content repo pushed to its `main` too
+(Playlists content + the background/bio/settings edits that were already staged locally).
 
 ---
 
@@ -254,7 +295,13 @@ suite green (`npx vitest run`); then decide merge/push.
 
 ## Additional add ons from leon
 - [ ] the heading h3 shoudl have color  #f1dbff
-- [ ] i would like for the `bloob.haus` in the footer to have a simialr font to how it shows up on `leons.bloob.haus` <a href="https://bloob.haus/" target="_blank" rel="noopener">bloob.haus</a> 
+  - **Status (S66): still open.** `.page-body h3` currently uses `var(--color-accent-2)` (`#7a3f9e`,
+    purple) — not `#f1dbff`. Not touched this session.
+- [x] i would like for the `bloob.haus` in the footer to have a simialr font to how it shows up on `leons.bloob.haus` <a href="https://bloob.haus/" target="_blank" rel="noopener">bloob.haus</a>
+  - **Status: already done** (pre-dates S66, confirmed still in place). `.melt-footer__credit a` in
+    `themes/melt/assets/css/main.css` replicates the treatment: small-caps, `letter-spacing: 0.1em`,
+    `font-weight: 700`, accent color, no underline. Satoshi isn't loaded in melt, so it uses the
+    theme's own body font (Quicksand) instead — same visual rhythm, different face.
   - [ ]     --bg-color: #dce8f8;
   --banner-bg: #ffffff;
   --text-color: #333333;
@@ -306,7 +353,23 @@ suite green (`npx vitest run`); then decide merge/push.
   color: var(--accent-color);
   text-decoration: none;
 
-- [ ] VERY IMPORTANT: DO FIRST: we need to have a higher contrast and ligther theme - i wodner two things: (Q1) can we make the background very light and then have the text on top for the whole theme be dark? (Q2) we could engineer a ligth dar mode / day mode thing for themes. becasue maybe someone wants to have it dark. but more importan is q1: we need to have the background canvas very bright and then dark text on top --> here is the new background with brigth: '/Users/lsanten/Library/CloudStorage/GoogleDrive-leon.santen@googlemail.com/.shortcut-targets-by-id/1Y4i8vxExCNMPz13xbWkTjMb-7gl_2Yzx/MELT materials/MELT Website/Images/MELT website background-BRIGHT-MEDIUM-SIZE.png.jpg' i think we need to copy paste it into the vault and update teh background vault reference (ACTUALLY I ALREADY RELINKED IT NOW)
+- [x] VERY IMPORTANT: DO FIRST: we need to have a higher contrast and ligther theme - i wodner two things: (Q1) can we make the background very light and then have the text on top for the whole theme be dark? (Q2) we could engineer a ligth dar mode / day mode thing for themes. becasue maybe someone wants to have it dark. but more importan is q1: we need to have the background canvas very bright and then dark text on top --> here is the new background with brigth: '/Users/lsanten/Library/CloudStorage/GoogleDrive-leon.santen@googlemail.com/.shortcut-targets-by-id/1Y4i8vxExCNMPz13xbWkTjMb-7gl_2Yzx/MELT materials/MELT Website/Images/MELT website background-BRIGHT-MEDIUM-SIZE.png.jpg' i think we need to copy paste it into the vault and update teh background vault reference (ACTUALLY I ALREADY RELINKED IT NOW)
+  - **Status (S66): Q1 done.** Melt's text-on-light design was already the theme's default (deep
+    plum `#2e1a3d` on pale mint `#d8f9d5`) — Q1 was about the background *photo* being bright enough,
+    not the color system. `melt-website/_bloob-settings.md` now points `background_image` at
+    `MELT website background-BRIGHT-MEDIUM-SIZE.png.jpg` (relinked as Leon noted, file committed +
+    pushed to the content repo this session). **Q2 (light/dark theme toggle) still open** — explicitly
+    lower priority per Leon's own note; no work done on it.
 
-- [ ] i want to add the general featuer (this could be bloob haus wide and would amek sense for themes that have backgorund iamges and also in general for a a theme), i you set the `background_image: "[[MELT website background-MEDIUM-SIZE.png.jpg]]"` in the YAML of a file, it should use that background image. we have the brither backgroundimage for he general theme set in the bloob-settings and then i have the other background image for the langind page. we need to make sur athat this overwrite functionality of the background image works reliably
-  - [ ] look at the YAML of this file --> /Users/lsanten/_local/GitHubLocal/melt-website/_index.md
+- [x] i want to add the general featuer (this could be bloob haus wide and would amek sense for themes that have backgorund iamges and also in general for a a theme), i you set the `background_image: "[[MELT website background-MEDIUM-SIZE.png.jpg]]"` in the YAML of a file, it should use that background image. we have the brither backgroundimage for he general theme set in the bloob-settings and then i have the other background image for the langind page. we need to make sur athat this overwrite functionality of the background image works reliably
+  - [x] look at the YAML of this file --> /Users/lsanten/_local/GitHubLocal/melt-website/_index.md
+  - **Status (S66): done.** `scripts/generate-background.js` exports `generatePageBackgrounds`,
+    called from `scripts/assemble-src.js` and exposed as `site.backgroundImages`;
+    `themes/melt/layouts/base.njk` resolves a page's `background_image:` frontmatter against that map
+    (falling back to the sitewide default) before rendering `.site-background`. Verified wired end to
+    end: `melt-website/_index.md` sets `background_image: "[[MELT website background-MEDIUM-SIZE.png.jpg]]"`
+    to override the sitewide BRIGHT default back to the original photo for just the homepage. This was
+    built generically (reads any page's `background_image:` key, not melt-specific) so any theme with
+    a background-image system can adopt the same pattern — **not yet promoted to
+    `docs/architecture/settings-registry.md`** as a formal bloob-haus-wide setting; do that when a
+    second theme actually uses it (Rule of Three).

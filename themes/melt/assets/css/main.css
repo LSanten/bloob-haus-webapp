@@ -78,9 +78,20 @@ html {
 body {
   font-family: var(--font-body);
   font-size: 1rem;
+  font-weight: 500; /* Quicksand 400 reads thin at body size; 500 (loaded — see head.njk's
+                        Quicksand:wght@400;500;600;700) is the readability baseline for all normal
+                        text. Headings/strong/buttons keep their own explicit heavier weights above
+                        this, so hierarchy is unaffected. */
   line-height: 1.7;
   color: var(--color-text);
   min-height: 100vh;
+  /* Sticky footer: on short-content pages (e.g. a folder index with few items — main is just
+     two small visualizer mounts, no min-height wrapper of its own), body's own min-height:100vh
+     used to leave unstyled leftover space BELOW the footer, showing the raw fixed background
+     photo flush against the footer's opaque bottom edge (a hard seam). flex + .site-main's
+     flex:1 below pushes the footer down to the true viewport bottom instead, closing that gap. */
+  display: flex;
+  flex-direction: column;
   /* Background repeated on body for browsers that don't scroll html */
   background: var(--gradient);
   background-attachment: fixed;
@@ -178,7 +189,10 @@ body.has-bg-image {
 .melt-nav__crumb--current { color: var(--color-text); }
 
 /* --- Main content area --- */
-.site-main { padding-top: 54px; } /* clear fixed nav */
+.site-main {
+  padding-top: 54px; /* clear fixed nav */
+  flex: 1 0 auto; /* sticky footer: fills leftover space on short pages, pushing .melt-footer to viewport bottom */
+}
 
 /* --- Home page --- */
 .home-wrapper {
@@ -188,7 +202,7 @@ body.has-bg-image {
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 45px 24px 60px;
+  padding: 15px 24px 60px;
 }
 
 .home-logo {
@@ -633,6 +647,7 @@ a.button:focus-visible {
   z-index: 0; /* own stacking context, so ::before's z-index:-1 stays scoped to this
                  element instead of leaking behind .site-background (same painting-order
                  gotcha documented above) */
+  flex-shrink: 0; /* sticky footer: keep natural height, don't get squeezed by the flex column */
   text-align: center;
   padding: 40px 24px 32px;
   font-size: 0.8rem;

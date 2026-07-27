@@ -130,16 +130,38 @@
   flex: 1;
 }
 
-/* Small identifier label — themes override color/size in their visualizer override CSS */
-.fp-card__title {
+/* SELF-SUFFICIENCY RULE (TECH-DEBT #41) — scoped so collection renders the same
+   whether or not folder-preview.css is loaded. That matters for per-page
+   visualizer loading (#4), which drops stylesheets a page doesn't use.
+
+   folder-preview/styles.css declares `.fp-card__title` TWICE: line ~99 (a small
+   uppercase label, matching collection's own intent) and line ~349, a later
+   override styling it as a 16px headline for folder-preview's own SEO grid.
+   Load order means line 349 wins, so **that is what AE's collection cards
+   render today** — verified in a browser, not assumed.
+
+   These values deliberately replicate line 349 so nothing changes on the live
+   AE site, and so AE's folder-preview cards and collection cards keep matching.
+   The smaller label/headline hierarchy that collection's markup implies may
+   well be the better design — that is Leon's call with AE in front of him; see
+   docs/collaborators/2026-07-27_AE-verification-seed.md.
+
+   What AE renders today is actually a MERGE of folder-preview's two rules:
+   font-size/weight/family/colour/margin from line 349, text-transform and
+   letter-spacing from line 99 (which line 349 never resets). Both are
+   replicated below, so this single scoped rule reproduces the merged result
+   exactly — confirmed identical with and without folder-preview.css across all
+   four themes. */
+.collection-visualizer .fp-card__title {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: var(--font-heading, sans-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-color, #333);
+  line-height: 1.35;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent-color, #333);
-  line-height: 1.4;
-  margin-bottom: 0.25rem;
 }
 
 /* Main headline — themes override in their visualizer override CSS */
@@ -195,7 +217,13 @@
   border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
 }
 
-.folder-preview__link {
+/* Scoped for self-sufficiency (TECH-DEBT #41), same reason as .fp-card__title.
+   Here collection's value is kept rather than folder-preview's: folder-preview
+   falls back to a hardcoded `#914c9a` (marbles purple), which renders a stray
+   purple link on any non-marbles theme. Falling back to the theme's own accent
+   is the correct behaviour, so scoping this *fixes* list mode on AE rather than
+   preserving a bug. AE does not currently use `display: list`. */
+.collection-visualizer .folder-preview__link {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -206,7 +234,7 @@
   transition: color 0.12s;
 }
 
-.folder-preview__link:hover {
+.collection-visualizer .folder-preview__link:hover {
   color: var(--accent-dark, var(--accent-color, #333));
 }
 

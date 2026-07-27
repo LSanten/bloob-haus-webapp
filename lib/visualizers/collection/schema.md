@@ -6,7 +6,7 @@ The `collection` shape resolves a **source** (folder, tag, field filter, or all)
 
 A collection holds page-references and renders each as itself (closed-state card, list item, bubble, etc.) inside a uniform visual container. It is a **leaf shape with preserve policy**: identity of each contained page is never overridden — only presentation is uniform.
 
-The visualizer (engine) behind this shape reads `graph.json` at build time (for `display: cards`) or at runtime (for all display modes via `browser.js`).
+The visualizer (engine) behind this shape reads `graph.json` at build time and renders **every** display mode to HTML then. `browser.js` only adds behavior on top. (Before 2026-07-27 only `display: cards` rendered at build time; see the pure-renderer standard in `docs/architecture/visualizers.md`.)
 
 ## Activation
 
@@ -28,7 +28,7 @@ bloob-shape: collection
 ---
 ```
 
-Note: file-scope use emits a runtime placeholder. For build-time SEO-crawlable cards, use the code fence form.
+File-scope use is also rendered at build time: `renderFilescope()` runs during preprocessing (before `graph.json` exists) and emits the settings container, then `transform()` — which runs inside Eleventy, where `graph.json` does exist — fills it in during the same build.
 
 ## Settings
 
@@ -41,6 +41,7 @@ Note: file-scope use emits a runtime placeholder. For build-time SEO-crawlable c
 | `show_fields` | string or list | — | Extra frontmatter fields to show on each card. Must be declared in `sites/[site].yaml` `graph.extra_fields`. Comma-separated: `building_type, location` |
 | `search` | string | combined | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. |
 | `title` | string | `ARTICLES` | Label shown above `display: slider` |
+| `placeholder` | string | `Search...` | Placeholder text for the filter input |
 | `id` | string | — | HTML id on the container element |
 
 ## Source syntax
@@ -59,13 +60,17 @@ Deferred: `links-here`, `links-from`, explicit wikilink lists in the body.
 
 ## Display modes
 
-| Mode | Build-time SEO? | Notes |
-|------|----------------|-------|
-| `cards` | ✅ Yes (default) | 3-column grid with image, title, subtitle, optional fields |
-| `list` | ❌ Runtime | Flat list with icon + title |
-| `slider` | ❌ Runtime | Swiper carousel (requires Swiper loaded by theme) |
-| `bubbles` | ❌ Runtime | Circular bubbles, scatter layout |
-| `marbles` | ❌ Runtime | Interactive draggable marbles |
+**All display modes are rendered at build time and are fully crawlable.** Since 2026-07-27 the
+display mode is a purely visual choice — it has no effect on indexability. `browser.js` only adds
+behavior (drag physics, Swiper) on top of markup that already exists.
+
+| Mode | Notes | Runtime behavior added |
+|------|-------|------------------------|
+| `cards` (default) | 3-column grid with image, title, subtitle, optional fields | search filtering |
+| `list` | Flat list with icon + title | search filtering |
+| `slider` | Swiper carousel (requires Swiper loaded by theme) | Swiper init |
+| `bubbles` | Circular bubbles, scatter layout | search filtering (CSS-only hover) |
+| `marbles` | Draggable marbles with collision + float | drag physics, search filtering |
 
 ## Content policy
 
@@ -124,9 +129,22 @@ sort: reverse-alpha
 
 ## Implementation notes
 
-- Build-time `display: cards` reads `graph.json` from disk (written before Eleventy runs). The `transform()` path (code fence in Eleventy `addTransform`) is when graph.json is available.
-- `renderFilescope()` (called during preprocessing, before graph.json exists) emits only a runtime placeholder.
+This shape is the reference implementation of the **pure-renderer standard**
+(`docs/architecture/visualizers.md`). File roles:
+
+| File | Purity | Role |
+|---|---|---|
+| `resolve.js` | pure | source string → filtered/sorted nodes. Nodes are **injected**, never read here. |
+| `renderer.js` | pure | nodes + settings → complete HTML string, for all five display modes |
+| `index.js` | host | reads `graph.json` from disk, calls resolve → render |
+| `browser.js` | behavior | drag physics, Swiper, search filtering. **Never builds markup.** |
+
+- All five display modes render at build time; `browser.js` only attaches behavior.
+- `browser.js` retains a fallback path for when `graph.json` was unavailable at build time — it calls the *same* `renderer.js`, so there is no second implementation to drift.
+- The container keeps `data-pagefind-ignore`: the listing should be crawlable by Google but must not pad the site's own Pagefind results with duplicate titles. Different consumers.
+- A collection never lists the page it sits on (`pageUrl` is passed in by `eleventy.config.js`).
 - Images always carry `class="no-pswp"` to prevent the image-optimizer from wrapping them in a PhotoSwipe `<a>` tag (which would create an invalid nested anchor inside the card's own `<a href>`).
+- `.fp-search-input` is styled from the shared `--sv-*` token contract so the filter input matches the site-wide search bar in whatever theme is active. Its rule is scoped to `.collection-visualizer` because `folder-preview.css` declares an identical unscoped rule and loads later (TECH-DEBT #41).
 - Canonical card image class: `fp-card__image-wrap` (shared with folder-preview SEO render path; not the legacy `fp-card__img-wrap` from folder-preview's runtime renderCards).
 - `field:` sources depend on `graph.extra_fields` in `sites/[site].yaml` — fields must be declared there to appear in graph.json.
 

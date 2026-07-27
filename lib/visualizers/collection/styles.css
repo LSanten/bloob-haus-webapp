@@ -22,22 +22,45 @@
   gap: var(--spacing-sm, 1rem);
 }
 
-.fp-search-input {
+/* The collection's filter input is a search surface, so it reads from the SAME
+   --sv-* token contract as the site-wide Pagefind bar (lib/visualizers/search/
+   styles.css). The two cannot share markup — one is Pagefind's element, one is
+   ours — so they share variables instead. A theme that rounds its search bar
+   rounds this one; a theme that squares it squares this one.
+
+   Fallbacks are repeated here rather than relied upon from search/styles.css so
+   this still renders correctly on a page where the search shape's CSS is not
+   loaded (see TECH-DEBT #4, per-page visualizer loading).
+
+   SCOPED to .collection-visualizer on purpose. folder-preview/styles.css
+   declares an identical unscoped `.fp-search-input` and, being later in the
+   alphabet, its stylesheet loads after this one and wins every tie. Scoping
+   this one rule lets the collection's input take the token styling without
+   touching folder-preview's input on other sites. The wider `fp-*` collision
+   between the two shapes is recorded in TECH-DEBT (#41). */
+.collection-visualizer .fp-search-input {
   width: 100%;
-  padding: 0.6em 0.9em;
+  padding: var(--sv-input-pad-y, 0.6em) var(--sv-input-pad-x, 1.25em);
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
-  border-radius: var(--border-radius, 6px);
+  border-radius: var(--sv-input-radius, 999px);
   font-family: var(--font-body, sans-serif);
-  font-size: 1rem;
+  font-size: var(--sv-input-font-size, 1.125rem);
+  line-height: 1.4;
   color: var(--text-color, #333);
-  background: var(--bg-color, #fff);
+  background: var(--sv-input-bg, var(--card-bg, #fff));
   box-sizing: border-box;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.fp-search-input:focus {
-  outline: 2px solid var(--accent-color, #555);
-  outline-offset: 1px;
-  border-color: transparent;
+.collection-visualizer .fp-search-input::placeholder {
+  color: var(--text-light, #666);
+}
+
+.collection-visualizer .fp-search-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #555);
+  background: var(--sv-input-bg-focus, var(--sv-input-bg, var(--card-bg, #fff)));
+  box-shadow: var(--sv-input-focus-ring, none);
 }
 
 .fp-filter-placeholder {

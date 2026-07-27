@@ -682,7 +682,10 @@ export default async function (eleventyConfig) {
 
       let result = content;
       for (const viz of buildTimeVisualizers) {
-        result = viz.transform(result, { siteConfig });
+        // pageUrl lets a visualizer exclude the page it is rendered on from its
+        // own listing (collection does this). Additive — visualizers that
+        // ignore it are unaffected.
+        result = viz.transform(result, { siteConfig, pageUrl: this.page.url });
       }
       return result;
     });

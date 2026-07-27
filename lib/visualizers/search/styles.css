@@ -8,10 +8,24 @@
  * override individual values without touching the rules below.
  */
 
-/* ───── Layout tokens ───── */
+/* ───── Layout tokens ─────
+ *
+ * .collection-visualizer is included so the collection shape's own filter input
+ * (.fp-search-input) renders as the same search surface as the site-wide bar —
+ * one token set, both surfaces. Collection's styles.css repeats the fallbacks
+ * so it still looks right if this file is ever not loaded on a page (see
+ * TECH-DEBT #4, per-page visualizer loading).
+ *
+ * Appearance tokens (--sv-input-bg, --sv-input-bg-focus, --sv-input-focus-ring)
+ * are deliberately NOT declared here. Theme main.css loads BEFORE visualizer
+ * CSS, so a value declared in this block would beat a theme's :root value at
+ * equal specificity. They are consumed with fallbacks at point of use instead,
+ * which lets a theme set them from :root with no !important.
+ */
 .search-visualizer,
 .home-search,
-.footer-search__panel {
+.footer-search__panel,
+.collection-visualizer {
   --sv-max-width: 100%;
   --sv-widget-margin-y: 0px;
 
@@ -84,7 +98,7 @@
   transition: padding-left 150ms ease !important;
   font-size: var(--sv-input-font-size) !important;
   line-height: 1.4 !important;
-  background: var(--card-bg) !important;
+  background: var(--sv-input-bg, var(--card-bg)) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--sv-input-radius) !important;
   color: var(--text-color) !important;
@@ -101,6 +115,8 @@
 .pagefind-ui__search-input:focus {
   outline: none !important;
   border-color: var(--accent-color) !important;
+  background: var(--sv-input-bg-focus, var(--sv-input-bg, var(--card-bg))) !important;
+  box-shadow: var(--sv-input-focus-ring, none) !important;
 }
 
 /* Fade loupe out when typing (opacity so it can animate; icon is position:absolute, no layout impact) */

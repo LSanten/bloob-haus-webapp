@@ -42,6 +42,118 @@ This enables:
 
 ---
 
+## The Pure-Renderer Standard
+
+**Status: adopted 2026-07-27. `collection` is the reference implementation.**
+**Applies to every shape that GENERATES CONTENT.** See "Which shapes are exempt" below.
+
+### The rule
+
+> **Markup comes from a pure renderer. `browser.js` never builds markup.**
+
+Four files, one responsibility each:
+
+| File | Purity | Role |
+|---|---|---|
+| `parser.js` | pure | block text → data |
+| `resolve.js` | pure fn, data **injected** | how the shape obtains data from *outside* its own block |
+| `renderer.js` | pure | data + settings → **complete final HTML string** |
+| `browser.js` | impure | **behavior only** — physics, Swiper, listeners, fetch |
+
+### Why: three hosts, one renderer
+
+A pure renderer runs anywhere. That gives three hosts which differ *only* in where the
+data comes from — never in what they produce:
+
+| Host | Data source | Output |
+|---|---|---|
+| **Node / build time** (`index.js`) | `readFileSync(graph.json)` | HTML baked into the page |
+| **Standalone playground** (future) | pasted / dropped content | same string, injected |
+| **Browser fallback** (`browser.js`) | `fetch("/graph.json")` | same string, injected |
+
+This is what the future standalone visualizer web app is built on. It gets every conforming
+shape **for free**, with no second implementation to drift.
+
+That drift is not hypothetical: scene-nav's standalone magic machine grew its own copy of the
+parser/renderer, the two diverged, and the fix was to delete one and make the shape's own files
+the single source of truth (see [DECISIONS.md](../implementation-plans/DECISIONS.md), 2026-07-20).
+A pure renderer makes that class of bug structurally impossible.
+
+### Why: SEO is decoupled from the visualization
+
+Before this standard, "does this shape have SEO?" was answered by "does it happen to have an
+isomorphic renderer?" — an accident of implementation. `collection` shipped build-time HTML for
+`display: cards` and an **empty div** for `list`, `slider`, `bubbles` and `marbles`. On the live
+melt Resources page a crawler saw **zero** links.
+
+With the standard, indexability is a property of the *shape*, not of *which visual you picked*.
+Every display mode ships real `<a href>` markup; `browser.js` adds behavior on top.
+
+**Do not "solve" SEO by rendering a hidden duplicate block.** Emitting a crawlable list that JS
+then replaces means a visible flash and `display:none` content, which Google discounts. Render
+the real markup for the real visual instead.
+
+Most "JS-only" renderers turn out not to need JS at all. All four of collection's were plain
+`document.createElement` markup with behavior bolted on afterwards — the physics and Swiper init
+are *behavior*, applied to elements that can perfectly well already exist.
+
+**There is deliberately no `seo:` on/off setting.** Hiding content from crawlers with JavaScript
+is not a privacy mechanism. `visibility: unlisted` is the real tool and already exists — see
+[security-by-obscurity.md](security-by-obscurity.md).
+
+### `resolve.js` — the only host-dependent seam
+
+Most shapes read their data from **inside** their own block (the markdown you typed), so
+`parser.js` is enough and there is no `resolve.js`.
+
+A shape needs `resolve.js` when its data lives **outside** the block — `graph.json`, a folder
+listing, an API. That is the entire reason such a shape has a host split at all.
+
+Keep it pure by **injecting** the data:
+
+```js
+// resolve.js — pure. Never reads anything itself.
+export function resolvePages(nodes, settings) { … }
+
+// index.js — the host does the impure read, then hands it in.
+const nodes = JSON.parse(readFileSync(graphPath, "utf-8")).nodes;
+const pages = resolvePages(nodes, settings);
+```
+
+Prior art: `lib/visualizers/scene-nav/resolve.js` (pure image-ref resolution against an injected
+attachment index) and `lib/visualizers/collection/resolve.js`.
+
+### Which shapes are exempt
+
+Shapes that **only enhance existing text** and generate no content of their own: `latex` (needs
+KaTeX at runtime), `citations`, `checkbox-tracker`, `page-preview`. There is nothing for a crawler
+to miss, so they legitimately stay `browser.js`-only.
+
+The test is not "does it need JS?" — it is **"if JS never runs, is content missing?"** If yes, it
+needs a pure renderer.
+
+### Conformance status
+
+**Conforming** (`parser.js` + `renderer.js`): `card-preview`, `image-grid`, `image-text`,
+`photo-grid`, `quotes-stack`, `scene-nav`, `services`, `slideshow`, `testimonials`,
+`heading-and-paragraph`, **`collection`** (2026-07-27).
+
+**Not yet conforming, generates content** — `folder-preview`, `circular-nav`, `fridge-magnets`,
+`tags`, `graph`. Tracked as **TECH-DEBT #40**. Convert each when next touched; do not retrofit
+them speculatively.
+
+### Checklist for a new content-generating shape
+
+- [ ] `renderer.js` exports pure functions returning HTML **strings** — no `document`, no I/O
+- [ ] every display/variant the shape supports is reachable from `renderer.js`
+- [ ] external data (if any) arrives via an injected argument through `resolve.js`
+- [ ] `index.js` does the impure read and calls resolve → render
+- [ ] `browser.js` attaches behavior to existing elements; it does not build markup
+- [ ] a test asserts build-time output contains real `<a href>` and title text for **every** variant
+- [ ] no `display:none` / hidden duplicate of the content for crawlers
+
+---
+
 ## Four Types of Visualizers
 
 These are four **activation triggers** — how and where a shape's renderer runs — not four kinds of thing. What differs is *what triggers rendering* (code fence, `:::` container, auto-detect) and *where the code runs* (build-time Node vs. runtime browser). All four are shapes at different scopes; see the framing note at the top of this doc.

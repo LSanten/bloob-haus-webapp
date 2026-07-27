@@ -46,6 +46,13 @@
   --pagefind-ui-border: rgba(145, 76, 154, 0.2);
   --pagefind-ui-tag: rgba(145, 76, 154, 0.1);
   --pagefind-ui-font: "Nunito Sans", sans-serif;
+
+  /* Shared search-surface appearance (--sv-input-*). Drives BOTH the site-wide
+     Pagefind bar and the collection shape's own filter input, so the marbles
+     glass effect is identical wherever a search surface appears. */
+  --sv-input-bg: rgba(255, 255, 255, 0.85);
+  --sv-input-bg-focus: rgba(255, 255, 255, 0.85);
+  --sv-input-focus-ring: 0 0 0 3px rgba(145, 76, 154, 0.12);
 }
 
 *,
@@ -947,15 +954,9 @@ details > *:not(summary) {
   margin: 0 0 var(--spacing-xl);
 }
 
-/* Marbles glass effect */
-.pagefind-ui__search-input {
-  background: rgba(255, 255, 255, 0.85) !important;
-}
-
-/* Marbles purple focus glow */
-.pagefind-ui__search-input:focus {
-  box-shadow: 0 0 0 3px rgba(145, 76, 154, 0.12) !important;
-}
+/* Marbles glass effect + purple focus glow now come from the shared
+   --sv-input-* tokens declared in :root, so the site-wide Pagefind bar and the
+   collection shape's own filter input match. See :root above. */
 
 /* Slightly more transparent filter blocks */
 .pagefind-ui__filter-block {

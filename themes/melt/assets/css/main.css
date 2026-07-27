@@ -55,6 +55,13 @@
   --pagefind-ui-tag: var(--color-accent-2);
   --pagefind-ui-font: var(--font-body);
 
+  /* Shared search-surface appearance (--sv-input-*). Drives BOTH the site-wide
+     Pagefind bar and the collection shape's own filter input, so melt's frosted
+     pill is identical wherever a search surface appears. */
+  --sv-input-bg: rgba(255, 255, 255, 0.72);
+  --sv-input-bg-focus: rgba(255, 255, 255, 0.9);
+  --sv-input-focus-ring: 0 0 0 3px rgba(184, 67, 127, 0.25);
+
   /* Gradient — light fallback echoing the watercolor (mint → lilac → sky).
      Only shows as the pre-decode fallback; .site-background paints the photo. */
   --gradient: linear-gradient(
@@ -340,6 +347,7 @@ body.has-bg-image {
    top-level shapes to the shared column so they line up with prose pages. (Home keeps
    .home-wrapper full-bleed; content pages keep .page-content — neither is targeted here.) */
 .site-main > .folder-preview-visualizer,
+.site-main > .collection-visualizer,
 .site-main > .search-visualizer {
   max-width: var(--content-max-width);
   margin-inline: auto;
@@ -690,15 +698,12 @@ a.button:focus-visible {
 .melt-footer__credit a:hover { color: var(--color-accent-2); }
 
 /* --- Pagefind theme overrides (base sizing+color in lib/visualizers/search/styles.css) ---
-   Melt's frosted-glass aesthetic uses light semi-transparent backgrounds over the bright bg. */
-.pagefind-ui__search-input {
-  background: rgba(255, 255, 255, 0.72) !important;
-}
+   Melt's frosted-glass aesthetic uses light semi-transparent backgrounds over the bright bg.
 
-.pagefind-ui__search-input:focus {
-  background: rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 0 0 3px rgba(184, 67, 127, 0.25) !important;
-}
+   The input appearance now comes from the shared --sv-input-* tokens declared in
+   :root above, so the site-wide Pagefind bar and the collection shape's own
+   filter input are the same frosted pill. No !important needed — those tokens
+   are consumed with fallbacks, never declared, in the visualizer CSS. */
 
 .pagefind-ui__search-clear:hover {
   color: var(--text-color) !important;

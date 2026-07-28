@@ -40,6 +40,7 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 | `limit` | number | — | Max pages to show |
 | `show_fields` | string or list | — | Extra frontmatter fields to show on each card. Must be declared in `sites/[site].yaml` `graph.extra_fields`. Comma-separated: `building_type, location` |
 | `search` | string | combined | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. |
+| `width` | string | `wide` | `prose` \| `wide` \| `full`. How wide the collection asks to be. See Width preference below. |
 | `title` | string | `ARTICLES` | Label shown above `display: slider` |
 | `placeholder` | string | `Search...` | Placeholder text for the filter input |
 | `id` | string | — | HTML id on the container element |
@@ -71,6 +72,37 @@ behavior (drag physics, Swiper) on top of markup that already exists.
 | `slider` | Swiper carousel (requires Swiper loaded by theme) | Swiper init |
 | `bubbles` | Circular bubbles, scatter layout | search filtering (CSS-only hover) |
 | `marbles` | Draggable marbles with collision + float | drag physics, search filtering |
+
+## Width preference
+
+**Declared default: `wide`** (`manifest.json` → `"width": "wide"`).
+
+A collection is a card grid, not prose, so it asks to be wider than a reading column. The request is
+a *preference*, not an instruction — three things decide what actually happens:
+
+1. **The theme is the final arbiter.** It defines how wide "wide" is, via `--shape-width-wide`. A
+   theme that never sets it renders `wide` at prose measure — identical to having no width contract
+   at all. This is why `wide` is safe as a shared default.
+2. **The instance beats the shape default.** `width: prose` in the fence pins one collection to the
+   reading column.
+3. **An unknown value falls back to `prose`, silently.** A typo never breaks a page.
+
+Container behaviour follows the **container-contents policy**, not a separate rule: `article` is a
+`preserve` container, so it lets a nested collection take the width it asks for. An `override`
+container imposes its own and ignores the request.
+
+On phones the breakout is disabled entirely — every width renders at container measure, so the card
+column ladder (3 → 2 → 1) is the only thing deciding phone layout.
+
+````markdown
+```collection
+source: tag=zero-net-energy
+display: cards
+width: wide
+```
+````
+
+Full contract: `docs/architecture/shapes.md` → "Width preference".
 
 ## Content policy
 

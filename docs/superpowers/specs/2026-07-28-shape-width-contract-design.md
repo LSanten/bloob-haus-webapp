@@ -69,38 +69,52 @@ warm-kitchen and buffbaby are unaffected until they opt in by defining tracks. A
 
 ## Mechanism
 
-The **container** offers named grid tracks; the **child** tags itself into one.
+> **Revised 2026-07-28 during implementation.** The first draft put named grid tracks on
+> `.article-body`. Reading the actual stylesheet killed that: the width constraint lives on
+> **`.article-page`** (`max-width: var(--article-width, 820px); margin: 0 auto`), not on
+> `.article-body`, which is unconstrained and merely inherits it. Grid tracks on `.article-body`
+> would still be clipped by the parent, and moving them to `.article-page` means restructuring the
+> element that also wraps the header, share bar and comments — far more risk for the same result.
+> It also removes the margin-collapsing hazard, since nothing becomes a grid.
+
+The **child breaks out** of the prose column; the **theme** decides how far it may go.
 
 ```css
-/* lib/visualizers/article/styles.css — article is itself a shape, so its tracks
-   live in its own stylesheet and every theme inherits them. */
-.article-body {
-  display: grid;
-  grid-template-columns:
-    [full-start] minmax(0, 1fr)
-      [wide-start] minmax(0, var(--shape-width-gutter, 0px))
-        [prose-start] min(var(--article-width, 820px), 100%) [prose-end]
-      minmax(0, var(--shape-width-gutter, 0px)) [wide-end]
-    minmax(0, 1fr) [full-end];
+/* lib/visualizers/article/styles.css — article is itself a shape, so this lives
+   in its own stylesheet and every theme inherits it. */
+.article-body > [data-width="wide"],
+.article-body > [data-width="full"] {
+  width: min(
+    var(--shape-width-wide, 100%),
+    calc(100vw - 2 * var(--spacing-md, 1.5rem))
+  );
+  margin-left: 50%;
+  translate: -50% 0;
 }
-.article-body > *                   { grid-column: prose; }
-.article-body > [data-width="wide"] { grid-column: wide;  }
-.article-body > [data-width="full"] { grid-column: full;  }
+
+/* Phones: never break out. Prose measure for everything. */
+@media (max-width: 900px) {
+  .article-body > [data-width] { width: 100%; margin-left: 0; translate: none; }
+}
 ```
 
-`renderer.js` emits `data-width="wide"` on the collection's container root.
+`index.js` emits `data-width="wide"` on the collection container (`buildContainer()` — the single
+place both the fence path and the file-scope path construct it).
 
-**Verified prerequisite:** `.collection-visualizer` is already a direct child of `.article-body`
-(measured in a real browser on `/projects/` and `/resources/`, 2026-07-28), so `grid-column`
-applies without a wrapper or `display: contents` workaround.
+**Verified prerequisite:** `.collection-visualizer` is a direct child of `.article-body` (measured in
+a real browser on `/projects/` and `/resources/`, 2026-07-28), so the child selector applies.
 
-**Degradation is the default state, not a special case.** `--shape-width-gutter` defaults to `0px`,
-which collapses every track to the prose measure. A theme opts in by setting it:
+**Degradation is the default state, not a special case.** `--shape-width-wide` defaults to `100%`,
+so `min(100%, …)` resolves to the prose column and the page renders exactly as today. A theme opts
+in by naming a real width:
 
 ```css
 /* themes/alter-engineers/assets/css/main.css */
-:root { --shape-width-gutter: 190px; }   /* wide ≈ 1200px */
+:root { --shape-width-wide: 1200px; }
 ```
+
+The `calc(100vw - …)` clamp is what stops a wide breakout from causing horizontal overflow on
+viewports narrower than the declared width.
 
 ## Mobile rule — per display mode
 
@@ -171,9 +185,11 @@ Plus an existing-suite consideration: **the collection golden master will change
 `UPDATE_GOLDEN=1`. That golden already caught one real regression this session, so it must not be
 regenerated reflexively.
 
-**Grid layout risk to test explicitly:** making `.article-body` a grid changes its layout model —
-margin collapsing between prose blocks behaves differently in grid than in normal flow. Assert that
-paragraph/heading spacing in an article body is unchanged, on a real project profile.
+**Layout risk, reduced but not gone.** The revised mechanism introduces no grid, so the
+margin-collapsing hazard is gone. What remains is horizontal overflow: a breakout child is sized
+from the viewport, so a mis-clamped value produces a horizontal scrollbar. Assert
+`document.documentElement.scrollWidth <= clientWidth` on a page carrying a wide collection, at
+desktop *and* phone widths.
 
 ## Delivery
 

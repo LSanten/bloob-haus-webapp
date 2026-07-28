@@ -12,6 +12,49 @@
   padding-right: var(--spacing-md, 1.5rem);
 }
 
+/* ── Width contract ─────────────────────────────────────────────────────────
+   `article` is a PRESERVE container: a nested shape renders the way it wants,
+   not the way the article's prose does (docs/architecture/shapes.md →
+   Container-contents policy). A shape declares `width: prose|wide|full`; the
+   theme decides whether that means anything.
+
+   Degradation is the DEFAULT state, not a special case: --shape-width-wide
+   defaults to 100%, so min(100%, …) resolves to the prose column and a page
+   renders exactly as it did before this rule existed. A theme opts in by
+   naming a real width:  :root { --shape-width-wide: 1200px; }
+
+   That is what lets `collection` default to `wide` in its manifest without
+   touching melt, marbles-pouch, warm-kitchen or buffbaby.
+
+   The breakout is width + margin-left:50% + translate rather than grid tracks,
+   because the constraint lives on .article-page (max-width) and .article-body
+   merely inherits it — tracks on the body would still be clipped by the parent.
+   The calc() clamp is what prevents horizontal overflow when the declared width
+   exceeds the viewport. */
+.article-body > [data-width="wide"],
+.article-body > [data-width="full"] {
+  width: min(
+    var(--shape-width-wide, 100%),
+    calc(100vw - 2 * var(--spacing-md, 1.5rem))
+  );
+  margin-left: 50%;
+  translate: -50% 0;
+}
+
+.article-body > [data-width="full"] {
+  --shape-width-wide: 100vw;
+}
+
+/* Phones never break out — prose measure for everything. Keeps the card ladder
+   (3/2/1) the only thing deciding phone layout. */
+@media (max-width: 900px) {
+  .article-body > [data-width] {
+    width: 100%;
+    margin-left: 0;
+    translate: none;
+  }
+}
+
 /* ── Header ─────────────────────────────────────────────────────────────── */
 .article-header {
   margin-bottom: var(--spacing-lg, 2rem);

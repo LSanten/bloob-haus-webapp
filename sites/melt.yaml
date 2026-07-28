@@ -17,3 +17,7 @@ permalinks:
 # Build features
 features:
   search: true
+  # Load only the visualizer CSS/JS a page actually uses (TECH-DEBT #4).
+  # Detection reads the rendered HTML; shapes opt in via `detect` in their
+  # manifest.json, and anything unannotated is still loaded everywhere.
+  per_page_visualizers: true

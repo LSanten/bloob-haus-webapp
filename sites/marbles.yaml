@@ -17,6 +17,9 @@ permalinks:
 # Build features
 features:
   search: true   # Pagefind search index — enables search bar on homepage
+  # Load only the visualizer CSS/JS a page actually uses (TECH-DEBT #4).
+  # Verified with: node scripts/audit-visualizer-detection.js --src=src-leons
+  per_page_visualizers: true
   magic_machines: true
   date_from_filename: true   # YYYY-MM-DD- filename prefix → date_created (date stays in URL)
   # date_prefix_slugs: false # (default) strip the YYYY-MM-DD- prefix from the URL slug — off for now

@@ -35,6 +35,43 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
  *   If provided and the vault has an index.md at its root, the theme's index.njk
  *   is skipped so there is no permalink collision at "/".
  */
+/**
+ * Decide which `themes/_base/pages/` files to copy into src/.
+ *
+ * A theme overrides a base page by BASENAME, not by filename, so `tags.njk` in
+ * a theme shadows `tags.md` in _base. This matters because theme pages are
+ * copied AFTERWARDS (Step 5): a same-extension file is simply overwritten, but
+ * a DIFFERENT extension would leave both on disk, and two templates declaring
+ * the same `permalink:` then fight over one output path. Skipping here is what
+ * makes an override an override rather than a collision.
+ *
+ * Pure so the rule is testable without a filesystem or a real theme.
+ *
+ * @param {string[]} baseEntries  filenames in themes/_base/pages/
+ * @param {string[]} themeFiles   filenames in themes/<theme>/pages/ (files only)
+ * @param {{rssEnabled?: boolean}} opts
+ * @returns {{copy: string[], skipped: {entry: string, reason: string}[]}}
+ */
+export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true } = {}) {
+  const themeBasenames = new Set(themeFiles.map((f) => path.parse(f).name));
+  const copy = [];
+  const skipped = [];
+
+  for (const entry of baseEntries) {
+    if (entry === "feed.njk" && !rssEnabled) {
+      skipped.push({ entry, reason: "features.rss: false" });
+      continue;
+    }
+    if (themeBasenames.has(path.parse(entry).name)) {
+      skipped.push({ entry, reason: "theme overrides it" });
+      continue;
+    }
+    copy.push(entry);
+  }
+
+  return { copy, skipped };
+}
+
 export async function assembleSrc(config, contentDir = null) {
   const SRC_DIR = getActiveSrcDir();
   const themeName = config.theme;
@@ -105,12 +142,24 @@ export async function assembleSrc(config, contentDir = null) {
   // Step 2d: Copy base pages (theme pages in Step 5 override these)
   if (fs.existsSync(path.join(baseDir, "pages"))) {
     console.log("[assemble] Copying base pages...");
+
+    const themePagesDir = path.join(themeDir, "pages");
+    const themePageFiles = fs.existsSync(themePagesDir)
+      ? (await fs.readdir(themePagesDir, { withFileTypes: true }))
+          .filter((e) => e.isFile())
+          .map((e) => e.name)
+      : [];
+
     const basePageEntries = await fs.readdir(path.join(baseDir, "pages"));
-    for (const entry of basePageEntries) {
-      if (entry === "feed.njk" && config.features?.rss === false) {
-        console.log("[assemble] Skipping base feed.njk (features.rss: false)");
-        continue;
-      }
+    const { copy, skipped } = selectBasePages(basePageEntries, themePageFiles, {
+      rssEnabled: config.features?.rss !== false,
+    });
+
+    for (const { entry, reason } of skipped) {
+      console.log(`[assemble] Skipping base ${entry} (${reason})`);
+    }
+
+    for (const entry of copy) {
       await fs.copy(
         path.join(baseDir, "pages", entry),
         path.join(SRC_DIR, entry),

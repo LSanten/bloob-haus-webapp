@@ -1,8 +1,23 @@
 # Tag pages as `.md` shape templates — design
 
 **Date:** 2026-07-28
-**Status:** design approved, not yet implemented
-**Depends on:** `2026-07-28-shape-width-contract-design.md` (for the wide look)
+**Status:** ✅ implemented 2026-07-28
+**Depends on:** `2026-07-28-shape-width-contract-design.md` (for the wide look) — landed
+
+## Outcome
+
+Implemented as designed, with one improvement found during the work: the template paginates
+`collections.tagList` rather than `collections` + a per-theme filter list (decision 3 below was
+rewritten accordingly). Verification results:
+
+- **Tag membership: zero changes** across all 16 real AE tags. The `collections[tag]` →
+  `graph.json` switch that decision 2 flagged as risky turned out to be a no-op for AE.
+- **One tag page removed**, correctly: `/tags/clients/` was fabricated from AE's `clients/`
+  *folder* by the old filter-list approach, and was empty.
+- `/tags/<tag>/` and `/projects/` verified **structurally identical** — same layout, same
+  `data-width="wide"` → 1200px, same 3 × 379px grid, same card title colour, same 1-column phone
+  layout, no horizontal overflow.
+- marbles-pouch and warm-kitchen keep their own `tags.njk` and are untouched; migration is opt-in.
 **Scope:** shared (`themes/_base/**`, `scripts/assemble-src.js`, `docs/**`) + AE cleanup
 
 ---

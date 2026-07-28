@@ -154,9 +154,14 @@
 
    These values deliberately replicate line 349 so nothing changes on the live
    AE site, and so AE's folder-preview cards and collection cards keep matching.
-   The smaller label/headline hierarchy that collection's markup implies may
-   well be the better design — that is Leon's call with AE in front of him; see
-   docs/collaborators/2026-07-27_AE-verification-seed.md.
+
+   REVIEWED 2026-07-28 against the live AE build: scoping this rule DID change
+   AE, because a theme override cannot reach it. AE's own override used a bare
+   `.fp-card__title` (0,1,0) and now loses to this selector (0,2,0) no matter
+   how late it loads, so AE's small orange label reverted to this grey headline.
+   Fixed by matching the scope in themes/alter-engineers/assets/css/visualizers/
+   collection.css. Anyone scoping a rule here must expect the same: raising
+   specificity in shared CSS silently outranks every theme override of it.
 
    What AE renders today is actually a MERGE of folder-preview's two rules:
    font-size/weight/family/colour/margin from line 349, text-transform and

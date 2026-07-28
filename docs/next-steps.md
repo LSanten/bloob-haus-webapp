@@ -8,8 +8,7 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 ## Immediate Next Steps
 
-**Needs the work machine (has the alter-engineers vault) — do first:**
-0. **Verify AE after the 2026-07-27 collection refactor.** Walk `docs/collaborators/2026-07-27_AE-verification-seed.md`: run `npx vitest run collection-invariants` (golden master proves cards markup unchanged), build AE, confirm cards look identical, then **decide the one intentional change — AE's collection search bar went square → pill** (three options with snippets in §3). Optionally enable per-page visualizer loading for AE after a clean `node scripts/audit-visualizer-detection.js` run (§3b).
+**AE verification — ✅ DONE 2026-07-28 on the work machine.** Seed doc walked and deleted. Outcomes: golden master passes (needed a `.gitattributes` LF fix first — it was silently CRLF-failing on Windows); scoping `.collection-visualizer .fp-card__title` upstream *did* break AE's orange label (theme override outranked — fixed by matching the scope); search bar **stays a pill** (Option A); per-page loading **enabled** for AE after fixing `folder-preview` detection, which had dropped the card grid on every tag page. New debt: TECH-DEBT #42 (the detection audit's page sampling is unsound). Decisions recorded in `DECISIONS.md` 2026-07-28.
 
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
 2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice).

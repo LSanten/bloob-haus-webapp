@@ -23,6 +23,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `hide_nav` | bool | `false` | Hide the site navigation bar on this page |
 | `hide_footer` | bool | `false` | Hide the site footer on this page |
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
+| `background_image` | wikilink | site-wide `background_image` | Per-page override of the site background photo, e.g. `background_image: "[[photo.jpg]]"`. Resolved by `scripts/generate-background.js` → `site.backgroundImages`; the theme's `base.njk` picks the page value and falls back to the sitewide one. Requires a theme with a background-image system (melt today). |
 | `layout` | string | shape layout, or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-shape`) |
 | `bloob-shape` | string | — | **Primary identity + rendering key.** Names the page's shape and drives (a) layout selection, (b) `renderFilescope()` body rendering (`lib/visualizers/[name]/index.js`), and (c) identity — banner image/text, graph icon, display name — looked up in `_bloob-shapes.md`. Identity resolves via `resolveIdentityKey` (precedence below). Shape config goes in a `::: settings` block in the body, not frontmatter. See `docs/architecture/shapes.md` + `visualizers.md`. |
 | `bloob-type` | string | — | **Legacy identity alias** for `bloob-shape` (older vaults; registry `_bloob-types.md`). Still accepted, and **wins for identity when explicitly set** — precedence `bloob-type` > `bloob-object` > `bloob-shape` — so a page may render as one shape while identifying as another. New content should use `bloob-shape:`. |
@@ -174,6 +175,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.backlinks` | `true` | Backlinks section on each page |
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
+| `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
 | `features.sitemap` | `true` | sitemap.xml |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
@@ -379,9 +381,40 @@ its body typeface (faces with a tall x-height read larger than their nominal siz
 | `--article-h4-size` | `1rem` | In-body `#### h4` |
 | `--article-h5-size` | `0.9rem` | In-body `##### h5` |
 | `--article-h6-size` | `0.82rem` | In-body `###### h6` |
+| `--article-width` | `820px` | Reading-column max-width |
+| `--article-padding-top` | `var(--spacing-lg, 2.5rem)` | Space above the header |
+| `--article-padding-bottom` | `var(--spacing-lg, 2.5rem)` | Space below the body (added 2026-07-27) |
+| `--article-media-radius` | `8px` | Corner radius on embedded iframe/embed |
+| `--article-media-margin` | `1.5rem` | Space below an embed |
+| `--article-video-ratio` | `16 / 9` | Aspect ratio for YouTube / Vimeo embeds |
+| `--article-table-size` | `0.9rem` | In-body table font size |
+| `--article-table-cell-padding` | `10px 14px` | Table cell padding |
+| `--article-strong-weight` | `600` | `**strong**` weight in body copy |
+| `--article-banner-size` | `0.9rem` | Shape `banner_text` size |
 
 **Theme contract:** optional. Set in the theme's `main.css` `:root`. Full guidance and a worked
 example (alter-engineers) are in `themes.md` → "Article-shape sizing tokens".
+
+---
+
+### Article-shape per-page settings (`::: settings` block)
+
+Authored in a `::: settings` block in the page body, not in frontmatter — see
+`shapes.md` → "The `shape_settings` mechanism".
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `share_bar` | bool | `true` | `false` hides the Copy link / Embed bar |
+| `show_date_created` | bool | `true` | `false` hides the "Written on" pill (added 2026-07-27) |
+| `show_date_updated` | bool | `true` | `false` hides the "Updated on" pill (added 2026-07-27) |
+
+**Date authoring — two conventions, both supported** (`scripts/utils/date-field.js`):
+
+| Form | Example | Used by |
+|------|---------|---------|
+| Comma | `date_created: 2024-11-07, Published on` | marbles, alter-engineers |
+| Separate key | `date_created: 2024-11-07` + `date_created_text: Published on` | melt |
+| List | `date_updated:` with a `- YYYY-MM-DD` list | melt — **latest entry wins**, not first |
 
 ---
 
@@ -399,6 +432,17 @@ Settings that apply to specific visualizers regardless of theme.
 | `quotes[].name` | string | — | Speaker name |
 | `quotes[].date` | string | — | Display date |
 | `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
+
+### `collection` code fence
+
+Full reference: `lib/visualizers/collection/schema.md`. Settings added since:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `placeholder` | string | `Search...` | Placeholder text for the collection's own filter input (added 2026-07-27) |
+
+The filter input reads the shared `--sv-*` search-surface tokens, so it matches the
+site-wide Pagefind bar in whatever theme is active.
 
 ### `folder-preview` code fence
 

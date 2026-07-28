@@ -1,8 +1,17 @@
 # Collection Shape — Pure Renderer & SEO Decoupling
 
 **Date:** 2026-07-27
-**Status:** Approved design, ready to implement
-**Part 1 of 2.** Part 2 (per-page visualizer loading, TECH-DEBT #4) ships only after this holds.
+**Status: ✅ SHIPPED 2026-07-27 — both parts, same session.** Suite 637 → 723 tests.
+
+| Part | Outcome |
+|---|---|
+| 1 — collection pure-renderer | Every display mode ships crawlable build-time HTML. melt Resources: **0 → 3 crawlable links**. `display: cards` byte-identical (golden master) so AE is safe. |
+| 2 — per-page visualizer loading (TECH-DEBT #4, **closed**) | melt −610 CSS/−448 JS across 39 pages; marbles −17,640/−12,771 across 1,162. Pages 24 assets → 11–13. Gated by `features.per_page_visualizers`; **off for buffbaby + AE** pending an audit run. |
+
+Unplanned work that came out of it: TECH-DEBT #41 resolved for the collection side; two
+browser-reported bugs fixed (search didn't visually hide marbles/bubbles; full-text search had
+**never** worked because it filtered Pagefind by a `section` filter no site registers); and melt's
+whole page set migrated onto the `article` shape. See CHANGELOG S67.
 
 ---
 

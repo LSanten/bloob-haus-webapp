@@ -1,55 +1,21 @@
 ---
-layout: layouts/base.njk
+layout: layouts/article.njk
 ---
-{% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
-<article class="page-content" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
-  <header class="page-header">
-    {% if typeData and typeData.display_name %}<p class="page-type">{{ typeData.display_name }}</p>{% endif %}
-    <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
-    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
-    {% if typeData and typeData.banner_text %}<p class="page-banner-text">{{ typeData.banner_text }}</p>{% endif %}
-    {% if author %}<p class="page-author">By {{ author }}</p>{% endif %}
-    {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}
+{#
+  melt's `page` layout is an ALIAS for the `article` shape.
 
-    {#
-      Date pills.
-      Frontmatter:
-        date_created: 2024-11-07
-        date_created_text: Written on      (optional custom label)
-        date_updated:
-          - 2025-04-01
-        date_updated_text: Updated on      (optional custom label)
-      Label defaults: "Written on" / "Updated on".
-      `dateFormat` handles both Date objects and the date_updated list (most recent entry).
-      The updated pill is hidden when the most recent update matches the creation date.
-    #}
-    {% set dcFmt = date_created | dateFormat %}
-    {% set duFmt = date_updated | dateFormat %}
-    {% if dcFmt %}
-    {% set dcLabel = date_created_text if date_created_text else "Written on" %}
-    <p class="page-date" data-pagefind-ignore>{{ dcLabel }} {{ dcFmt }}</p>
-    {% endif %}
+  Every melt content page declares `bloob-shape: article` (2026-07-27), so this
+  file is only reached by the preprocessor's step-5 default — an ordinary page
+  whose declared shape does not exist yet, e.g. `bloob-shape: guide` before a
+  `guide` shape is built. See shapes.md → "Unknown shape names".
 
-    {% if duFmt and duFmt != dcFmt %}
-    {% set duLabel = date_updated_text if date_updated_text else "Updated on" %}
-    <p class="page-date page-date--updated" data-pagefind-ignore>{{ duLabel }} {{ duFmt }}</p>
-    {% endif %}
+  It cannot simply be deleted: the fallback resolves to the literal path
+  `layouts/page.njk`, so Eleventy needs the file to exist. Making it an alias
+  means an un-built shape degrades to melt's real page treatment rather than to
+  a second, drifting copy of it.
 
-    {% include "partials/share-bar.njk" %}
-  </header>
-
-  {# Slug indexed for pagefind search. Two hidden spans:
-     1. "ID: contact-us" — styled as a pill in excerpts by browser.js
-     2. "contact us"     — space-separated form so multi-word queries ("contact us") match
-     Folder index pages get a trailing / on the ID span to signal folder status. #}
-  {% if slug %}
-  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
-  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
-  {% endif %}
-
-  <div class="page-body">
-    {{ content | safe }}
-  </div>
-</article>
-
-{% include "partials/comments.njk" %}
+  Content flows through once: this template emits the page body, and that output
+  becomes `content` for article.njk, which supplies the header, dates, share bar
+  and comments.
+#}
+{{ content | safe }}

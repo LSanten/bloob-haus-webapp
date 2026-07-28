@@ -425,16 +425,6 @@ body.has-bg-image {
   max-width: 100%;
 }
 
-.page-header { margin-bottom: 48px; }
-
-.page-type {
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin-bottom: 12px;
-}
-
 .page-title {
   font-family: var(--font-heading);
   font-size: clamp(2.2rem, 6vw, 3.6rem);
@@ -443,105 +433,8 @@ body.has-bg-image {
   margin-bottom: 12px;
 }
 
-.page-banner-text {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin-bottom: 8px;
-}
-
-.page-author,
-.page-byline {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.04em;
-}
-
-.page-date {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.06em;
-  margin-top: 14px;
-}
-
-/* Updated date pill — lighter emphasis than the created pill */
-.page-date--updated {
-  margin-top: 4px;
-  opacity: 0.8;
-}
-
-/* --- Body typography --- */
-.page-body { font-size: 1.05rem; line-height: 1.8; }
-
-.page-body p { margin-bottom: 1.5em; }
-
-.page-body h2 {
-  font-family: var(--font-heading);
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin: 2.2em 0 0.5em;
-}
-
-.page-body h3 {
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--color-accent-2);
-  margin: 1.8em 0 0.4em;
-}
-
-.page-body a {
-  color: var(--color-link);
-  text-decoration: underline;
-  text-decoration-color: rgba(184, 67, 127, 0.4);
-  transition: text-decoration-color 0.15s;
-}
-
-.page-body a:hover { text-decoration-color: var(--color-accent); }
-
-.page-body blockquote {
-  border-left: 3px solid rgba(122, 63, 158, 0.35);
-  padding: 4px 0 4px 20px;
-  font-style: italic;
-  color: var(--color-text-muted);
-  margin: 2em 0;
-}
-
-.page-body strong { font-weight: 600; }
-.page-body em { font-style: italic; }
-
-.page-body ul,
-.page-body ol {
-  padding-left: 1.6em;
-  margin-bottom: 1.5em;
-}
-
-.page-body li { margin-bottom: 0.5em; }
-
-.page-body hr {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 2.5em 0;
-}
-
 /* Required: table scroll wrapper */
 .table-wrapper { overflow-x: auto; }
-.page-body table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-.page-body th,
-.page-body td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--color-border);
-  text-align: left;
-}
-
-/* --- Heading anchors --- */
-.page-body h2,
-.page-body h3,
-.page-body h4 { position: relative; }
 
 .heading-anchor {
   display: inline-flex;
@@ -553,10 +446,6 @@ body.has-bg-image {
   vertical-align: middle;
   transition: opacity 0.15s, color 0.15s;
 }
-
-.page-body h2:hover .heading-anchor,
-.page-body h3:hover .heading-anchor,
-.page-body h4:hover .heading-anchor { opacity: 1; }
 
 .heading-anchor--copied { opacity: 1; color: var(--color-accent); }
 
@@ -741,4 +630,89 @@ a.button:focus-visible {
 
   .folder-title { font-style: italic; }
   .page-content { padding: 48px 20px 80px; }
+}
+
+/* --- Share bar — melt glassmorphism -------------------------------------------
+   melt-only override of the article shape's plain `.share-btn`. The buttons sit
+   directly on the watercolor background photo, so a frosted-glass treatment
+   reads better here than a flat outline.
+
+   Adapted from Leon's `.glass-card` reference to pill scale: the effect is the
+   translucent white fill + backdrop blur + the two inset light edges (a bright
+   top rim and a left rim), not the card's fixed 240x360 box.
+
+   Tuned 2026-07-27 to Leon's revised reference: dimmer fill (0.1) and half the
+   blur (7px), for a quieter glass that lets the watercolor read through.
+
+   `position: relative` + `overflow: hidden` are required for the ::before /
+   ::after light edges to sit inside the rounded pill. */
+.article-page .share-btn,
+.page-content .share-btn {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(46, 26, 61, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.6);
+  color: var(--color-text);
+  transition: background 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+/* Bright top rim — the light catching the upper edge of the glass. */
+.article-page .share-btn::before,
+.page-content .share-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+/* Left rim — vertical falloff, so the pill reads as a solid piece of glass. */
+.article-page .share-btn::after,
+.page-content .share-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+.article-page .share-btn:hover,
+.page-content .share-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-accent);
+  box-shadow:
+    0 10px 36px rgba(46, 26, 61, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.7);
+}
+
+.article-page .share-btn--confirmed,
+.page-content .share-btn--confirmed {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: var(--color-accent);
 }

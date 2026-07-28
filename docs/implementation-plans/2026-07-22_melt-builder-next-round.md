@@ -177,7 +177,7 @@ URL match + opaque placeholder) confirmed in the build.
 
 ---
 
-### B4 — Column width — PARTLY FIXED (S67); the remaining half is the PROSE, not the shapes
+### B4 — Column width — ✅ FULLY FIXED (S67)
 **Symptom:** on the Resources folder-index, the folder-preview bubbles + the search bar (and, on content
 pages, the comments section) don't stick to the page's content column — they sit wider / aren't confined.
 
@@ -202,10 +202,11 @@ respect the column and the *prose* does not. Cause is already noted in `themes/m
 straight into `.site-main` with no content column, and the B4 rule only targets bare *shape* children
 (`.site-main > .collection-visualizer` etc.), never `<h1>`/`<p>`.
 
-**Likely fix:** constrain all direct children of `.site-main` for this page type (or give the layout a
-real content wrapper) rather than enumerating shape classes one by one — the enumeration is what
-broke when the shape changed. **Verify across melt's page types** (home is deliberately full-bleed;
-content pages use `.page-content`), not just `/resources/`.
+**✅ Resolved later the same session — by fixing the layout, not the CSS.** The prose was full-bleed
+because the page had fallen through to `base.njk` (bare chrome, no content column) — see the root
+cause in "Open at the end of S67" below. Moving melt onto the `article` shape put the prose inside
+`.article-page`'s real column, so the clipped leading "I" is gone and no `.site-main > *` enumeration
+was needed. The enumeration approach would have treated the symptom.
 
 **Fix approach (decide scope):** a shape should govern the width of shapes nested in it. Give the page/folder
 container one column token and make nested shapes (search, folder-preview, comments) inherit it (constrain
@@ -325,9 +326,12 @@ area; looks right on phone; no overlay bleed onto the page bg; reduced-motion hi
 
 ## Open at the end of S67 (2026-07-27)
 
+**Resolved this session:** B4 (fully — melt moved onto the `article` shape, which gave the page a
+real content column). Melt's Resources page also moved `folder-preview` → `collection`, and all 15
+melt content pages now declare `bloob-shape: article`.
+
 Not moved to `_completed/` — these remain:
 - **B2** marquee rubber-band rewrite (still unverified in a real browser)
-- **B4** the prose half, above
 - **F1** undo/redo — not started
 - **Real-browser drag pass** for B1/B2/F2 — now unblocked by Playwright
 - **h3 colour `#f1dbff`** (Additional add-ons) — still open

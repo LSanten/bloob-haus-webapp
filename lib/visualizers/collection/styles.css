@@ -92,7 +92,19 @@
   transform: translateY(-2px);
 }
 
-.fp-card[hidden] {
+/* Search filtering sets `hidden` on non-matching items. The UA stylesheet turns
+   that into display:none only when nothing else sets `display` — and the item
+   rules below use flex/grid, which silently win. Without these overrides the
+   property flips and the element stays on screen.
+
+   Kept together so a new display mode is an obvious addition. Guarded by
+   tests/collection-search-visibility.test.js, which measures rendered geometry;
+   asserting `el.hidden === true` cannot catch this, since that only reads back
+   the value the filter just set. */
+.fp-card[hidden],
+.collection-visualizer .fp-marble[hidden],
+.collection-visualizer .fp-bubble[hidden],
+.collection-visualizer .folder-preview__item[hidden] {
   display: none;
 }
 

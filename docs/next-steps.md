@@ -12,9 +12,11 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 **`.md` page templates — pattern established 2026-07-28, tags migrated.** Builder-owned page templates are now `.md` files in `themes/_base/pages/` that compose shapes, overridden per theme by basename. See DECISIONS 2026-07-28. Two follow-ons, in order:
 
-1a. **Folder-index stub should emit a FENCE, not raw markup** (small, ~5 lines). `preprocess-content.js:844` writes a literal `<div class="folder-preview-visualizer" data-fp-settings='{}'></div>` into the generated stub — the same hard-coded-markup flaw `tags.njk` had, just relocated into JS. Emit a ```` ```collection ```` fence instead so folder indexes go through the shape too.
+1a. ✅ **DONE 2026-07-28 — folder-index stub now comes from a template.** `themes/_base/templates/folder-index.md`, theme-overridable via `themes/<theme>/templates/`. Composes `bloob-shape: article` + a nested `collection`, matching what authors already write.
 
-1b. **Then: `themes/_base/pages/folder-index.md`** paginating `collections.sections`, symmetric with `tags.md` — the full version of the pattern. Must handle "folder already has an author-written `_index.md`" (that precedence currently lives in preprocessor logic, not in a template).
+1b. ⚠️ **VERIFY ON MELT + MARBLES after the upstream cherry-pick.** The generated folder-index listing renderer changed `folder-preview` → `collection`, and those vaults are not on the AE machine so it could not be checked there. Also confirm the Pagefind change is acceptable: `article.njk` sets `data-pagefind-body` where `folder-index.njk` set `data-pagefind-ignore`, so generated folder indexes are now search-indexed. If melt wants its "A MELT ROOM" chrome back on generated indexes, ship `themes/melt/templates/folder-index.md` pointing at `layout: layouts/folder-index.njk` — see `themes/_base/templates/README.md`.
+
+1c. **Not done — folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated.
 
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
 2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice). **Supersedes/merges with 1a+1b above.**

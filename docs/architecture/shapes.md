@@ -55,13 +55,20 @@ The heuristic that emerges: shapes that are *transformation lenses* tend to over
 
 This policy is part of the shape's contract and must be declared in `schema.md`. It's also the source of the placement system choice: override shapes usually use a single placement system (everything goes in the same pool); preserve shapes often need richer placement (each item may need its own position).
 
-### The third axis: presentation containment
+### Presentation follows the policy — and CSS does not enforce it for you
 
-Override/preserve governs a contained item's **identity and rendering**. It says nothing about
-**styling** — and styling leaks by default, because CSS cascades.
+Styling is part of rendering, so the container-contents policy already answers the question:
 
-> **Rule: a container's body styles must not reach into a nested shape, and a nested shape scopes
-> its own presentation to its own container root.**
+> **A `preserve` container must let a nested shape style itself. An `override` container imposes its
+> own styling on what it holds. The policy the shape already declares is the answer — there is no
+> separate styling policy to invent.**
+
+`article` is a preserve container: a collection nested in an article body renders the way the
+*collection* wants, not the way the article's prose does.
+
+**The problem is purely mechanical: CSS has no notion of this policy.** The cascade does not know a
+shape boundary exists, so a preserve container leaks its prose styles into children by default and
+"who wins" is decided by specificity accident rather than by the declared policy.
 
 A container shape legitimately styles its prose (`.article-body a { text-decoration: underline }`).
 But a nested shape's markup lives *inside* that body, so the container's rule applies to it too —
@@ -83,6 +90,18 @@ fix cannot regress into "stop underlining links".
 This matters most for the composition the folder index is built on: **an `article` shape with a
 `collection` nested inside it.** Any new shape intended to be nested should scope its visual rules to
 its own container root from the start.
+
+**Current enforcement is convention only, and that does not scale** — every container × child pair is
+a fresh chance for a collision, found by eye. Two mechanisms could make the cascade express the
+policy instead. Not yet decided:
+
+| Option | How it maps to the policy | Cost / risk |
+|---|---|---|
+| **Cascade layers** (`@layer bloob.container, bloob.shape, bloob.lens`) | A shape's own styles sit in a layer that always beats a container's prose layer → **preserve is automatic**. An override/lens container puts its transformation styles in the winning layer → **override is automatic**. Specificity stops mattering. | Every shape stylesheet must be wrapped. **Unlayered CSS beats all layered CSS**, so theme `main.css` would outrank every shape unless themes are layered too — needs deciding, since themes overriding shapes is often desirable. |
+| **`@scope` donut** (`@scope (.article-body) to (.collection-visualizer)`) | Expresses "style my body, but stop at a nested shape" literally. | Per-pair rather than global; each container must know its children. Requires reasonably modern browsers. |
+
+Until one is adopted, the convention above (nested shape scopes to its own container root) is the
+rule, and `tests/shape-nesting.test.js` is the guard.
 
 ## Placement systems
 

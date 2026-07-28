@@ -14,6 +14,10 @@ import {
 } from "./scripts/utils/config-loader.js";
 import { formatDate } from "./scripts/utils/format-date.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
+import {
+  detectVisualizers,
+  renderAssetTags,
+} from "./scripts/utils/visualizer-detection.js";
 
 // Auto-discover magic machines from lib/magic-machines/
 // Each machine needs a manifest.json with a "route" field and an app.entry path.
@@ -699,6 +703,75 @@ export default async function (eleventyConfig) {
 
   if (mountPath) {
     console.log(`[eleventy] Mount path: /${mountPath}/ → output to ${outputDir}`);
+  }
+
+  // ── Per-page visualizer assets (TECH-DEBT #4) ───────────────────────────────
+  // Theme partials emit <!--bloob:visualizer-css--> / <!--bloob:visualizer-js-->
+  // instead of looping over every visualizer. This transform fills those markers
+  // with only the assets the rendered page actually needs.
+  //
+  // Registered AFTER the "visualizers" transform on purpose: detection reads the
+  // finished HTML, so shape containers must already exist. Because it inspects
+  // output rather than predicting from source, it works for every activation
+  // route — code fence, ::: container, bloob-shape frontmatter, or a theme
+  // partial that drops a shape into the nav or footer.
+  //
+  // Disabled (the default) reproduces today's behavior exactly: every asset on
+  // every page. A shape is only ever skipped when its manifest declares
+  // `detect.selectors`; see scripts/utils/visualizer-detection.js.
+  {
+    const perPageEnabled = siteConfig.features?.per_page_visualizers === true;
+
+    // visualizers.json is written by bundle-visualizers.js before Eleventy runs.
+    let visualizerData = [];
+    const visDataPath = join(process.env.SRC_DIR || "src", "_data", "visualizers.json");
+    try {
+      visualizerData = JSON.parse(readFileSync(visDataPath, "utf-8"));
+    } catch {
+      console.warn(
+        `[eleventy] visualizers.json not readable at ${visDataPath} — visualizer asset tags will be empty`,
+      );
+    }
+
+    const savings = { pages: 0, cssSkipped: 0, jsSkipped: 0 };
+
+    eleventyConfig.addTransform("visualizer-assets", function (content) {
+      if (!this.page.outputPath?.endsWith(".html")) return content;
+      if (!content.includes("<!--bloob:visualizer-")) return content;
+
+      const { css, js, skipped } = detectVisualizers(visualizerData, content, {
+        enabled: perPageEnabled,
+      });
+      const tags = renderAssetTags(css, js, pathPrefix);
+
+      if (perPageEnabled && skipped.length) {
+        savings.pages += 1;
+        for (const name of skipped) {
+          const vis = visualizerData.find((v) => v.name === name);
+          if (vis?.hasCss) savings.cssSkipped += 1;
+          if (vis?.hasJs) savings.jsSkipped += 1;
+        }
+      }
+
+      return content
+        .replace("<!--bloob:visualizer-css-->", tags.css)
+        .replace("<!--bloob:visualizer-js-->", tags.js);
+    });
+
+    eleventyConfig.on("eleventy.after", () => {
+      if (!perPageEnabled) {
+        console.log("[visualizer-assets] per-page loading OFF — every page loads every visualizer");
+        return;
+      }
+      const annotated = visualizerData.filter((v) => v.detect && !v.detect.always).length;
+      const always = visualizerData.filter((v) => v.detect?.always).length;
+      const unannotated = visualizerData.filter((v) => (v.hasCss || v.hasJs) && !v.detect).length;
+      console.log(
+        `[visualizer-assets] per-page loading ON — skipped ${savings.cssSkipped} CSS + ` +
+          `${savings.jsSkipped} JS requests across ${savings.pages} page(s). ` +
+          `${annotated} shape(s) detectable, ${always} always-on, ${unannotated} unannotated (always loaded).`,
+      );
+    });
   }
 
   // Run pagefind after every build (dev and prod) so search index is always current.

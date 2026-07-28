@@ -17,6 +17,7 @@
 
 import {
   readdirSync,
+  readFileSync,
   existsSync,
   copyFileSync,
   cpSync,
@@ -55,6 +56,20 @@ for (const name of visualizerDirs) {
   const stylesFile   = join(dir, "styles.css");
   const engineFile   = join(dir, "engine.js");
   const entry = { name, hasJs: false, hasCss: false, hasEngine: false };
+
+  // Carry the manifest's `detect` block into visualizers.json so the per-page
+  // asset transform can decide whether this shape is used on a given page
+  // (TECH-DEBT #4). A shape with no `detect` block is ALWAYS loaded — see
+  // scripts/utils/visualizer-detection.js for the safety rationale.
+  const manifestFile = join(dir, "manifest.json");
+  if (existsSync(manifestFile)) {
+    try {
+      const parsed = JSON.parse(readFileSync(manifestFile, "utf-8"));
+      if (parsed && parsed.detect) entry.detect = parsed.detect;
+    } catch (e) {
+      console.warn(`[bundle] ${name}: manifest.json unreadable (${e.message}) — shape will always load`);
+    }
+  }
 
   // Bundle browser.js with esbuild
   if (existsSync(browserEntry)) {

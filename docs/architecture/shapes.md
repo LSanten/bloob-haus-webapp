@@ -107,6 +107,48 @@ rule, and `tests/shape-nesting.test.js` is the guard.
 the `@scope` donut, written for someone who has not used either): see
 `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision".
 
+## Width preference
+
+**A shape declares how wide it wants to be; the container and theme decide whether it gets it.**
+
+This is the container-contents policy applied to layout — **not a new axis.** A `preserve` container
+lets a nested shape take the width it asks for; an `override` container imposes its own. There is no
+separate "width policy" to declare, for the same reason there is no separate styling policy.
+
+| Value | Meaning |
+|---|---|
+| `prose` | The container's reading measure. The default for anything undeclared. |
+| `wide` | Wider than the reading column — card grids, galleries, tables. |
+| `full` | Edge to edge. |
+
+**Declared in three tiers**, matching the model in open question #2:
+
+```jsonc
+// manifest.json — the shape's default
+"width": "wide"
+```
+```yaml
+# fence or ::: settings — the instance override
+width: prose
+```
+
+**Precedence:** instance > shape default > `prose`. **The theme is the final arbiter** — it defines
+how wide "wide" is. **Unknown values fall back to `prose` silently**, like an unknown `bloob-shape:`.
+
+### Degradation is the default state
+
+The theme opts in by defining `--shape-width-wide`. Until it does, `wide` resolves to the prose
+measure and the page renders exactly as it did before the contract existed. That property is what
+allows a shape to default to `wide` without touching any theme that has not adopted it — `collection`
+does exactly this, and melt, marbles-pouch, warm-kitchen and buffbaby were unaffected.
+
+Mechanism lives in `lib/visualizers/article/styles.css` (breakout via `width` + `margin-left: 50%` +
+`translate`, clamped to the viewport so a wide shape can never cause horizontal overflow). Phones
+disable the breakout entirely. Guarded by `tests/shape-width.test.js`, which asserts both directions
+— a wide child really is wider **and** prose siblings are not dragged with it.
+
+Spec: `docs/superpowers/specs/2026-07-28-shape-width-contract-design.md`.
+
 ## Placement systems
 
 Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.
@@ -691,6 +733,7 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## Fence format / grammar (shapes with non-trivial body syntax: what each line means)
 ## Parsing rules (how the shape parses its block — see "Shape-named blocks" above)
 ## Chrome preference (and override behavior)
+## Width preference (prose | wide | full — see "Width preference" above)
 ## Content policy (override identity vs. preserve identity for contained shapes)
 ## Placement system (which system, vocabulary, defaults)
 ## Examples (complete .md file mockups)

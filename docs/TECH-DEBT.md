@@ -17,7 +17,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 **IDs are stable and never reused** — code comments and other docs reference them by number
 (`#4`, `#40`, `#41` appear in `lib/visualizers/**` and `docs/architecture/visualizers.md`).
-**Next free ID: 43.**
+**Next free ID: 44.**
 
 ---
 
@@ -56,6 +56,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 | 41 | `collection` / `folder-preview` share unscoped `fp-*` class names | Latent collision trap. The collection side was scoped + guarded 2026-07-27; the **reverse direction is unverified** — whether `folder-preview` depends on `collection.css` | `npx vitest run css-independence` | Extend `tests/css-independence.test.js` to the reverse direction when folder-preview is retrofitted under #40 |
 | 42 | warm-kitchen: missing PhotoSwipe wiring (`head.njk` + `scripts.njk`) | Image zoom silently broken on warm-kitchen sites | `grep -rn "photoswipe" themes/warm-kitchen/` | Copy the wiring from alter-engineers, per `docs/architecture/settings-registry.md` |
 | 24 | warm-kitchen + marbles-pouch: missing color-pair CSS contract | `bg=` on visualizers has no effect until the themes define `--pair-bg/--pair-title/--pair-text` for `.bg-*` classes | `grep -n "pair-bg" themes/warm-kitchen/assets/css/main.css themes/marbles-pouch/assets/css/main.css` | Copy the pattern from `alter-engineers/main.css`, adjusting token colors per theme |
+| 43 | `audit-visualizer-detection.js` samples one page per detection *signature*, missing theme-rendered markup | A clean audit is necessary but **not sufficient** — it can license a per-page rollout that breaks live pages. Proven on AE 2026-07-28: the audit reported `7/7 signatures safe (86/86 pages)` while every `/tags/<tag>/` page had lost its card grid. Grouping by detected-shape set assumes pages sharing that set render equivalent markup — false when a theme template hand-rolls another shape's classes | `node scripts/audit-visualizer-detection.js --src=src-<name>`, then open one page per distinct *template* (not per signature) in a browser | Group the sample by template (`inputPath`) as well as by detection signature, so each distinct template is measured at least once. Until then, enabling `per_page_visualizers` on a site needs a manual browser pass over each template |
 
 ---
 

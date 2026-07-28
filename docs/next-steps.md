@@ -15,11 +15,18 @@ long arc.
 
 ## Immediate Next Steps
 
-**Needs the work machine (has the alter-engineers vault) — do first:**
-0. **Verify AE after the 2026-07-27 collection refactor.** Walk `docs/collaborators/2026-07-27_AE-verification-seed.md`: run `npx vitest run collection-invariants` (golden master proves cards markup unchanged), build AE, confirm cards look identical, then **decide the one intentional change — AE's collection search bar went square → pill** (three options with snippets in §3). Optionally enable per-page visualizer loading for AE after a clean `node scripts/audit-visualizer-detection.js` run (§3b).
+**AE verification — ✅ DONE 2026-07-28 on the work machine.** Seed doc walked and deleted. Outcomes: golden master passes (needed a `.gitattributes` LF fix first — it was silently CRLF-failing on Windows); scoping `.collection-visualizer .fp-card__title` upstream *did* break AE's orange label (theme override outranked — fixed by matching the scope); search bar **stays a pill** (Option A); per-page loading **enabled** for AE after fixing `folder-preview` detection, which had dropped the card grid on every tag page. New debt: TECH-DEBT #42 (the detection audit's page sampling is unsound). Decisions recorded in `DECISIONS.md` 2026-07-28.
+
+**`.md` page templates — pattern established 2026-07-28, tags migrated.** Builder-owned page templates are now `.md` files in `themes/_base/pages/` that compose shapes, overridden per theme by basename. See DECISIONS 2026-07-28. Two follow-ons, in order:
+
+1a. ✅ **DONE 2026-07-28 — folder-index stub now comes from a template.** `themes/_base/templates/folder-index.md`, theme-overridable via `themes/<theme>/templates/`. Composes `bloob-shape: article` + a nested `collection`, matching what authors already write.
+
+1b. ⚠️ **VERIFY ON MELT + MARBLES after the upstream cherry-pick.** The generated folder-index listing renderer changed `folder-preview` → `collection`, and those vaults are not on the AE machine so it could not be checked there. Also confirm the Pagefind change is acceptable: `article.njk` sets `data-pagefind-body` where `folder-index.njk` set `data-pagefind-ignore`, so generated folder indexes are now search-indexed. If melt wants its "A MELT ROOM" chrome back on generated indexes, ship `themes/melt/templates/folder-index.md` pointing at `layout: layouts/folder-index.njk` — see `themes/_base/templates/README.md`.
+
+1c. **Not done — folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated.
 
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
-2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice).
+2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice). **Supersedes/merges with 1a+1b above.**
 3. **Same layout fallback everywhere except the theme-owned root homepage** (`dir === "."`). Root must stay `base.njk` or marbles' homepage gets a narrow column and an `<h1>index</h1>`.
 4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, **explainer + recommendation written up** in `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision" (covers what a cascade layer is, the unlayered-wins trap, and the `@scope` donut). Recommendation is `@scope` + a shared `.bloob-shape-root` marker. Currently convention + `tests/shape-nesting.test.js`.
 5. **Retrofit shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview` first; it's collection's twin and the source of the `fp-*` collisions.

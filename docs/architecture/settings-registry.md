@@ -382,6 +382,7 @@ its body typeface (faces with a tall x-height read larger than their nominal siz
 | `--article-h5-size` | `0.9rem` | In-body `##### h5` |
 | `--article-h6-size` | `0.82rem` | In-body `###### h6` |
 | `--article-width` | `820px` | Reading-column max-width |
+| `--shape-width-wide` | `100%` | How wide a nested shape declaring `width: wide` may break out to. Default `100%` = prose measure, i.e. contract inert. Set it to opt the theme in (added 2026-07-28) |
 | `--article-padding-top` | `var(--spacing-lg, 2.5rem)` | Space above the header |
 | `--article-padding-bottom` | `var(--spacing-lg, 2.5rem)` | Space below the body (added 2026-07-27) |
 | `--article-media-radius` | `8px` | Corner radius on embedded iframe/embed |

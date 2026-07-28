@@ -355,11 +355,13 @@
   line-height: 1.35;
 }
 
+/* One field per line, kept tight. Mirrors collection/styles.css — this file
+   loads later, so a divergence here silently overrides that one. */
 .fp-card__fields {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.6rem;
-  margin-top: 0.1rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
 }
 
 .fp-field {
@@ -383,6 +385,20 @@
   opacity: 0.8;
 }
 
+/* Card column ladder: 3 desktop -> 2 tablet -> 1 phone.
+   Must stay in sync with the identical ladder in collection/styles.css. This
+   file loads LATER (alphabetical), so any step declared there but missing here
+   is overridden and silently never applies — which is exactly how the phone
+   step was lost: collection declared `560px -> 1fr`, this file stopped at
+   `900px -> 2`, and AE shipped 2 cards at 132px wide on a 360px phone.
+   Guarded by tests/card-layout.test.js, which loads BOTH stylesheets.
+   Keep the explicit repeat(N, 1fr) ladder — auto-fill/auto-fit would make the
+   column count a function of available width and reintroduce 3-up on phones
+   the moment a container gets wider. */
 @media (max-width: 900px) {
   .fp-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .fp-cards { grid-template-columns: 1fr; }
 }

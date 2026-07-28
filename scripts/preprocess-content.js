@@ -30,6 +30,11 @@ import {
   copyAttachments,
   extractFirstImage,
 } from "./utils/attachment-resolver.js";
+import {
+  resolveFolderIndexTemplate,
+  renderFolderIndexTemplate,
+  folderDisplayName,
+} from "./utils/folder-index-template.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
 import { stripLeadingTitleHeading, stripInlineMarkdown } from "./utils/title-deduplicator.js";
@@ -795,6 +800,21 @@ export async function preprocessContent({
   // and takes priority — we skip stub generation for that folder.
   console.log("\n--- Step 9.5: Generating folder index stubs ---");
   const SKIP_DIRS = new Set(["media", "assets", "tags", "pagefind", "og", "search"]);
+
+  // Resolved once: theme override wins over _base. Read up-front so a missing
+  // template is reported once rather than per folder.
+  const folderIndexTemplatePath = resolveFolderIndexTemplate(
+    path.join(ROOT_DIR, "themes"),
+    siteConfig.theme,
+  );
+  const folderIndexTemplate = folderIndexTemplatePath
+    ? await fs.readFile(folderIndexTemplatePath, "utf-8")
+    : null;
+  if (folderIndexTemplatePath) {
+    console.log(
+      `[folder-index] Template: ${path.relative(ROOT_DIR, folderIndexTemplatePath)}`,
+    );
+  }
   try {
     const entries = await fs.readdir(outputDir, { withFileTypes: true });
 
@@ -828,33 +848,41 @@ export async function preprocessContent({
         continue;
       }
 
-      // Display name: deslugify + smart title case, from the original folder name
-      // so acronyms survive ("come-to-MELT" → "Come to MELT").
-      const folderDisplay = smartTitleCase(folderSlug);
+      // Display name comes from the ORIGINAL folder name, never the slug, so
+      // acronyms survive on `case: lower` sites ("come-to-MELT" → "Come to MELT").
+      const folderDisplay = folderDisplayName(folderSlug);
 
-      // Stub bypasses the preprocessor's Step 6 (it's written directly to src-*/).
-      // All frontmatter that Step 6 would auto-inject for user-written index.md files
-      // must be baked in here. The bloob-shape is declared for documentation/tooling;
-      // renderFilescope() does not run on stubs — the container div is inlined directly.
       // `folderSlug` is the on-disk directory name and stays that way for
-      // filesystem paths — but the permalink is a URL and must go through the
-      // site's slug strategy, or the stub lands at "/Videos/" while its children
-      // live under "/videos/".
+      // filesystem paths — but EVERY value the template interpolates is either a
+      // URL or a graph lookup key, so `slug` must go through the site's slug
+      // strategy first. This is exactly the trap folder-index-template.js's
+      // header warns about, from both ends:
+      //   - `source: folder=Resources` matches nothing, silently, because
+      //     graph.json's `section` is slugified
+      //   - `permalink: /Resources/` puts a folder index at a different path
+      //     from its own children on a case-sensitive filesystem
       const folderUrlPath = slugifyPath(folderSlug, slugStrategy);
 
-      const stub = [
-        "---",
-        `bloob-shape: folder-preview`,
-        `layout: layouts/folder-index.njk`,
-        `permalink: /${folderUrlPath}/`,
-        `folder: ${folderSlug}`,
-        `title: ${folderDisplay}`,
-        `folder_display: ${folderDisplay}`,
-        "---",
-        "",
-        `<div class="folder-preview-visualizer" data-pagefind-ignore data-fp-settings='{}'></div>`,
-        "",
-      ].join("\n");
+      // The stub body comes from a markdown TEMPLATE that composes a shape —
+      // themes/<theme>/templates/folder-index.md, else themes/_base/. It used
+      // to be a hard-coded HTML string containing folder-preview's container
+      // div, which opted folder indexes out of the shape system and duplicated
+      // markup owned by a stylesheet elsewhere.
+      //
+      // Placeholders are substituted here, at generation time, so the slug is
+      // baked in before Eleventy sees the file. Stubs bypass Step 6, so the
+      // template carries every frontmatter key Step 6 would have injected.
+      if (!folderIndexTemplate) {
+        console.warn(
+          `[folder-index] No folder-index template found — skipping stub for /${folderSlug}/`,
+        );
+        continue;
+      }
+
+      const stub = renderFolderIndexTemplate(folderIndexTemplate, {
+        slug: folderUrlPath,
+        folder_display: folderDisplay,
+      });
 
       await fs.writeFile(indexPath, stub, "utf-8");
       console.log(`[folder-index] Generated stub for /${folderSlug}/`);

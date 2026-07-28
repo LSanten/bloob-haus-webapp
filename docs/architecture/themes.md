@@ -115,6 +115,12 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
   --pagefind-ui-border: var(--border-color);
   --pagefind-ui-tag: var(--bg-color);
   --pagefind-ui-font: var(--font-body);
+
+  /* OPTIONAL — shape width contract. Omit and every shape renders at prose
+     measure, exactly as if the contract did not exist. Define it to let a shape
+     that declares `width: wide` (collection does, by default) break out of the
+     reading column. See shapes.md → "Width preference". */
+  --shape-width-wide: 1200px;
 }
 ```
 

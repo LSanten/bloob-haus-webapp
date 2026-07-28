@@ -149,3 +149,47 @@ describe('extractLogoAlt', () => {
     expect(extractLogoAlt(undefined)).toBeNull();
   });
 });
+
+describe('selectBasePages — theme pages shadow base pages by basename', () => {
+  const load = async () =>
+    (await import('../../scripts/assemble-src.js')).selectBasePages;
+
+  it('copies base pages the theme does not override', async () => {
+    const selectBasePages = await load();
+    const { copy } = selectBasePages(['tags.md', 'feed.njk'], ['index.njk']);
+    expect(copy).toEqual(['tags.md', 'feed.njk']);
+  });
+
+  it('skips a base page the theme overrides with the SAME extension', async () => {
+    const selectBasePages = await load();
+    const { copy } = selectBasePages(['tags.md'], ['tags.md']);
+    expect(copy).toEqual([]);
+  });
+
+  it('skips a base page the theme overrides with a DIFFERENT extension', async () => {
+    // The load-bearing case: _base/tags.md + theme/tags.njk both declare
+    // permalink: /tags/{{ tag }}/ — leaving both on disk is a silent collision,
+    // not an override.
+    const selectBasePages = await load();
+    const { copy, skipped } = selectBasePages(['tags.md'], ['tags.njk']);
+    expect(copy).toEqual([]);
+    expect(skipped).toEqual([{ entry: 'tags.md', reason: 'theme overrides it' }]);
+  });
+
+  it('still honours features.rss: false, and reports why', async () => {
+    const selectBasePages = await load();
+    const { copy, skipped } = selectBasePages(['feed.njk', 'tags.md'], [], {
+      rssEnabled: false,
+    });
+    expect(copy).toEqual(['tags.md']);
+    expect(skipped).toEqual([{ entry: 'feed.njk', reason: 'features.rss: false' }]);
+  });
+
+  it('ignores theme subdirectories (pages/sections/) when matching', async () => {
+    const selectBasePages = await load();
+    // `sections` is a directory and is filtered out by the caller; a base page
+    // called sections.md must therefore still be copied.
+    const { copy } = selectBasePages(['sections.md'], []);
+    expect(copy).toEqual(['sections.md']);
+  });
+});

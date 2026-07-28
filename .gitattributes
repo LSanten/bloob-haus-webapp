@@ -1,4 +1,5 @@
-# Keep fork's own workflows when merging from upstream (LSanten/bloob-haus-webapp).
-# Prevents upstream's buffbaby/marbles/melt deploy workflows from overwriting
-# the AE-only deploy-alter-engineers.yml on git merge upstream/main.
-.github/workflows/** merge=ours
+# Golden-master fixtures are byte-compared against renderer output, which always
+# emits LF. Without this, a Windows clone with core.autocrlf=true checks them out
+# as CRLF and the comparison fails on every line despite identical content —
+# which silently disabled the collection golden master on Windows entirely.
+lib/visualizers/**/__golden__/** text eol=lf

@@ -13,6 +13,7 @@ import {
   resolveSiteName,
 } from "./scripts/utils/config-loader.js";
 import { formatDate } from "./scripts/utils/format-date.js";
+import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
 import {
   detectVisualizers,
@@ -215,6 +216,16 @@ export default async function (eleventyConfig) {
   // Handles Date objects, YYYY-MM-DD strings, and arrays (e.g. `date_updated`,
   // for which the most recent entry is shown regardless of list order).
   eleventyConfig.addFilter("dateFormat", formatDate);
+
+  // Date pills accept two authoring conventions and layouts must honour both:
+  //   comma form      date_created: 2024-11-07, Published on
+  //   separate key    date_created: 2024-11-07  +  date_created_text: Published on
+  // Lists (melt's `date_updated:`) resolve to their LATEST entry.
+  // `dateValue` returns the date part; `dateLabel` picks *_text > inline > default.
+  eleventyConfig.addFilter("dateValue", (raw) => parseDateField(raw).value);
+  eleventyConfig.addFilter("dateInlineLabel", (raw) => parseDateField(raw).label);
+  eleventyConfig.addFilter("dateLabel", (raw, explicitText, fallback) =>
+    resolveDateLabel(explicitText, parseDateField(raw).label, fallback));
 
   // Truncate filter (Hugo has this built-in)
   eleventyConfig.addFilter("truncate", function (str, len) {

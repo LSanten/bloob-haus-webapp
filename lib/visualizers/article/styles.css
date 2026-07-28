@@ -7,7 +7,7 @@
   max-width: var(--article-width, 820px);
   margin: 0 auto;
   padding-top: var(--article-padding-top, var(--spacing-lg, 2.5rem));
-  padding-bottom: var(--spacing-lg, 2.5rem);
+  padding-bottom: var(--article-padding-bottom, var(--spacing-lg, 2.5rem));
   padding-left: var(--spacing-md, 1.5rem);
   padding-right: var(--spacing-md, 1.5rem);
 }
@@ -195,4 +195,94 @@
 .share-btn--confirmed {
   border-color: var(--accent-color, #555);
   color: var(--accent-color, #555);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Added 2026-07-27 while consolidating melt's bespoke `page.njk` onto this
+   shape. Every rule below was previously theme-local in melt but is entirely
+   generic, so all themes gain it.
+
+   Per this shape's DECISIONS.md convention, each token carries the value melt
+   used as its fallback, so a theme that defines none of them renders exactly
+   what melt rendered before.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── Embedded media ───────────────────────────────────────────────────────────
+   Article previously had NO iframe/video handling, so an embedded video kept
+   its hardcoded width/height attributes and overflowed the reading column. */
+.article-page iframe,
+.article-page embed {
+  width: 100%;
+  display: block;
+  border-radius: var(--article-media-radius, 8px);
+  margin-bottom: var(--article-media-margin, 1.5rem);
+}
+
+/* Video embeds ship width/height attributes; width:100% alone leaves the height
+   fixed and squashes them. Constrain by ratio instead and let height follow.
+   youtu.be and youtube-nocookie.com are matched too — share links and the
+   privacy-preserving embed domain are both common in vaults. */
+.article-page iframe[src*="youtube.com"],
+.article-page iframe[src*="youtube-nocookie.com"],
+.article-page iframe[src*="youtu.be"],
+.article-page iframe[src*="vimeo.com"] {
+  aspect-ratio: var(--article-video-ratio, 16 / 9);
+  height: auto;
+}
+
+.article-page video {
+  max-width: 100%;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────────── */
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--article-table-size, 0.9rem);
+}
+
+.article-body th,
+.article-body td {
+  padding: var(--article-table-cell-padding, 10px 14px);
+  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  text-align: left;
+}
+
+/* ── Inline emphasis ─────────────────────────────────────────────────────────
+   Explicit because some theme resets flatten em/strong inside prose. */
+.article-body em {
+  font-style: italic;
+}
+
+.article-body strong {
+  font-weight: var(--article-strong-weight, 600);
+}
+
+/* ── Shape banner text (from the shape registry's banner_text column) ───────── */
+.article-banner-text {
+  font-size: var(--article-banner-size, 0.9rem);
+  color: var(--text-light, #666);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+/* ── Updated-date pill ──────────────────────────────────────────────────────── */
+.article-date--updated {
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* ── Heading anchors ────────────────────────────────────────────────────────
+   The anchor element itself is injected globally; these rules position it and
+   reveal it on hover of the heading it belongs to. */
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  position: relative;
+}
+
+.article-body h2:hover .heading-anchor,
+.article-body h3:hover .heading-anchor,
+.article-body h4:hover .heading-anchor {
+  opacity: 1;
 }

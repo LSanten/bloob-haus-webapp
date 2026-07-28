@@ -15,6 +15,7 @@ import {
 import { formatDate } from "./scripts/utils/format-date.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
+import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
 import {
   detectVisualizers,
   renderAssetTags,
@@ -272,37 +273,9 @@ export default async function (eleventyConfig) {
   });
 
   // Title case filter — matches Hugo's .Title behavior (lowercase small words)
-  // Also converts hyphens to spaces for slugified strings
-  eleventyConfig.addFilter("titleCase", function (str) {
-    if (!str) return "";
-    const small = new Set([
-      "a",
-      "an",
-      "and",
-      "as",
-      "at",
-      "but",
-      "by",
-      "for",
-      "in",
-      "nor",
-      "of",
-      "on",
-      "or",
-      "so",
-      "the",
-      "to",
-      "up",
-    ]);
-    return str
-      .replace(/-/g, " ")
-      .split(" ")
-      .map((word, i) => {
-        if (i > 0 && small.has(word.toLowerCase())) return word.toLowerCase();
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ");
-  });
+  // Also converts hyphens/underscores to spaces for slugified strings.
+  // Delegates to the shared util so templates and the preprocessor agree.
+  eleventyConfig.addFilter("titleCase", smartTitleCase);
 
   // Filter out system/reserved tags from display
   function filterTagList(tags) {

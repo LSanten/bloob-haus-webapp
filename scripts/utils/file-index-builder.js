@@ -10,6 +10,7 @@ import { glob } from "glob";
 import matter from "gray-matter";
 import { getSlugFunction } from "./slug-strategy.js";
 import { stripDatePrefix } from "./date-prefix.js";
+import { smartTitleCase } from "./smart-title-case.js";
 
 /**
  * Strips inline markdown from a heading string.
@@ -73,11 +74,11 @@ function extractTitleMd(frontmatter, content, filename) {
 /**
  * Converts a folder name (slug-style) to a human-readable title.
  * E.g. "my-folder" → "My Folder", "resources" → "Resources"
+ * Delegates to the shared smartTitleCase so folder names, filename fallbacks and
+ * the `titleCase` Nunjucks filter can't drift apart again.
  */
 function prettifyFolderName(name) {
-  return name
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return smartTitleCase(name);
 }
 
 /**
@@ -133,8 +134,13 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     // wiki-links written against the on-disk name keep resolving.
     const slugBase = useDatePrefix ? stripDatePrefix(filename).name : filename;
 
-    const titleFallback =
-      isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : slugBase;
+    // Last-resort display title when a file has neither `title:` nor an H1.
+    // Prettified from the ORIGINAL filename (not the slug) so acronyms survive on
+    // sites with `case: lower`. Wiki-links are unaffected — they resolve through
+    // filenameLookup, which is still keyed on the raw filename.
+    const titleFallback = isIndex && hasFolder
+      ? prettifyFolderName(path.basename(folderPath))
+      : smartTitleCase(slugBase);
     const title = extractTitle(frontmatter, body, titleFallback);
     const titleMd = extractTitleMd(frontmatter, body, titleFallback);
 

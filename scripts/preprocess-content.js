@@ -37,6 +37,7 @@ import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { stripDatePrefix } from "./utils/date-prefix.js";
+import { smartTitleCase } from "./utils/smart-title-case.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
 import { resolveRedirect } from "./utils/redirect-resolver.js";
@@ -592,10 +593,7 @@ export async function preprocessContent({
         // "My Title" (set via file-index-builder) and we must not overwrite it.
         const filenameStem = path.basename(file.relativePath, ".md");
         if (pageTitle === filenameStem) {
-          const folderDisplay = folderSlug
-            .split(/[-_\s]+/)
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
+          const folderDisplay = smartTitleCase(folderSlug);
           outputFrontmatter.title = folderDisplay;
           outputFrontmatter.folder_display = folderDisplay;
         }
@@ -821,11 +819,9 @@ export async function preprocessContent({
         continue;
       }
 
-      // Display name: capitalise each word
-      const folderDisplay = folderSlug
-        .split(/[-_\s]+/)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
+      // Display name: deslugify + smart title case, from the original folder name
+      // so acronyms survive ("come-to-MELT" → "Come to MELT").
+      const folderDisplay = smartTitleCase(folderSlug);
 
       // Stub bypasses the preprocessor's Step 6 (it's written directly to src-*/).
       // All frontmatter that Step 6 would auto-inject for user-written index.md files

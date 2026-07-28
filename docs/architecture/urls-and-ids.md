@@ -156,5 +156,18 @@ widget matches whatever theme/page it renders on. Selectors come from FastCommen
 - **bloob↔bloob cross-site linking** — a standard for linking between Bloob sites by ID.
 - **Cloudflare case-insensitive URLs** — serving an uppercase request for a lowercase page
   (avoids 404 on casing drift). Infra-side; complements the lowercased ID.
-- **Obsidian plugin copy-link (#5)** — the plugin must implement this contract (read the `url:`
-  block, apply `getSlugFunction`) so its copied URL matches the deployed URL.
+
+## Implementations of this contract
+
+| Where | File | Notes |
+|---|---|---|
+| Webapp (authoritative) | `scripts/utils/slug-strategy.js` (`getSlugFunction`, `slugifyPath`) + `scripts/utils/file-index-builder.js` | `slugifyPath` is the one folder-path → URL-path derivation. **Every consumer must go through it** — including the folder-index permalink in `preprocess-content.js`, which used to bypass it (see below). |
+| Obsidian plugin | `bloob-haus-obsidian-plugin/modules/bloob-url.ts` | Reads the vault's `url:` block and mirrors the slug functions. Cross-repo import isn't possible, so the duplication is deliberate and labelled; if the webapp's slug functions change, mirror them there in the same change. |
+
+**2026-07-28 — the folder-index permalink bug.** `preprocess-content.js` pinned folder-index
+permalinks straight from the raw directory name (`"/" + dir + "/"`), bypassing the slug
+strategy entirely. On a `case: lower` site that put a folder index at `/Resources/` while its
+children lived under `/resources/`. macOS's case-insensitive filesystem merges the two, so it
+is invisible locally and only breaks on a Linux CI build. Fixed by routing both the
+`_index.md` branch and the auto-stub generator through `slugifyPath`. **If you add another
+place that builds a URL from a path, use `slugifyPath` — do not hand-roll it.**

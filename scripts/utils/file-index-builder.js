@@ -8,7 +8,7 @@ import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
 import matter from "gray-matter";
-import { getSlugFunction } from "./slug-strategy.js";
+import { getSlugFunction, slugifyPath } from "./slug-strategy.js";
 import { stripDatePrefix } from "./date-prefix.js";
 import { smartTitleCase } from "./smart-title-case.js";
 
@@ -144,10 +144,12 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const title = extractTitle(frontmatter, body, titleFallback);
     const titleMd = extractTitleMd(frontmatter, body, titleFallback);
 
-    // Build URL with folder prefix if in a subfolder
-    // Apply slug strategy to each folder segment
+    // Build URL with folder prefix if in a subfolder.
+    // slugifyPath is the one canonical folder-path → URL-path derivation; the
+    // preprocessor's folder-index permalink goes through it too, so the two
+    // cannot disagree about where a folder lives.
     const slugifiedFolder = hasFolder
-      ? folderPath.split(path.sep).map(slugFn).join("/")
+      ? slugifyPath(folderPath, options.slugStrategy)
       : "";
 
     // Slug is based on filename, not title (URLs stay stable even if title changes).

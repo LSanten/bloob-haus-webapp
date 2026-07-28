@@ -38,6 +38,7 @@ import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { stripDatePrefix } from "./utils/date-prefix.js";
 import { smartTitleCase } from "./utils/smart-title-case.js";
+import { slugifyPath } from "./utils/slug-strategy.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
 import { resolveRedirect } from "./utils/redirect-resolver.js";
@@ -575,8 +576,16 @@ export async function preprocessContent({
       ["index", "_index"].includes(path.basename(file.relativePath, ".md"));
     if (isIndexFile && BUILD_TARGET === "eleventy") {
       const dir = path.dirname(file.relativePath);
-      const permalink =
-        dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
+      // The file index is the single source of truth for URLs, so prefer the URL
+      // it already computed for this page. The slugifyPath fallback covers pages
+      // missing from the index (e.g. drafts) and derives the same value anyway.
+      //
+      // This used to be `"/" + dir + "/"` — the raw directory name, bypassing the
+      // slug strategy. On a `case: lower` site that pinned the folder index at
+      // "/Resources/" while its children lived under "/resources/", which macOS's
+      // case-insensitive filesystem silently merged and Linux CI would not.
+      const permalink = pageInfo?.url
+        ?? (dir === "." ? "/" : "/" + slugifyPath(dir, slugStrategy) + "/");
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
         outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/base.njk";
@@ -827,11 +836,17 @@ export async function preprocessContent({
       // All frontmatter that Step 6 would auto-inject for user-written index.md files
       // must be baked in here. The bloob-shape is declared for documentation/tooling;
       // renderFilescope() does not run on stubs — the container div is inlined directly.
+      // `folderSlug` is the on-disk directory name and stays that way for
+      // filesystem paths — but the permalink is a URL and must go through the
+      // site's slug strategy, or the stub lands at "/Videos/" while its children
+      // live under "/videos/".
+      const folderUrlPath = slugifyPath(folderSlug, slugStrategy);
+
       const stub = [
         "---",
         `bloob-shape: folder-preview`,
         `layout: layouts/folder-index.njk`,
-        `permalink: /${folderSlug}/`,
+        `permalink: /${folderUrlPath}/`,
         `folder: ${folderSlug}`,
         `title: ${folderDisplay}`,
         `folder_display: ${folderDisplay}`,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSlugFunction, slugifyHeading } from '../../scripts/utils/slug-strategy.js';
+import { getSlugFunction, slugifyHeading, slugifyPath } from '../../scripts/utils/slug-strategy.js';
 
 describe('getSlugFunction', () => {
   describe('slugify strategy (default)', () => {
@@ -78,5 +78,54 @@ describe('slugifyHeading', () => {
 
   it('trims whitespace', () => {
     expect(slugifyHeading('  Hello  ')).toBe('hello');
+  });
+});
+
+describe('slugifyPath', () => {
+  // Regression: folder-index permalinks were pinned from the RAW directory name
+  // while every other URL went through the slug strategy. On macOS the
+  // case-insensitive filesystem hid it; on Linux "/Resources/" and
+  // "/resources/playlists/" are different directories and the breadcrumb 404s.
+  describe('slugify strategy', () => {
+    it('lowercases a single mixed-case segment', () => {
+      expect(slugifyPath('Resources', 'slugify')).toBe('resources');
+    });
+
+    it('slugifies every segment of a nested path', () => {
+      expect(slugifyPath('Resources/Deep Folder', 'slugify')).toBe('resources/deep-folder');
+    });
+
+    it('matches what a leaf page URL uses for the same folder', () => {
+      // file-index-builder builds "/resources/playlists/" — the folder index
+      // permalink must agree, or the two live at different paths.
+      const folder = slugifyPath('Resources', 'slugify');
+      expect(`/${folder}/`).toBe('/resources/');
+    });
+  });
+
+  describe('preserve-case strategy', () => {
+    it('keeps casing and converts spaces', () => {
+      expect(slugifyPath('Resources/Deep Folder', 'preserve-case')).toBe('Resources/Deep-Folder');
+    });
+  });
+
+  describe('normalisation', () => {
+    it('accepts Windows separators', () => {
+      expect(slugifyPath('Resources\\Deep Folder', 'slugify')).toBe('resources/deep-folder');
+    });
+
+    it('drops "." and empty segments', () => {
+      expect(slugifyPath('./Resources//Sub', 'slugify')).toBe('resources/sub');
+    });
+
+    it('returns empty string for "." and empty input', () => {
+      expect(slugifyPath('.', 'slugify')).toBe('');
+      expect(slugifyPath('', 'slugify')).toBe('');
+      expect(slugifyPath(null, 'slugify')).toBe('');
+    });
+
+    it('defaults to the slugify strategy when none is given', () => {
+      expect(slugifyPath('Resources')).toBe('resources');
+    });
   });
 });

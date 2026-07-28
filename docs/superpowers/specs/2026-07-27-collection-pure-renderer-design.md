@@ -230,3 +230,104 @@ present in the machine-global cache `~/Library/Caches/ms-playwright/` (`chromium
 Shared (`lib/`, `docs/`, `tests/`) split from any theme-specific commits, per CLAUDE.md, so the
 shared work stays cherry-pickable upstream. `bloob-haus-webapp` pushed to `origin main`;
 `melt-website` left for Leon to push.
+
+---
+
+## OPEN follow-on decision: how a nested shape keeps its own styling
+
+**Nothing decided, nothing built.** Surfaced by a real bug this session. Leon to pick.
+
+### The problem, in one example
+
+melt's Resources page is an **article shape with a collection nested inside it**. Article styles its
+prose; collection styles its marbles:
+
+```css
+.article-body a  { text-decoration: underline; }   /* article: prose links */
+.fp-marble       { text-decoration: none; }        /* collection: marble titles */
+```
+
+The collection sits *inside* `.article-body`, so **both match the same element**. The browser picked
+article's — every marble title came out underlined. Neither rule is wrong. They collide, and nothing
+tells the browser which shape owns that element.
+
+**Why article won:** when two rules match, the browser scores each selector's *specificity* — roughly
+"how many things did you name". `.article-body a` names two (0,1,1); `.fp-marble` names one (0,1,0).
+**That is the entire reason.** Not policy — an accident of how the selectors were written.
+`shapes.md` says `article` is a **preserve** container that must let children render as themselves;
+the cascade has no idea that rule exists.
+
+**Today's fix (shipped):** the nested shape names one more thing so it out-scores the container —
+`.collection-visualizer .fp-marble` (0,2,0). It works, but it's a manual arms race: every new
+container × child pair is a fresh chance to collide, found by eye in a browser. Today it was
+`text-decoration`; next time `color`, `margin`, `font-size`.
+
+### Option A — Cascade layers (`@layer`)
+
+A layer is a **named priority bucket**. Declare the order once, then file rules into buckets:
+
+```css
+@layer container, shape;                              /* "shape" is later → shape wins */
+@layer container { .article-body a { text-decoration: underline; } }   /* (0,1,1) */
+@layer shape     { .fp-marble    { text-decoration: none; } }          /* (0,1,0) — but WINS */
+```
+
+**The key thing:** once rules are in layers, **layer order beats specificity entirely**. The later
+layer wins even with a far weaker selector; specificity only breaks ties *within* a layer. So we can
+state "a shape's own styling outranks its container's prose" as a **declared rule** instead of hoping
+we wrote a longer selector. Mapped to the ontology — `@layer bloob.container, bloob.shape, bloob.lens`
+— **preserve and override both become automatic**.
+
+> **The catch: CSS not in ANY layer beats ALL layered CSS.** This is the opposite of what most people
+> guess. Theme `main.css` is unlayered today, so layering shape CSS while leaving themes unlayered
+> would make **themes silently outrank every shape**. Maybe desirable — but it must be a decision,
+> not a surprise.
+
+**Cost:** wrap ~24 shape + 5 theme stylesheets. `bundle-visualizers.js` could auto-wrap a shape's
+`styles.css`, so authors needn't think about it — *but* container shapes like `article` hold both
+kinds of rule in one file (own chrome + prose rules for contained content), so those need splitting.
+
+### Option B — `@scope` with a donut
+
+`@scope` says *"apply inside A, but **stop** when you hit B"* — the gap is the donut:
+
+```css
+@scope (.article-body) to (.bloob-shape-root) {
+  a { text-decoration: underline; }
+}
+```
+
+*Underline links in the article body — but stop the moment you reach a nested shape's root.* The
+marble is inside one, so the rule never reaches it. No specificity fight; the rule simply doesn't
+apply there.
+
+The container would seem to need every shape's root class — it doesn't: **give every shape root one
+shared marker class** (`.bloob-shape-root`, emitted by every renderer alongside its own class). Then
+every container writes the same boundary, forever.
+
+**Cost:** one extra class per renderer; only container shapes' prose rules get rewritten (`article`
+today, `garden` later) — a much smaller surface than A. Browser support Chrome 118+/Safari 17.4+/
+Firefox 128+; on anything older prose links would also underline marbles — cosmetic, not broken.
+
+### Option C — keep the convention
+
+Nested shapes keep out-specifying containers by hand; `tests/shape-nesting.test.js` catches the pairs
+we remember to test. Fine at today's scale, worse as shapes multiply — and this is exactly the
+invisible-until-you-look class of bug that costs most to find.
+
+### Recommendation
+
+**Option B, with C as the interim.** It states the actual rule rather than encoding it as a priority
+number; blast radius is container prose rules + one class, not every stylesheet; it avoids A's
+unlayered-wins trap; and it fails gracefully. Option A is the more powerful mechanism and the better
+answer *if* we later want themes, shapes and lenses in one fully declared priority order — a bigger
+project than this bug needs.
+
+**If B is chosen:** add `.bloob-shape-root` to shape renderers (collection, scene-nav,
+folder-preview first) → rewrite `article`'s prose rules with `@scope` → extend
+`tests/shape-nesting.test.js` to assert the boundary holds for a shape it has never seen (the point
+is no per-pair maintenance) → document the marker in `shapes.md` → "What a complete shape carries" →
+drop the S67 `.collection-visualizer .fp-*` specificity overrides, keep the test.
+
+**Open either way:** should a *theme* be able to override a shape's internals? Today it can, by
+accident of load order. Whatever we pick should answer that deliberately.

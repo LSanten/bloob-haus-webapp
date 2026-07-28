@@ -103,6 +103,10 @@ policy instead. Not yet decided:
 Until one is adopted, the convention above (nested shape scopes to its own container root) is the
 rule, and `tests/shape-nesting.test.js` is the guard.
 
+**Full explainer + recommendation** (what a cascade layer actually is, the unlayered-wins trap, and
+the `@scope` donut, written for someone who has not used either): see
+`docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision".
+
 ## Placement systems
 
 Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.

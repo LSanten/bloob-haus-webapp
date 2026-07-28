@@ -14,7 +14,7 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
 2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice).
 3. **Same layout fallback everywhere except the theme-owned root homepage** (`dir === "."`). Root must stay `base.njk` or marbles' homepage gets a narrow column and an `<h1>index</h1>`.
-4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, per the table in `shapes.md` → "Presentation follows the policy". Layers make preserve/override automatic but unlayered theme CSS would outrank every shape. Currently convention + `tests/shape-nesting.test.js`.
+4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, **explainer + recommendation written up** in `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision" (covers what a cascade layer is, the unlayered-wins trap, and the `@scope` donut). Recommendation is `@scope` + a shared `.bloob-shape-root` marker. Currently convention + `tests/shape-nesting.test.js`.
 5. **Retrofit shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview` first; it's collection's twin and the source of the `fp-*` collisions.
 
 **Local thread — melt scene-nav builder (merged to `main` as `a5529af`; bugs outstanding):**

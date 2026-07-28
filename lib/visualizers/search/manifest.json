@@ -33,8 +33,17 @@
     },
     "openFilters": {
       "type": "array",
-      "default": ["tag"],
+      "default": [
+        "tag"
+      ],
       "description": "Filter categories to show expanded by default"
     }
+  },
+  "detect": {
+    "selectors": [
+      ".search-visualizer",
+      ".home-search",
+      ".footer-search__panel"
+    ]
   }
 }

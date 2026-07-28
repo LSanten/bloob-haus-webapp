@@ -17,5 +17,9 @@
       "default": 60000,
       "description": "How long the undo window stays open (ms)"
     }
+  },
+  "detect": {
+    "always": true,
+    "reason": "targets input[type=checkbox] produced by the markdown task-list plugin, not by this shape"
   }
 }

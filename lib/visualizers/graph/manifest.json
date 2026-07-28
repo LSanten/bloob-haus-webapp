@@ -37,5 +37,10 @@
   "notes": {
     "positioning": "TODO: a 'position' setting (values: bottom | right | left) is planned but not yet implemented. Right/left sidebar layout requires theme-level CSS grid changes. Currently the graph always renders at the bottom of the page (via the layout template) or at the ```graph code fence location if used inline.",
     "cdn": "Renders using force-graph (MIT, vasturiano/force-graph) loaded from jsDelivr CDN at runtime. No npm install needed."
+  },
+  "detect": {
+    "selectors": [
+      ".graph-visualizer"
+    ]
   }
 }

@@ -21,5 +21,9 @@
   "notes": {
     "cdn": "Loads KaTeX 0.16.9 from jsDelivr CDN at runtime. No npm install needed.",
     "delimiters": "Supports $$...$$  (display/block) and $...$ (inline). Both are enabled by default."
+  },
+  "detect": {
+    "always": true,
+    "reason": "scans rendered text for $..$ / $$..$$ math; no container class exists until KaTeX runs"
   }
 }

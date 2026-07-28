@@ -3,5 +3,12 @@
   "type": "hybrid",
   "filescope": true,
   "defaultLayout": "layouts/folder-index.njk",
-  "description": "Lists all pages in the current folder. Used in auto-generated and user-created folder index pages."
+  "description": "Lists all pages in the current folder. Used in auto-generated and user-created folder index pages.",
+  "detect": {
+    "selectors": [
+      ".folder-preview-visualizer",
+      ".folder-index",
+      ".articles"
+    ]
+  }
 }

@@ -31,5 +31,10 @@
       "default": true,
       "description": "Show the count badge next to each tag"
     }
+  },
+  "detect": {
+    "selectors": [
+      ".tags-visualizer"
+    ]
   }
 }

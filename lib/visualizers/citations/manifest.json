@@ -2,12 +2,16 @@
   "name": "citations",
   "type": "runtime",
   "version": "1.0.0",
-  "description": "Styles Pandoc-style footnotes ([^label]) rendered by markdown-it-footnote. No JS — CSS only.",
+  "description": "Styles Pandoc-style footnotes ([^label]) rendered by markdown-it-footnote. No JS \u2014 CSS only.",
   "activation": {
     "method": "auto-detect",
     "pattern": ".footnote-ref"
   },
   "files": {
     "css": "citations.css"
+  },
+  "detect": {
+    "always": true,
+    "reason": "footnote markup is emitted by markdown-it-footnote, not by this shape"
   }
 }

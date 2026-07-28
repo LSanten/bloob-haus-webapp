@@ -22,5 +22,10 @@
       "required": false,
       "description": "Map of platform name to show-level URL, e.g. spotify: https://..."
     }
+  },
+  "detect": {
+    "selectors": [
+      ".rss-episode"
+    ]
   }
 }

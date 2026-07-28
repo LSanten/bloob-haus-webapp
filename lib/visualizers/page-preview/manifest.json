@@ -11,5 +11,9 @@
     "browser": "browser.js",
     "styles": "styles.css"
   },
-  "settings": {}
+  "settings": {},
+  "detect": {
+    "always": true,
+    "reason": "attaches to .pagefind-ui__result nodes that Pagefind creates at runtime"
+  }
 }

@@ -2,7 +2,7 @@
   "name": "fridge-magnets",
   "type": "hybrid",
   "version": "2.0.0",
-  "description": "Interactive fridge magnet board — drag and rearrange word cards, add your own words, and submit favorite arrangements to a Google Form.",
+  "description": "Interactive fridge magnet board \u2014 drag and rearrange word cards, add your own words, and submit favorite arrangements to a Google Form.",
   "activation": {
     "method": "code-fence",
     "description": "Place a ```fridge-magnets code fence in markdown. Cards pre-load from the 'cards' string. All boards support add-a-word and drag. Feedback boards also support submission."
@@ -31,7 +31,7 @@
     "show-editor": {
       "type": "boolean",
       "default": false,
-      "description": "Show the YAML textarea editor on load. Default (false/no): editor is hidden, toggled via the ⌨ button."
+      "description": "Show the YAML textarea editor on load. Default (false/no): editor is hidden, toggled via the \u2328 button."
     },
     "feedback-allow": {
       "type": "boolean",
@@ -48,11 +48,11 @@
       "default": {},
       "description": "Maps Google Form entry IDs to their semantic roles. All five keys required for full functionality. name and category may be omitted to hide those fields.",
       "properties": {
-        "arrangement": "entry.XXXXXXXXX — the card arrangement string [word](x,y)",
-        "board": "entry.XXXXXXXXX — board name from the 'board' YAML field",
-        "type": "entry.XXXXXXXXX — 'whole-board' or 'selection'",
-        "name": "entry.XXXXXXXXX — submitter name (optional; omit to hide the name input)",
-        "category": "entry.XXXXXXXXX — category label chosen in modal (optional; omit to hide picker)"
+        "arrangement": "entry.XXXXXXXXX \u2014 the card arrangement string [word](x,y)",
+        "board": "entry.XXXXXXXXX \u2014 board name from the 'board' YAML field",
+        "type": "entry.XXXXXXXXX \u2014 'whole-board' or 'selection'",
+        "name": "entry.XXXXXXXXX \u2014 submitter name (optional; omit to hide the name input)",
+        "category": "entry.XXXXXXXXX \u2014 category label chosen in modal (optional; omit to hide picker)"
       }
     },
     "mode": {
@@ -70,5 +70,11 @@
       "default": 24,
       "description": "Hours after submission_at during which a row shows automatically (before manual approval). Rows with approved=yes always show; approved=no never show."
     }
+  },
+  "detect": {
+    "selectors": [
+      ".fm-root",
+      ".fridge-magnets-visualizer"
+    ]
   }
 }

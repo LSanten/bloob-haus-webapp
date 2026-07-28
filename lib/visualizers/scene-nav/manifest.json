@@ -9,17 +9,23 @@
   },
   "files": {
     "transform": "index.js",
-    "parser":    "parser.js",
-    "renderer":  "renderer.js",
-    "browser":   "browser.js",
-    "css":       "styles.css"
+    "parser": "parser.js",
+    "renderer": "renderer.js",
+    "browser": "browser.js",
+    "css": "styles.css"
   },
   "settings": {
     "maxWidth": {
-      "type":        "string",
-      "default":     "900px",
+      "type": "string",
+      "default": "900px",
       "description": "Maximum width of the scene container"
     }
   },
-  "pairs_with": "scene-nav-builder"
+  "pairs_with": "scene-nav-builder",
+  "detect": {
+    "selectors": [
+      ".scene-nav-wrapper",
+      ".scene-nav-container"
+    ]
+  }
 }

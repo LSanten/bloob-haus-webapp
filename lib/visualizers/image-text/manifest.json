@@ -3,5 +3,10 @@
   "type": "build-time",
   "activation": "container",
   "trigger": "image-text",
-  "description": "Transforms a ::: image-text container into a two-column image + text layout. The first ![[image]] becomes the image column; all other content becomes the text column. image=left|right controls side, bg= uses the theme color pair system. Stacks on mobile."
+  "description": "Transforms a ::: image-text container into a two-column image + text layout. The first ![[image]] becomes the image column; all other content becomes the text column. image=left|right controls side, bg= uses the theme color pair system. Stacks on mobile.",
+  "detect": {
+    "selectors": [
+      ".image-text"
+    ]
+  }
 }

@@ -3,5 +3,10 @@
   "type": "hybrid",
   "activation": "container",
   "trigger": "testimonials",
-  "description": "Transforms a ::: testimonials container of blockquotes into a Swiper carousel. Each blockquote is one slide — quote text + ~ name / ~ role metadata lines."
+  "description": "Transforms a ::: testimonials container of blockquotes into a Swiper carousel. Each blockquote is one slide \u2014 quote text + ~ name / ~ role metadata lines.",
+  "detect": {
+    "selectors": [
+      ".testimonials"
+    ]
+  }
 }

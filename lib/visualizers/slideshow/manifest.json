@@ -3,5 +3,10 @@
   "type": "build-time",
   "activation": "container",
   "trigger": "slideshow",
-  "description": "Transforms a ::: slideshow container of ![[images]] into an infinitely scrolling CSS marquee. duration= controls loop speed, height= sets image height, title= adds an optional section heading, bg= uses the theme color pair system."
+  "description": "Transforms a ::: slideshow container of ![[images]] into an infinitely scrolling CSS marquee. duration= controls loop speed, height= sets image height, title= adds an optional section heading, bg= uses the theme color pair system.",
+  "detect": {
+    "selectors": [
+      ".slideshow"
+    ]
+  }
 }

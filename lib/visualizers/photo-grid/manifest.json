@@ -3,5 +3,10 @@
   "type": "build-time",
   "activation": "container",
   "trigger": "photo-grid",
-  "description": "Responsive image/GIF grid with uniform or mixed-row layouts. Images are wrapped in PhotoSwipe lightbox anchors when image_zoom is enabled."
+  "description": "Responsive image/GIF grid with uniform or mixed-row layouts. Images are wrapped in PhotoSwipe lightbox anchors when image_zoom is enabled.",
+  "detect": {
+    "selectors": [
+      ".photo-grid"
+    ]
+  }
 }

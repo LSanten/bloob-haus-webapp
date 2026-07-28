@@ -10,5 +10,10 @@
   "files": {
     "browser": "browser.js",
     "styles": "styles.css"
+  },
+  "detect": {
+    "selectors": [
+      ".circular-nav-visualizer"
+    ]
   }
 }

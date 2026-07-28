@@ -1,5 +1,32 @@
 # Melt Scene-Nav Builder — Next Round (bugs + undo + overlay)
 
+## ✅ COMPLETED 2026-07-28 (S68) — archived
+
+**Every bug in this plan is fixed and verified by Leon in a real browser.** The long-running
+"headless can't drag, so nothing here is verifiable" blocker — which stalled this plan across
+S63–S67 — is resolved by direct human verification:
+
+| Item | Outcome |
+|---|---|
+| **B1** rotation grip persists | ✅ verified — the `.snb-active` hover gate holds |
+| **B2** marquee rubber-band select | ✅ verified working — **the overlay rewrite below was never needed.** The S65 fixes (widened `isEmptyTarget` + empty-click deselect) were sufficient; the diagnosis that the event model needed replacing was wrong |
+| **Group transforms** (move / resize / rotate) | ✅ verified |
+| **F2** overlay (loop + colour + strength, live preview) | ✅ verified |
+| **B3** background flash | ✅ fixed S64 |
+| **B4** column width | ✅ fixed S67 (melt onto the `article` shape) |
+
+**Deferred, not done — `F1 undo/redo`.** Explicitly deferred by Leon in favour of higher-value
+melt work. Carried to `IDEAS.md`; the implementation sketch in the F1 section below is still good.
+Also carried there: the h3 `#f1dbff` colour, the Q2 light/dark theme toggle, and the mobile
+`aspectRatio 9/16` decision.
+
+**Lesson for future plans:** three sessions of this document's length were spent describing
+rewrites for bugs that a five-minute human browser check showed were already fixed. When a plan
+says "unverified — headless can't do this", the cheapest next step is to *ask the human to click
+it*, not to write a more elaborate fix.
+
+---
+
 **Status:** Updated 2026-07-27 (S67). For a FRESH session — prior sessions (S62–S65) grew very large.
 
 > **S67 changed two things that matter to this plan:**

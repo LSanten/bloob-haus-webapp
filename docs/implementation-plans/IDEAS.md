@@ -45,6 +45,25 @@ Features and ideas that came up but aren't prioritized yet. Add ideas here to ca
 - [ ] Nutrition calculation from ingredients
 - [ ] Shopping list generation from recipes
 
+### Deferred from the melt scene-nav builder (S68, 2026-07-28)
+Plan archived at [`_completed/2026-07-22_melt-builder-next-round.md`](_completed/2026-07-22_melt-builder-next-round.md)
+— every bug in it is fixed and browser-verified. These are the parts Leon chose not to build:
+- [ ] **Undo / redo in the scene-nav builder (was F1)** — a visible "↶ Undo" button + `⌘Z` / `⌘⇧Z`.
+  Implementation sketch is written out in the archived plan's F1 section: an undo stack of
+  `structuredClone(scene)` snapshots pushed at each mutation boundary (drag end, handle end,
+  number-field change, add/remove, bulk edit); undo pops → re-apply to DOM → `renderPanel()` +
+  `wireCanvas()`; cap ~50; redo stack. **Snapshot the pre-resolution scene** (raw refs) — the
+  builder edits that object, not the resolved one.
+- [ ] **melt: `h3` colour should be `#f1dbff`** — currently `var(--color-accent-2)` (`#7a3f9e`).
+  Leon asked for this in S66 and it has stayed open since.
+- [ ] **Light/dark theme toggle for themes (was Q2)** — Leon flagged it lower-priority himself.
+  The related Q1 (bright background + dark text) is done.
+- [ ] **melt mobile `aspectRatio 9/16`** — decide keep-portrait-and-tune vs drop so mobile mirrors
+  desktop. The builder's state chip already flags it as an untuned divergence.
+- [ ] **`dev-local.js --clean` flag** — wipe the per-site `src-*` dir on startup. Repeated dev
+  restarts can leave a stale processed `_index.md` that looks like a duplicate scene;
+  `rm -rf src-melt _site` is the manual fix today.
+
 ### Visualizer Ideas
 - [ ] PDF viewer visualizer
 - [ ] Code playground visualizer

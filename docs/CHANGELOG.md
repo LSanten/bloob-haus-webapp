@@ -6,6 +6,18 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 69 — July 28, 2026
+**Worked on:** melt breadcrumbs and URL derivation on Leon's machine, then merged S68 from the AE fork. Suite 751 → **808 tests**.
+
+- **Breadcrumbs: one rule — every crumb shows that page's own title.** The folder crumb was the URL slug (`MELT · resources · Music we melt to`); it now resolves the folder-index page via a new `lookupPage` filter and uses its title. It has to be a lookup, not a prettified slug: melt sets `case: lower`, so an acronym is already gone by the time a URL exists.
+- **`scripts/utils/smart-title-case.js` replaces five divergent "prettify a name" copies** (file-index-builder, two in preprocess-content, the `titleCase` filter, and AE's `folderDisplayName`). Filename/folder fallbacks now deslugify + smart-case from the **original** name, so `come-to-MELT.md` → "Come to MELT". Wiki-links unaffected — they resolve via `filenameLookup`.
+- **`slugifyPath` — folder-index permalinks bypassed the slug strategy entirely** (`"/" + dir + "/"`), putting a folder index at `/Resources/` while its children lived under `/resources/`. Invisible on macOS (case-insensitive FS merges them), broken on Linux CI. Both the `_index.md` branch and the stub generator now go through it. Verified against a clean HEAD worktree: **no live URL moved** on marbles or buffbaby; melt's two were corrected.
+- **Merged PR #3** (9 shared AE commits: width contract, `.md` page templates, per-page loading fixes). Two conflicts, both in just-changed territory — see DECISIONS 2026-07-28 for why the two sides needed each other.
+- **melt + marbles folder chrome restored** via `themes/<theme>/templates/folder-index.md`. Closes S68's "verify on melt + marbles" item: measured against production first — 8 live pages would have lost their chrome and entered search.
+- **Obsidian plugin 1.2.0 released** — copy-link now reads the vault's `_bloob-settings.md` `url:` block instead of hardcoding one site's rules (urls-and-ids.md #5). Verified against the builder's own derivation: 556 pages, 0 mismatches.
+- **New debt:** TECH-DEBT #44 — the shape width contract keys on `.article-body`, so it's coupled to one layout's markup rather than the shape system. Filed, not patched; no live symptom until a theme sets `--shape-width-wide`.
+- **Left incomplete:** melt's header fade (reworked to a taller `::before`, never visually confirmed); the legacy `copy-link-button` plugin still installed alongside `bloob-haus` in marbles and alone in buffbaby.
+
 ### Session 68 — July 28, 2026
 **Worked on:** First session on the machine that has the alter-engineers vault. Walked and closed the AE verification seed, then built two shared features out of what verification exposed. Suite 692 → **780 tests**.
 

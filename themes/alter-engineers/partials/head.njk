@@ -70,9 +70,7 @@
     {% endif %}
 
     <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
-    {% for vis in visualizers %}{% if vis.hasCss %}
-    <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
-    {% endif %}{% endfor %}
+    <!--bloob:visualizer-css-->
 
     {% include "partials/site-snippets-head.njk" %}
 </head>

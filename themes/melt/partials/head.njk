@@ -52,9 +52,7 @@
     {% include "partials/photoswipe-head.njk" %}
 
     <!-- Visualizer stylesheets -->
-    {% for vis in visualizers %}{% if vis.hasCss %}
-    <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
-    {% endif %}{% endfor %}
+    <!--bloob:visualizer-css-->
 
     <!-- Pagefind UI styles — only when search is enabled -->
     {% if site.features.search %}

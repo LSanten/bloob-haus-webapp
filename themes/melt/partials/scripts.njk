@@ -1,7 +1,5 @@
 {# Visualizer scripts #}
-{% for vis in visualizers %}{% if vis.hasJs %}
-<script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
-{% endif %}{% endfor %}
+<!--bloob:visualizer-js-->
 
 {% include "partials/photoswipe-scripts.njk" %}
 {% include "partials/iframe-resize.njk" %}

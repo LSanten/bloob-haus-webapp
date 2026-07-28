@@ -8,7 +8,10 @@
     "selectors": [
       ".folder-preview-visualizer",
       ".folder-index",
-      ".articles"
-    ]
+      ".articles",
+      ".fp-cards",
+      ".fp-card"
+    ],
+    "note": "This stylesheet OWNS the .fp-card* card grid, and theme templates render that markup directly without any folder-preview container — alter-engineers' pages/tags.njk builds a .fp-cards grid by hand. Detecting only the container classes dropped the stylesheet on every tag page, collapsing the 3-column grid to a full-width unstyled stack. Same failure mode as article/.share-bar: a stylesheet can own classes something else renders."
   }
 }

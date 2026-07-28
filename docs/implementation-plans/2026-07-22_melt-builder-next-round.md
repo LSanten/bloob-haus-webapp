@@ -1,6 +1,23 @@
 # Melt Scene-Nav Builder — Next Round (bugs + undo + overlay)
 
-**Status:** Updated 2026-07-23 (S66). For a FRESH session — prior sessions (S62–S65) grew very large.
+**Status:** Updated 2026-07-27 (S67). For a FRESH session — prior sessions (S62–S65) grew very large.
+
+> **S67 changed two things that matter to this plan:**
+> 1. **`@playwright/test` is now installed** (pinned 1.61.1, reuses the machine-global chromium
+>    cache). **The "headless can't drag" blocker this plan keeps citing is gone** — Playwright drives
+>    real pointer drags. B1/B2/F2 and the "real-browser verification pass" below are now automatable;
+>    see `scripts/audit-visualizer-detection.js` and `tests/css-independence.test.js` for the pattern
+>    (launch chromium, drive the page, assert on measured geometry).
+> 2. **Melt's Resources page moved from `folder-preview` to the `collection` shape**
+>    (```collection source: folder=resources display: marbles```), and its separate ```search``` fence
+>    was dropped in favour of collection's own filter. Marbles look and behave identically; the page
+>    now also ships crawlable HTML. Note the source is lowercase `resources` — graph.json's `section`
+>    is slugified, and `folder=Resources` renders empty silently.
+>
+> **Lesson worth carrying into B1/B2 work:** a filter/interaction test that asserts on the property
+> the code just set (e.g. `el.hidden === true`) proves nothing. S67 shipped a search filter that set
+> `hidden` correctly while the marbles stayed on screen, because `.fp-marble { display:flex }`
+> overrides the UA `[hidden]` rule. Assert on **measured geometry**, not on state you wrote.
 **Branch/deploy:** builder v2 + S64 link fix + S66 work (below, `.button` contract, footer fade,
 homepage spacing, per-page `background_image` override) are all on `main` as of commit `a5529af`,
 pushed 2026-07-23. Deploy/live status on melt.bloob.haus not reconfirmed after this push — check before
@@ -160,7 +177,7 @@ URL match + opaque placeholder) confirmed in the build.
 
 ---
 
-### B4 — Column width: nested shapes don't respect the page/folder column (NEW, deferred)
+### B4 — Column width — PARTLY FIXED (S67); the remaining half is the PROSE, not the shapes
 **Symptom:** on the Resources folder-index, the folder-preview bubbles + the search bar (and, on content
 pages, the comments section) don't stick to the page's content column — they sit wider / aren't confined.
 
@@ -170,6 +187,25 @@ use it and don't impose it on nested shapes:
   nested `:::folder-preview`, `:::search`, and comments shapes render inside but set their own widths.
 - `.page-content` uses `--content-max-width`, but comments/search render as their own blocks not constrained
   to it.
+
+**S67 update — measured, not guessed.** On `/resources/` at 1400px and 2000px viewports:
+- `.collection-visualizer` → `left: 360 / 660, width: 680` — **correctly constrained and centred.**
+  S67 added `.site-main > .collection-visualizer` to melt's B4 column rule (it named
+  `.folder-preview-visualizer` explicitly, so the shape swap would otherwise have spilled full-width).
+- `.site-main p` (the intro prose) → `left: 0, width: 1400 / 2000` — **full-bleed with zero padding.**
+  That is the visible bug Leon reported: the leading "I" of "If you have resources…" is clipped at
+  the window edge.
+
+So the remaining problem is the **inverse** of how this item was originally written: the *shapes* now
+respect the column and the *prose* does not. Cause is already noted in `themes/melt/assets/css/main.css`
+— a `bloob-shape: page` + `is_folder` index is assigned `base.njk` directly, so its children render
+straight into `.site-main` with no content column, and the B4 rule only targets bare *shape* children
+(`.site-main > .collection-visualizer` etc.), never `<h1>`/`<p>`.
+
+**Likely fix:** constrain all direct children of `.site-main` for this page type (or give the layout a
+real content wrapper) rather than enumerating shape classes one by one — the enumeration is what
+broke when the shape changed. **Verify across melt's page types** (home is deliberately full-bleed;
+content pages use `.page-content`), not just `/resources/`.
 
 **Fix approach (decide scope):** a shape should govern the width of shapes nested in it. Give the page/folder
 container one column token and make nested shapes (search, folder-preview, comments) inherit it (constrain
@@ -286,6 +322,16 @@ area; looks right on phone; no overlay bleed onto the page bg; reduced-motion hi
 - Pure logic (`builder/selection.js`: `elementsInRect`, `groupBBox`, `scaleGroup`, `rotateGroupPositions`,
   `moveGroup`, `mobileState`) is tested — reuse it; bugs live in the DOM wiring (`handles.js`,
   `panel.js` `wireCanvas`/`refreshHandles`, `mountMarquee`).
+
+## Open at the end of S67 (2026-07-27)
+
+Not moved to `_completed/` — these remain:
+- **B2** marquee rubber-band rewrite (still unverified in a real browser)
+- **B4** the prose half, above
+- **F1** undo/redo — not started
+- **Real-browser drag pass** for B1/B2/F2 — now unblocked by Playwright
+- **h3 colour `#f1dbff`** (Additional add-ons) — still open
+- **Q2 light/dark theme toggle** — still open, explicitly lower priority
 
 ## Definition of done
 Rotation persists on release; marquee selects exactly the enclosed bubbles; undo reverses the last action;

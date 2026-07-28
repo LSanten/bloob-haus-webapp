@@ -142,6 +142,59 @@ needs a pure renderer.
 `tags`, `graph`. Tracked as **TECH-DEBT #40**. Convert each when next touched; do not retrofit
 them speculatively.
 
+### Per-page asset loading — the `detect` block
+
+**Status: shipped 2026-07-27. Enabled on `melt` and `marbles`.**
+
+Every page used to load every visualizer's CSS and JS. A shape can now declare
+how to tell it is present, and pages load only what they use.
+
+```jsonc
+// lib/visualizers/<shape>/manifest.json
+"detect": { "selectors": [".collection-visualizer"] }
+
+// or, for shapes whose markup is not theirs to emit:
+"detect": { "always": true, "reason": "attaches to Pagefind results created at runtime" }
+```
+
+Detection runs on the page's **rendered HTML** in an Eleventy transform, so it
+works for every activation route — fence, `:::`, `bloob-shape:`, or a theme
+partial dropping a shape into the nav. Themes emit
+`<!--bloob:visualizer-css-->` / `<!--bloob:visualizer-js-->` markers that the
+transform fills.
+
+Enable per site: `features.per_page_visualizers: true` in `sites/<name>.yaml`.
+Off (the default) reproduces the old behavior exactly.
+
+**A shape with no `detect` block is always loaded.** Opt-in, not opt-out — a
+wrong guess silently breaks a page, so the default must be safe.
+
+#### Declaring a selector is not enough — run the audit
+
+```bash
+npm run dev:<site>                                       # leave it running
+node scripts/audit-visualizer-detection.js --src=src-<name>
+```
+
+Checking "does my shape emit this class?" misses the real failure mode: **a
+stylesheet can own classes something else renders.** `article/styles.css` owns
+`.share-bar` / `.share-btn`, which `themes/_base/partials/share-bar.njk` puts on
+ordinary pages — so detecting only `.article-page` silently stripped the share
+bar's styling from 33 melt pages. Screenshots showed it only as a 5px height
+change.
+
+The audit loads each page with all CSS present, disables exactly what detection
+would drop, and compares every element's geometry. It groups pages by detection
+signature, so a 1159-page site audits in seconds. **Enable the flag on a new site
+only after a clean audit run.**
+
+Two things the audit deliberately ignores, both learned the hard way:
+- **zero-size elements**, stripped before measuring — a dropped shape's JS is
+  dropped with its CSS, so runtime-injected `display:none` scaffolding
+  (fridge-magnets' hidden modal) can never appear in a real per-page build.
+- **rAF-animated elements**, excluded via a control measurement — marble float
+  changes geometry between frames and would otherwise read as a regression.
+
 ### Checklist for a new content-generating shape
 
 - [ ] `renderer.js` exports pure functions returning HTML **strings** — no `document`, no I/O

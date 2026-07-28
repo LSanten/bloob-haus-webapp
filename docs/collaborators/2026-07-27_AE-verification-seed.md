@@ -53,7 +53,7 @@ deploying. Do **not** regenerate the golden to make it pass unless the change is
 UPDATE_GOLDEN=1 npx vitest run collection-invariants   # only when a cards change is deliberate
 ```
 
-Full suite: `npx vitest run` → expect **668 passing**.
+Full suite: `npx vitest run` → expect **692 passing**.
 
 ## 2. Build AE and verify
 
@@ -111,19 +111,60 @@ AE never overrode the search input background, so it falls back to `var(--card-b
 before — **no change, nothing to do.** But if you want AE's search surfaces to have the same
 treatment melt and marbles-pouch now get, that is where you would set it.
 
-## 4. Known adjacent risk — do NOT ship per-page visualizer loading yet
+## 3b. Per-page visualizer loading is now shipped — but OFF for AE
 
-`collection` and `folder-preview` collide on **11 unscoped `fp-*` CSS rules**, and
-`folder-preview.css` loads later (alphabetical) so it wins every tie. `.fp-card` and `.fp-cards`
-genuinely differ — folder-preview's version adds `border-radius`, `background`, `border`,
-`overflow` and `transition`.
+Part 2 landed the same day: pages load only the visualizer CSS/JS they use,
+behind `features.per_page_visualizers` in `sites/<name>.yaml`. Enabled and
+audited on melt (41 pages) and marbles (1159 pages); pages went from 24
+visualizer assets to 11–13.
 
-**AE's collection cards are therefore currently styled by `folder-preview.css`, not by
-`collection.css`.** That works today only because every page loads every stylesheet.
+**`sites/alter-engineers.yaml` is deliberately NOT enabled.** The AE vault does
+not exist on Leon's machine, so AE's detection could not be audited — and
+enabling it blind is exactly what the flag exists to prevent.
 
-Per-page visualizer loading (TECH-DEBT #4) would drop `folder-preview.css` from pages that only use
-`collection` and **silently restyle AE's cards**. Recorded as TECH-DEBT #41, and #4 is now marked
-blocked by it. Resolve #41 first.
+To turn it on for AE, on the machine that has the vault:
+
+```bash
+npm run dev:alter-engineers                                   # leave running
+node scripts/audit-visualizer-detection.js --src=src-<ae-src-dir>
+```
+
+Expect `detection is safe for every page`. **Only then** add to
+`sites/alter-engineers.yaml`:
+
+```yaml
+features:
+  per_page_visualizers: true
+```
+
+If the audit reports a failure it names the element that moved and the page it
+moved on; add the missing class to the owning shape's `manifest.json`
+`detect.selectors` and re-run. AE uses `folder-preview` (articles slider) and
+`collection`, both of which are annotated — but AE's theme may render a shape's
+markup from a partial the way melt does with `.share-bar`, which is precisely
+the case the audit catches and inspection does not.
+
+## 4. Known adjacent risk — largely resolved, one direction left
+
+`collection` and `folder-preview` share unscoped `fp-*` class names and `folder-preview.css` loads
+later (alphabetical), so it won every tie — **AE's collection cards were being styled by
+folder-preview.css.**
+
+**Resolved for the collection side (2026-07-27).** Measured in a real browser across all 5 display
+modes and 4 themes, only THREE rules actually diverged — `.fp-card__title`,
+`.folder-preview__link`, `.folder-preview__icon`. (The earlier "11 colliding rules, cards differ"
+figure came from a faulty text-diff; the browser is the ground truth.) Those are now scoped, and
+`.fp-card__title` deliberately replicates what AE renders today, which is a *merge* of
+folder-preview's two competing declarations — so **AE's cards should look unchanged**. Guarded by
+`tests/css-independence.test.js`.
+
+Worth a glance while you have AE open: confirm the card titles look the same as production. If they
+changed, the values to compare are in `lib/visualizers/collection/styles.css` under the
+SELF-SUFFICIENCY comment.
+
+**Still open (low):** the reverse direction is unverified — whether `folder-preview` depends on
+anything in `collection.css`. AE is the site most likely to expose it, since it uses both shapes.
+The per-page audit in §3b would catch it.
 
 ## 5. If something is wrong
 

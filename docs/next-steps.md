@@ -2,23 +2,27 @@
 
 Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
-**Last updated:** 2026-07-22
+**Last updated:** 2026-07-27
 
 ---
 
 ## Immediate Next Steps
 
-**Active local thread — scene-nav builder (branch `scene-nav-builder-rework`, unpushed):**
-0. **Finish + merge the scene-nav builder.** v2 is built (grammar, ref resolution, icon-first GUI, on-canvas handles, multi-select, mobile fields) but has two known drag bugs and no real-browser test. Fix per `docs/implementation-plans/2026-07-22_melt-builder-next-round.md` (rotation-persist hover gate, marquee overlay rewrite via `frontend-design` skill, add undo/redo, real-browser pass), then decide merge to `main`. See TECH-DEBT #39.
+**Needs the work machine (has the alter-engineers vault) — do first:**
+0. **Verify AE after the 2026-07-27 collection refactor.** Walk `docs/collaborators/2026-07-27_AE-verification-seed.md`: run `npx vitest run collection-invariants` (golden master proves cards markup unchanged), build AE, confirm cards look identical, then **decide the one intentional change — AE's collection search bar went square → pill** (three options with snippets in §3). Optionally enable per-page visualizer loading for AE after a clean `node scripts/audit-visualizer-detection.js` run (§3b).
+
+**Local thread — melt scene-nav builder (merged to `main` as `a5529af`; bugs outstanding):**
+1. **Fix the remaining builder bugs.** Per `docs/implementation-plans/2026-07-22_melt-builder-next-round.md`: B2 marquee overlay rewrite, F1 undo/redo, B4 nested-shape column width, and the **real-browser drag pass** that plan keeps deferring — `@playwright/test` is now installed and *can* drive drags, so that blocker is gone.
 
 **Cloud backend thread (Phase 3):**
-1. **Unblock Scaleway** — the billing **country-change (→ US)** ticket is pending with Scaleway support. Once cleared, provision Managed Postgres (DEV-S, `fr-par`), Container Registry, and a KV namespace. Everything below waits on this.
-2. **Deploy + prove the crux** — follow the V1 spike plan (`docs/implementation-plans/phases/phase-3/2026-07-08_v1-spike-implementation-plan.md`) from **Task 1**: deploy the `bloob-haus-cloud` app to a Scaleway container (`auth.bloob.haus`), then prove the **cross-subdomain session cookie across the Cloudflare↔Scaleway boundary** — the highest-risk piece. Then Worker deploy + seed KV + E2E.
-3. **Switch DB to Postgres** — set `DATABASE_URL` on the container (`auth.ts` auto-switches from local SQLite; no code change) and run the Better Auth migration against Scaleway Postgres.
-4. **Cheap high-leverage Phase-2 task, still open:** the canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36).
+2. **Unblock Scaleway** — the billing **country-change (→ US)** ticket is pending with Scaleway support. Once cleared, provision Managed Postgres (DEV-S, `fr-par`), Container Registry, and a KV namespace. Everything below waits on this.
+3. **Deploy + prove the crux** — follow the V1 spike plan (`docs/implementation-plans/phases/phase-3/2026-07-08_v1-spike-implementation-plan.md`) from **Task 1**: deploy the `bloob-haus-cloud` app to a Scaleway container (`auth.bloob.haus`), then prove the **cross-subdomain session cookie across the Cloudflare↔Scaleway boundary** — the highest-risk piece. Then Worker deploy + seed KV + E2E.
+4. **Switch DB to Postgres** — set `DATABASE_URL` on the container (`auth.ts` auto-switches from local SQLite; no code change) and run the Better Auth migration against Scaleway Postgres.
+5. **Cheap high-leverage Phase-2 task, still open:** the canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36).
 
 ## What's Done
 
+- **SEO decoupled from the visualization + per-page visualizer loading** (2026-07-27, S67). Adopted the **pure-renderer standard** (`parser`/`resolve`/`renderer` pure; `browser.js` behavior-only) and refactored `collection` onto it — all five display modes now ship crawlable build-time HTML (melt Resources went 0 → 3 crawlable links), file-scope included. Search surfaces share a `--sv-*` token contract (melt + marbles-pouch `!important` overrides removed, pixel-identical). Shipped **per-page visualizer loading** behind `features.per_page_visualizers` (TECH-DEBT #4 closed): melt −610 CSS/−448 JS, marbles −17,640/−12,771; 24 assets/page → 11–13. `scripts/audit-visualizer-detection.js` is the mandatory gate before enabling on a new site. Resolved #41 for the collection side. Suite 637 → 692. See CHANGELOG S67 + `docs/architecture/visualizers.md`.
 - **Scene-nav shape + builder v2 — built, on unmerged branch** (2026-07-21/22, S62–S63). Grammar v2.1 (`hoverGlow`/`hoverScale`/`label:false`, `[[wiki]]` goto, `on/off/true/false` vocab); scene-nav resolves its own image refs (fixed melt Contact-us 404 + marbles subpath images); goto raw-preservation (round-trips `[label](note.md)`); reworked debug builder (icon-first entry, foldable panel, on-canvas resize/rotate handles, marquee + Cmd/Shift multi-select, group transform + relative bulk-edit, editable numbers, mobile fields + inheritance standard). Shared "Authoring & resolution conventions" in `shapes.md`. **Branch `scene-nav-builder-rework` — unpushed; 2 drag bugs + real-browser test outstanding (TECH-DEBT #39, next-round plan).**
 - **Bloob-shapes unification — DONE** (2026-07-20, Session 59). Reader reads `_bloob-shapes.md` (`bloob-shape` column) ahead of legacy `_bloob-types.md`/`_bloob-objects.md`; `publish-filter.js` excludes any `_bloob-*` file; docs reconciled (`bloob-shape:` = single forward-facing identity+rendering key); melt is a clean reference; `_base` scaffold added. Resolves TECH-DEBT #34. Deferred: per-shape behavior *gating* (steps 3–4 → IDEAS). Plan in `_completed/`.
 - **Phase 3 V1 spike — plan written + backend build STARTED** (2026-07-08, Session 58). New **separate repo `../bloob-haus-cloud/`**: Cloudflare Worker routing (12 offline tests) + Next.js Better Auth **Google login proven locally** (SQLite); OAuth client + identity settled (`dev.bloob@gmail.com`); Scaleway confirmed (only EU provider w/ true scale-to-zero). **Cloud deploy blocked on the Scaleway account.** See the spike plan + CHANGELOG 58.
@@ -28,6 +32,9 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 ## Not started / still open
 
+- **Retrofit remaining content-generating shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview`, `circular-nav`, `fridge-magnets`, `tags`, `graph` build markup in `browser.js`, so crawlers see nothing and the future playground can't render them. Convert each when next touched; don't retrofit speculatively.
+- **#41 reverse direction unverified** — whether `folder-preview` depends on anything in `collection.css`. AE is the likeliest site to expose it (uses both shapes); extend `tests/css-independence.test.js` when folder-preview is retrofitted.
+- **Per-page visualizer loading is OFF for buffbaby + alter-engineers** — audit each (`node scripts/audit-visualizer-detection.js --src=src-<name>`) before enabling.
 - Canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36) — Phase 2, high-leverage.
 - Vault-local `_bloob-shapes/` folder pipeline scanning (TECH-DEBT #37).
 - Marketplace safety hardening / build-time-code sandboxing (TECH-DEBT #35) + pre-launch ToS/DSA (TECH-DEBT #38) — future.

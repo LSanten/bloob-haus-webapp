@@ -1,8 +1,15 @@
 # Next Steps
 
-Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
+**This is the one file to read at the start of a session.** It is a set of *pointers* into the
+implementation plans, not a task tracker — **there is nothing here to check off.** The plans hold
+the actual work; this holds the links and says which ones currently matter. If an item is done, it
+gets deleted from here, not ticked.
 
-**Last updated:** 2026-07-27 (S67, late)
+Everything else is reference you consult on demand: `docs/CHANGELOG.md` for history,
+`docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
+long arc.
+
+**Last updated:** 2026-07-28 (S68)
 
 ---
 
@@ -17,8 +24,13 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, **explainer + recommendation written up** in `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision" (covers what a cascade layer is, the unlayered-wins trap, and the `@scope` donut). Recommendation is `@scope` + a shared `.bloob-shape-root` marker. Currently convention + `tests/shape-nesting.test.js`.
 5. **Retrofit shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview` first; it's collection's twin and the source of the `fp-*` collisions.
 
-**Local thread — melt scene-nav builder (merged to `main` as `a5529af`; bugs outstanding):**
-6. **Fix the remaining builder bugs.** Per `docs/implementation-plans/2026-07-22_melt-builder-next-round.md`: B2 marquee overlay rewrite, F1 undo/redo, B4 nested-shape column width, and the **real-browser drag pass** that plan keeps deferring — `@playwright/test` is now installed and *can* drive drags, so that blocker is gone.
+**Local thread — melt.** The scene-nav builder is **done**: every bug in the next-round plan was
+verified fixed by Leon in a real browser on 2026-07-28 (rotation persist, marquee select, group
+move/resize/rotate, the F2 overlay controls). Plan archived to
+`docs/implementation-plans/_completed/2026-07-22_melt-builder-next-round.md`; TECH-DEBT #39 closed.
+Undo/redo was deferred by choice → `IDEAS.md`, along with the h3 `#f1dbff` colour, the light/dark
+toggle, and the mobile `aspectRatio 9/16` decision.
+6. **Melt dev — open, no plan file yet.** Next melt work starts from a fresh brainstorm.
 
 **Cloud backend thread (Phase 3):**
 7. **Unblock Scaleway** — the billing **country-change (→ US)** ticket is pending with Scaleway support. Once cleared, provision Managed Postgres (DEV-S, `fr-par`), Container Registry, and a KV namespace. Everything below waits on this.
@@ -41,7 +53,7 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 - **Retrofit remaining content-generating shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview`, `circular-nav`, `fridge-magnets`, `tags`, `graph` build markup in `browser.js`, so crawlers see nothing and the future playground can't render them. Convert each when next touched; don't retrofit speculatively.
 - **#41 reverse direction unverified** — whether `folder-preview` depends on anything in `collection.css`. AE is the likeliest site to expose it (uses both shapes); extend `tests/css-independence.test.js` when folder-preview is retrofitted.
-- **Per-page visualizer loading is OFF for buffbaby + alter-engineers** — audit each (`node scripts/audit-visualizer-detection.js --src=src-<name>`) before enabling.
+- **Per-page visualizer loading is OFF for alter-engineers only.** buffbaby was enabled 2026-07-28 (S68) — audit clean (7/7 signatures safe across 193 pages), pages went to 9–12 assets, `checkbox-tracker` verified present on every page that renders a checkbox via its `detect.always`. AE still needs `node scripts/audit-visualizer-detection.js --src=src-alter-engineers` on the work machine before flipping.
 - Canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36) — Phase 2, high-leverage.
 - Vault-local `_bloob-shapes/` folder pipeline scanning (TECH-DEBT #37).
 - Marketplace safety hardening / build-time-code sandboxing (TECH-DEBT #35) + pre-launch ToS/DSA (TECH-DEBT #38) — future.

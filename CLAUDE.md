@@ -39,8 +39,10 @@ The session checklists below are a reminder for the END of the session.
 
 ## Project Quick Start
 - This file (CLAUDE.md) contains development rules and practices
-- `docs/CLAUDE_CONTEXT.md` — current project status and architecture overview (read it!)
-- `docs/TECH-DEBT.md` — outstanding technical debt
+- `docs/next-steps.md` — **start here.** What's active, next, and blocked
+- `docs/CLAUDE_CONTEXT.md` — project status and architecture overview
+- `docs/TECH-DEBT.md` — a reminder list of things that are (or might still be) wrong. Verify a row
+  before acting on it; delete the row when it's fixed
 
 ## Sibling Repo: Planning Vault
 The product vision, values, room concepts, and engineering reports live in a separate Obsidian vault at `../bloobhaus-notes/` (see its `CLAUDE.md`). If you need context on *why* things are designed a certain way, check there. This repo is the source of truth for *how* — technical architecture, build pipeline, and implementation plans.
@@ -69,11 +71,41 @@ All scripts and `package.json` commands must work on both Mac/Linux and Windows.
 - Do not hardcode site names, URLs, or content paths in shared scripts — use `process.env.SITE_NAME`, `siteConfig`, or CLI args
 
 ## Session Checklist (start of session)
-- [ ] Read `docs/CLAUDE_CONTEXT.md` for current status
-- [ ] Check `docs/TECH-DEBT.md` for outstanding items
-- [ ] Review recent `docs/CHANGELOG.md` entries for context
-- [ ] Review `docs/implementation-plans/ROADMAP.md` for overall project scope
-- [ ] Consult `docs/architecture/` if working on architectural changes
+
+**Read exactly two files. Everything else is reference — consult it on demand, not up front.**
+
+1. **`docs/next-steps.md`** — what's active, what's next, what's blocked. This is the steering doc
+   and the only one guaranteed current. It is a set of *pointers into the implementation plans*,
+   not a task tracker; there is nothing to check off.
+2. **`docs/CLAUDE_CONTEXT.md`** — architecture orientation, if you aren't already familiar.
+
+Consult on demand, when the work actually calls for it:
+
+| File | Read it when |
+|---|---|
+| `docs/TECH-DEBT.md` | You're **choosing** what to work on. It's a reminder list, not a ledger — every row carries a *How to check*. **Run it before planning any work against a row.** |
+| `docs/CHANGELOG.md` | You need history on a specific piece of work |
+| `docs/implementation-plans/ROADMAP.md` | You need the long arc / phase shape. Changes a few times a year |
+| `docs/architecture/` | You're making an architectural change (and see the SHAPE TRINITY rule above) |
+| `docs/implementation-plans/IDEAS.md` | You're looking for parked ideas, or parking one |
+
+## Verify Before Fixing
+
+**Do not write a fix for a bug you have not reproduced in the current session.** If a doc, plan, or
+debt row describes a bug, treat that as a *claim with a date on it*, not a fact — bugs get fixed
+incidentally, and a stale bug report reads exactly like a live one.
+
+- Reproduce first. If it doesn't reproduce, delete the claim from the doc and move on.
+- If a doc says "unverified" or "needs a real-browser check", **that is an instruction to verify,
+  not a licence to design a more elaborate fix.**
+- If you can't drive the interaction yourself (drag, hover, a real device), **ask Leon to click it.**
+  That takes him a minute and is the cheapest step available.
+
+**This rule exists because it was violated across three sessions.** The melt scene-nav builder plan
+carried B1/B2 as open bugs from S63 to S67, accumulating ever more detailed rewrite designs —
+including a full marquee-overlay rewrite — for bugs that a single browser check on 2026-07-28
+showed were **already fixed**. Every one of those sessions read "unverified" and wrote more plan
+instead of asking.
 
 ## Session Checklist (end of session)
 - [ ] Update `docs/CHANGELOG.md` with session summary
@@ -97,7 +129,9 @@ All scripts and `package.json` commands must work on both Mac/Linux and Windows.
 - New architectural decisions → `docs/implementation-plans/DECISIONS.md` (date + rationale)
 - New feature ideas → `docs/implementation-plans/IDEAS.md` (don't clutter ROADMAP)
 - Session work → `docs/CHANGELOG.md`
-- Technical debt → `docs/TECH-DEBT.md`
+- Technical debt → `docs/TECH-DEBT.md` (always with a *How to check*; **delete the row when fixed** —
+  no "✅ Done" rows, the history belongs in CHANGELOG)
+- What to do next → `docs/next-steps.md` (pointers into plans; nothing to check off)
 - Project status → `docs/CLAUDE_CONTEXT.md`
 - Architecture patterns → `docs/architecture/` (visualizers, magic-machines, search, etc.)
 - New or changed settings (any theme) → `docs/architecture/settings-registry.md`

@@ -398,3 +398,20 @@
 @media (max-width: 560px) {
   .fp-cards { grid-template-columns: 1fr; }
 }
+
+/* ── Nested-shape presentation guard ─────────────────────────────────────────
+   A collection is frequently rendered INSIDE another shape's body — the folder
+   index is literally an article shape with a collection in it. Container shapes
+   style their prose, and `.article-body a { text-decoration: underline }` is
+   (0,1,1), which beats a bare `.fp-marble` (0,1,0) and underlined every marble
+   title on melt after its pages moved onto the article shape.
+
+   The container is not wrong to underline prose links — so the nested shape
+   wins by scoping to its own container instead. Guarded by
+   tests/shape-nesting.test.js. */
+.collection-visualizer .fp-card,
+.collection-visualizer .fp-marble,
+.collection-visualizer .fp-bubble,
+.collection-visualizer .folder-preview__link {
+  text-decoration: none;
+}

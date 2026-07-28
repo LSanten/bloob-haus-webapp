@@ -1,4 +1,16 @@
-{# Breadcrumb nav — home dot + path segments #}
+{# Breadcrumb nav — home dot + path segments.
+   Renders the context stack (see docs/architecture/ontology.md): haus · room · note.
+
+   ONE RULE: every crumb shows that page's own title.
+
+   The folder crumb therefore resolves the folder-index page and uses its title —
+   it does NOT prettify the URL slug. On a site with `case: lower` the slug has
+   already lost its casing, so "come-to-MELT" could never be recovered from
+   "/come-to-melt/". When no folder-index page exists we fall back to the slug,
+   smart-cased, which is the best that's available.
+
+   Filename-derived titles are prettified upstream in file-index-builder.js, so a
+   page with no `title:` and no H1 already arrives here as "Come to MELT". #}
 {% if page.url != "/" %}
 <nav class="melt-nav" aria-label="breadcrumb">
   <a href="{{ "/" | url }}" class="melt-nav__home" aria-label="Home to MELT"></a>
@@ -10,8 +22,11 @@
   {# Folder segment (if URL has 2+ parts) #}
   {% set urlParts = page.url | replace("/", " ") | trim | split(" ") %}
   {% if urlParts.length >= 2 %}
+    {% set folderUrl = "/" + urlParts[0] + "/" %}
+    {% set folderPage = collections.all | lookupPage(folderUrl) %}
+    {% set folderLabel = folderPage.data.folder_display or folderPage.data.title or (urlParts[0] | titleCase) %}
     <span class="melt-nav__sep" aria-hidden="true">·</span>
-    <a href="{{ ("/" + urlParts[0] + "/") | url }}" class="melt-nav__crumb">{{ urlParts[0] | replace("-", " ") }}</a>
+    <a href="{{ folderUrl | url }}" class="melt-nav__crumb">{{ folderLabel | truncate(32) }}</a>
   {% endif %}
 
   {# Page title (leaf page only, not folder index) #}

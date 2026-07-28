@@ -277,6 +277,23 @@ export default async function (eleventyConfig) {
   // Delegates to the shared util so templates and the preprocessor agree.
   eleventyConfig.addFilter("titleCase", smartTitleCase);
 
+  // Look up a page in a collection by URL, case-insensitively.
+  //
+  // Used by breadcrumbs to resolve an ancestor folder's real title instead of
+  // prettifying its URL slug — a slug can't recover an acronym on a site with
+  // `case: lower`.
+  //
+  // The match ignores case deliberately. Folder-index permalinks and leaf-page
+  // URLs now agree (both go through slugifyPath), but a preserve-case site can
+  // still be reached at a different casing than it was generated with, and a
+  // silently-null lookup would drop the crumb rather than fail loudly.
+  // Returns null when nothing matches; callers fall back to the slug.
+  eleventyConfig.addFilter("lookupPage", function (collection, url) {
+    if (!collection || !url) return null;
+    const target = String(url).toLowerCase();
+    return collection.find((p) => String(p.url || "").toLowerCase() === target) || null;
+  });
+
   // Filter out system/reserved tags from display
   function filterTagList(tags) {
     return (tags || []).filter(

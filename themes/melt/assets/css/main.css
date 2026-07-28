@@ -168,8 +168,36 @@ body.has-bg-image {
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--color-text-muted);
-  /* subtle light veil so the crumbs read over the bright watercolor without fighting content */
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
+  /* Veil lives on ::before so it can extend past the bar itself — see below. */
+  background: none;
+}
+
+/* Light veil behind the crumbs.
+   It is a pseudo-element rather than the nav's own background so the fade can run
+   TALLER than the bar (--melt-nav-veil-height). A gradient confined to the ~54px
+   bar has to reach transparent within the text itself, which is why the crumbs
+   used to disappear over dark backgrounds; giving the fade room below the text
+   lets the top stay near-opaque while still dissolving smoothly into the page.
+   Multi-stop because a two-stop linear fade bands visibly over photography. */
+.melt-nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--melt-nav-veil-height, 150px);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.86) 0%,
+    rgba(255, 255, 255, 0.82) 22%,
+    rgba(255, 255, 255, 0.66) 42%,
+    rgba(255, 255, 255, 0.42) 60%,
+    rgba(255, 255, 255, 0.2) 78%,
+    rgba(255, 255, 255, 0.06) 90%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
 .melt-nav__home {
@@ -618,7 +646,8 @@ a.button:focus-visible {
 
 /* --- Mobile --- */
 @media (max-width: 600px) {
-  .melt-nav { padding: 12px 14px; font-size: 0.75rem; }
+  /* Shorter bar on mobile, so the veil scales down with it */
+  .melt-nav { padding: 12px 14px; font-size: 0.75rem; --melt-nav-veil-height: 110px; }
   .home-logo img { width: 208px; }
   .home-tagline { margin-bottom: 40px; }
 

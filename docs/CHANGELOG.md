@@ -6,6 +6,29 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 68 — July 28, 2026
+**Worked on:** First session on the machine that has the alter-engineers vault. Walked and closed the AE verification seed, then built two shared features out of what verification exposed. Suite 692 → **780 tests**.
+
+**The seed's headline finding: three separate regressions that only a real AE build could reveal.**
+
+- **The golden master was silently not running on Windows.** `core.autocrlf=true` checks the fixture out as CRLF while the renderer emits LF, so the byte-compare failed on every line despite identical content — meaning the AE card-markup safety net had been inert. Fixed with a scoped `.gitattributes` rule (`__golden__/** text eol=lf`).
+- **Scoping `.collection-visualizer .fp-card__title` (S67) DID change AE**, contrary to the note left in `collection/styles.css`. A theme override using a bare `.fp-card__title` (0,1,0) cannot outrank a scoped shared rule (0,2,0) no matter how late it loads, so AE's orange label reverted to the shared grey headline. **Rule:** raising specificity in shared CSS silently outranks every theme override of it.
+- **Per-page visualizer loading broke every tag page.** `folder-preview/styles.css` owns the `.fp-card*` grid, but detection listed only container classes — and AE's `pages/tags.njk` rendered that markup by hand. Enabling the flag dropped the stylesheet and collapsed the 3-column grid to an unstyled full-width stack. **`detect.selectors` must list the classes a stylesheet OWNS, not what its own renderer emits** (second instance after `article`/`.share-bar`).
+- **The detection audit passed while those tag pages were visibly broken** — it samples one page per detection *signature*, which assumes pages sharing a detected-shape set render equivalent markup. Untrue for theme-rendered markup. **A clean audit is necessary but not sufficient** → TECH-DEBT #42.
+
+**Shape width contract** (`docs/superpowers/specs/2026-07-28-shape-width-contract-design.md`) — a shape declares `width: prose|wide|full` in `manifest.json`; the instance may override it; **the theme is the final arbiter**. Unknown values fall back to `prose` silently. This is the container-contents policy applied to layout, **not a new axis**: a `preserve` container (`article`) grants the request, an `override` container imposes its own. `collection` defaults to `wide`, which is safe because *degradation is the default state* — `--shape-width-wide` defaults to `100%`, so a theme that has not opted in renders exactly as before. Mechanism revised during implementation: the spec proposed grid tracks on `.article-body`, but the constraint actually lives on `.article-page`, so it uses a viewport-clamped breakout instead — which also removed the margin-collapsing hazard.
+
+**`.md` page templates that compose shapes** — builder-owned page templates become `.md` files that compose *shapes* rather than `.njk` files that emit *markup*. Every theme that had a `.njk` page template grew a duplicate renderer; AE's `tags.njk` is exactly what broke above. Needed nothing new from Eleventy (`templateFormats` already includes `md`, `markdownTemplateEngine: "njk"` already interpolates inside a fence). `assemble-src` now shadows base pages by **basename**, so `_base/tags.md` and a theme's `tags.njk` can't both land in `src/` and fight over one permalink.
+
+- `themes/_base/pages/tags.md` paginates `collections.tagList`, **not** `collections` + a filter list. That approach cannot be complete by construction — per-section collections are registered dynamically from content folders — so it fabricated a tag page per folder. AE shipped an empty `/tags/clients/`. Switching produced **zero** membership changes across all 16 real tags and removed exactly that bogus page.
+- `themes/_base/templates/folder-index.md` replaces the hard-coded HTML string the folder-index stub used to emit. Templates live in `templates/`, deliberately not `pages/` (Eleventy would publish the template itself). Composes `bloob-shape: article` + a nested `collection`, matching what authors already write.
+
+**Card layout:** one card per row on phones (the `560px → 1fr` step existed in `collection/styles.css` but `folder-preview/styles.css` stopped at `900px → 2` and loads later, so it won — affected all four themes); `show_fields` values stack one per line.
+
+**Needs verification on melt + marbles** (no vaults on the AE machine): the generated folder-index listing renderer changed `folder-preview` → `collection`, and generated folder indexes are now Pagefind-indexed since `article.njk` sets `data-pagefind-body` where `folder-index.njk` set `data-pagefind-ignore`. A theme restores its own folder chrome with a `templates/folder-index.md` override.
+
+**Known flake:** `tests/build/generate-background.test.js` fails on Windows in *teardown* (`EBUSY` unlinking a temp file sharp still holds). All 8 of its tests pass.
+
 ### Session 67 — July 27, 2026
 **Worked on:** Decoupling SEO from the visualization layer, then per-page visualizer loading. Suite 637 → **692 tests**. Spec: `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md`.
 

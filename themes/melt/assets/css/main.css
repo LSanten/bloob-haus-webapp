@@ -55,6 +55,19 @@
   --pagefind-ui-tag: var(--color-accent-2);
   --pagefind-ui-font: var(--font-body);
 
+  /* ── Article-shape sizing ──────────────────────────────────────────────
+     melt's pages moved from the theme-local `page.njk` onto the shared
+     `article` shape (2026-07-27). These tokens reproduce exactly what
+     `.page-content` / `.page-title` / `.page-body` rendered before, so the
+     migration is invisible. Colours and fonts already carried over on their
+     own — article/styles.css reads the standard tokens. */
+  --article-width: var(--content-max-width);          /* 680px, was .page-content */
+  --article-padding-top: 60px;
+  --article-padding-bottom: 120px;
+  --article-title-size: clamp(2.2rem, 6vw, 3.6rem);
+  --article-body-size: 1.05rem;
+  --article-body-line-height: 1.8;
+
   /* Shared search-surface appearance (--sv-input-*). Drives BOTH the site-wide
      Pagefind bar and the collection shape's own filter input, so melt's frosted
      pill is identical wherever a search surface appears. */

@@ -8,7 +8,29 @@ This file is read automatically by Claude Code at session start. It contains dev
 
 1. **`docs/CLAUDE_CONTEXT.md`** — architecture overview, graph.json schema, build pipeline, what's working. May be outdated; check the "Last Updated" date and ask the user if the status section looks stale.
 2. **`docs/TECH-DEBT.md`** — known debt to avoid making worse
-3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/`, `scripts/utils/inject-container-raw.js`, or any `:::` container / code fence behavior. Pay special attention to: `data-vis-raw` pipeline, `browser.js` ownership convention, settings flow, and `inject-container-raw.js` utility.
+3. **THE SHAPE TRINITY — read ALL THREE, ALWAYS, before ANY shape work.**
+   **`docs/architecture/ontology.md`** + **`docs/architecture/shapes.md`** + **`docs/architecture/visualizers.md`**
+
+   > **Reading only one of these is the single most reliable way to get shape work wrong.**
+   > They are not three views of the same thing — each owns a different layer, and a change
+   > that looks correct in one layer routinely violates a rule stated in another.
+
+   | File | Owns | Read it for |
+   |---|---|---|
+   | `ontology.md` | **What a shape *is*** — the concept | The two states, closed-state purpose, placement-as-backlink, the context stack, metabolism, graceful degradation |
+   | `shapes.md` | **The shape *contract*** — rules every shape obeys | Container-contents policy (override/preserve), layout selection order, `default_shape`, unknown-shape fallback, `shape_settings`, identity resolution, authoring conventions, current shape status |
+   | `visualizers.md` | **How a shape *renders*** — the machinery | Pure-renderer standard, the four files, three hosts, activation methods, `data-vis-raw`, `browser.js` ownership, per-page asset loading + `detect` |
+
+   **"Shape work" means any of:** `lib/visualizers/**` · a `layout.njk` or `manifest.json` · `bloob-shape:` /
+   `default_shape` / layout-selection logic in `scripts/preprocess-content.js` · a theme's `page.njk`/`article.njk`/
+   `folder-index.njk` · nesting one shape inside another · a shape's `styles.css`.
+
+   **This rule exists because it was violated on 2026-07-27.** Two core shapes (`collection`, `article`) were
+   reworked after reading *only* `visualizers.md`. Consequences: the `page`-shaped folder-index bug was
+   misdiagnosed for far longer than needed even though `shapes.md` documents the exact layout-selection
+   order and the `index.md` → `base.njk` exception; and a nested-shape styling collision shipped that
+   `shapes.md`'s container-contents section would have prompted a check for. **Read all three first —
+   it is minutes, and it is cheaper than the rework.**
 4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens. Contains the **required CSS token contract** — every theme's `main.css` must declare `--accent-color`, `--bg-color`, `--text-color`, `--border-color`, `--card-bg`, `--font-body`, `--font-heading`, and `--pagefind-ui-*` so all shared visualizers pick up the right colors. Missing tokens = visualizers fall back to warm-kitchen defaults silently.
 5. **`docs/architecture/settings-registry.md`** — before adding any new per-page frontmatter or site-wide setting to any theme. This is the authoritative list of all settings across all themes (universal vs theme-specific).
 6. **`docs/architecture/security-by-obscurity.md`** — **READ THIS** before doing or advising on *anything* that makes content "private", "unlisted", "client-only", "hidden", "not on Google", "share by link", or "just for one client". It defines the obscured-path + `unlisted` convention, the mandatory user-facing flag (this is security by obscurity — as safe as a Google "anyone with the link" share, **not** access control), and the **mandatory pre-ship dependency scan** an AI must run on every file that will be hosted.

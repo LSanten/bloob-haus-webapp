@@ -55,6 +55,35 @@ The heuristic that emerges: shapes that are *transformation lenses* tend to over
 
 This policy is part of the shape's contract and must be declared in `schema.md`. It's also the source of the placement system choice: override shapes usually use a single placement system (everything goes in the same pool); preserve shapes often need richer placement (each item may need its own position).
 
+### The third axis: presentation containment
+
+Override/preserve governs a contained item's **identity and rendering**. It says nothing about
+**styling** — and styling leaks by default, because CSS cascades.
+
+> **Rule: a container's body styles must not reach into a nested shape, and a nested shape scopes
+> its own presentation to its own container root.**
+
+A container shape legitimately styles its prose (`.article-body a { text-decoration: underline }`).
+But a nested shape's markup lives *inside* that body, so the container's rule applies to it too —
+and usually wins, because a descendant selector like `.article-body a` (0,1,1) outranks a bare
+`.fp-marble` (0,1,0). Nothing in override/preserve prevents this: a **preserve** container that
+faithfully lets a child render as itself will still restyle it.
+
+Both sides of the fix matter:
+- **Do not weaken the container.** Prose links *should* be underlined. Removing the container's rule
+  to fix a child is the wrong direction.
+- **The nested shape raises its own specificity** — scope to its container root
+  (`.collection-visualizer .fp-marble { … }`), which beats the container's descendant rule.
+
+Real case (2026-07-27): melt's pages moved onto the `article` shape, and every marble title in the
+nested collection came out underlined. Guarded by `tests/shape-nesting.test.js`, which asserts both
+directions — the nested item is not underlined **and** the container's prose links still are, so the
+fix cannot regress into "stop underlining links".
+
+This matters most for the composition the folder index is built on: **an `article` shape with a
+`collection` nested inside it.** Any new shape intended to be nested should scope its visual rules to
+its own container root from the start.
+
 ## Placement systems
 
 Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.
@@ -435,8 +464,23 @@ This works because `assemble-src.js` copies `themes/_base/partials/` into `src-*
 ## Unknown shape names — fallback behaviour
 
 When `effectiveShape` names a shape with no `lib/visualizers/[name]/` folder:
-- If the shape was **explicitly declared** in frontmatter → logs a warning, falls back to `page.njk`
-- If the shape came from **`default_shape`** → silent, falls back to `page.njk`
+- If the shape was **explicitly declared** in frontmatter → logs a warning, falls back to the default layout
+- If the shape came from **`default_shape`** → silent, falls back to the default layout
+
+> ⚠️ **"the default layout" is NOT always `page.njk`.** It is `page.njk` for ordinary pages but
+> **`layouts/base.njk` for `index.md` / `_index.md`** — see step 5 of "How the preprocessor selects
+> the layout" above. `base.njk` is bare chrome: **no content column and no `<h1>` render.**
+>
+> This bites hard, because the preprocessor strips a leading `# Heading` from the body on the
+> assumption that `page.njk` will re-render it as the title. On an index file that fell through to
+> `base.njk`, the title is consumed into frontmatter and then **never displayed** — the page silently
+> loses both its column and its heading.
+>
+> Real case (2026-07-27): melt's `Resources/_index.md` declared `bloob-shape: page`. There is no
+> `lib/visualizers/page/`, so it fell through to `base.njk` and rendered untitled and full-bleed,
+> while `about-melt.md` — the same declared shape, an ordinary page — rendered correctly via
+> `page.njk`. The console warning even said *"falling back to page.njk"*, which was wrong for that
+> file. **If a page's title vanishes and its column is gone, check the resolved `layout:` first.**
 
 This means content files can use `bloob-shape: note` today even though `lib/visualizers/note/` doesn't exist yet — the build won't crash. When the `note` shape is eventually built and its folder appears, those files will automatically pick up its layout.
 
@@ -468,6 +512,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — | — |
+| `page` | — | **Not a shape** | — | A bare NAME with no `lib/visualizers/page/` package, so `bloob-shape: page` resolves to nothing and the layout comes entirely from the step-5 fallback. It works on ordinary pages only by coincidence (that fallback *is* `page.njk`); on an `index.md` the same declaration lands on `base.njk` and the page loses its column and title. Four divergent theme-local `page.njk` files back it. **Prefer `bloob-shape: article`** — a real layout-only shape. If `page` should become real, add `lib/visualizers/page/manifest.json` with `defaultLayout: layouts/page.njk` and NO `layout.njk`, so each theme keeps its own. |
 | `photo-grid` | build-time | Partial | — | — |
 | `quotes-stack` | hybrid | Partial | — | Missing `schema.md` |
 | `scene-nav` | hybrid | ✓ | ✓ `builder/` (debug-mode overlay; `:::` block + Shopify embed exports; magic machine deleted 2026-07-20) | v2 nested-bullet grammar; code fence deprecated |

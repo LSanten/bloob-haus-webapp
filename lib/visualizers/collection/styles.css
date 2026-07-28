@@ -191,11 +191,15 @@
   margin: 0 0 0.5rem;
 }
 
+/* One field per line, kept tight. `show_fields: building_type, location, sqft`
+   is a spec list, not prose — running the values together on a wrapped row made
+   them hard to scan. Column direction rather than a row that happens to wrap,
+   so a short pair like "School" + "Oakland" still gets its own line each. */
 .fp-card__fields {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.6rem;
-  margin-top: 0.1rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
 }
 
 .fp-field {

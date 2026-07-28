@@ -102,28 +102,55 @@ which collapses every track to the prose measure. A theme opts in by setting it:
 :root { --shape-width-gutter: 190px; }   /* wide ≈ 1200px */
 ```
 
-## Mobile rule
+## Mobile rule — per display mode
 
-**Requirement: never more than two cards per row on a phone.**
+**Width and internal layout are separate concerns**, and this is what makes the mobile story simple:
 
-Measured 2026-07-28 across `/projects/`, `/resources/` and `/tags/<tag>/`, this **already holds** —
-the grid is 3 columns at ≥1024px and exactly 2 columns from 900px down to 360px. The `560px → 1fr`
-rule in `folder-preview/styles.css:403` is dead code, overridden by a later `900px → 2` rule.
+- The **width contract** governs how wide the collection *block* is. On a phone the gutter token
+  collapses to `0`, so `wide` == `prose` automatically and the block is container-width. No media
+  query is needed in the child.
+- **Display-mode rules** govern the layout *inside* the block. Each mode owns its own classes
+  (`.fp-cards`, `.fp-bubbles`, `.fp-marbles`), so their responsive rules are independent and cannot
+  interact. Precedent already exists: `.fp-bubble` has its own `@media (max-width: 480px)` rule.
 
-So this requirement is a **regression guard, not new work**. The risk is that widening the desktop
-track tempts a `repeat(auto-fill, minmax(...))` rule that yields 3 narrow columns on a phone.
+### `display: cards` — ONE card per row on phone (decided 2026-07-28)
 
-Design rules:
-- The gutter token goes to `0` below the wide breakpoint, so `wide` == `prose` on phones
-  automatically. No media query is needed in the child.
-- Card column count stays an explicit `repeat(N, 1fr)` ladder. **Do not** convert `.fp-cards` to
-  `auto-fill`/`auto-fit`, which makes column count a function of available width and would break the
-  two-per-row guarantee exactly when the container gets wider.
-- A test locks 2 columns at 390px and 360px.
+Measured 2026-07-28: the grid is currently 3 columns at ≥1024px and **2 columns all the way down to
+360px**, where cards are 132px wide — too cramped. The `560px → 1fr` rule at
+`folder-preview/styles.css:403` is dead code, overridden by a later `900px → 2` rule.
 
-Open question deliberately left to implementation review: at 360px, two cards are 132px wide, which
-is cramped. One-per-row below ~400px would satisfy "no more than two" and read better. Decide with
-the phone in hand; the contract permits either.
+Target ladder:
+
+| Viewport | Columns |
+|---|---|
+| ≥1024px | 3 |
+| 900–1023px | 2 |
+| < ~560px | **1** |
+
+Fix the dead rule so it actually applies. **Do not** convert `.fp-cards` to `auto-fill`/`auto-fit`:
+that makes column count a function of available width, which would silently produce 3 narrow columns
+on a phone exactly when the desktop container gets wider. Keep the explicit `repeat(N, 1fr)` ladder.
+
+Test locks 1 column at 390px and 360px, and 3 at 1440px.
+
+### `display: bubbles` — tighter packing on phone
+
+Bubbles are a deliberately different look and do **not** follow the card ladder. Intent: more
+crammed on a phone, not fewer per row. Concrete values to be set with the phone in hand during
+implementation; the existing `@media (max-width: 480px)` bubble rule is the place they go. Treated as
+a small follow-on to the card work, not a blocker for it.
+
+## Card field lists (`show_fields`)
+
+Extra fields (`show_fields: building_type, location, sqft, services`) currently render as a
+horizontally wrapping flex row (`.fp-card__fields { display: flex; flex-wrap: wrap; gap: .3rem .6rem }`),
+so values run together on one line.
+
+**Decision:** stack them one per line, kept tight — `flex-direction: column` with a small row gap.
+
+Safe to make in the **shared** stylesheet: `graph.extra_fields` is declared only by
+`sites/alter-engineers.yaml` (verified 2026-07-28), so `show_fields` cannot render on melt, marbles,
+buffbaby, or the template site. The change is a no-op everywhere but AE.
 
 ## Testing
 
@@ -136,7 +163,8 @@ so the fix cannot regress into "everything got wide":
 | prose siblings still sit at the reading measure | prose was not collateral damage |
 | unknown value (`width: enormous`) renders as prose | graceful degradation |
 | a theme defining no gutter token renders byte-identical to today | other sites unaffected |
-| `.fp-cards` is 2 columns at 390px and 360px | the phone rule |
+| `.fp-cards` is 1 column at 390px and 360px, 3 at 1440px | the phone rule |
+| `.fp-card__fields` stacks one field per line | the field-list rule |
 
 Plus an existing-suite consideration: **the collection golden master will change**, because
 `renderer.js` now emits `data-width`. Diff it by hand, then regenerate deliberately with

@@ -1,5 +1,11 @@
 # Fridge Magnets Visualizer
 
+> ⚠️ **TECH-DEBT #40 — not yet on the pure-renderer standard.** This shape builds its markup in
+> `browser.js`, so a crawler sees an empty container. Convert it the next time you touch it:
+> extract a pure `renderer.js`, keep `browser.js` behavior-only, add a build-time output test.
+> Reference: `lib/visualizers/collection/`. Standard: `docs/architecture/visualizers.md` →
+> "The pure-renderer standard". Do not retrofit speculatively.
+
 Interactive word-magnet board. Drag cards to compose sentences, add your own words, and (optionally) submit favorite arrangements to a shared collection via Google Forms.
 
 ---

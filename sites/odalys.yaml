@@ -1,0 +1,38 @@
+# Bloob Haus Site Config — odalys
+# Infrastructure settings only. Author settings (site title, author name, publish
+# mode, default shape) live in _bloob-settings.md at the root of the vault.
+#
+# THIS FILE BELONGS IN ODALYS'S FORK (odalysbest/bloob-haus-webapp), not upstream.
+#
+# Three names that look alike and are NOT interchangeable:
+#   SITE_NAME=odalys            → this file, and the generated src-odalys/ dir
+#   odalys.bloob.haus           → the public subdomain (site.url below)
+#   odalys-bloob                → the Cloudflare Pages project (--project-name in
+#                                 .github/workflows/deploy-odalys.yml). Differs
+#                                 because the plain `odalys` project name was taken.
+
+# Deployed URL. The subdomain also names the working dir → src-odalys/
+site:
+  url: "https://odalys.bloob.haus"
+
+# Content source — Odalys's own vault repo.
+# TODO: replace <vault-repo> once the vault repo exists. The cloud build clones
+# this with CONTENT_REPO_TOKEN; local dev ignores it entirely and reads the folder
+# passed to --content=.
+content:
+  repo: "odalysbest/<vault-repo>"
+  branch: "main"
+
+# Theme. Starting on `melt` so the first build works out of the box.
+# RECOMMENDED next step: `cp -r themes/melt themes/odalys`, then set this to
+# "odalys". melt is a live client theme — editing it directly means upstream melt
+# changes reshape this site, and local changes leak into a client's site.
+theme: "melt"
+
+# URL slug strategy: preserve-case keeps original filename casing, spaces → hyphens
+permalinks:
+  strategy: preserve-case
+
+# Build features. Full list: docs/architecture/settings-registry.md
+features:
+  search: true

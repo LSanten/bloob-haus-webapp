@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseEmbedFences, EMBED_TARGETS, mergeBloobSettings } from '../../scripts/utils/bloob-settings-reader.js';
+import { parseEmbedFences, EMBED_TARGETS, mergeBloobSettings, parseGoatCounterCode } from '../../scripts/utils/bloob-settings-reader.js';
 
 describe('parseEmbedFences', () => {
   it('returns an empty object for empty/null input', () => {
@@ -147,5 +147,46 @@ describe('mergeBloobSettings — url: block', () => {
   it('legacy permalink_strategy still works when no url: block', () => {
     const merged = mergeBloobSettings({}, { permalink_strategy: 'slugify' });
     expect(merged.permalinks.strategy).toBe('slugify');
+  });
+});
+
+describe('parseGoatCounterCode', () => {
+  const snippet = (url) => ({ 'goat-counter-tracking': `<script data-goatcounter="${url}" async src="//gc.zgo.at/count.js"></script>` });
+
+  it('reads the site code out of the tracking snippet the user already pasted', () => {
+    expect(parseGoatCounterCode(snippet('https://melt.goatcounter.com/count'))).toBe('melt');
+    expect(parseGoatCounterCode(snippet('https://studiobloob.goatcounter.com/count'))).toBe('studiobloob');
+  });
+
+  it('accepts single quotes, http, and mixed case', () => {
+    expect(parseGoatCounterCode({ 'goat-counter-tracking': "<script data-goatcounter='http://Melt.GoatCounter.com/count'></script>" })).toBe('melt');
+  });
+
+  it('returns null when there is no snippet, so the counter simply stays off', () => {
+    expect(parseGoatCounterCode(null)).toBe(null);
+    expect(parseGoatCounterCode({})).toBe(null);
+  });
+
+  it('returns null for a self-hosted install, which has no code subdomain', () => {
+    expect(parseGoatCounterCode(snippet('https://stats.example.org/count'))).toBe(null);
+  });
+});
+
+describe('mergeBloobSettings — visitor counter', () => {
+  const withSnippet = { _embeds: { 'goat-counter-tracking': '<script data-goatcounter="https://melt.goatcounter.com/count"></script>' } };
+
+  it('is off unless the vault opts in, even when tracking is configured', () => {
+    const m = mergeBloobSettings({}, withSnippet);
+    expect(m.analytics.goatcounter_code).toBe('melt');
+    expect(m.analytics.show_visitor_count).toBe(false);
+  });
+
+  it('turns on when the vault sets show_visitor_count', () => {
+    const m = mergeBloobSettings({}, { ...withSnippet, show_visitor_count: true });
+    expect(m.analytics.show_visitor_count).toBe(true);
+  });
+
+  it('has no code when the vault configured no tracking at all', () => {
+    expect(mergeBloobSettings({}, { show_visitor_count: true }).analytics.goatcounter_code).toBe(null);
   });
 });

@@ -6,8 +6,9 @@
   "detect": {
     "selectors": [
       ".article-page",
-      ".share-bar"
+      ".share-bar",
+      ".visitor-count"
     ],
-    "note": "This stylesheet also owns .share-bar / .share-btn, which themes/_base/partials/share-bar.njk renders on ordinary pages \u2014 not just article-shaped ones. Detecting only .article-page dropped the share-bar styling on 33 melt pages."
+    "note": "This stylesheet also owns .share-bar / .share-btn and .visitor-count, which themes/_base/partials/*.njk render on ordinary pages \u2014 not just article-shaped ones. Detecting only .article-page dropped the share-bar styling on 33 melt pages."
   }
 }

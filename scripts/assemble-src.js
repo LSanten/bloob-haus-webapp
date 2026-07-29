@@ -513,6 +513,7 @@ export default {
   theme_settings: ${JSON.stringify(config.theme_settings || {})},
   embeds: ${JSON.stringify(embeds)},
   snippets: ${JSON.stringify(snippets)},
+  analytics: ${JSON.stringify(config.analytics || {})},
 };
 `;
 

@@ -1,0 +1,55 @@
+{# Visitor count, from GoatCounter's JSON counter endpoint.
+
+   Deliberately NOT GoatCounter's <img>/iframe badge: this fetches
+   `https://CODE.goatcounter.com/counter/<path>.json` and writes the number into our
+   own markup, so there is no GoatCounter branding, no fixed 200x80 box, and the
+   number inherits the theme's type and color like any other pill.
+
+   TWO switches must both be on for a number to appear, and the second one is not
+   ours:
+     1. `show_visitor_count: true` in the vault's _bloob-settings.md (default off)
+     2. "Allow using the visitor counter" in the GoatCounter site's own settings
+        (ALSO default off — without it the endpoint answers 403)
+   Failure is silent by design: the element is empty until a count arrives, so a site
+   that has only flipped switch 1 shows nothing rather than an error.
+
+   Per-page override wins over the site setting: `visitor_count: false` in a note's
+   frontmatter hides it on that page; `visitor_count: true` shows it even when the
+   site default is off.
+
+   The site code is derived from the goat-counter-tracking snippet — see
+   parseGoatCounterCode() in scripts/utils/bloob-settings-reader.js. #}
+
+{# `is defined` rather than `!== undefined`: a page that sets `visitor_count: false`
+   must still count as having made a choice, and it is the only form that survives a
+   site.analytics that predates this feature. #}
+{% set vcSite = site.analytics.show_visitor_count if site.analytics else false %}
+{% set vcCode = site.analytics.goatcounter_code if site.analytics else null %}
+{% set vcOn = visitor_count if visitor_count is defined else vcSite %}
+
+{% if vcCode and vcOn %}
+<p class="visitor-count" data-pagefind-ignore hidden
+   data-goatcounter-code="{{ vcCode }}">
+  <span class="visitor-count__number"></span>
+  <span class="visitor-count__label">views</span>
+</p>
+<script>
+(function () {
+  var el = document.currentScript.previousElementSibling;
+  if (!el || !el.classList.contains('visitor-count')) return;
+  var code = el.dataset.goatcounterCode;
+  // GoatCounter keys pageviews by path, and its counter route expects the path to keep
+  // its leading slash — hence the doubled slash in /counter//some/page.json.
+  var url = 'https://' + code + '.goatcounter.com/counter/' +
+            encodeURIComponent(location.pathname).replace(/%2F/g, '/') + '.json';
+  fetch(url)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.count) return;           // 403 = counter not enabled in GoatCounter
+      el.querySelector('.visitor-count__number').textContent = d.count;
+      el.removeAttribute('hidden');
+    })
+    .catch(function () { /* offline or blocked — stay hidden */ });
+})();
+</script>
+{% endif %}

@@ -32,6 +32,13 @@ features:
   search: true
   og_images: true
   tags: true
+show_visitor_count: false       # show a per-page view count. Needs BOTH this AND the
+                                # "Allow using the visitor counter" setting inside your
+                                # GoatCounter site settings, which also defaults to OFF —
+                                # without it the counter endpoint answers 403 and nothing
+                                # is shown. Requires the goat-counter-tracking fence below
+                                # (the site code is read from it). Override per note with
+                                # `visitor_count: true` / `false` in that note's frontmatter.
 logo: "[[logo.png]]"
 favicon: "[[favicon.png]]"
 ---
@@ -62,9 +69,24 @@ a snippet off. See `docs/architecture/settings-registry.md` and the implementati
 
 ### GoatCounter analytics → injected in `<head>`
 
+Sign up at [goatcounter.com](https://www.goatcounter.com/), pick a site code, and paste
+the snippet it gives you. Replace `YOURCODE` if you copy the line below by hand.
+
 ```goat-counter-tracking
 <script data-goatcounter="https://YOURCODE.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 ```
+
+**To show visitor counts on your pages**, two switches must both be on:
+
+1. `show_visitor_count: true` in the frontmatter above.
+2. **"Allow using the visitor counter"** in GoatCounter → *Settings* → *Site settings*.
+   This defaults to **off**. Until you turn it on, GoatCounter answers the count request
+   with `403 Need to enable the 'allow using the visitor counter' setting` and the site
+   shows nothing — no error, just no number.
+
+The count is fetched as JSON and rendered in your own theme's styling, so there is no
+GoatCounter badge or branding. Hide it on one note with `visitor_count: false` in that
+note's frontmatter; show it on one note with `visitor_count: true`.
 
 ### FastComments → placed at the bottom of each page's content
 

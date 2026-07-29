@@ -69,6 +69,30 @@ export function parseEmbedFences(markdownBody) {
 }
 
 /**
+ * Extracts the GoatCounter site code from the `goat-counter-tracking` snippet.
+ *
+ * The user already pastes their tracking script, which carries the code in its
+ * data-goatcounter URL (`https://CODE.goatcounter.com/count`). The visitor counter
+ * needs that same code to call `https://CODE.goatcounter.com/counter/<path>.json`,
+ * so it is derived rather than asked for a second time — one place to get wrong
+ * instead of two.
+ *
+ * Self-hosted GoatCounter installs use an arbitrary host with no code subdomain;
+ * those return null and the counter simply stays off.
+ *
+ * @param {Object} embeds - Map of fence name → raw content (see parseEmbedFences)
+ * @returns {string|null} The site code (e.g. "melt"), or null if not derivable
+ */
+export function parseGoatCounterCode(embeds) {
+  const snippet = embeds && embeds["goat-counter-tracking"];
+  if (!snippet) return null;
+  const m = String(snippet).match(
+    /data-goatcounter\s*=\s*["']https?:\/\/([a-z0-9-]+)\.goatcounter\.com\//i,
+  );
+  return m ? m[1].toLowerCase() : null;
+}
+
+/**
  * Reads and parses _bloob-settings.md from a content directory.
  * @param {string} contentDir - Path to the content directory
  * @returns {Object|null} Parsed frontmatter settings, or null if file not found
@@ -196,6 +220,18 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
   if (bloobSettings._embeds && Object.keys(bloobSettings._embeds).length) {
     merged.embeds = { ...siteConfig.embeds, ...bloobSettings._embeds };
   }
+
+  // Visitor counter. Opt-in (default off) and TWO things must be true for a number to
+  // appear: this setting, and "allow using the visitor counter" in the GoatCounter site
+  // settings, which also defaults to off. Without the second, the counter endpoint
+  // answers 403 and the widget stays hidden.
+  merged.analytics = {
+    ...siteConfig.analytics,
+    goatcounter_code:
+      parseGoatCounterCode(merged.embeds) || siteConfig.analytics?.goatcounter_code || null,
+    show_visitor_count:
+      bloobSettings.show_visitor_count ?? siteConfig.analytics?.show_visitor_count ?? false,
+  };
 
   // Theme-specific settings — opaque bag passed through to site.theme_settings in templates
   if (bloobSettings.theme_settings) {

@@ -37,6 +37,10 @@ layout: layouts/base.njk
     {% if shape_settings.share_bar !== false %}
       {% include "partials/share-bar.njk" %}
     {% endif %}
+
+    {# Visitor count sits with the other metadata pills. Self-guarding: renders nothing
+       unless the vault opted in AND the GoatCounter site allows the counter. #}
+    {% include "partials/visitor-count.njk" %}
   </header>
 
   {% if slug %}

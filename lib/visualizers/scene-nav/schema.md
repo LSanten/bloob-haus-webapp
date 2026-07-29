@@ -43,7 +43,7 @@ debug: on
   hover label; the target is the image (md-link, `[[wiki-link]]`, or bare path).
 - **Nested bullets = properties**: `background` (bare flag — renders as a background layer),
   `at: x, y` (percent from top-left), `scale` (% of container width), `rotation` (deg),
-  `glow` (#hex), `glowIntensity` (0.2–3), `goto`, `filter`, `onlyShowOn`
+  `glow` (#hex), `glowIntensity` (0.2–3), `goto`, `newTab`, `filter`, `onlyShowOn`
   (desktop/mobile), `flipH`/`flipV` (bare flags), `mobile:` (deeper bullets: `at`/`scale`/`rotation`).
 - **`label` (tri-state)**: absent → the image's alt text (shown on hover); `label: false`/`off` →
   **no** hover label; `label: Custom text` → override.
@@ -54,6 +54,16 @@ debug: on
 - **`goto:` derives the action**: internal md-link `[label](target.md)`, `[[wiki]]` link, or URL →
   link; `#id` → anchor scroll; `filter: tag` instead → in-embed filtering (Shopify). Internal links
   are resolved to final URLs by the build.
+- **`newTab` (tri-state)** — where a `goto` link opens. **Absent → auto**, which is what you want
+  almost always: a target on **this site** opens in the **same tab**, a target on **another site**
+  opens in a **new tab**. `newTab: on` always opens a new tab; `newTab: off` always stays in this
+  tab. Policy lives in `link-target.js` (pure, origin injected) and is shared by the runtime, the
+  builder and the tests.
+  - `mailto:` / `tel:` count as same-tab — the OS handler takes over and the page stays put.
+  - `example.com` with no `https://` is indistinguishable from a relative path, so it routes as
+    **internal**. Write `https://example.com` (the builder says so when it spots one).
+  - **Embeds differ**: an exported Shopify embed sits on someone else's page, so its auto default
+    is a new tab — navigating the host's page away is never wanted. `newTab: off` still wins.
 
 ## Parsing rules
 

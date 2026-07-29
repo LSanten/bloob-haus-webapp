@@ -707,37 +707,18 @@ a.internal-link:hover {
 }
 
 /* --- Share bar --- */
-.share-bar {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: var(--spacing-sm);
-}
-
+/* Share bar: the `article` shape owns it (lib/visualizers/article/styles.css), which
+   loads after this file and carries the icon-collapse behavior. The near-identical
+   copy that used to live here only restated the shape's defaults, so it was deleted
+   2026-07-28 rather than kept in sync by hand. Colors still come from this theme's
+   tokens. Restore a rule here only to diverge deliberately. */
 .share-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border-color);
-  background: transparent;
   color: var(--text-muted, var(--accent-dark));
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
 }
 
 .share-btn:hover {
   background: var(--bg-secondary, rgba(0,0,0,0.05));
   border-color: var(--accent-dark);
-}
-
-.share-btn--confirmed {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
 }
 
 /* --- Heading anchors --- */

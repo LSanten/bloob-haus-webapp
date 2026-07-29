@@ -31,16 +31,16 @@
 <div class="share-bar" data-pagefind-ignore>
   <button class="share-btn share-btn--share" id="js-share-btn" aria-label="Share this page">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-    <span>Share</span>
+    <span class="share-btn__label">Share</span>
   </button>
   <button class="share-btn share-btn--copy" id="js-copy-link-btn" aria-label="Copy link to this page">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-    <span>Copy link</span>
+    <span class="share-btn__label">Copy link</span>
   </button>
   {% if site.features.embed !== false %}
   <button class="share-btn share-btn--embed" id="js-embed-btn" aria-label="Embed this page">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-    <span>Embed</span>
+    <span class="share-btn__label">Embed</span>
   </button>
   {% endif %}
 </div>
@@ -139,11 +139,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // ── Touch: first tap opens the label, second tap acts ─────────────────────
+  // The bar collapses to icons (see .share-bar in article/styles.css). With a
+  // pointer, hover reveals the label. With no hover there is nothing to reveal it,
+  // so the first tap expands and the second performs the action.
+  //
+  // The listener is on the bar in the CAPTURE phase, so it can stop the tap before
+  // it reaches any button's own handler. navigator.share still works: the second
+  // tap is itself a user gesture.
+  var shareBars = document.querySelectorAll('.share-bar');
+  if (window.matchMedia && window.matchMedia('(hover: none)').matches) {
+    shareBars.forEach(function (bar) {
+      bar.classList.add('share-bar--touch');
+      bar.addEventListener('click', function (e) {
+        var btn = e.target.closest && e.target.closest('.share-btn');
+        if (!btn || btn.classList.contains('is-open')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        bar.querySelectorAll('.share-btn.is-open').forEach(function (b) { b.classList.remove('is-open'); });
+        btn.classList.add('is-open');
+      }, true);
+    });
+    // Tapping anywhere else collapses the bar again.
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.share-bar')) return;
+      document.querySelectorAll('.share-btn.is-open').forEach(function (b) { b.classList.remove('is-open'); });
+    });
+  }
+
   // ── Share button ──────────────────────────────────────────────────────────
   var shareBtn = document.getElementById('js-share-btn');
   if (shareBtn) {
     if (!navigator.share) {
-      shareBtn.style.display = 'none';
+      // Removed, not hidden: the bar's overlap uses :first-child, and a hidden-but-
+      // present button would keep that slot and pull the first VISIBLE button left
+      // out of the content column.
+      shareBtn.remove();
     } else {
       shareBtn.addEventListener('click', function () {
         navigator.share({ title: document.title, url: window.location.href }).catch(function () {});
@@ -154,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Copy link button ──────────────────────────────────────────────────────
   var copyBtn = document.getElementById('js-copy-link-btn');
   if (copyBtn) {
-    var copyLabel = copyBtn.querySelector('span');
+    var copyLabel = copyBtn.querySelector('.share-btn__label');
     copyBtn.addEventListener('click', function () {
       copyText(window.location.href, function () {
         copyLabel.textContent = 'Copied!';

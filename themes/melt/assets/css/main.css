@@ -477,33 +477,14 @@ body.has-bg-image {
 
 .heading-anchor--copied { opacity: 1; color: var(--color-accent); }
 
-/* --- Share bar --- */
+/* --- Share bar ---
+   Layout (the collapsed icon row, the overlap, the label reveal) belongs to the
+   `article` shape — lib/visualizers/article/styles.css. The near-duplicate block
+   that used to live here was deleted 2026-07-28: its `gap: 10px` silently cancelled
+   the shape's -9px overlap, so the buttons rendered 1px APART instead of stacked.
+   Only melt's glass skin stays theme-local, further down this file. */
 .share-bar {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
   margin-top: 20px;
-}
-
-.share-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.share-btn:hover {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: var(--color-accent);
 }
 
 .share-btn--confirmed {
@@ -541,34 +522,84 @@ a.internal-link {
 
 /* Required: .button CTA contract (docs/architecture/theme-standards.md).
    Authored in markdown with no HTML: [Listen on Spotify](url){.button}
-   Filled rose→purple pill, echoing the home bubble-nav CTA gradient — sentence
-   case, not the uppercase/bordered look of the generic contract example, to
-   stay in melt's soft/dreamy register rather than a corporate CTA. Selector
-   specificity matches a.internal-link above so it wins over ".page-body a"
-   regardless of source order. */
+
+   Reworked 2026-07-28 to frosted glass, matching the share bar — melt's buttons
+   sit on the watercolor photo, and a filled pill fought it.
+
+   THE CONTRAST BUG THIS FIXES. The old rule was a rose→purple gradient with
+   `color: #fff`, which stopped applying when melt's pages moved onto the `article`
+   shape: `a.button` and `.article-body a` have the SAME specificity (0,1,1), and
+   `article/styles.css` loads after `main.css` (see _base/partials/head.njk), so
+   `.article-body a { color: var(--accent-color) }` won — purple text on a purple
+   fill. Every selector below is therefore qualified with `.article-body` /
+   `.page-body` at (0,2,1) so it wins on specificity, never on file order.
+
+   Text is deep plum on near-clear glass rather than white on a fill: the
+   background is bright, so plum is the readable direction. */
+.article-body a.button,
+.page-body a.button,
+.page-content a.button,
 a.button {
   display: inline-block;
+  position: relative;
+  overflow: hidden;
   padding: 0.65rem 1.6rem;
   margin: 0.3em 0;
   font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #fff;
+  color: var(--color-text);
   text-decoration: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
-  box-shadow: 0 6px 18px rgba(122, 63, 158, 0.28);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(46, 26, 61, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+              border-color 0.2s ease, color 0.2s ease;
 }
 
+/* Bright top rim — same light-catching edge as the share-bar glass. */
+.article-body a.button::before,
+.page-body a.button::before,
+.page-content a.button::before,
+a.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+}
+
+.article-body a.button:hover,
+.page-body a.button:hover,
+.page-content a.button:hover,
 a.button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(122, 63, 158, 0.38);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-accent);
   text-decoration: none;
-  color: #fff;
+  opacity: 1; /* .article-body a:hover fades links to 0.75; a CTA should not fade */
+  box-shadow:
+    0 12px 30px rgba(46, 26, 61, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.45);
 }
 
+.article-body a.button:focus-visible,
+.page-body a.button:focus-visible,
+.page-content a.button:focus-visible,
 a.button:focus-visible {
   outline: 2px solid var(--color-accent-2);
   outline-offset: 2px;
@@ -673,28 +704,39 @@ a.button:focus-visible {
    Tuned 2026-07-27 to Leon's revised reference: dimmer fill (0.1) and half the
    blur (7px), for a quieter glass that lets the watercolor read through.
 
+   Tuned again 2026-07-28 to be MORE see-through: the fill drops to 0.04, the
+   inner bloom that was washing the glass out (inset 0 0 12px 6px at 0.6) drops to
+   0.22, and the rim opacities come down with it. The blur stays at 7px — blur is
+   what makes it read as glass; opacity is what makes it read as *thin* glass.
+
+   Selectors are `.share-bar .share-btn` (0,3,0) so they beat the shape's own
+   `.share-bar .share-btn` (0,2,0) on specificity rather than on file order, and
+   the transition list includes the shape's padding/margin animation — a bare
+   `transition` here would otherwise cancel the icon-to-label expansion.
+
    `position: relative` + `overflow: hidden` are required for the ::before /
    ::after light edges to sit inside the rounded pill. */
-.article-page .share-btn,
-.page-content .share-btn {
+.article-page .share-bar .share-btn,
+.page-content .share-bar .share-btn {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   -webkit-backdrop-filter: blur(7px);
   backdrop-filter: blur(7px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 8px 32px rgba(46, 26, 61, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 12px 6px rgba(255, 255, 255, 0.6);
+    0 8px 32px rgba(46, 26, 61, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.22);
   color: var(--color-text);
-  transition: background 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  transition: background 180ms ease, box-shadow 180ms ease, border-color 180ms ease,
+              padding-right 0.24s ease, margin-left 0.24s ease;
 }
 
 /* Bright top rim — the light catching the upper edge of the glass. */
-.article-page .share-btn::before,
-.page-content .share-btn::before {
+.article-page .share-bar .share-btn::before,
+.page-content .share-bar .share-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -711,8 +753,8 @@ a.button:focus-visible {
 }
 
 /* Left rim — vertical falloff, so the pill reads as a solid piece of glass. */
-.article-page .share-btn::after,
-.page-content .share-btn::after {
+.article-page .share-bar .share-btn::after,
+.page-content .share-bar .share-btn::after {
   content: '';
   position: absolute;
   top: 0;
@@ -728,20 +770,25 @@ a.button:focus-visible {
   );
 }
 
-.article-page .share-btn:hover,
-.page-content .share-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.45);
+/* Hover/open still lifts, just from a much lower floor than before — the glass
+   gains presence when reached for without ever becoming opaque. `.is-open` is the
+   touch equivalent of hover (first tap), so it gets the same treatment. */
+.article-page .share-bar .share-btn:hover,
+.page-content .share-bar .share-btn:hover,
+.article-page .share-bar .share-btn.is-open,
+.page-content .share-bar .share-btn.is-open {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.34);
   color: var(--color-accent);
   box-shadow:
-    0 10px 36px rgba(46, 26, 61, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 12px 6px rgba(255, 255, 255, 0.7);
+    0 10px 36px rgba(46, 26, 61, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.3);
 }
 
-.article-page .share-btn--confirmed,
-.page-content .share-btn--confirmed {
-  border-color: rgba(255, 255, 255, 0.55);
+.article-page .share-bar .share-btn--confirmed,
+.page-content .share-bar .share-btn--confirmed {
+  border-color: rgba(255, 255, 255, 0.4);
   color: var(--color-accent);
 }

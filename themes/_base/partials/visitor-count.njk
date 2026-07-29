@@ -31,7 +31,7 @@
 <p class="visitor-count" data-pagefind-ignore hidden
    data-goatcounter-code="{{ vcCode }}">
   <span class="visitor-count__number"></span>
-  <span class="visitor-count__label">views</span>
+  <span class="visitor-count__label">community views</span>
 </p>
 <script>
 (function () {
@@ -47,6 +47,8 @@
     .then(function (d) {
       if (!d || !d.count) return;           // 403 = counter not enabled in GoatCounter
       el.querySelector('.visitor-count__number').textContent = d.count;
+      // GoatCounter returns a formatted string ("1,234"), so compare as text.
+      if (d.count === '1') el.querySelector('.visitor-count__label').textContent = 'community view';
       el.removeAttribute('hidden');
     })
     .catch(function () { /* offline or blocked — stay hidden */ });

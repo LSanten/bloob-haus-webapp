@@ -9,7 +9,7 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-07-28 (S69)
+**Last updated:** 2026-07-28 (S70)
 
 ---
 
@@ -25,13 +25,25 @@ long arc.
 4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, **explainer + recommendation written up** in `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision" (covers what a cascade layer is, the unlayered-wins trap, and the `@scope` donut). Recommendation is `@scope` + a shared `.bloob-shape-root` marker. Currently convention + `tests/shape-nesting.test.js`.
 5. **Retrofit shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview` first; it's collection's twin and the source of the `fp-*` collisions.
 
-**Local thread — melt.** The scene-nav builder is **done**: every bug in the next-round plan was
-verified fixed by Leon in a real browser on 2026-07-28 (rotation persist, marquee select, group
-move/resize/rotate, the F2 overlay controls). Plan archived to
-`docs/implementation-plans/_completed/2026-07-22_melt-builder-next-round.md`; TECH-DEBT #39 closed.
-Undo/redo was deferred by choice → `IDEAS.md`, along with the h3 `#f1dbff` colour, the light/dark
-toggle, and the mobile `aspectRatio 9/16` decision.
-6. **Melt dev — open, no plan file yet.** Next melt work starts from a fresh brainstorm.
+**Local thread — melt.** S70 cleared Leon's whole 2026-07-28 dev-notes batch (see "What's Done").
+Two things it left open:
+
+6. **One push outstanding — `melt-website` is 1 commit ahead of origin** (`show_visitor_count: true`).
+   `git push` hung on the macOS keychain during S70 and needs running by hand. **Until it lands the
+   visitor counter shows nothing on the live site**, even though the GoatCounter switch is now on
+   (the endpoint returns real numbers: site total 87, `/about-melt/` 8). If it still doesn't appear
+   after that deploy, the counter is fine — check `analytics` in the deployed `src-melt/_data/site.js`.
+7. **DECIDE: is the date pill a theme standard or a shape concern?** (TECH-DEBT #45) marbles-pouch's
+   `.marble-date` is a second implementation and did not get S70's glass treatment. Cheap either way;
+   the cost of leaving it is that the next "make the date pill X" request silently hits one theme.
+8. **Composite shapes — the real gap Leon named in S70.** Declaring `bloob-shape: article` already
+   pulls in child shapes (share bar, comments, visitor count, and the folder-index template's nested
+   `collection`), so "shapes inside shapes" *works* — but composition is hand-written Nunjucks inside
+   `layout.njk`, so **a shape cannot declare what it contains**. Consequences: the future standalone
+   playground can't render a composite (composition lives in a template only Eleventy understands),
+   per-page detection has to inspect rendered output to discover what's on a page, and a theme can't
+   swap one child without forking the layout. This is the documented-but-unbuilt **container shape**
+   (`ontology.md` → leaf vs container). Start from a brainstorm, not a refactor.
 
 **Cloud backend thread (Phase 3):**
 7. **Unblock Scaleway** — the billing **country-change (→ US)** ticket is pending with Scaleway support. Once cleared, provision Managed Postgres (DEV-S, `fr-par`), Container Registry, and a KV namespace. Everything below waits on this.
@@ -41,6 +53,7 @@ toggle, and the mobile `aspectRatio 9/16` decision.
 
 ## What's Done
 
+- **melt dev-notes batch cleared; share bar reworked and re-homed** (2026-07-28, S70). scene-nav stopped opening a new tab for links to its own site — the tab is decided by **origin**, with a tri-state `newTab: on/off` override and a pure `link-target.js` (origin injected) shared by runtime, builder and tests. Share bar went **icon-first** across every theme (overlapping circles, hover to reveal, first-tap-expands on touch, copy link always first), and its CSS **moved out of the `article` shape into `themes/_base/assets/css/base.css`** — the markup is a `_base` partial three unrelated hosts include, so `.share-bar` came *out* of article's `detect` and themes now override on source order instead of a specificity ladder. Date pill is frosted glass for all articles (colors untouched; the fix was mixing into `transparent`, not into an opaque bg). melt's `{.button}` contrast bug traced to `a.button` and `.article-body a` having **identical specificity** with the shape stylesheet loading later. New **opt-in visitor count** from GoatCounter's JSON endpoint — no badge, no branding, and it fails invisibly because the deciding switch ("Allow using the visitor counter") lives in GoatCounter's own settings and defaults off. Per-page `visitor_count:` mirrors `comments:`; the comments half was already working and got tests rather than a rewrite. Verified in headless Chromium on clean per-site builds; audits re-run (marbles 11/11 across 1159 pages, melt 8/8). Suite 808 → **851**. New debt #45. See CHANGELOG S70 + DECISIONS 2026-07-28.
 - **melt breadcrumbs + one canonical URL/title derivation; S68 merged from the AE fork** (2026-07-28, S69). Breadcrumb rule: **every crumb shows that page's own title** — the folder crumb resolves the folder-index page (new `lookupPage` filter) instead of prettifying a URL slug, which cannot work on a `case: lower` site. `smart-title-case.js` replaced **five** divergent prettify-a-name copies and now runs on the *original* filename, so acronyms survive (`come-to-MELT.md` → "Come to MELT"). `slugifyPath()` became THE folder-path → URL-path derivation, fixing folder-index permalinks that bypassed the slug strategy entirely (`/Resources/` vs `/resources/` — invisible on macOS, broken on Linux CI); verified against a clean HEAD worktree that **no live URL moved**. Merged PR #3 (9 AE commits) and closed its "verify on melt + marbles" item by restoring both themes' folder chrome via `templates/folder-index.md` — measured against production first: 8 live pages would otherwise have lost their chrome and entered search. Obsidian plugin **1.2.0** released: copy-link reads the vault's `_bloob-settings.md` `url:` block (556 pages, 0 mismatches vs the builder). New debt **#44**. Suite 751 → **808**. See CHANGELOG S69 + DECISIONS 2026-07-28.
 - **melt consolidated onto the shared `article` shape** (2026-07-27, S67). Root cause of the odd Resources page: `bloob-shape: page` resolves to nothing (no `lib/visualizers/page/`), so layout fell to the step-5 default — `page.njk` for pages but **`base.njk` for index files**, which has no column and renders no title, while the preprocessor had already stripped the H1 expecting it to be re-rendered. Fixed by upgrading `article` with four generic features (**`date_updated`**, `banner_text`, show/hide date settings, **media embeds incl. responsive YouTube**) + a pure `date-field.js` supporting both date conventions, then migrating all 15 melt pages. `/about-melt/` measured **identical** before/after. Also: nested-shape styling collision fixed (`.article-body a` was underlining marbles), melt `page.njk` reduced to an alias, 22 dead `.page-*` rules removed, `settings-registry.md` brought fully current, share bar → glassmorphism. **CLAUDE.md now mandates the SHAPE TRINITY** (ontology + shapes + visualizers, always) and `shapes.md` gained presentation-containment + a corrected fallback section. Suite 723.
 - **SEO decoupled from the visualization + per-page visualizer loading** (2026-07-27, S67). Adopted the **pure-renderer standard** (`parser`/`resolve`/`renderer` pure; `browser.js` behavior-only) and refactored `collection` onto it — all five display modes now ship crawlable build-time HTML (melt Resources went 0 → 3 crawlable links), file-scope included. Search surfaces share a `--sv-*` token contract (melt + marbles-pouch `!important` overrides removed, pixel-identical). Shipped **per-page visualizer loading** behind `features.per_page_visualizers` (TECH-DEBT #4 closed): melt −610 CSS/−448 JS, marbles −17,640/−12,771; 24 assets/page → 11–13. `scripts/audit-visualizer-detection.js` is the mandatory gate before enabling on a new site. Resolved #41 for the collection side. Suite 637 → 692. See CHANGELOG S67 + `docs/architecture/visualizers.md`.

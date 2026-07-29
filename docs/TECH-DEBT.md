@@ -17,7 +17,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 **IDs are stable and never reused** — code comments and other docs reference them by number
 (`#4`, `#40`, `#41` appear in `lib/visualizers/**` and `docs/architecture/visualizers.md`).
-**Next free ID: 45.**
+**Next free ID: 46.**
 
 ---
 

@@ -188,6 +188,25 @@ would drop, and compares every element's geometry. It groups pages by detection
 signature, so a 1159-page site audits in seconds. **Enable the flag on a new site
 only after a clean audit run.**
 
+#### Sometimes the right fix is to move the CSS, not to add a selector
+
+Adding `.share-bar` to `article`'s `detect` made the symptom go away, but it left a
+shape stylesheet owning classes the shape does not render. **If a stylesheet owns
+markup that lives in a `_base` partial — something several unrelated hosts include —
+it does not belong in a shape at all.** Its mechanics go in
+`themes/_base/assets/css/base.css`, which every theme loads unconditionally, and the
+per-page question disappears instead of being answered.
+
+That is what happened to the share bar on 2026-07-28: `.share-bar` was **removed**
+from `article`'s selectors when its CSS moved to `base.css`. Bonus, and the reason to
+prefer this direction: `base.css` loads *before* each theme's `main.css`, so a theme
+overrides with a plain class selector, where a shape stylesheet (which loads *after*
+`main.css`) forces themes to climb a specificity ladder to override it.
+
+Ask in this order: **(1)** is this markup mine to own? If no → `base.css`. **(2)** if
+yes, what classes does my stylesheet own? Those are the `detect` selectors — never
+"what does my renderer emit".
+
 Two things the audit deliberately ignores, both learned the hard way:
 - **zero-size elements**, stripped before measuring — a dropped shape's JS is
   dropped with its CSS, so runtime-injected `display:none` scaffolding

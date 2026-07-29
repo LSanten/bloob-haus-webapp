@@ -261,119 +261,14 @@
 }
 
 /* ── Share bar ────────────────────────────────────────────────────────────────
-   Icon-first. Reading "Share Copy link Embed" spelled out under every article is
-   noise, so the buttons collapse to a row of overlapping circles and reveal their
-   label only when reached for: on hover with a pointer, on the first tap on touch
-   (the second tap performs the action — wired in _base/partials/share-bar.njk).
+   NOT HERE ANY MORE. Moved to themes/_base/assets/css/base.css on 2026-07-28.
 
-   `.share-btn` on its own stays an ordinary labelled pill: the embed modal reuses
-   the class for its "Copy code" button, which lives outside the bar and has no
-   icon. Only `.share-bar .share-btn` collapses.
-
-   Every button carries an aria-label, so the collapsed state is not a screen-reader
-   regression. ── */
-.share-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  /* Explicitly zero: spacing is the buttons' negative margin, and any theme `gap`
-     here silently cancels the overlap. melt's `gap: 10px` did exactly that. */
-  gap: 0;
-  margin-top: 1.25rem;
-}
-
-.share-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4em 0.9em;
-  border-radius: 20px;
-  border: 1px solid var(--border-color, rgba(0,0,0,0.15));
-  background: transparent;
-  color: var(--text-color, #333);
-  font-family: var(--font-body, sans-serif);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.share-btn:hover {
-  background: color-mix(in srgb, var(--accent-color, #555) 8%, transparent);
-  border-color: var(--accent-color, #555);
-  color: var(--accent-color, #555);
-}
-
-.share-btn--confirmed {
-  border-color: var(--accent-color, #555);
-  color: var(--accent-color, #555);
-}
-
-/* Collapsed circle. Height and side padding are fixed rather than derived from the
-   font, so the pill is exactly round before a label opens. */
-.share-bar .share-btn {
-  position: relative;
-  gap: 0;
-  height: var(--share-btn-size, 34px);
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: var(--share-btn-inset, 9px);
-  padding-right: var(--share-btn-inset, 9px);
-  border-radius: 999px;
-  /* Squished: each button tucks under the one before it. */
-  margin-left: calc(var(--share-btn-overlap, 9px) * -1);
-  transition: background 0.18s, border-color 0.18s, color 0.18s,
-              padding-right 0.24s ease, margin-left 0.24s ease;
-}
-
-.share-bar .share-btn:first-child { margin-left: 0; }
-.share-bar .share-btn svg { flex: 0 0 auto; }
-
-/* The label is the part that collapses. max-width animates without anyone having to
-   know how wide the text is; 12rem is just "wider than any label we ship". */
-.share-btn__label {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: max-width 0.24s ease, opacity 0.16s ease, margin-left 0.24s ease;
-}
-
-/* Open states that apply on every input type: the touch tap (.is-open) and the
-   post-action confirmation — "Copied!" behind a collapsed label would be invisible. */
-.share-bar .share-btn.is-open .share-btn__label,
-.share-bar .share-btn--confirmed .share-btn__label,
-.share-bar .share-btn:focus-visible .share-btn__label {
-  max-width: 12rem;
-  opacity: 1;
-  margin-left: 0.42em;
-}
-
-.share-bar .share-btn.is-open,
-.share-bar .share-btn--confirmed,
-.share-bar .share-btn:focus-visible {
-  padding-right: 0.95em;
-  z-index: 2;
-}
-
-/* Pointer-only. Guarded by the media query rather than undone afterwards, so a
-   tap on a phone can never leave a button latched in its hover state. */
-@media (hover: hover) {
-  /* Approaching the bar un-squishes it — the stack spreads into a row. */
-  .share-bar:hover .share-btn { margin-left: var(--share-btn-gap, 0.35rem); }
-  .share-bar:hover .share-btn:first-child { margin-left: 0; }
-
-  .share-bar .share-btn:hover .share-btn__label {
-    max-width: 12rem;
-    opacity: 1;
-    margin-left: 0.42em;
-  }
-
-  .share-bar .share-btn:hover {
-    padding-right: 0.95em;
-    z-index: 2;
-  }
-}
+   The markup is themes/_base/partials/share-bar.njk, which marbles-pouch's page.njk
+   and _base/pages/embed-pages.njk include too — so a page can carry a share bar
+   without being an article. Owning its CSS here meant the styling was gated on this
+   shape's `detect` selectors, and `.share-bar` had to be listed among them purely to
+   paper over that. base.css is unconditional, so the mismatch is now impossible
+   rather than patched. See that file for the mechanics/skin split. ── */
 
 /* ────────────────────────────────────────────────────────────────────────────
    Added 2026-07-27 while consolidating melt's bespoke `page.njk` onto this

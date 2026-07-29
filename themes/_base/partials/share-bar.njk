@@ -28,14 +28,19 @@
 @media(max-width:540px){.embed-modal__controls{grid-template-columns:1fr}}
 </style>
 
+{# Copy link is deliberately FIRST on every page and every theme. It is the only
+   button guaranteed to be present — the share button is removed at runtime when the
+   browser has no navigator.share (all desktops) — so putting it first means the bar
+   starts with the same icon everywhere, and `.share-bar .share-btn:first-child`
+   (which cancels the overlap's negative margin) always lands on a visible button. #}
 <div class="share-bar" data-pagefind-ignore>
-  <button class="share-btn share-btn--share" id="js-share-btn" aria-label="Share this page">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-    <span class="share-btn__label">Share</span>
-  </button>
   <button class="share-btn share-btn--copy" id="js-copy-link-btn" aria-label="Copy link to this page">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
     <span class="share-btn__label">Copy link</span>
+  </button>
+  <button class="share-btn share-btn--share" id="js-share-btn" aria-label="Share this page">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <span class="share-btn__label">Share</span>
   </button>
   {% if site.features.embed !== false %}
   <button class="share-btn share-btn--embed" id="js-embed-btn" aria-label="Embed this page">

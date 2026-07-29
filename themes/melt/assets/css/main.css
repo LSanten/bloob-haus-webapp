@@ -648,6 +648,13 @@ a.button:focus-visible {
 /* The "bloob.haus" credit link echoes how it reads on leons.bloob.haus:
    small-caps, wide tracking, bold, accent color, no underline. (Satoshi isn't loaded
    here, so we replicate the treatment with the theme's own body font.) */
+/* The credit wraps to two lines (a <br> after the bloob.haus link). The footer's own
+   line-height: 1.8 is tuned for separate single-line rows, so between two lines of one
+   sentence it reads as a gap rather than as a wrap. */
+.melt-footer__credit {
+  line-height: 1.45;
+}
+
 .melt-footer__credit a {
   color: var(--color-accent);
   text-decoration: none;
@@ -693,7 +700,7 @@ a.button:focus-visible {
 }
 
 /* --- Share bar — melt glassmorphism -------------------------------------------
-   melt-only override of the article shape's plain `.share-btn`. The buttons sit
+   melt's skin over the shared mechanics in base.css. The buttons sit
    directly on the watercolor background photo, so a frosted-glass treatment
    reads better here than a flat outline.
 
@@ -709,15 +716,18 @@ a.button:focus-visible {
    0.22, and the rim opacities come down with it. The blur stays at 7px — blur is
    what makes it read as glass; opacity is what makes it read as *thin* glass.
 
-   Selectors are `.share-bar .share-btn` (0,3,0) so they beat the shape's own
-   `.share-bar .share-btn` (0,2,0) on specificity rather than on file order, and
-   the transition list includes the shape's padding/margin animation — a bare
+   Plain `.share-bar .share-btn` selectors: the mechanics now live in
+   themes/_base/assets/css/base.css, which head.njk loads BEFORE this file, so an
+   equal-specificity rule here wins on source order. (Until 2026-07-28 these had to
+   be written `.article-page .share-bar .share-btn` purely to outrank the article
+   shape's stylesheet, which loads AFTER main.css.)
+
+   The transition list still repeats base.css's padding/margin animation — a bare
    `transition` here would otherwise cancel the icon-to-label expansion.
 
    `position: relative` + `overflow: hidden` are required for the ::before /
    ::after light edges to sit inside the rounded pill. */
-.article-page .share-bar .share-btn,
-.page-content .share-bar .share-btn {
+.share-bar .share-btn {
   position: relative;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
@@ -735,8 +745,7 @@ a.button:focus-visible {
 }
 
 /* Bright top rim — the light catching the upper edge of the glass. */
-.article-page .share-bar .share-btn::before,
-.page-content .share-bar .share-btn::before {
+.share-bar .share-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -753,8 +762,7 @@ a.button:focus-visible {
 }
 
 /* Left rim — vertical falloff, so the pill reads as a solid piece of glass. */
-.article-page .share-bar .share-btn::after,
-.page-content .share-bar .share-btn::after {
+.share-bar .share-btn::after {
   content: '';
   position: absolute;
   top: 0;
@@ -773,10 +781,8 @@ a.button:focus-visible {
 /* Hover/open still lifts, just from a much lower floor than before — the glass
    gains presence when reached for without ever becoming opaque. `.is-open` is the
    touch equivalent of hover (first tap), so it gets the same treatment. */
-.article-page .share-bar .share-btn:hover,
-.page-content .share-bar .share-btn:hover,
-.article-page .share-bar .share-btn.is-open,
-.page-content .share-bar .share-btn.is-open {
+.share-bar .share-btn:hover,
+.share-bar .share-btn.is-open {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.34);
   color: var(--color-accent);
@@ -787,8 +793,7 @@ a.button:focus-visible {
     inset 0 0 12px 6px rgba(255, 255, 255, 0.3);
 }
 
-.article-page .share-bar .share-btn--confirmed,
-.page-content .share-bar .share-btn--confirmed {
+.share-bar .share-btn--confirmed {
   border-color: rgba(255, 255, 255, 0.4);
   color: var(--color-accent);
 }

@@ -1,0 +1,62 @@
+/* Image Zoom Plugin Styles */
+
+/* Target images in both editing and reading modes */
+.markdown-source-view img:not(.emoji),
+.markdown-preview-view img:not(.emoji),
+.markdown-rendered img:not(.emoji) {
+  cursor: zoom-in;
+  transition: all 0.2s ease;
+}
+
+/* Highlight on hover to indicate zoom capability */
+.markdown-source-view img:not(.emoji):hover,
+.markdown-preview-view img:not(.emoji):hover,
+.markdown-rendered img:not(.emoji):hover {
+  box-shadow: 0 0 0 3px var(--interactive-accent);
+}
+
+/* Full screen overlay */
+.image-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: zoom-out;
+}
+
+/* Zoomed image */
+.image-zoom-image {
+  max-height: 90vh;
+  max-width: 90vw;
+  object-fit: contain;
+  cursor: zoom-in;
+  transform-origin: center center;
+  transition: transform 0.05s ease-out;
+}
+
+/* Special styling for dragging state */
+.image-zoom-image.dragging {
+  cursor: grabbing !important;
+  transition: none;
+}
+
+/* Make sure Live Preview mode images are targetable too */
+.cm-preview-code-block img:not(.emoji),
+.cm-embed-block img:not(.emoji) {
+  cursor: zoom-in;
+}
+
+/* Ensure the plugin works in all Obsidian themes */
+.theme-dark .image-zoom-overlay {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.theme-light .image-zoom-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}

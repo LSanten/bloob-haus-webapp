@@ -1,0 +1,10 @@
+{
+  "id": "file-timestamp-tracker",
+  "name": "File Timestamp Tracker",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Automatically tracks file creation dates and significant update history in YAML frontmatter",
+  "author": "Alter Team",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

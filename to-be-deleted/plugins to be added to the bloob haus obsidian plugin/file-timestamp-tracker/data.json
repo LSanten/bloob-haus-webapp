@@ -1,0 +1,10 @@
+{
+  "enableCreatedTracking": true,
+  "enableUpdateTracking": true,
+  "minCharacterChange": 20,
+  "excludedFolders": [
+    "_media",
+    "templates"
+  ],
+  "cleanupRun": true
+}

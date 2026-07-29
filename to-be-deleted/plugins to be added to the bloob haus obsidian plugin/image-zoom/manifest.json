@@ -1,0 +1,10 @@
+{
+  "id": "image-zoom",
+  "name": "Image Zoom",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Zoom into images by clicking and scrolling in normal view.",
+  "author": "leon",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false
+}

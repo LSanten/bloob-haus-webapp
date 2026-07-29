@@ -1,0 +1,32 @@
+{
+  "replacements": [
+    {
+      "trigger": "TODAY",
+      "format": "YYYY-MM-DD"
+    },
+    {
+      "trigger": "DATE",
+      "format": "YYYY-MM-DD"
+    },
+    {
+      "trigger": "TIME",
+      "format": "HH:mm:ss A"
+    },
+    {
+      "trigger": "WDATE",
+      "format": "YYYY-MM-DD, dddd"
+    },
+    {
+      "trigger": "TDATE",
+      "format": "# YYYY-MM-DD"
+    },
+    {
+      "trigger": "TTDATE",
+      "format": "## YYYY-MM-DD"
+    },
+    {
+      "trigger": "TTTDATE",
+      "format": "### YYYY-MM-DD"
+    }
+  ]
+}

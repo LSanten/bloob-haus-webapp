@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-link-encoder",
+  "name": "Link Encoder",
+  "version": "1.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Automatically converts spaces in file/folder URLs to encoded format (%20) when pasting.",
+  "author": "leon",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

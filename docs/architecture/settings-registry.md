@@ -36,6 +36,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `website_status` | string | depends on `publish_by_default` | Used when `publish_mode: status_field`. `draft` = excluded from build. `unlisted` = built, hidden from all indexes. `archived` = built, Google-indexable, hidden from listings. `public` = fully published. Absent field = excluded if `publish_by_default: false`, treated as public if `true` (default). |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
 | `comments` | bool | `true` | When `false`, suppresses the comment embed (`fast-comments-embed` fence) on this page. No effect unless the site has a `fast-comments-embed` snippet. |
+| `visitor_count` | bool | site-wide `show_visitor_count` | Per-page override for the GoatCounter visitor count, in **both** directions: `false` hides it on a page whose site shows it, `true` shows it on a site that is otherwise off. Cannot conjure a counter — the site still needs a `goat-counter-tracking` snippet, **and** "Allow using the visitor counter" must be enabled in the GoatCounter site's own settings (it defaults to off; without it the endpoint answers 403 and the widget stays hidden). Guarded by `tests/visitor-count-partial.test.js`. |
 | `bloob-page-id` | string | derived from URL | Override the canonical page ID (lowercased). Primary use: after moving/renaming a note, set this to its **old** ID so the FastComments thread stays attached. See `docs/architecture/urls-and-ids.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
@@ -199,6 +200,30 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 |-----|---------|-------------|
 | `media.convert_gif_to_mp4` | `true` | Auto-convert GIF files to MP4 at build time. GIFs are removed from the deployed output; photo-grid renders them as `<video autoplay loop muted playsinline>`. Videos play in the PhotoSwipe lightbox when clicked. On iOS Low Power Mode where autoplay is blocked, a ▶ play overlay appears; a "Play all animations" button is injected if any videos are paused. Set to `false` to keep GIFs rendered as `<img>` tags. |
 
+#### Analytics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `show_visitor_count` | bool | `false` | Site-wide default for showing a per-page visitor count. Rendered by `themes/_base/partials/visitor-count.njk`, which the `article` shape includes; the count comes from GoatCounter's **JSON** counter endpoint (`https://CODE.goatcounter.com/counter/<path>.json`) and is written into the theme's own markup — **no GoatCounter image badge, iframe, or branding**. Override per page with `visitor_count:`. |
+
+**Two switches, and only one of them is in this repo.** A number appears only when *both*
+are on:
+
+1. `show_visitor_count: true` here (defaults off), **and**
+2. **"Allow using the visitor counter"** in the GoatCounter site's own settings — which
+   **also defaults to off**. Without it the endpoint answers
+   `403 Need to enable the 'allow using the visitor counter' setting`.
+
+The widget renders `hidden` and unhides only when a count actually arrives, so a site
+with just switch 1 on shows nothing rather than a broken pill. **If a count is not
+appearing, check switch 2 first** — it is the one that is easy to forget, because
+nothing in the build can detect it.
+
+The **site code is derived** from the `goat-counter-tracking` fence
+(`parseGoatCounterCode()`, `scripts/utils/bloob-settings-reader.js`) rather than
+configured twice. A self-hosted GoatCounter has no code subdomain, so it yields `null`
+and the counter stays off. Exposed to templates as `site.analytics`.
+
 #### Snippets & Embeds (raw code fences in the `_bloob-settings.md` **body**)
 
 Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `_bloob-settings.md` (never in frontmatter — a raw `<script>` would break the YAML). Parsed by `parseEmbedFences()` in `scripts/utils/bloob-settings-reader.js`. **An empty fence is ignored** — that is how a user turns a snippet off ("present means on"). Every fence is exposed to templates as `site.embeds['<name>']`; fences in `EMBED_TARGETS` are additionally concatenated into `site.snippets.{head,bodyEnd}` and auto-injected.
@@ -209,7 +234,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 | `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
 | `footer-snippet` | before `</body>` | Generic end-of-body injection |
 | `embed-endofbody` | before `</body>` | Generic end-of-body injection |
-| `fast-comments-embed` | content-bottom of `page.njk` (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. Opt out per-page with `comments: false`. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). |
+| `fast-comments-embed` | content-bottom of `page.njk` **and of the `article` shape** (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. On by default wherever the partial is included; opt out per-page with `comments: false`; renders nothing at all when this fence is absent. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). Guarded by `tests/comments-partial.test.js`. |
 | `embed-*` (any name) | *(not auto-injected)* | Available as `{{ site.embeds['embed-x'] \| safe }}` for manual placement anywhere in a theme. |
 
 **Per-page tokens** (substituted inside any snippet by the `injectPageVars` filter — a fixed vocabulary, *not* full template eval):

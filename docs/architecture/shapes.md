@@ -381,7 +381,21 @@ here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-build
    `data-vis-raw-source` capture; see its schema.md). **Image refs**, which carry no separate label,
    are emitted in markdown `[alt](target)` form.
 
-7. **A mobile layout inherits desktop by default.** A shape with a responsive/mobile variant treats
+7. **A link's tab is decided by origin, not by the shape.** A shape that navigates on click
+   opens **the same tab for a target on this site** and **a new tab for one off it**. Staying
+   in the tab is the correct default for internal navigation — a site that spawns a tab per
+   click is the bug, not the feature. An explicit per-element `newTab: on/off` (tri-state, per
+   #5) overrides it, and *absent means absent*: nothing is written to the markdown until the
+   author actually chooses. Reference implementation: `lib/visualizers/scene-nav/link-target.js`
+   — pure, with the current origin **injected**, so the runtime, the builder's live preview and
+   the tests all reach the same answer.
+   - `mailto:`/`tel:` count as same-tab: the OS handler takes over and the page stays put.
+   - A scheme-less `example.com` is indistinguishable from a relative path and routes as
+     **internal**. A builder should say so rather than guess (scene-nav's does).
+   - An **exported embed inverts the default** to new-tab: it sits on someone else's page,
+     where navigating the host away is never wanted.
+
+8. **A mobile layout inherits desktop by default.** A shape with a responsive/mobile variant treats
    mobile as identical to desktop **unless the author establishes a divergence** — an explicit mobile
    aspect-ratio, or per-element mobile position overrides. No divergence → mobile == desktop (same
    ratio, same positions). A builder should surface this state plainly ("same as desktop" vs

@@ -53,7 +53,7 @@ These conventions are **not scene-nav-specific** — they apply to every shape t
 
 3. **A shape resolves its own refs when the general pass can't.** When a shape's grammar uses link forms the general preprocessor skips (e.g. `[alt](x.png)` without `!`, chosen to keep Obsidian source uncluttered), the shape resolves them itself against the attachment/file indexes. Raw refs stay in the source-of-truth; resolution is a **render-time projection**, never written back.
 
-4. **Literal spaces are the authored form; encoding is a render concern.** Authors (and the builder) write literal spaces (`Contact us.png`). The parser accepts both literal spaces and `%20` (decoding to a literal space internally). Proper URL-encoding happens **only** in the resolved output URL — the author never has to think about it.
+4. **Literal spaces are the authored form; encoding is a render concern.** Authors (and the builder) write literal spaces (`Contact us.png`). The parser accepts both literal spaces and `%20` (decoding to a literal space internally). Proper URL-encoding happens **only** in the resolved output URL — the author never has to think about it. **[SUPERSEDED 2026-08-15 — builders now emit `%20`; see 2026-08-15_image-ref-encoding-and-decode-safety.md]**
 
 5. **Tri-state attribute + boolean vocabulary (all shapes).** For any optional attribute: **absent → default**, **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**. Both `false`/`off` and `true`/`on` are accepted (case-insensitive) everywhere, so authors don't hit syntax errors guessing the keyword. Distinct from **bare flags** (`- background`, `- flipH` → boolean true) and **keyed values** (`- at: x, y`).
 
@@ -107,7 +107,7 @@ Reorganize `builder/panel.js` into **collapsible sections** mirroring the old GU
 ## 7. Round-trip serialization rules (`serializeBlock`)
 
 - Emit markdown `[label](target)` for images and `goto` (normalize wiki → markdown).
-- **Preserve the authored target** granularity: full path → full path; basename → basename; new refs → basename. (No `%20` — literal spaces.)
+- **Preserve the authored target** granularity: full path → full path; basename → basename; new refs → basename. (No `%20` — literal spaces.) **[SUPERSEDED 2026-08-15 — builders now emit `%20`; see 2026-08-15_image-ref-encoding-and-decode-safety.md]**
 - `label`: emit `label: false` when off; emit `label: X` when overridden; omit when it equals alt.
 - `hoverGlow: false` / `hoverScale: false` emitted only when off.
 - Round-trips through `parse()` to an equivalent scene (positions, props, refs) that re-renders identically.

@@ -72,6 +72,20 @@ deeper leading whitespace (tabs or spaces; never a hardcoded tab width). CRLF in
 normalized. Unparseable blocks warn (`[scene-nav] v2 grammar parse error`) and render
 nothing rather than throwing.
 
+**Encoding.** Write image refs either way — `[alt](Contact us.png)` or
+`[alt](Contact%20us.png)`; both parse to the same thing, and a filename containing a
+literal `%` (`50% off flyer.png`) is handled rather than throwing. The builder's
+"Copy ::: block" always emits the **encoded** form, so the block you paste back resolves
+in Obsidian's editor as well as on the site.
+
+`goto:` targets are emitted **verbatim**, except that a space inside a markdown-link
+target is encoded (`[x](a note.md)` → `[x](a%20note.md)`). **Wiki-links are never
+touched** — `[[a note]]` is Obsidian syntax where spaces are legal.
+
+Note that image refs are written as markdown *links* (`[alt](x.png)`, no leading `!`)
+on purpose, so Obsidian shows a readable block instead of embedding seven full-size
+images down your editor. See `shapes.md` → "Authoring & resolution conventions" #3.
+
 ## Container-contents policy
 
 Override: everything inside is scene-nav's grammar; there is no pass-through content.

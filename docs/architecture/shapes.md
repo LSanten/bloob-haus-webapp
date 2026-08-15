@@ -366,20 +366,29 @@ here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-build
    the general preprocessor skips (e.g. `[alt](x.png)` without the `!`, chosen so Obsidian doesn't embed
    and clutter the source), the shape resolves them itself. Raw refs are the source-of-truth; resolution
    is a **render-time projection**, never written back — so a builder can round-trip the exact grammar.
-4. **Literal spaces are authored; encoding is a render concern.** Authors and builders write literal
-   spaces (`Contact us.png`); parsers accept both literal spaces and `%20`. URL-encoding happens only in
-   the resolved output URL.
+4. **Refs are stored decoded and emitted encoded.** Parsers accept **both** literal spaces
+   (`Contact us.png`) and `%20`, and hold the **decoded** form in the model, so basename resolution
+   never has to think about encoding. Anything that *writes markdown back out* — a builder's export,
+   a serializer — emits the **percent-encoded** form, because a raw space terminates a CommonMark link
+   destination and the link does not resolve in Obsidian's editor. One emitted string then works in
+   both hosts. *(Amended 2026-08-15; previously builders emitted literal spaces, which produced refs
+   that built correctly but appeared broken in the vault. The original rule reasoned only about
+   storage and carried the same form over to emission without arguing for it.)*
 5. **Tri-state + boolean vocabulary (all shapes).** Optional attribute: **absent → default**,
    **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**; `false`/`off` and
    `true`/`on` accepted case-insensitively so authors don't hit syntax errors. Distinct from **bare
    flags** (`- background`, `- flipH` → true) and **keyed values** (`- at: x, y`).
 6. **A write-face (builder) emits authorable output that round-trips.** Whatever a builder produces
    must be something a human could have typed and that re-parses + re-renders identically. It preserves
-   the authored **target** granularity (full path stays full path; basename stays basename, literal
-   spaces). **Note-links (`goto`) are preserved verbatim** — the exact `[label](note.md)` or `[[wiki]]`
-   the author wrote, so they stay clickable in Obsidian (scene-nav does this via a pre-resolution
-   `data-vis-raw-source` capture; see its schema.md). **Image refs**, which carry no separate label,
-   are emitted in markdown `[alt](target)` form.
+   the authored **target** granularity (full path stays full path; basename stays basename; spaces are
+   percent-encoded per #4). **Note-links (`goto`) are preserved verbatim, with one exception** — the
+   exact `[label](note.md)` or `[[wiki]]` the author wrote is kept, but **a space inside a
+   markdown-link target is percent-encoded**, because a raw space terminates a CommonMark link
+   destination and the link would not resolve in Obsidian. **Wiki-links are never re-encoded** —
+   `[[an evening with melt]]` is Obsidian's own syntax, where spaces are legal and `%20` would make it
+   hunt for a file literally named `an%20evening...`. (scene-nav does the verbatim capture via a
+   pre-resolution `data-vis-raw-source`; see its schema.md.) **Image refs**, which carry no separate
+   label, are emitted in markdown `[alt](target)` form.
 
 7. **A link's tab is decided by origin, not by the shape.** A shape that navigates on click
    opens **the same tab for a target on this site** and **a new tab for one off it**. Staying
@@ -753,7 +762,8 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## Examples (complete .md file mockups)
 ## Translation behavior (what happens to non-native content)
 ## Closed-state visual (how this shape looks as an icon when referenced from elsewhere)
-## Builder (does this shape have a GUI author? where it lives, what core it reads/writes)
+## Builder (does this shape have a GUI author? where it lives, what core it reads/writes,
+##   and — if it exports markdown — confirmation that its output re-opens in Obsidian)
 ## Authors (creator name(s) + URL — an array; renders in the shape catalog)
 ## Assets (static files the shape ships, if any)
 ```

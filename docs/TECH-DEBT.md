@@ -17,7 +17,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 **IDs are stable and never reused** — code comments and other docs reference them by number
 (`#4`, `#40`, `#41` appear in `lib/visualizers/**` and `docs/architecture/visualizers.md`).
-**Next free ID: 47.**
+**Next free ID: 48.**
 
 ---
 
@@ -96,7 +96,8 @@ one-line index so a `TECH-DEBT #N` pointer never dangles. **Details are in `docs
 `25` Windows `isMainModule` fix (2026-07-20, referenced from `scripts/utils/is-main.js`,
 `tests/utils/is-main.test.js`, CLAUDE.md) ·
 `34` bloob-shape / bloob-type unification (2026-07-20) ·
-`39` scene-nav builder bugs + real-browser test (2026-07-28)
+`39` scene-nav builder bugs + real-browser test (2026-07-28) ·
+`47` unguarded `decodeURIComponent` across the pipeline (2026-08-15 — fixed same session it was raised)
 
 > Note: `25` was accidentally used twice. The still-live warm-kitchen PhotoSwipe item was
 > renumbered to **`42`**.

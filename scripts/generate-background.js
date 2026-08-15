@@ -6,6 +6,7 @@ import crypto from "crypto";
 import sharp from "sharp";
 import { glob } from "glob";
 import matter from "gray-matter";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const OUT_REL = path.join("media", "optimized", "site-background.webp");
 const OUT_URL = "/media/optimized/site-background.webp";
@@ -19,7 +20,7 @@ async function resolveSourceFile(value, srcDir) {
   const s = String(value).trim();
   const wiki = s.match(/^\[\[(.+?)\]\]$/);
   const md = s.match(/^\[.*?\]\((.+?)\)$/);
-  let rel = wiki ? wiki[1] : md ? decodeURIComponent(md[1]) : s;
+  let rel = wiki ? wiki[1] : md ? safeDecode(md[1]) : s;
   const direct = path.join(srcDir, rel);
   if (await fs.pathExists(direct)) return direct;
   const matches = await glob(`**/${rel}`, {

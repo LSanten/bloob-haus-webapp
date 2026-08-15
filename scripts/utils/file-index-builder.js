@@ -11,6 +11,7 @@ import matter from "gray-matter";
 import { getSlugFunction, slugifyPath } from "./slug-strategy.js";
 import { stripDatePrefix } from "./date-prefix.js";
 import { smartTitleCase } from "./smart-title-case.js";
+import { safeDecode } from "./safe-decode.js";
 
 /**
  * Strips inline markdown from a heading string.
@@ -288,7 +289,7 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     const file = rawFile.replace(/\\/g, "/");
     // e.g. "media/logo.png" or "projects/My Diagram.html"
     const filename = path.basename(file);
-    const decodedFilename = decodeURIComponent(filename);
+    const decodedFilename = safeDecode(filename);
 
     // Preserve vault structure in URL: encode each segment individually
     const url = "/" + file.split("/").map(encodeURIComponent).join("/");

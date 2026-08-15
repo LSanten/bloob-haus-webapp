@@ -15,6 +15,8 @@
  * @param {Object} fileIndex - File index from buildFileIndex()
  * @returns {string|null} Resolved URL, or null
  */
+
+import { safeDecode } from "./safe-decode.js";
 export function resolveRedirect(value, fileIndex) {
   if (!value) return null;
   const s = String(value).trim();
@@ -32,7 +34,7 @@ export function resolveRedirect(value, fileIndex) {
   // [text](url) markdown link — extract the URL, resolve .md filenames via fileIndex
   const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
   if (mdMatch) {
-    const target = decodeURIComponent(mdMatch[1]);
+    const target = safeDecode(mdMatch[1]);
     if (target.endsWith(".md")) {
       const filename = target.replace(/^.*\//, "").replace(/\.md$/, "");
       return lookupPageUrl(filename, fileIndex) || null;

@@ -5,6 +5,7 @@
 
 import { isMainModule } from "./is-main.js";
 import { slugifyHeading } from "./slug-strategy.js";
+import { safeDecode } from "./safe-decode.js";
 
 /**
  * Resolves markdown links pointing to .md files to proper URLs.
@@ -24,7 +25,7 @@ export function resolveMarkdownLinks(content, index) {
 
   const processedContent = content.replace(mdLinkPattern, (match, displayText, target) => {
     // Decode URL-encoded characters (e.g., %20 → space)
-    const decodedTarget = decodeURIComponent(target);
+    const decodedTarget = safeDecode(target);
 
     // Split off any heading anchor
     const [filePath, heading] = decodedTarget.split('#');

@@ -8,6 +8,7 @@ import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
 import sharp from "sharp";
+import { safeDecode } from "./safe-decode.js";
 
 /**
  * Resolves image and attachment references in markdown content.
@@ -38,7 +39,7 @@ export function resolveAttachments(content, attachmentIndex, { sourceVaultPath =
   // Returns the URL if found in byVaultPath, null otherwise.
   function resolveVaultRelative(rawSrc) {
     if (!sourceVaultPath) return null;
-    const decoded = decodeURIComponent(rawSrc);
+    const decoded = safeDecode(rawSrc);
     // Compute source file's directory within the vault (forward slashes)
     const sourceDir = sourceVaultPath.replace(/\\/g, "/").split("/").slice(0, -1).join("/");
     const joined = sourceDir ? sourceDir + "/" + decoded : decoded;
@@ -55,7 +56,7 @@ export function resolveAttachments(content, attachmentIndex, { sourceVaultPath =
 
   // Basename fallback: extract filename from path and look up in byBasename.
   function lookupBasename(rawSrc) {
-    const decoded = decodeURIComponent(rawSrc);
+    const decoded = safeDecode(rawSrc);
     const filename = path.basename(decoded);
     return byBasename[filename] || byBasename[filename.toLowerCase()] || null;
   }
@@ -83,7 +84,7 @@ export function resolveAttachments(content, attachmentIndex, { sourceVaultPath =
   // Wiki syntax never carries path info — always basename lookup only.
   const wikiImagePattern = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
   processedContent = processedContent.replace(wikiImagePattern, (match, imagePath, altText) => {
-    const decoded = decodeURIComponent(imagePath);
+    const decoded = safeDecode(imagePath);
     const filename = path.basename(decoded);
     const alt = altText || "";
     const resolvedPath = byBasename[filename] || byBasename[filename.toLowerCase()] || null;

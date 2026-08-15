@@ -19,6 +19,7 @@ import { fileURLToPath } from "url";
 import os from "os";
 import { mapWithConcurrency } from "./utils/map-concurrent.js";
 import { isMainModule } from "./utils/is-main.js";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -78,7 +79,7 @@ async function fileHash(filePath) {
  * Handles URL-encoded filenames by using glob with decoded baseName.
  */
 async function findSourceFile(baseName, srcDir) {
-  const decoded = decodeURIComponent(baseName);
+  const decoded = safeDecode(baseName);
   const exts = ["jpg", "jpeg", "png", "gif"];
   for (const ext of exts) {
     const matches = await glob(`**/${decoded}.${ext}`, {
@@ -196,7 +197,7 @@ export async function generateOgImages() {
     const match = ogBasename.match(/^(.+)-og\.(jpeg|png|gif)$/);
     if (!match) continue;
 
-    const baseName = decodeURIComponent(match[1]);
+    const baseName = safeDecode(match[1]);
     if (imageSources.has(baseName)) continue;
 
     const sourceFile = await findSourceFile(baseName, SRC_DIR);

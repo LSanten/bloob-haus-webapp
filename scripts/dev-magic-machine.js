@@ -26,6 +26,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -105,7 +106,7 @@ function serveFile(filePath, res) {
 
 // ── Request handler ──────────────────────────────────────────────────────────
 const server = http.createServer((req, res) => {
-  const urlPath = decodeURIComponent(req.url.split("?")[0]);
+  const urlPath = safeDecode(req.url.split("?")[0]);
 
   // /assets/* → bundled visualizer output
   if (urlPath.startsWith("/assets/")) {

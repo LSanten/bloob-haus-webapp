@@ -29,6 +29,7 @@
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
+import { safeDecode } from "./safe-decode.js";
 
 // Accepted filenames in priority order (first match wins) — _bloob-shapes.md is
 // the forward-facing name (matches the `bloob-shape` vocabulary); _bloob-types.md
@@ -182,7 +183,7 @@ export function parseObjectImageField(imageField) {
 
   // Markdown image syntax: ![alt](path)
   const mdMatch = imageField.match(/^!\[.*?\]\((.+?)\)$/);
-  if (mdMatch) return decodeURIComponent(mdMatch[1]);
+  if (mdMatch) return safeDecode(mdMatch[1]);
 
   // Wiki-link syntax: [[filename.png]]
   const wikiMatch = imageField.match(/^\[\[(.+?)\]\]$/);

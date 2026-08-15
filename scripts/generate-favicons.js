@@ -17,6 +17,7 @@ import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
 import { glob } from "glob";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -42,7 +43,7 @@ function extractFilePath(value) {
 
   // [label](url) or [](url) — standard markdown link
   const mdMatch = s.match(/^\[.*?\]\((.+?)\)$/);
-  if (mdMatch) return decodeURIComponent(mdMatch[1]);
+  if (mdMatch) return safeDecode(mdMatch[1]);
 
   return s;
 }

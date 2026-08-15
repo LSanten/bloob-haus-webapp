@@ -53,6 +53,7 @@ import {
   resolveIdentityKey,
   parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -516,7 +517,7 @@ export async function preprocessContent({
     // Extract first image for OG preview
     const firstImage = extractFirstImage(processedContent);
     if (firstImage) {
-      const imgFilename = path.basename(decodeURIComponent(firstImage));
+      const imgFilename = path.basename(safeDecode(firstImage));
       const imgExt = path.extname(imgFilename).toLowerCase();
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
       // GIFs → first frame extracted as JPEG by generate-og-images.js

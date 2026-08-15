@@ -22,6 +22,7 @@ import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
 import { generateBackground, generatePageBackgrounds } from "./generate-background.js";
 import { EMBED_TARGETS } from "./utils/bloob-settings-reader.js";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -430,7 +431,7 @@ export async function resolveLogoUrl(value, srcDir) {
     // Decode for disk lookups; a literal % that isn't an escape falls back to the raw string
     let decoded;
     try {
-      decoded = decodeURIComponent(p);
+      decoded = safeDecode(p);
     } catch {
       decoded = p;
     }

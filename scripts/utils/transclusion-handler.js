@@ -19,6 +19,7 @@
 import { getSlugFunction } from "./slug-strategy.js";
 import { resolveLink } from "./file-index-builder.js";
 import { stripComments } from "./comment-stripper.js";
+import { safeDecode } from "./safe-decode.js";
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.mp4', '.webm', '.html'];
 
@@ -30,16 +31,6 @@ function isMediaFile(target) {
 // Bump all ATX headings down one level: H1→H2, H2→H3, ..., H5→H6 (H6 stays).
 function bumpHeadings(markdown) {
   return markdown.replace(/^(#{1,5})(\s)/gm, (_, hashes, space) => '#' + hashes + space);
-}
-
-// decodeURIComponent throws on malformed escapes ("100% done.md"). Author typos
-// must not break a build, so fall back to the raw string.
-function safeDecode(value) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
 }
 
 /**

@@ -143,6 +143,99 @@ describe('handleTransclusions', () => {
     });
   });
 
+  describe('markdown-style embeds ![alt](Page.md)', () => {
+    it('expands a plain markdown-style embed', () => {
+      const index = makeIndex({
+        'sauces': { title: 'Sauces', rawBody: 'All about sauces.' },
+      });
+      const result = handleTransclusions('![Sauces](Sauces.md)', index);
+      expect(result.content).toContain('All about sauces.');
+      expect(result.content).not.toContain('transclusion-placeholder');
+    });
+
+    it('decodes percent-encoded targets (Obsidian "use markdown links" mode)', () => {
+      const index = makeIndex({
+        'bios-for-whitney-and-vicki': {
+          title: 'Bios for whitney and vicki',
+          rawBody: 'Whitney and Vicki bios.',
+        },
+      });
+      const result = handleTransclusions(
+        '![Bios for whitney and vicki](Bios%20for%20whitney%20and%20vicki.md)',
+        index,
+      );
+      expect(result.content).toContain('Whitney and Vicki bios.');
+      expect(result.content).not.toContain('transclusion-placeholder');
+      expect(result.transclusions[0].target).toBe('Bios for whitney and vicki');
+    });
+
+    it('decodes the target in the placeholder fallback too', () => {
+      const result = handleTransclusions('![Bios](Bios%20for%20whitney%20and%20vicki.md)');
+      expect(result.content).toContain('transclusion-placeholder');
+      expect(result.content).toContain('Bios for whitney and vicki');
+      expect(result.content).toContain('href="/bios-for-whitney-and-vicki/"');
+    });
+
+    it('strips a folder path from the target', () => {
+      const index = makeIndex({
+        'sauces': { title: 'Sauces', rawBody: 'All about sauces.' },
+      });
+      const result = handleTransclusions('![s](notes/sub%20folder/Sauces.md)', index);
+      expect(result.content).toContain('All about sauces.');
+    });
+
+    it('accepts a heading specifier, embedding the full page', () => {
+      const index = makeIndex({
+        'guide': { title: 'Guide', rawBody: '## Intro\n\nHello.\n\n## Details\n\nMore.' },
+      });
+      const result = handleTransclusions('![Guide](Guide.md#Details)', index);
+      expect(result.content).toContain('Hello.');
+      expect(result.content).toContain('More.');
+      expect(result.content).not.toContain('transclusion-placeholder');
+    });
+
+    it('expands markdown-style embeds nested inside an embedded page', () => {
+      const index = makeIndex({
+        'outer': { title: 'Outer', rawBody: 'Outer body.\n\n![Inner](Inner%20Page.md)' },
+        'inner-page': { title: 'Inner Page', rawBody: 'Inner body.' },
+      });
+      const result = handleTransclusions('![[Outer]]', index);
+      expect(result.content).toContain('Outer body.');
+      expect(result.content).toContain('Inner body.');
+      expect(result.content).not.toContain('transclusion-placeholder');
+    });
+
+    it('accepts a hand-written target with literal spaces', () => {
+      const index = makeIndex({
+        'bios-for-whitney-and-vicki': {
+          title: 'Bios for whitney and vicki',
+          rawBody: 'Whitney and Vicki bios.',
+        },
+      });
+      const result = handleTransclusions('![Bios](Bios for whitney and vicki.md)', index);
+      expect(result.content).toContain('Whitney and Vicki bios.');
+    });
+
+    it('leaves external URLs alone', () => {
+      const input = '![spec](https://example.com/readme.md)';
+      const result = handleTransclusions(input, makeIndex({}));
+      expect(result.content).toBe(input);
+      expect(result.transclusions).toHaveLength(0);
+    });
+
+    it('leaves image embeds alone', () => {
+      const input = '![photo](my%20photo.png)';
+      const result = handleTransclusions(input, makeIndex({}));
+      expect(result.content).toBe(input);
+      expect(result.transclusions).toHaveLength(0);
+    });
+
+    it('survives a malformed percent-escape without throwing', () => {
+      const input = '![weird](100%%20done.md)';
+      expect(() => handleTransclusions(input, makeIndex({}))).not.toThrow();
+    });
+  });
+
   describe('multiple transclusions', () => {
     it('expands multiple transclusions in the same content', () => {
       const index = makeIndex({

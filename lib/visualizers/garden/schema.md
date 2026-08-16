@@ -93,12 +93,21 @@ Order matters for elements: **document order is stacking (z) order** — later i
 - **`"<title>"`** — for objects, the page title; for a `label`, the displayed text.
 - **`@<x>,<y>`** — top-left position in the canvas logical space. The `@` is what marks the line as an
   element (vs. a `key: value` setting).
-- **attrs** (optional, space-separated `key:value`, plus bare flags):
+- **attrs** (optional, space-separated `key:value`, plus bare flags — the only flags are
+  `bold`, `italic`, `highlight`). **Any value containing a space must be quoted**
+  (`bg:"my backdrop.png"`); refs may alternatively be percent-encoded. Values are stored
+  **decoded** in the model and emitted **encoded/quoted**, per
+  `docs/architecture/shapes.md` → "Authoring & resolution conventions" #4.
   - `size:N` — a **label**'s font size (no `x`).
   - `size:WxH` — a **dimension** override (has `x`); default is the type's own size (for a drawn
     label: its image size).
   - `src:media/garden/…` — the image for a `custom` element, or a **drawn label**
     (`label "" @x,y src:… size:WxH` — a decorative image, not clickable).
+    **If the filename contains a space, quote it or percent-encode it** —
+    `src:"my sketch.png"` or `src:my%20sketch.png`. Both parse to the same value; attrs are
+    space-separated, so an unquoted space would end the value early. Unrecognized leftover
+    tokens are warned about (`[garden] Ignoring unrecognized token …`) rather than dropped
+    silently. The builder always writes the percent-encoded form.
   - `hover:none|scale|glow|bounce` — element hover effect (default `scale`).
   - `glow:#hex` — element glow color (a drop-shadow halo; default off).
   - **label styling:** `font:georgia|arial|courier|verdana|palatino|trebuchet` (default `georgia`),

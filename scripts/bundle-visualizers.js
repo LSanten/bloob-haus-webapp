@@ -39,8 +39,13 @@ mkdirSync(CSS_OUT_DIR, { recursive: true });
 mkdirSync(dirname(DATA_OUT), { recursive: true });
 
 // Auto-discover visualizer folders
+// An underscore prefix marks a folder that is NOT a shape — `_utils/` holds pure helpers
+// shared by several shapes (see docs/architecture/visualizers.md → "Shared helpers").
+// Without this filter it was enumerated as a visualizer and landed in visualizers.json as a
+// manifest-less entry, which that doc defines as "always loaded" — a phantom shape that also
+// skews audit-visualizer-detection.js. Mirrors the vault's `_bloob-*` system-file convention.
 const visualizerDirs = readdirSync(VISUALIZERS_DIR, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
+  .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
   .map((d) => d.name);
 
 console.log(

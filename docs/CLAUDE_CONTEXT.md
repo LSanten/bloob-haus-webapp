@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-08-15
+**Last Updated:** 2026-08-16
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -104,7 +104,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Per-file `exclude_files` list in site YAML config
 - Multi-site build isolation (src/ cleaned between builds, repo-switch detection)
 - Reserved directory filtering (media, assets, etc. excluded from section nav)
-- Test suite: 921 tests across 51 files (Vitest), co-located visualizer tests
+- Test suite: 924 tests across 52 files (Vitest), co-located visualizer tests
 - Validation report with `--strict` flag for CI (fails build on broken links)
 
 **Build pipeline:**

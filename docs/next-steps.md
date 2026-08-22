@@ -9,7 +9,7 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-08-16 (S71)
+**Last updated:** 2026-08-22 (S71)
 
 ---
 
@@ -64,6 +64,18 @@ Two things it left open:
 - (Session 56) Cross-origin embed auto-height + `font` param.
 
 ## Not started / still open
+
+- 🚧 **The Letter — decision inventory, NOTHING DECIDED YET.**
+  [`docs/superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md`](superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md)
+  A thinking document, not a spec: **56 items · 24 carry a suggested direction · 0 actually decided.**
+  Four groups — the world Whitney draws (`W`), the flows a person moves through (`F`), the technical
+  spine (`S`), and what stays open on purpose (`Q`). Nothing is built: no `letter` shape exists, and
+  none of it is on the roadmap. **Listed here so it's findable, not because it's active.**
+  Two items connect to work already in this file: `S-07` (engine extraction / container shapes) is the
+  same thing as the composite-shapes item above, and `S-04` (does the recipient need an account?) is the
+  fork that decides how much of the Phase-3 backend the letter actually needs.
+  *Suggested entry point:* pick `Q-01` (who gets the first letter), lock `W-03` + `W-10`, and tear a grey
+  rectangle on a phone before anyone draws anything.
 
 - **Retrofit remaining content-generating shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview`, `circular-nav`, `fridge-magnets`, `tags`, `graph` build markup in `browser.js`, so crawlers see nothing and the future playground can't render them. Convert each when next touched; don't retrofit speculatively.
 - **#41 reverse direction unverified** — whether `folder-preview` depends on anything in `collection.css`. AE is the likeliest site to expose it (uses both shapes); extend `tests/css-independence.test.js` when folder-preview is retrofitted.

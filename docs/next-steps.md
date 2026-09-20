@@ -15,6 +15,16 @@ long arc.
 
 ## Immediate Next Steps
 
+**A visualizer inventory table (ontology / shapes).** 25 visualizers exist in `lib/visualizers/` and
+nothing lists them with their *type*. Leon, 2026-09-20: the docs "should probably start to make a
+list of all visualizers and their types some time soon (I guess a table)." One table, in
+`shapes.md` (mechanism) and referenced from `ontology.md` (concept), with at minimum: name, **leaf
+or container**, scope it works at (inline `:::` / file / both), and whether it has a builder face.
+The value is not the list — it is that filling in the "container" column will show, concretely, how
+much of the unbuilt heart is still unbuilt. Current best guess: `garden`, `collection`,
+`folder-preview` and `fridge-magnets` are the only ones near container behaviour.
+
+
 **`.md` page templates — pattern established 2026-07-28, tags + folder-index migrated.** Builder-owned page templates are `.md` files that compose shapes, overridden per theme by basename (`pages/`) or filename (`templates/`). See DECISIONS 2026-07-28. Remaining:
 
 1. **Folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated. No action unless that changes.

@@ -141,6 +141,40 @@ Nothing is ever wrong; things are only more or less defined. This is what "lay t
 
 ---
 
+## Flows and stocks — the delivery layer (2026-09-20)
+
+The post office work (`bloob-haus-cloud`, sealed letters) surfaced the piece this ontology never
+had: **how things arrive.** Leon's framing, arrived at after returning to a "chat interface" idea for
+the tenth time: *a shape is a unit of communication, delivered differently depending on who receives
+it — one person, a few, a room, or the whole internet.*
+
+That reframe is true and it does not replace the ontology; it supplies its transport. Two kinds of
+thing, and conflating them is the trap (the same trap as leaf vs. container):
+
+- **Flows** — a letter, a forward, a song dropped into a room. Immutable, from someone, to someone or
+  somewhere, delivered once, in a sealed envelope. The unit of communication.
+- **Stocks** — a room, a garden, the haus. Mutable, inhabited, tended for years. Where flows land.
+
+A room *receives* a flow and does something with it — that is the membrane / metabolism, seen from
+the outside. "When is a communication accepted or rejected?" is answered here as before: shapes do
+not reject, they translate.
+
+**Bloob Haus is a postal system for places, not a chat.** Chat is placeless (Signal stores no
+history, hides the envelope, renders previews on the sender's phone); Bloob Haus is place-based —
+"placement is the new backlink" — so it keeps history, shows the envelope, and lets the destination
+have a nature. The chat insight gave the delivery layer, not a new identity. Mechanism (envelopes,
+doors, rings, keys) lives in `bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`.
+
+Two vocabulary consequences worth keeping:
+- **Room vs. shelf.** A folder with an `_index.md` is a room: it *holds*, and its index page is where
+  you write between the objects. A file of `[[links]]` is a shelf (the `collection` shape): it
+  *points*. Ask "if I delete this, do the things inside disappear?" — room yes, shelf no.
+- **Three separate permissions** on a place: *enter* a room, *see* an object (its closed state, placed
+  where you can enter), *open* an object. A locked chest in a room you can enter is a valid, useful
+  state — the closed state doing its job.
+
+---
+
 ## Configuration and content are one surface
 
 Most systems draw a hard line: you are either writing content or configuring a component. The `:::settings` block dissolves that line. You author in one continuous surface, and some of what you write is configuration — *how a thing is represented and how it relates*, the knobs on representation and relation. (Your own gloss — "administration of the relational actions of a digital object" — is correct; trust it.)

@@ -151,6 +151,25 @@ JS, `customCSS` can be built dynamically from the page's theme tokens
 (`getComputedStyle(document.documentElement).getPropertyValue('--accent-color')`, etc.) so the
 widget matches whatever theme/page it renders on. Selectors come from FastComments' docs.
 
+## Addresses vs. doors (settled 2026-09-18)
+
+This contract defines **addresses**: where a thing lives — `⟨haus⟩.bloob.haus/⟨folders⟩/⟨file⟩`.
+A public thing's address *is* its share URL. The cloud adds a second kind of URL, a **door**: a
+token link such as `post-office.bloob.haus/mail/⟨id⟩#⟨key⟩` that opens one item without saying
+where it lives. Three rules keep the two from tangling:
+
+- **A door never reveals an address** (the Google-Drive rule): a letter shared out of a locker
+  does not expose the locker. An item may have many doors; a `share_links` row is a door.
+- **The shape never appears in a URL.** URLs carry names (folders, files, ids); the shape lives in
+  the file's frontmatter. `/mail/` and `/lockers/` are reserved *folder names* in the post-office
+  haus that happen to say what they hold — naming, not a type system. A file named `insight123`
+  may be a `marble`; sharing it shares its path.
+- **Addressing is orthogonal to access.** Subdomain vs. path says *where*; capability (token),
+  identity (sign-in), or password says *who may open*. A private thing on a public haus is a
+  readable address plus a door (`leons.bloob.haus/marbles/secret-article-1` + sign-in), or an
+  unguessable address that *is* the secret. Both are valid; the mechanism lives in
+  `bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`.
+
 ## Deferred / related (not in this contract yet)
 
 - **bloob↔bloob cross-site linking** — a standard for linking between Bloob sites by ID.

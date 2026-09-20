@@ -180,6 +180,33 @@ Open authoring patterns:
 
 The future Obsidian plugin may provide an "extract" gesture — possibly "give it a life of its own" — that promotes a `:::` block to its own `.md` file and replaces the original with a wikilink. The shape is the same thing at both scopes; scope is just where it lives.
 
+## Sealing — the outside and the inside (decided 2026-09-18)
+
+A file has an **outside** (its frontmatter — the *envelope*) and an **inside** (its body). Private
+things in the cloud are stored **sealed**: the body is encrypted, the envelope stays plaintext. A
+sealed file is still a markdown file — same frontmatter, ciphertext where the prose was. The full
+mechanism (doors, keys, escrow) is a cloud concern and lives in
+`bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`. What belongs to the *shape* contract
+is one rule and one function:
+
+- **Sealable is a capability, not a permission.** A shape can be sealed only if it can draw its
+  closed state from the envelope alone. The server draws closed states (previews, `og:image`, inbox
+  rows, a locker's spine) with no key and no body. A shape whose closed state needs the body
+  (garden's canvas flatten) is not sealable until it attaches an envelope-only closed state at seal
+  time. Sealing is decided per **file** (a public page is never sealed; a letter always is); the
+  shape only says whether it *can* be.
+- **`renderClosed(envelope, state) → HTML string`** — pure, server-side, the closed-state face.
+  `state` carries door facts such as `opened_at` so an opened envelope can look opened. This is the
+  home open question #5 was waiting for; the `letter` shape is the first to fill it.
+- **What goes on the envelope is authored as outside.** A sender chooses what the world may see
+  (`to`, `from`, `date`, a subject). Nothing is derived from the inside for display — filenames,
+  previews, and search over sealed files use the envelope only.
+
+Consequence for the two rendering hosts: the site builder renders public files, open state, at
+build time. The cloud app renders sealed files' *closed* state on the server and their *open* state
+in the browser after unsealing — through the same pure renderer (see `visualizers.md` → "three hosts,
+one renderer").
+
 ## What a complete shape carries
 
 A shape has **one core** (the saved data) and up to two faces over it: a **renderer** (read) and an
@@ -597,6 +624,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — | — |
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
+| `letter` | leaf, sealable | Not yet built | — | First shape with a real closed state (the envelope) and the first sealable one. The post office (`bloob-haus-cloud`) renders it in the browser today via a provisional `note` component; the real shape is written once, here, to the Pure-Renderer Standard, and both hosts draw it. See "Sealing" above. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — | — |
@@ -703,7 +731,7 @@ resolves open question #3 below. It makes shapes human-consistent, AI-authorable
 
 ## Open architectural questions (living section — refine as we learn)
 
-These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-06-05.
+These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-09-18.
 
 ### 1. Chrome — what can a shape declare about its frame?
 
@@ -795,6 +823,31 @@ The conceptual architecture says every shape has two states: open (the full page
 **Open question:** should closed-state be part of the shape contract now (so shape creators think about it from the start), or deferred until wikilink embedding is built properly? 
 
 **Tentative position:** add a `closed-state visual` section to `schema.md` template now (even if it just says "TBD — uses default wikilink pill"), so the question doesn't get forgotten. Don't implement any renderer yet.
+
+**Update 2026-09-18:** the letter forces this. Sealed files (see "Sealing" above) can only show their
+closed state, and the server must draw it with no body — so `renderClosed(envelope, state)` becomes a
+contract function, pure like `renderer.js`, and the first implementation is the letter's envelope.
+The `schema.md` section is now "closed state: what the envelope carries and how it is drawn", not
+TBD. The wikilink-pill default stays for shapes that haven't filled it.
+
+---
+
+### 8. What markdown a shape lets through — and refuses
+
+The site pipeline runs one markdown-it configuration (task lists, footnotes, attrs, containers) on
+every page; a shape's `parser.js` only parses the shape's *own* block syntax. Nothing declares what
+general markdown a shape supports, and nothing declares what it **refuses**.
+
+**The gap (surfaced by the letter, 2026-09-18):** the letter accepts all general markdown, but for
+privacy it must *refuse* raw HTML and remote images (a remote image is a read receipt). Those
+refusals are the letter's real settings and have no machine-readable home. Today they live in code
+in the cloud app (`note/render.ts`), and the post office's markdown-it lacks the site's plugins — a
+letter with `- [ ]` or a footnote renders differently in the two hosts.
+
+**Tentative position:** one shared markdown-it configuration is the baseline every shape gets; a
+shape declares deviations in `manifest.json` (a `markdown:` block — `html: false`,
+`images: alt-only`, …) and explains them in `schema.md`. Write it when the letter shape is built;
+record the derivation in `shape-authoring-log.md`.
 
 ---
 

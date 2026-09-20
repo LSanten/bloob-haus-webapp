@@ -21,6 +21,17 @@
 > getting decided, mark them inline and update the count above. When enough of `W` and `S` are
 > settled, it graduates into a real plan under `docs/implementation-plans/` and this banner goes.
 
+> **Update 2026-09-20 — the Spine is decided; the World and most Flows are not.** The
+> Briefgeheimnis design conversation in `bloob-haus-cloud` (see
+> `bloob-haus-cloud/docs/architecture/letters-and-envelopes.md` and its `DECISIONS.md` 2026-09-18/20)
+> settled **S-01, S-02, S-04, S-05, S-06, S-10** and **Q-05** — marked inline below as *Decided →*.
+> It also decided things this inventory didn't list: the letter body is *sealed* (encrypted) with the
+> envelope plaintext; links carry the key as `#key-…`; recipients keep letters via an escrowed
+> account. **One item needs a deliberate call from Leon before M3 ships: F-18 / Q-02 (read
+> receipts).** The September design records `opened` as a fact so the *recipient's* envelope can be
+> torn (W-11); whether the *sender* ever sees it is the values decision this doc asked to make once.
+> Everything in W and the rest of F remains open, as before.
+
 **2026-08-16.** Everything that needs deciding before the first envelope gets torn open.
 Four groups: the world Whitney draws (**W**), the flows a person moves through (**F**), the
 technical spine (**S**), and what stays open on purpose (**Q**). Each item has an ID so we can
@@ -214,9 +225,17 @@ stops the backend from being speculative.*
 Frontmatter: `bloob-shape: letter`, `from`, `to`, `sent_at`, `opened_at`, `stamp`, `state`. Body is
 the letter. This file *is* the letter — the export, the archive, and the reason a modular blocky
 world built here is actually forkable. Every other metaverse's save file is a proprietary blob.
+*Decided 2026-09-20 →* exactly this, with one refinement: the frontmatter is the **envelope**
+(plaintext: `to`, `from`, `date`, `stamp`, `bloob-shape`, a `sealed:` block) and the body is
+**sealed** (ciphertext). `opened_at` / `state` are **postmarks** stamped onto the envelope as
+served or exported, never written into the stored file — so the envelope's cryptographic binding
+holds. Still the same markdown file; still forkable.
 
 **S-02 — Where letters are stored.** Scaleway Object Storage, EU. Bucket layout — per user, per
 haus, per conversation?
+*Decided →* one bucket (`bloob-vaults`, fr-par), every file under its owner's prefix
+(`{user}/{room}/file`); the post office is a system haus; a locker is a folder. The vault *is* the
+haus.
 
 **S-03 — The three endpoints.** `whoami` · `mailbox` · `deliver`. Confirm nothing else is needed for
 v1 — and that these three are the same three every later feature wants.
@@ -229,12 +248,17 @@ v1 — and that these three are the same three every later feature wants.
 → *Rec:* build the account path — it's the bottleneck you named, and it only gets good by being
 lived with. But keep the unguessable-URL path permanently, as the way you write to someone who
 isn't here yet. **Both, not either** — the link is how the product spreads.
+*Decided →* both. The link is a **door** whose key rides in the fragment (`…#key-…`, never seen by
+the server); signing in adds an **account door** (a lockbox on the recipient's ring) so the letter is
+theirs on every device — escrowed by default so nothing is ever lost.
 
 **S-05 — Jurisdiction: what runs where.**
 Cloudflare is a US company, so the CLOUD Act reaches content it processes regardless of where the
 bytes sit. Scaleway is French and doesn't have that exposure.
 → *Your call was right:* anything touching private letter content runs on Scaleway. Cloudflare keeps
 serving public static hauses only. This moves the preview renderer off the Worker — see S-06.
+*Decided →* confirmed, and stronger: private content is sealed, so even Scaleway holds only
+ciphertext for link-only letters; the post-office host is Cloudflare DNS-only (grey).
 
 **S-06 — Link preview images: where they render, and what's in them.**
 *Where:* a small Scaleway container that scales to zero. Satori (HTML+CSS → PNG, no browser, fast
@@ -251,6 +275,9 @@ Your own architecture already answered this — a closed state announces the nee
 
 *One correction to plan around:* most platforms flatten or card-crop these images, so transparency
 is unreliable. Design each preview as a complete little scene with its own background, not a cutout.
+*Decided →* the preview IS the closed state, drawn **server-side from the envelope alone** by a
+pure `renderClosed(envelope, state)` — the same function draws the gate page, inbox rows, and the
+`og:image` (Satori). Structurally guaranteed never to contain the message: the server has no key.
 
 **S-07 — Engine extraction.**
 Which shapes must render outside Eleventy, and finishing container shapes so a shape can declare
@@ -270,6 +297,10 @@ notification on a home-screen icon is the moment this stops being a website.
 Cloudflare Pages keeps serving public hauses; Scaleway serves everything private. Where does a
 deliberately *public* letter live, and does that boundary match the existing `visibility: unlisted`
 mechanism?
+*Decided →* **public is plaintext and built; private is sealed and app-served** — everything private
+by default, publishing is a choice. Publishing unseals (keys and doors kept, so links outlive
+visibility changes); the Worker's visibility map is the switch. A public letter is just a public
+page.
 
 ---
 
@@ -293,6 +324,9 @@ ever have.
 **Q-05 — Can a letter contain a marble?** A photo, a page from your haus, a whole garden. The moment
 the letter stops being a greeting card and becomes part of the system — and the first real test of a
 container holding another shape.
+*Decided →* yes: **a door opens a thing and what it carries.** The letter's share ring holds the
+keys of the photos and notes it embeds; the recipient's browser fetches them through the same door.
+The send screen discloses what's carried. (Sealed *gardens* wait on a cover drawable without the body.)
 
 **Q-06 — Photoshop or Illustrator for the moving-part objects?** Photoshop works if layers are
 exported separately (W-10). Illustrator is only required where parts need runtime recolouring or

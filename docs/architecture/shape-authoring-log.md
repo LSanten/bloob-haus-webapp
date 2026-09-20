@@ -17,6 +17,90 @@
 
 ---
 
+## 2026-09-18 — Letter: sealing forces the closed state, and two axes got untangled
+
+Source: a design conversation (Leon + Claude) in `bloob-haus-cloud` about Briefgeheimnis for the post
+office, before the `letter` shape exists. Outcome doc: `bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`;
+contract changes: `shapes.md` → "Sealing", open questions #5 (updated) and #8 (new).
+
+**Addendum 2026-09-20** (same conversation, continued; independent review folded in):
+- **New hard rule for the marketplace: third-party shape code never loads on a sealed page.** Any
+  script on a page can read the key that unseals it, so sealed pages are CSP-locked to first-party
+  code. This is stricter than the existing "user-authored code runs client-side only" line — for
+  sealed content, *approved* is not enough either; only shapes we ship run there. Consequence: a
+  marketplace shape that wants to render private things must be adopted into the built-in set.
+- **A shape's closed state must be drawable from the envelope alone to be sealable** (already
+  recorded) — and the *carried set* matters too: a shape that embeds other files (images, notes)
+  must expose what it embeds, because sharing carries them. For markdown shapes that is the
+  `![[…]]`/`[[…]]` references; a shape with its own reference syntax (garden's `page:` blocks) must
+  declare how to enumerate them. Contract gap; record when the second such shape appears.
+- **Flows vs. stocks** went into `ontology.md` as the delivery-layer framing ("a postal system for
+  places, not a chat"), with room-vs-shelf and the three permissions.
+
+### Contract gaps found
+
+- **No shape could say whether its closed state needs its body.** Once a file's inside is encrypted,
+  the server can only draw the *outside*. Garden's closed state is a canvas flatten of the body; a
+  letter's is `to`/`from`/`date`. That difference had no name. → "sealable" = *can draw its closed
+  state from the envelope alone*, and `renderClosed(envelope, state)` joins the contract as a pure
+  server-side function. Open question #5 gets its answer from the letter, not from wikilink embedding.
+- **No home for what general markdown a shape refuses.** The letter must refuse raw HTML and remote
+  images (a remote image is a read receipt). Today that's code in the cloud app, and the two hosts run
+  *different* markdown-it plugin sets. → open question #8 (`manifest.json` `markdown:` block; one
+  shared baseline config).
+
+### Rejected alternatives (and why — do not re-propose)
+
+- **Rendering the closed state in the sender's browser at send time** (canvas → PNG, the "free
+  closed-state" trick noted 2026-07-13). Rejected for the letter: the server needs to draw the envelope
+  in many places (`og:image`, inbox rows, locker spines, the gate page) and with door state (opened /
+  sealed), so it must be a server-side pure function. The browser trick remains the way a
+  *body-dependent* closed state (garden) can be attached at seal time — a fallback, not the rule.
+- **Putting the shape name in the URL** (`…/letter/⟨token⟩`). Rejected: a URL is an address (haus +
+  folders + file) or a door (token); the shape lives in the file. `/mail/` is a reserved folder whose
+  *name* happens to say what it holds — naming, not a type system. See `urls-and-ids.md` → "Addresses
+  vs. doors".
+- **A second, cloud-only implementation of `note`/`letter` as React components.** The cloud's
+  `src/shapes/note/` (30 lines, bare markdown-it) is provisional. The real shape is written once under
+  the Pure-Renderer Standard; the cloud app is the standard's *third host* ("standalone playground",
+  `visualizers.md`), which the standard reserved in July and the post office hadn't taken.
+
+### Terminology correction (worth keeping)
+
+Two axes were being collapsed into one sentence ("a container shows things as they are, a leaf
+reshapes them"):
+
+1. **Leaf vs. container** — does it *hold other shapes*? (`ontology.md`)
+2. **Preserve vs. override** — what a container *does* to what it holds. (`shapes.md` → Container-contents policy)
+
+"Shows things as they are" is a *preserve container*; "reshapes them" is an *override container* (or
+metabolism). A leaf holds no shapes, so it reshapes nothing — it transforms a span of *content* into a
+visual. Placed: letter = leaf; locker = preserve container; mail room = preserve container; the
+counter = an app-like leaf (like `search`). Also settled in passing: **a folder with an `_index.md`
+declaring a shape is a container instance** (a locker already is one); a file of `[[links]]` is a
+*collection* — a view, not a place. **Name ≠ shape**: `mail/` should carry `_index.md` with
+`bloob-shape: mail-room` so a link to the folder has a closed state, exactly as lockers do.
+
+### Load-bearing vs. incidental
+
+- **Load-bearing:** the envelope is authored *as outside*. Nothing shown publicly may be derived from
+  the body — not filenames, not previews, not search. This is what makes "the platform can't see the
+  letter" true wherever it's claimed.
+- **Load-bearing:** one pure renderer per shape, drawn by both hosts. The cloud app hosts shapes; it
+  does not own them.
+- **Incidental:** which fields go on a letter's envelope beyond `to`/`from`/`date`. Bikeshed freely.
+
+### Forward hinges
+
+- **Sealing is per file, sealable per shape.** The holistic rule for *which* private things get
+  sealed when is deliberately unwritten; it will be derived from the letter (V1 seals letters and
+  lockers only).
+- **Escrowed account keys by default; user-held lock-out later.** Chosen because Google-only sign-in
+  yields no user-held secret and losing letters is the worse failure. Every later door (password,
+  passkey, email) is one more lockbox — no re-sealing. Detail in the cloud doc.
+
+---
+
 ## 2026-07-17 — Garden: writing the contract forced three divergences (and settled a fourth call)
 
 Source: garden Task 1 (the `schema.md` contract, written 2026-07-15) and its reconciliation back into

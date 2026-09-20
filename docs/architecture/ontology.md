@@ -217,6 +217,56 @@ The container for all of a user's marbles, organized into rooms (folders). **Dec
 
 ---
 
+## What a file can prove — trust, provenance, and the open surface (2026-09-20)
+
+Leon's rule, arrived at while building the sealed letter: *"the markdown file content is the THING
+that is ONLY needed to visualize the object to the user — the way a real object is its own truth. I
+don't need to ask someone else if the letter is open, I can see it."*
+
+This is the ontology's answer to **where an object's truth lives**. A bloob is not a database row
+that a template dresses up; it is a file, and the file carries its own state. The database remains
+the *authority* that produces those values — but it must never be a second thing a renderer has to
+consult. Wherever both could speak, one builder produces both, or they drift: a letter that reads
+"opened" on the page and "sealed" in the file has two truths, which is one too many.
+
+Taking that seriously forces a distinction the system had not needed until now: **not everything
+written on an object is true in the same way.**
+
+**Two grades of trust, in the same YAML.**
+
+- **Mathematics.** A letter's `to`, `from`, `date_created` — anything its author sealed — are bound
+  into its encryption. The recipient's own browser re-checks them every single time it opens the
+  letter, and a tampered field makes it refuse to open. Nobody, the haus included, can alter them.
+  **This survives leaving the haus.**
+- **Provenance.** The postmark, and the record of whether a letter was fetched and opened, are true
+  because the haus watched it happen and keeps the record. **This does not survive leaving the
+  haus.**
+
+Both are honest; they promise different things. Eventually this should be visible to people —
+*"we can prove this"* versus *"we are telling you this."*
+
+**Host-attested state is a real category.** `opened` is the first of a family: visitor counts,
+last-touched, how many people have entered a room. They are facts about an object's *life in the
+haus*, not properties of the file. The consequence is sharp — on a file that has left, they are
+claims, not facts, and must be re-derived rather than believed. (The post office already refuses a
+letter that arrives carrying someone else's postmark.)
+
+**So: three zones of writing.** What the author sealed (immutable, mathematically held), what the
+haus stamps (its own marks), and an **open surface** reserved for whatever we invent later —
+stickers, transit marks, a friend's scrawl on the envelope. Reserving that surface *before the first
+real object exists* is the difference between a system that can grow and one that has locked itself
+in: a name an author has already used can never later become a name the haus writes.
+
+**Portability follows leaf and container.** A leaf shape is one file and can be carried as one —
+that is what makes "the file is the object" literal. A container is a folder; carrying it means a
+zip. Not a failure of the rule but the leaf/container split seen from the outside: you put a letter
+in your pocket, and you carry a locker by carrying the box.
+
+Mechanism lives in `bloob-haus-cloud`: `docs/architecture/letters-and-envelopes.md` and that repo's
+`docs/DECISIONS.md` (2026-09-20, "The file is the object").
+
+---
+
 ## Design ethic — and the rule
 
 > *"Materials tell us things if we are in contact with them. One's intention is always improved by working with materials."* — Chris Rose (via the email questions, 2024)

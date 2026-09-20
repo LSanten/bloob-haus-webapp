@@ -317,7 +317,7 @@ For the parser/renderer to be shareable across web, Obsidian plugin, and webapp 
 
 1. **`scripts/utils/inject-container-raw.js`** — called from `preprocess-content.js` after link resolution. Scans processed markdown line-by-line for `:::` blocks, extracts the inner content, base64-encodes it, and injects `_raw="<base64>"` onto the `:::` opener info string.
 
-2. **`eleventy.config.js` `markdownItContainer` renderer** — parses the info string (including `_raw`), deletes it from `data-vis-settings`, and emits it as a separate `data-vis-raw` attribute on the `<section>`.
+2. **`scripts/utils/section-container.js`** (called by the `markdownItContainer` renderer in `eleventy.config.js`) — parses the info string (including `_raw`), deletes it from `data-vis-settings`, and emits it as a separate `data-vis-raw` attribute on the `<section>`. Escapes the class; keeps settings as single-quoted JSON with `' < > &` as `\u` escapes so the consumers' regex + `JSON.parse` keep working; drops (with a warning) a `_raw` that is not base64.
 
 3. **`lib/visualizers/[name]/index.js`** — reads `data-vis-raw`, base64-decodes to raw markdown, passes to `parser.js`.
 

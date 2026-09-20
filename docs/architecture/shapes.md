@@ -195,9 +195,15 @@ is one rule and one function:
   (garden's canvas flatten) is not sealable until it attaches an envelope-only closed state at seal
   time. Sealing is decided per **file** (a public page is never sealed; a letter always is); the
   shape only says whether it *can* be.
-- **`renderClosed(envelope, state) → HTML string`** — pure, server-side, the closed-state face.
-  `state` carries door facts such as `opened_at` so an opened envelope can look opened. This is the
-  home open question #5 was waiting for; the `letter` shape is the first to fill it.
+- **`renderClosed(envelope) → HTML string`** — pure, the closed-state face. **One input: the
+  envelope.** (Corrected 2026-09-20; it previously read `renderClosed(envelope, state)` with a second
+  argument carrying door facts, which contradicted this section's own rule that a sealed shape draws
+  its closed state *from the envelope alone*.) Door facts reach it **as envelope keys** — the post
+  office stamps `date_postmarked`, `fetched` and `opened` onto the served copy before anything
+  renders, so an opened envelope looks opened without a second channel of truth. One input means the
+  page and the downloaded `.md` cannot disagree, and it is the stricter reading of
+  `visualizers.md`'s pure-renderer standard ("three hosts... differ only in where the data comes
+  from"). The `letter` shape is the first to fill this.
 - **What goes on the envelope is authored as outside.** A sender chooses what the world may see
   (`to`, `from`, `date`, a subject). Nothing is derived from the inside for display — filenames,
   previews, and search over sealed files use the envelope only.
@@ -222,12 +228,53 @@ lib/visualizers/[name]/
   layout.njk          file-scope shapes only — default page layout template
   assets/             when the shape ships its own static files (icons, sprites) — copied into build
                       output like JS/CSS; NOT served from a central CDN (keeps sites self-contained)
-  builder/            when the shape has a GUI author (a "shape builder") — a single self-contained,
-                      file://-openable index.html that reads AND writes this shape's core format
+  builder/            when the shape has a GUI author (a "shape builder") — reads AND writes this
+                      shape's core format. Preferably a single self-contained, file://-openable
+                      index.html, because that is the easiest thing for someone else to fork. But
+                      see "where portability actually matters" below: a framework build (the cloud
+                      app's letter builder is React) is acceptable where the host already has one.
+                      What must stay portable is the RENDERER, not the GUI.
 ```
 
 First shapes to exercise the new folders: `garden` (both `assets/` and `builder/`), `scene-nav`
 (`builder/`, once migrated out of `lib/magic-machines/`).
+
+### Where portability actually matters (2026-09-20)
+
+The "someone builds an HTML/JS/CSS visualization and it becomes a bloob shape fast" story depends on
+the **renderer** being portable — pure, framework-free, data in and an HTML string out, runnable in
+Node, in a browser, or in a standalone playground. That is what `visualizers.md`'s three-hosts
+standard buys, and it is where the requirement belongs.
+
+A shape's **builder** (its authoring GUI) is a different job with different pressures: it must be
+genuinely good to use, on a phone and on a computer. A self-contained `index.html` remains the ideal
+because it forks easily, but a framework is acceptable where the host already carries one — the
+cloud app's letter builder (`app/src/shapes/letter/EnvelopeFields.tsx`) is React, sitting beside a
+renderer (`closed.ts`) that is pure and has no framework at all. Leon, 2026-09-20: *"react is JS so
+it's part of html/JS — we just need to have a good interface, and it needs to work on phone and on
+computer."*
+
+The test to apply: **could a third party render this shape without our stack?** If yes, the contract
+is satisfied, whatever the editor is written in.
+
+### Open question — sealing and the two site-builder flows (raised 2026-09-20, undecided)
+
+Content reaches a haus two ways, and they do not have the same provenance:
+
+1. **Pushed from the author's own GitHub/Obsidian** — the author holds the source and may overwrite
+   it with the next push.
+2. **Authored in bloob haus cloud** — the cloud holds it.
+
+Sealing flow 1 is unresolved: a seal freezes a specific set of bytes, and a repo push can replace the
+very file a sealed link points at. Leon: *"I could always package it as a full letter and encrypt the
+body, but then that's like sending an actual file rather than linking to content from my github."*
+
+**The pattern the ontology already suggests** (`ontology.md` → "Flows and stocks"): **you seal flows,
+not stocks.** A letter is a flow — immutable, from someone, delivered once — and sealing freezes a
+moment, which is exactly its nature. A repo-backed page is a stock — mutable, tended for years — and
+freezing it fights what it is. So a stock can be *private* (access-controlled) but is not a candidate
+for *sealing*; sealing something from a repo means packaging a copy as a flow, which is Leon's own
+instinct above. Not a decision yet — recorded so the next person does not re-derive it.
 
 ## Conversion checklist per shape type
 

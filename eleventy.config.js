@@ -162,7 +162,9 @@ export default async function (eleventyConfig) {
     // {.class} {#id} {attr=value} attribute syntax on links, images, headings
     // e.g. [CONTACT US](#footer){.button} → <a href="#footer" class="button">
     // Allow-listed: without this, `{onclick=…}` or `{href=javascript:…}` in
-    // authored markdown would be emitted verbatim.
+    // authored markdown would be emitted verbatim. Defence in depth only —
+    // this markdown-it runs with html:true, so authored raw HTML is trusted;
+    // hardening for untrusted markdown starts with html:false, not here.
     mdLib.use(markdownItAttrs, {
       allowedAttributes: [
         "id", "class", "title", "target", "rel", "width", "height", "loading",

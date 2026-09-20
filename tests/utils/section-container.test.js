@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderSectionOpen, parseSectionInfo, jsonAttr } from "../../scripts/utils/section-container.js";
+import { injectContainerRaw } from "../../scripts/utils/inject-container-raw.js";
 
 // The exact regex every build-time visualizer uses to read its settings back.
 const readSettings = (html) => {
@@ -62,5 +63,39 @@ describe("section container — opening tag", () => {
     const s = { a: "it's <b> & c" };
     expect(JSON.parse(jsonAttr(s))).toEqual(s);
     expect(jsonAttr(s)).not.toMatch(/['<>&]/);
+  });
+
+  it("an empty setting value survives as an empty string", () => {
+    expect(readSettings(renderSectionOpen("services limit="))).toEqual({ limit: "" });
+    expect(readSettings(renderSectionOpen('services limit=""'))).toEqual({ limit: "" });
+  });
+
+  it("a > in settings does not truncate the consumers' <section …([^>]*)> match", () => {
+    const html = renderSectionOpen('image-grid title="a > b"');
+    const m = html.match(/<section class="image-grid"([^>]*)>/);
+    expect(m).not.toBeNull();
+    expect(readSettings(m[1])).toEqual({ title: "a > b" });
+  });
+
+  it("a rejected _raw warns instead of failing silently", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderSectionOpen("scene-nav _raw=not+base64!");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("dropped non-base64 _raw"));
+    warn.mockRestore();
+  });
+
+  // Contract between inject-container-raw.js (the writer) and this module (the
+  // reader): whatever the injector emits must pass the base64 check and decode
+  // back to the original inner markdown, including quotes, pipes and unicode.
+  it("round-trips real injectContainerRaw output", () => {
+    const inner = `- it's "quoted" | über\n- second`;
+    const md = `::: scene-nav title="Tour"\n${inner}\n:::\n`;
+    const injected = injectContainerRaw(md);
+    const opener = injected.split("\n")[0].replace(/^:::\s*/, "");
+    const html = renderSectionOpen(opener);
+    const raw = html.match(/data-vis-raw="([^"]+)"/);
+    expect(raw).not.toBeNull();
+    expect(Buffer.from(raw[1], "base64").toString("utf-8")).toBe(inner);
+    expect(readSettings(html)).toEqual({ title: "Tour" });
   });
 });

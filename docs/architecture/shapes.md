@@ -2,6 +2,19 @@
 
 Shapes are the unified concept for everything that renders content visually: `bloob-type`, `visualizer`, and `:::` block are all the same thing at different scopes. See `bloobhaus-notes/.../2026-05-31-BLOOB-HAUS-SHAPES-ARCHITECTURE.md` for the full conceptual model.
 
+> **These three documents are a living triad, still growing.** `ontology.md` (what a shape *is*),
+> `shapes.md` (the contract), `visualizers.md` (the renderer standard) — read together, never one
+> alone. Most of what is written here has serious empirical roots, but **they can and do diverge
+> from each other and from the code**, and not every line should be trusted as settled. They are
+> ground for philosophical *and* practical conversation.
+>
+> **Standing invitation, to a person or an AI reading this:** if you notice a contradiction, or a
+> larger pattern nobody has named yet, **say so and propose a change to these docs in the same
+> session** — do not quietly route around it. Precedent, 2026-09-20: this document specified
+> `renderClosed(envelope, state)` while its own sealing rule said a closed state must be drawn
+> "from the envelope alone". The code had followed the rule; the signature was the slip; the doc
+> was corrected. That is the expected motion, in either direction.
+
 ## Two scopes
 
 - **Inline scope** — authored as a `:::` block inside a page body. Rendered by the visualizer's `transform()` + optional `browser.js`. No layout needed.

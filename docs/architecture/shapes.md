@@ -684,7 +684,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — | — |
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
-| `letter` | leaf, sealable | Not yet built | — | First shape with a real closed state (the envelope) and the first sealable one. The post office (`bloob-haus-cloud`) renders it in the browser today via a provisional `note` component; the real shape is written once, here, to the Pure-Renderer Standard, and both hosts draw it. See "Sealing" above. |
+| `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework — with a React builder beside it, exactly the split "Where portability actually matters" describes. **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — | — |

@@ -52,7 +52,7 @@ A `bloob-type` (old terminology for `bloob-shape`), a `visualizer`, and an inlin
 **There are two kinds of shape, and conflating them is the trap.** The one-concept story is true for *authoring* (one syntax, one mental model, one word) but the *contract* differs:
 
 - **Leaf shapes** (renderers): transform a span of content into a visual. No contents, no placement, no metabolism, no meaningful closed state. This is almost everything built so far — `latex`, `citations`, `image-grid`, `article`, `folder-preview`.
-- **Container shapes** (places): hold other shapes, have placement, metabolism, recursion, and a distinct closed state. Pond, garden, book, research-collection. **None of these exist yet.** They are the unbuilt heart of the system.
+- **Container shapes** (places): hold other shapes, have placement, metabolism, recursion, and a distinct closed state. Pond, garden, book, research-collection. **The first one exists: the locker**, live in `bloob-haus-cloud` since 2026-09-20 and, since M4b (2026-09-23), the only thing a letter ever lands in. It is a folder with an `_index.md` — a *room* by this document's own test — and it proves the cheap half of the contract: a distinct closed state (its spine, drawn from the plaintext index alone), *preserve* content policy, and **flow** placement. It deliberately has **no metabolism**, per "Metabolism — the last layer" below. The rest of the family — pond, garden, book — is still unbuilt, and so is every container in *this* repo.
 
 The practical consequence: don't write one 20-field contract that every shape must satisfy. Tier it — a minimal core every shape declares (identity, type, open-state renderer) plus an optional **container extension** (placement, metabolism, content policy, distinct closed state) that only container shapes fill in. See `shapes.md` for the field-level detail.
 
@@ -184,9 +184,39 @@ Two vocabulary consequences worth keeping:
   *points*. Ask "if I delete this, do the things inside disappear?" — room yes, shelf no.
 - **Three separate permissions** on a place: *enter* a room, *see* an object (its closed state, placed
   where you can enter), *open* an object. A locked chest in a room you can enter is a valid, useful
-  state — the closed state doing its job.
+  state — the closed state doing its job. **Expanded below.**
 
 ---
+
+
+## Enter, see, open — three permissions, not one (2026-09-23)
+
+The line above earned a section once the post office had to enforce it.
+
+**They are genuinely three, and they come apart.** You may be able to *enter* a room and not *open*
+a chest inside it. You may be able to *see* a thing's calling card and have no way in. The closed
+state is what makes the middle one possible at all: an object can announce what it is without
+surrendering what it holds, which is the whole reason closed state is "the soul of the system"
+rather than a thumbnail.
+
+**Seeing is conditioned on entering.** You may see an object's closed state *placed where you can
+enter*. That qualifier is load-bearing, and the post office got it wrong first: a visitor holding a
+bare locker link, with no key, was shown every letter's closed envelope inside — the contents of a
+room nobody had admitted them to. The fix was not to abolish the closed state but to ask which one
+is being drawn: **the locker's own spine is visible to anyone with the link; the letters inside are
+not.** A generic locker is drawn instead, identical to the one drawn for a locker that never
+existed. Hiding, here, is this rule being applied — not overridden.
+
+**What is not yet built, and should not be yet.** Per-object permission *inside* a room — a room you
+may enter, holding some things you may see but not open, and some you cannot see at all — is the
+natural next layer and the interesting one for a personal haus someone else is exploring. Leon
+re-derived it independently while specifying lockers and correctly called it overkill for now. It is
+recorded so the shape of it stays available: nothing in the current model forecloses it, because
+*see* and *open* were kept separate from the start.
+
+Mechanism (doors, keys, rings, revocation, and the rule that two equally-unentitled requests must be
+indistinguishable): `bloob-haus-cloud/docs/architecture/permissions-and-doors.md`.
+
 
 ## Configuration and content are one surface
 

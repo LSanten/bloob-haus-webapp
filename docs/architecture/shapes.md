@@ -120,6 +120,20 @@ rule, and `tests/shape-nesting.test.js` is the guard.
 the `@scope` donut, written for someone who has not used either): see
 `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision".
 
+## What a room allows
+
+A container declares which ACTIONS it permits on what it holds, the way it already declares
+whether it preserves or overrides their look. This was missing until the locker needed it
+(2026-09-24): a person's editor is the same everywhere in the haus, but the room decides what
+that editor may do inside it.
+
+- **Locker:** *add, open, fold*. **Never edit, never delete**: a letter is a flow, sealed once,
+  and a response is always a new file (which is also what makes future margin notes reliable:
+  they can anchor to text that never changes).
+- **Open question:** the same shape in a different host may allow more. A locker at home might
+  allow reordering or private annotations; the post office's does not. Decide when a home
+  locker exists.
+
 ## Width preference
 
 **A shape declares how wide it wants to be; the container and theme decide whether it gets it.**
@@ -175,6 +189,7 @@ The five systems identified so far (more may emerge as shapes are built):
 | **Regions** | Semantic zones: `region="sunny"`, `region="deep-water"`. | Human-friendly; maps to shape's character. |
 | **Coordinates** | Explicit `x/y` or `x/y/z`: `pos="120, 340"`. | Spatial canvases; precise layout; AI-friendly. |
 | **Relational** | `near="the cactus"`, `between="A and B"`. | Natural-language authoring; loosely positioned. |
+| **Sorted** | Order derived from a field, named by the container (`sort: postmark` / `date_created` / `date_updated`). No position is authored. | Containers whose contents arrive over time: the locker (its first user, 2026-09-24). |
 
 **Multiple authoring paths:** a shape can accept more than one placement system for the same authoring goal. A garden's primary system might be regions (human-friendly); it could also accept coordinates (AI-friendly) for precise override. Same shape, two valid paths.
 
@@ -685,6 +700,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
 | `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework — with a React builder beside it, exactly the split "Where portability actually matters" describes. **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
+| `locker` | container, sealable closed state | **Built — in `bloob-haus-cloud`** (M4b, M5a 2026-09-24) | the room itself (React) | First container shape. Settings in `_index.md` (`contents`, `sort`); pure helpers in `app/src/shapes/locker/`; closed state = character art, one drawing for everyone (D1). Contents from `[[links]]` (M5b) not built. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — | — |

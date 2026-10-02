@@ -232,6 +232,12 @@ is one rule and one function:
   page and the downloaded `.md` cannot disagree, and it is the stricter reading of
   `visualizers.md`'s pure-renderer standard ("three hosts... differ only in where the data comes
   from"). The `letter` shape is the first to fill this.
+- **Transitions are renderer output too** (2026-10-02, cloud backlog U17). The letter also exports
+  `renderTearing(envelope, tears)`: the frames between closed and open, pure, same single input plus
+  how far along the movement is. The **host counts the gesture** (three taps); **the renderer draws
+  every frame**, so a third host gets the same tear for free. A transition is not a state: it never
+  writes to the envelope and never says "opened". Only the host's finished gesture opens the letter,
+  and only then does the office stamp it.
 - **What goes on the envelope is authored as outside.** A sender chooses what the world may see
   (`to`, `from`, `date`, a subject). Nothing is derived from the inside for display — filenames,
   previews, and search over sealed files use the envelope only.
@@ -699,7 +705,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — | — |
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
-| `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework — with a React builder beside it, exactly the split "Where portability actually matters" describes. **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
+| `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework, plus `renderTearing(envelope, tears)` for the three-tap tear (2026-10-02) — with a React builder beside it, exactly the split "Where portability actually matters" describes. **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
 | `locker` | container, sealable closed state | **Built — in `bloob-haus-cloud`** (M4b, M5a 2026-09-24) | the room itself (React) | First container shape. Settings in `_index.md` (`contents`, `sort`); pure helpers in `app/src/shapes/locker/`; closed state = character art, one drawing for everyone (D1). Contents from `[[links]]` (M5b) not built. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
@@ -926,6 +932,21 @@ shape declares deviations in `manifest.json` (a `markdown:` block — `html: fal
 record the derivation in `shape-authoring-log.md`.
 
 ---
+
+### 9. Gestures: some actions ask for a deliberate movement (raised 2026-10-02)
+
+The first one: a letter nobody has opened is **torn open in three taps**, each tap ripping the flap
+further, instead of opened with one click. Why: the first opening stamps `opened` for everyone holding
+the link, and Leon unsealed a letter he had written for someone else by accident. The movement is the
+confirmation, and a nicer one than a yes/no dialog (inspired by Duolingo's tap-tap-tap).
+
+Leon's question: is this "action step" part of the shape contract (declared, e.g. a manifest
+`gestures: { open: tear-3 }`, maybe tuned per room), or does it live in the shape's own code?
+
+**Current position: the shape's own code.** One shape has one gesture. Don't design the contract until
+a second shape needs one; the reusable part already exists, because the frames come from the pure
+renderer (see Sealing → "Transitions are renderer output too"). Candidates that would make it two:
+breaking a wax seal, opening a locker's door, signing something.
 
 ### 6. Lineage / shape inheritance — deferred
 

@@ -81,17 +81,17 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 | Concern | Mechanism | Automatic? |
 |---------|-----------|------------|
 | Excluded from RSS | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✓ Universal |
-| `noindex` meta | `_base/partials/head.njk` checks `_bloob_unlisted` | ✓ Universal |
+| `noindex` meta | `_base/partials/robots-meta.njk` checks `_bloob_unlisted`; every theme head includes it (tested) | ✓ Universal |
 | Excluded from pagefind | Layout must check `_bloob_unlisted` and swap `data-pagefind-body` → `data-pagefind-ignore` | Per-theme obligation |
-| Excluded from sitemap | `pages/sitemap.njk` must filter `_bloob_unlisted` entries | Per-theme obligation |
+| Excluded from sitemap | `_base/pages/sitemap.njk` filters `_bloob_unlisted` entries; themes may not ship their own (tested) | ✓ Universal |
 
 **Theme implementation status:**
 | Theme | noindex | pagefind-ignore | sitemap filter |
 |-------|---------|-----------------|----------------|
 | `alter-engineers` | ✓ | ✓ | ✓ |
-| `marbles-pouch` | ✓ | ✓ | — (no sitemap) |
-| `warm-kitchen` | ✓ | ✓ | — |
-| `melt` | ✓ | ✓ | — |
+| `marbles-pouch` | ✓ | ✓ | ✓ (base) |
+| `warm-kitchen` | ✓ | ✓ | ✓ (base) |
+| `melt` | ✓ (since 2026-10-25; its head had no unlisted check before) | ✓ | ✓ (base) |
 
 > **Hosting unlisted/client-facing content at an unguessable URL** (security by obscurity, raw HTML
 > passthrough files, third-party-dependency leak vectors): see
@@ -177,7 +177,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
 | `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
-| `features.invite_search_engines` | `false` | **Opt-in.** `sitemap.xml` + `robots.txt` from `themes/_base/pages/` (all themes except alter-engineers). Unlisted pages are never listed. Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby. melt held back (2026-10-25) until its page list is reviewed: it would announce `/bios-for-whitney-and-vicki/`, public but unlinked. Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
+| `features.show_in_search` | `quiet` | How the site shows up in search engines. `yes` = `sitemap.xml` + `robots.txt` from `themes/_base/pages/` (all themes except alter-engineers). `quiet` = no sitemap; pages are found only if something links to them. `no` = keep the whole site out of search: every rendered page gets `noindex,nofollow` (`_base/partials/robots-meta.njk`, included by every theme head), and the build appends `X-Robots-Tag: noindex, nofollow` for every path to `_headers` (`scripts/utils/search-headers.js`, build-site step 7.1), which also covers what no head renders: magic machines, raw HTML, PDFs, images. Unlisted pages are never listed in any mode. A bare `yes`/`no` read as `true`/`false` by an older YAML parser counts; any other value is `quiet`. Renamed from `features.invite_search_engines` (2026-10-25, same day it shipped). Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby. melt held back (2026-10-25) until its page list is reviewed: it would announce `/bios-for-whitney-and-vicki/`, public but unlinked. Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |

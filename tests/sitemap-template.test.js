@@ -1,5 +1,6 @@
 /**
- * sitemap.xml + robots.txt — the base theme's pair, shared by every site.
+ * sitemap.xml + robots.txt + the robots meta tag: how a site shows up in search.
+ * One switch, `features.show_in_search`: yes (sitemap) | quiet (default) | no (noindex).
  *
  * A sitemap is an invitation: it hands Google every URL in it. So two things are
  * load-bearing here, not cosmetic:
@@ -8,7 +9,7 @@
  *      `_bloob_unlisted`) must never be in it. security-by-obscurity.md lists this as a
  *      per-theme obligation; living in _base makes it everyone's, once.
  *   2. no theme quietly ships its own copy, or the site's switch
- *      (`features.invite_search_engines`) stops deciding anything for that theme.
+ *      (`features.show_in_search`) stops deciding anything for that theme.
  */
 import { describe, it, expect } from "vitest";
 import nunjucks from "nunjucks";
@@ -21,8 +22,8 @@ const THEMES = path.join(__dirname, "../themes");
 const BASE_PAGES = path.join(THEMES, "_base/pages");
 
 /** Template body without its frontmatter, the way Eleventy hands it to Nunjucks. */
-function body(file) {
-  const text = fs.readFileSync(path.join(BASE_PAGES, file), "utf-8");
+function body(file, dir = BASE_PAGES) {
+  const text = fs.readFileSync(path.join(dir, file), "utf-8");
   return text.replace(/^---[\s\S]*?\n---\n/, "");
 }
 
@@ -83,5 +84,37 @@ describe("one switch for every theme", () => {
         .map((f) => `${t}/pages/${f}`),
     );
     expect(own).toEqual([]);
+  });
+});
+
+describe("robots meta tag (partials/robots-meta.njk)", () => {
+  const PARTIALS = path.join(THEMES, "_base/partials");
+  const meta = (ctx) =>
+    new nunjucks.Environment().renderString(body("robots-meta.njk", PARTIALS), ctx).trim();
+
+  it("says nothing on a normal page of a quiet or yes site", () => {
+    expect(meta({ site: { features: { show_in_search: "quiet" } } })).toBe("");
+    expect(meta({ site: { features: { show_in_search: "yes" } } })).toBe("");
+  });
+
+  it("keeps an unlisted page out of search", () => {
+    expect(meta({ site: { features: {} }, _bloob_unlisted: true })).toContain("noindex");
+  });
+
+  it("keeps every page of a show_in_search: no site out of search", () => {
+    expect(meta({ site: { features: { show_in_search: "no" } } })).toContain("noindex");
+  });
+
+  it("is used by every maintained theme's head", () => {
+    // A head that skips the partial silently ignores the switch for that theme.
+    const heads = fs
+      .readdirSync(THEMES, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && d.name !== "alter-engineers")
+      .map((d) => path.join(THEMES, d.name, "partials/head.njk"))
+      .filter((f) => fs.existsSync(f));
+    expect(heads.length).toBeGreaterThan(1);
+    for (const head of heads) {
+      expect(fs.readFileSync(head, "utf-8"), head).toContain('{% include "partials/robots-meta.njk" %}');
+    }
   });
 });

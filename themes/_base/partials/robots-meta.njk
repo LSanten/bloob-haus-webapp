@@ -1,0 +1,5 @@
+{#- Keeps a page out of search: an unlisted page always, every page when the site says
+    features.show_in_search: no (normalized in assemble-src.js). Every theme's head includes this. -#}
+{%- if _bloob_unlisted or site.features.show_in_search == "no" %}
+<meta name="robots" content="noindex,nofollow" />
+{%- endif %}

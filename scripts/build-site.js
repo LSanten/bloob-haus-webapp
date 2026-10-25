@@ -15,7 +15,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
-import { assembleSrc } from "./assemble-src.js";
+import { assembleSrc, showInSearch } from "./assemble-src.js";
+import { addNoindexHeader } from "./utils/search-headers.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
@@ -163,6 +164,13 @@ async function buildSite() {
 
     // Step 7: Build Eleventy
     await buildEleventy(config);
+
+    // Step 7.1: show_in_search: no also covers what no theme head renders
+    // (magic machines, raw HTML, PDFs, images) with an X-Robots-Tag header.
+    if (showInSearch(config.features) === "no") {
+      await addNoindexHeader(path.join(ROOT_DIR, "_site"), config.mount_path);
+      console.log("[build] show_in_search: no → X-Robots-Tag: noindex on every path (_headers)");
+    }
 
     // Build summary
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);

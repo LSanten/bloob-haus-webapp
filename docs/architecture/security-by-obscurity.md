@@ -116,10 +116,10 @@ When `_bloob_unlisted` is set, the pipeline does this **universally, for every t
 
 | Concern | Wiring | Automatic? |
 |---------|--------|:----------:|
-| `noindex,nofollow` meta tag | `themes/_base/partials/head.njk` checks `_bloob_unlisted` | ✅ Universal |
+| `noindex,nofollow` meta tag | `themes/_base/partials/robots-meta.njk` checks `_bloob_unlisted` (and `features.show_in_search: no` for a whole site); included by every theme head except alter-engineers | ✅ Universal |
 | Excluded from RSS / all collections | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✅ Universal |
 | Excluded from internal search (Pagefind) | layout swaps `data-pagefind-body` → `data-pagefind-ignore` | ⚠️ Per-theme obligation |
-| Excluded from `sitemap.xml` | `themes/_base/pages/sitemap.njk` filters `_bloob_unlisted` (and excluded collections); one sitemap for every theme except alter-engineers, built only when the site sets `features.invite_search_engines: true` | ✅ Universal |
+| Excluded from `sitemap.xml` | `themes/_base/pages/sitemap.njk` filters `_bloob_unlisted` (and excluded collections); one sitemap for every theme except alter-engineers, built only when the site sets `features.show_in_search: yes` | ✅ Universal |
 
 > Check the **theme implementation status** table in [settings-registry.md](settings-registry.md)
 > before relying on a theme's pagefind filtering (the sitemap comes from `_base` for every theme

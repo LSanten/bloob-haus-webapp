@@ -14,9 +14,7 @@
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
     <meta name="bloob-page-id" content="{{ bloobPageId }}" />
 
-    {% if _bloob_unlisted %}
-    <meta name="robots" content="noindex,nofollow" />
-    {% endif %}
+    {% include "partials/robots-meta.njk" %}
 
     {% if redirect %}
     <!-- Redirect — set via `redirect:` frontmatter in the content vault -->

@@ -185,22 +185,26 @@ describe('selectBasePages — theme pages shadow base pages by basename', () => 
     expect(skipped).toEqual([{ entry: 'feed.njk', reason: 'features.rss: false' }]);
   });
 
-  it('leaves out sitemap.njk and robots.njk unless the site invites search engines', async () => {
+  it('leaves out sitemap.njk and robots.njk unless show_in_search is yes', async () => {
     // Every vault scaffold shipped `features.sitemap: true`, so that key was never an
-    // active choice. A sitemap invites Google to every listed page; it needs a real yes.
+    // active choice. A sitemap hands Google every listed page; it needs a real yes.
     const selectBasePages = await load();
-    const { copy, skipped } = selectBasePages(['sitemap.njk', 'robots.njk', 'tags.md'], []);
-    expect(copy).toEqual(['tags.md']);
-    expect(skipped).toEqual([
-      { entry: 'sitemap.njk', reason: 'features.invite_search_engines is not on' },
-      { entry: 'robots.njk', reason: 'features.invite_search_engines is not on' },
-    ]);
+    for (const showInSearch of [undefined, 'quiet', 'no']) {
+      const { copy, skipped } = selectBasePages(['sitemap.njk', 'robots.njk', 'tags.md'], [], {
+        showInSearch,
+      });
+      expect(copy).toEqual(['tags.md']);
+      expect(skipped).toEqual([
+        { entry: 'sitemap.njk', reason: 'features.show_in_search is not yes' },
+        { entry: 'robots.njk', reason: 'features.show_in_search is not yes' },
+      ]);
+    }
   });
 
-  it('copies sitemap.njk and robots.njk when the site invites search engines', async () => {
+  it('copies sitemap.njk and robots.njk when show_in_search is yes', async () => {
     const selectBasePages = await load();
     const { copy } = selectBasePages(['sitemap.njk', 'robots.njk'], [], {
-      searchEnginesInvited: true,
+      showInSearch: 'yes',
     });
     expect(copy).toEqual(['sitemap.njk', 'robots.njk']);
   });
@@ -211,5 +215,35 @@ describe('selectBasePages — theme pages shadow base pages by basename', () => 
     // called sections.md must therefore still be copied.
     const { copy } = selectBasePages(['sections.md'], []);
     expect(copy).toEqual(['sections.md']);
+  });
+});
+
+describe('showInSearch: one of yes | quiet | no', () => {
+  const load = async () => (await import('../../scripts/assemble-src.js')).showInSearch;
+
+  it('is quiet when the site says nothing', async () => {
+    const showInSearch = await load();
+    expect(showInSearch(undefined)).toBe('quiet');
+    expect(showInSearch({})).toBe('quiet');
+  });
+
+  it('reads the three words', async () => {
+    const showInSearch = await load();
+    expect(showInSearch({ show_in_search: 'yes' })).toBe('yes');
+    expect(showInSearch({ show_in_search: 'quiet' })).toBe('quiet');
+    expect(showInSearch({ show_in_search: 'no' })).toBe('no');
+  });
+
+  it('reads yes/no that an older YAML parser turned into true/false', async () => {
+    // gray-matter (YAML 1.1) reads a bare `yes` as true and `no` as false.
+    const showInSearch = await load();
+    expect(showInSearch({ show_in_search: true })).toBe('yes');
+    expect(showInSearch({ show_in_search: false })).toBe('no');
+  });
+
+  it('falls back to quiet for anything else, never to yes', async () => {
+    const showInSearch = await load();
+    expect(showInSearch({ show_in_search: 'maybe' })).toBe('quiet');
+    expect(showInSearch({ invite_search_engines: true })).toBe('quiet');
   });
 });

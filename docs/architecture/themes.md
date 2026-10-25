@@ -387,7 +387,7 @@ All themes must respect these `features:` flags from `_bloob-settings.md`. A fea
 | Feature key | Default | Description |
 |-------------|---------|-------------|
 | `features.rss` | `true` | Generate RSS feed at `/feed.xml` |
-| `features.invite_search_engines` | `false` (**opt-in**) | Build `sitemap.xml` + `robots.txt` from `themes/_base/pages/`. A sitemap invites search engines to every listed page, so it needs an active yes; unlisted pages are never in it. Every theme uses the base pair except alter-engineers. Replaces `features.sitemap` / `features.robots_txt`, which every vault scaffold set to `true` and which are now ignored. |
+| `features.show_in_search` | `quiet` | `yes` builds `sitemap.xml` + `robots.txt` from `themes/_base/pages/`; `no` puts `noindex` on every page via `partials/robots-meta.njk`, which every theme head must include, plus an `X-Robots-Tag` header for every path. A sitemap hands search engines every listed page, so it needs an active yes; unlisted pages are never in it. Every theme uses the base pair except alter-engineers. Replaces `features.sitemap` / `features.robots_txt`, which every vault scaffold set to `true` and which are now ignored. |
 | `features.search` | `true` | Pagefind search index + search bar |
 | `features.backlinks` | `true` | Show backlinks section on each page |
 | `features.og_images` | `true` | Open Graph meta tags for social sharing |

@@ -27,7 +27,7 @@ blocklist_tag: private
 visualizers: []
 features:
   rss: true
-  invite_search_engines: false   # true = give Google a sitemap of every listed page (unlisted pages never appear)
+  show_in_search: quiet   # yes = give search engines a list of every page | quiet = no list | no = keep every page out of search
   search: true
   og_images: true
   tags: true

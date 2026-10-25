@@ -177,7 +177,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
 | `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
-| `features.sitemap` | `true` | sitemap.xml |
+| `features.invite_search_engines` | `false` | **Opt-in.** `sitemap.xml` + `robots.txt` from `themes/_base/pages/` (all themes except alter-engineers). Unlisted pages are never listed. Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby. melt held back (2026-10-25) until its page list is reviewed: it would announce `/bios-for-whitney-and-vicki/`, public but unlinked. Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |

@@ -50,10 +50,13 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
  *
  * @param {string[]} baseEntries  filenames in themes/_base/pages/
  * @param {string[]} themeFiles   filenames in themes/<theme>/pages/ (files only)
- * @param {{rssEnabled?: boolean}} opts
+ * sitemap.njk and robots.njk are opt-in: a sitemap invites search engines to every
+ * listed page, so it is only built when the site says `features.invite_search_engines: true`.
+ *
+ * @param {{rssEnabled?: boolean, searchEnginesInvited?: boolean}} opts
  * @returns {{copy: string[], skipped: {entry: string, reason: string}[]}}
  */
-export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true } = {}) {
+export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true, searchEnginesInvited = false } = {}) {
   const themeBasenames = new Set(themeFiles.map((f) => path.parse(f).name));
   const copy = [];
   const skipped = [];
@@ -61,6 +64,10 @@ export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true } =
   for (const entry of baseEntries) {
     if (entry === "feed.njk" && !rssEnabled) {
       skipped.push({ entry, reason: "features.rss: false" });
+      continue;
+    }
+    if ((entry === "sitemap.njk" || entry === "robots.njk") && !searchEnginesInvited) {
+      skipped.push({ entry, reason: "features.invite_search_engines is not on" });
       continue;
     }
     if (themeBasenames.has(path.parse(entry).name)) {
@@ -154,6 +161,7 @@ export async function assembleSrc(config, contentDir = null) {
     const basePageEntries = await fs.readdir(path.join(baseDir, "pages"));
     const { copy, skipped } = selectBasePages(basePageEntries, themePageFiles, {
       rssEnabled: config.features?.rss !== false,
+      searchEnginesInvited: config.features?.invite_search_engines === true,
     });
 
     for (const { entry, reason } of skipped) {

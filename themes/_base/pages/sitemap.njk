@@ -2,10 +2,12 @@
 permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
+{#- Built only when the site sets features.invite_search_engines: true (assemble-src.js).
+    Unlisted pages are never listed: see docs/architecture/security-by-obscurity.md. -#}
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.w3.org/2000/sitemaps.org/schemas/sitemap/0.9">
   {%- for page in collections.all %}
-  {%- if page.url and not page.data.eleventyExcludeFromCollections %}
+  {%- if page.url and not page.data.eleventyExcludeFromCollections and not page.data._bloob_unlisted %}
   <url>
     <loc>{{ site.url }}{{ page.url }}</loc>
     <lastmod>{{ page.date | dateToRfc3339 }}</lastmod>

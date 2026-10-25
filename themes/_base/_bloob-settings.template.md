@@ -27,8 +27,7 @@ blocklist_tag: private
 visualizers: []
 features:
   rss: true
-  sitemap: true
-  robots_txt: true
+  invite_search_engines: false   # true = give Google a sitemap of every listed page (unlisted pages never appear)
   search: true
   og_images: true
   tags: true

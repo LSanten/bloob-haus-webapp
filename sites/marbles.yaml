@@ -21,5 +21,8 @@ features:
   # Verified with: node scripts/audit-visualizer-detection.js --src=src-leons
   per_page_visualizers: true
   magic_machines: true
+  # sitemap.xml + robots.txt (themes/_base/pages). Opt-in: a sitemap invites search
+  # engines to every listed page. Unlisted pages are never in it.
+  invite_search_engines: true
   date_from_filename: true   # YYYY-MM-DD- filename prefix → date_created (date stays in URL)
   # date_prefix_slugs: false # (default) strip the YYYY-MM-DD- prefix from the URL slug — off for now

@@ -19,3 +19,6 @@ features:
   # Detection reads the rendered HTML; shapes opt in via `detect` in their
   # manifest.json, and anything unannotated is still loaded everywhere.
   per_page_visualizers: true
+  # sitemap.xml + robots.txt (themes/_base/pages). Opt-in: a sitemap invites search
+  # engines to every listed page. Unlisted pages are never in it.
+  invite_search_engines: true

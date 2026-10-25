@@ -185,6 +185,26 @@ describe('selectBasePages — theme pages shadow base pages by basename', () => 
     expect(skipped).toEqual([{ entry: 'feed.njk', reason: 'features.rss: false' }]);
   });
 
+  it('leaves out sitemap.njk and robots.njk unless the site invites search engines', async () => {
+    // Every vault scaffold shipped `features.sitemap: true`, so that key was never an
+    // active choice. A sitemap invites Google to every listed page; it needs a real yes.
+    const selectBasePages = await load();
+    const { copy, skipped } = selectBasePages(['sitemap.njk', 'robots.njk', 'tags.md'], []);
+    expect(copy).toEqual(['tags.md']);
+    expect(skipped).toEqual([
+      { entry: 'sitemap.njk', reason: 'features.invite_search_engines is not on' },
+      { entry: 'robots.njk', reason: 'features.invite_search_engines is not on' },
+    ]);
+  });
+
+  it('copies sitemap.njk and robots.njk when the site invites search engines', async () => {
+    const selectBasePages = await load();
+    const { copy } = selectBasePages(['sitemap.njk', 'robots.njk'], [], {
+      searchEnginesInvited: true,
+    });
+    expect(copy).toEqual(['sitemap.njk', 'robots.njk']);
+  });
+
   it('ignores theme subdirectories (pages/sections/) when matching', async () => {
     const selectBasePages = await load();
     // `sections` is a directory and is filtered out by the caller; a base page

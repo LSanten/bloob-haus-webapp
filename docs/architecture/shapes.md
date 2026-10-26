@@ -968,3 +968,52 @@ The longer-term goal is that anyone (human or AI) can create a shape by followin
 - [ ] Documented: how a vault-local shape in `/bloob-haus-shapes/` gets picked up by the build pipeline (not yet implemented — see conceptual doc)
 
 The vault-local shapes folder (defined in the conceptual doc) is the gateway to shapes becoming a community thing. Nothing in the current build pipeline supports scanning a vault's shape folder yet. That's the missing technical piece between "creator" shapes and "user" shapes.
+
+---
+
+### 10. Canvas: placement in a file Obsidian already edits (raised 2026-10-23, undecided)
+
+Leon, 2026-10-23: many of his visualizers "are actually a canvas", and working with Obsidian's
+Canvas can be very important and useful. **He is not yet sure how to integrate it.** Recorded so the
+next session starts here instead of re-deriving it. Consider canvas whenever placement, rooms,
+the haus, or a coordinate-based shape is on the table.
+
+**What a canvas is.** Obsidian's `.canvas` file is **JSON Canvas**, an open spec (jsoncanvas.org,
+MIT): `nodes` — each `text`, `file`, `link` or `group`, with `id`, `x`, `y`, `width`, `height` and an
+optional `color` — and `edges` (`fromNode` / `toNode`, optional sides, ends, `label`, `color`).
+
+**The pattern nobody had named.** Three shapes each invented their own coordinate grammar: garden
+(`- mature-tree "Title" @240,225`), fridge-magnets (`[word](x,y)`), scene-nav (per-element positions
+with mobile overrides). JSON Canvas is the standard form of the **Coordinates** row in "Placement
+systems" above, and it ships with an editor people already use.
+
+**Working position, not a decision:** a canvas is **not a shape**. It is a placement file — *where
+things sit* — and shapes are *what sits*. Keep the two apart; merging them is the same trap as
+leaf vs. container.
+
+| JSON Canvas | Bloob Haus reading |
+|---|---|
+| `file` node | a note placed in a room, drawn as its **closed state** (the keystone in `ontology.md`) |
+| `group` node | a room inside a room (recursive placement) |
+| `edge` | a relation / wire between objects; also a comment pinned to its target (text node + edge) |
+| `text` node | a leaf whose outside is its inside (a sticky note) |
+| `link` node | an outside thing, drawn as a link card |
+
+**Open, in rough order of how much they would change the build:**
+- **How a canvas says what kind of room it is** (garden vs. plain room). Unverified: whether
+  Obsidian keeps unknown fields in a `.canvas` file when it saves. If it does, a `bloob-shape` field
+  in the JSON; if not, a sidecar `_index.md` that names the canvas.
+- **Pixels vs. phones.** A canvas is an infinite plane in absolute pixels; a room on a phone needs a
+  fit/scale rule (relates to authoring convention #8, mobile inherits desktop).
+- **Do garden / scene-nav / fridge-magnets move to canvas?** Not wholesale (see "Rule: do not convert
+  visualizers wholesale"), and only if a shape gains from Obsidian editing. Their own grammars hold
+  things canvas does not (mobile overrides, garden's nested page bullets).
+- **Rendering stays pure:** `.canvas` JSON in, HTML out, so it runs in all three hosts
+  (`visualizers.md` → "three hosts, one renderer"). Look for prior art drawing JSON Canvas on the web
+  before writing one.
+- **Sealing:** a canvas is a stock (a room), not a flow, so it can be private but is not sealed (see
+  "Sealing and the two site-builder flows" above).
+
+Context: raised in the workbench session (2026-10-23), where a rung-0 shape became a folder of plain
+HTML templates (`open.html`, optional `closed.html`, `style.css`) filled from `{{yaml.x}}` and
+`{{body}}`. The canvas is the natural room those shapes get placed in.

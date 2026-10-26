@@ -93,6 +93,8 @@ The same marble means something different in a pond than in a garden — not bec
 
 **The honest cost.** The graph falls out of links for free; the space does not fall out of placement for free. A link is cheap to author (`[[x]]`) and the graph self-assembles. Placement requires someone to *put things somewhere* and something to *render the arrangement*. This is why Obsidian ships a graph view and not a room view — the graph is automatic, the room is labor. "Placement is the new backlink" is true and beautiful, and it is also the reason the spatial story is hard and still unbuilt. Price the bill; don't let the beauty hide it.
 
+**Revisit (2026-10-23): this undercounts Obsidian.** It does ship a room view: **Canvas**, whose `.canvas` files are an open format (JSON Canvas) with x/y placement, groups and edges. People already do the labor of placing things, in a standard file, with a free editor — which may make the spatial story much cheaper than the paragraph above prices it. How Bloob Haus integrates canvas is **undecided**; see `shapes.md` → open question 10.
+
 ---
 
 ## The context stack

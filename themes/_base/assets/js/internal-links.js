@@ -11,9 +11,23 @@
  * with Access-Control-Allow-Origin: * (set via Cloudflare _headers).
  *
  * Opt-out: add data-no-pills to any container to exclude its links.
+ *
+ * Look (2026-10-26): internal links read as ordinary inline links. The class
+ * only lets base.css draw a thin hover pill that never moves the text.
+ *
+ * Shape icons are OFF by default. Turn them back on for a whole site with
+ * `features.link_icons: true` (themes pass it to this script tag as
+ * data-link-icons), or for one part of a page with a data-link-icons container.
  */
 (function () {
   "use strict";
+
+  var thisScript = document.currentScript;
+  var siteWantsIcons = !!(thisScript && thisScript.hasAttribute("data-link-icons"));
+
+  function wantsIcon(link) {
+    return siteWantsIcons || !!link.closest("[data-link-icons]");
+  }
 
   // Cache: origin → Promise<Map<pathname, { title, bloobIcon }>>
   var graphCache = {};
@@ -50,7 +64,7 @@
   function applyPill(link, bloobIconUrl) {
     var inHeading = !!link.closest("h1, h2, h3, h4, h5, h6");
     if (!inHeading) link.classList.add("internal-link");
-    if (bloobIconUrl && !link.querySelector(".internal-link__icon")) {
+    if (bloobIconUrl && wantsIcon(link) && !link.querySelector(".internal-link__icon")) {
       var img = document.createElement("img");
       img.src = bloobIconUrl;
       img.className = "internal-link__icon";
@@ -73,6 +87,10 @@
 
       // Respect opt-out containers
       if (link.closest("[data-no-pills]")) continue;
+
+      // A link that already has a class is a component (a tag badge, a
+      // {.button}, a card), not a prose link: leave its look alone.
+      if (link.classList.length && !link.classList.contains("internal-link")) continue;
 
       // Only pill inline links — skip card/nav/structural links.
       // p: prose wiki-links. li: list items (tight lists have no <p> wrapper). td: table cells.

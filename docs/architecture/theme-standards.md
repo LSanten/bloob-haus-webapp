@@ -105,56 +105,41 @@ table {
 
 `display: block` is required on the `<table>` element itself for `overflow-x: auto` to work. This is the CSS-only approach for markdown-rendered tables (no JS wrapper needed).
 
-### 2. Internal link pills
+### 2. Internal links
 
-Internal link pills are applied **client-side** by `_base/assets/js/internal-links.js`, which runs on every page. It scans all `<a>` elements in the content area, checks if they point to a same-origin content page (via `graph.json`), and adds `class="internal-link"`. Cross-site links to other `*.bloob.haus` domains are also detected and pilled. Bloob-object icons (24×24) are fetched from `graph.json` and injected inline.
+Internal links are marked **client-side** by `_base/assets/js/internal-links.js`, which runs on every page. It scans all `<a>` elements in the content area, checks if they point to a same-origin content page (via `graph.json`), and adds `class="internal-link"`. Cross-site links to other `*.bloob.haus` domains are also detected. Links that already carry a class (tag badges, `{.button}` links) are left alone.
+
+**Look (since 2026-10-26): plain inline links.** They used to be inline-flex pills with a shape icon, which sat higher than the surrounding text and made their line taller. Now an internal link keeps the baseline, line height and box of any other link in the line. On hover, `_base/assets/css/base.css` draws a thin pill from `background-color` + `box-shadow` + `outline`, none of which take up space, so the text never moves. The base rules use `:where()` (no specificity), so theme and component rules always win. Guarded by `tests/internal-links.test.js` in every theme.
 
 **Themes must:**
-1. Include the script tag in `scripts.njk`:
+1. Include the script tag in `scripts.njk`, passing the icon setting through:
    ```njk
-   <script src="{{ '/assets/js/internal-links.js' | url }}"></script>
+   <script src="{{ '/assets/js/internal-links.js' | url }}"{% if site.features.link_icons %} data-link-icons{% endif %}></script>
    ```
-2. Style `a.internal-link` and `.internal-link__icon` in `main.css`:
+2. Set the link colour and the hover pill colours in `main.css`, and nothing that changes layout (no `display`, `padding`, `border`, `line-height` or `vertical-align` on `a.internal-link`):
 
 ```css
 a.internal-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  padding: 0.1em 0.6em 0.1em 0.35em;
-  background: rgba(/* accent */, 0.06);
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  font-size: 0.93em;
+  --internal-link-hover-bg: rgba(/* accent */, 0.14);  /* pill fill */
+  --internal-link-hover-ring: var(--accent-color);    /* 1px ring; transparent = none */
   color: var(--link-color);
-  text-decoration: none;
-  vertical-align: baseline;
-  line-height: 1.4;
-  transition: background 0.15s, border-color 0.15s;
 }
 a.internal-link:hover {
-  background: rgba(/* accent */, 0.12);
-  border-color: var(--accent-color);
-  text-decoration: none;
-}
-.internal-link__icon {
-  width: 1em;   /* scales with surrounding text */
-  height: 1em;
-  object-fit: contain;
-  border-radius: 0;
-  flex-shrink: 0;
+  color: var(--accent-dark);
 }
 ```
 
-**Opt-out:** Add `data-no-pills` to any container (e.g. the connections graph, nav) to exclude its links from pill detection.
+**Icons are off by default.** Turn them on for a whole site with `features.link_icons: true` (in `_bloob-settings.md` or `sites/*.yaml`), or for one part of a page by wrapping it in a container with `data-link-icons`. When on, `base.css` sizes the icon to the text (`1em`, on the baseline), so it adds width but no height.
 
-**How icons work:** the shape registry (`_bloob-shapes.md`, or legacy `_bloob-types.md` / `_bloob-objects.md`) declares each shape with an `image`. `generate-bloob-icons.js` (called from `assemble-src.js` Step 10) resizes each image to 24×24 PNG (transparency preserved) and writes it to `src/assets/objects/bloob-icons/[type]-icon.png`. `preprocess-content.js` stores the path on each page's graph node. `internal-links.js` reads `graph.json` and injects the icon `<img>` when adding the pill class.
+**Opt-out:** Add `data-no-pills` to any container (e.g. the connections graph, nav) to exclude its links from detection.
+
+**How icons work:** the shape registry (`_bloob-shapes.md`, or legacy `_bloob-types.md` / `_bloob-objects.md`) declares each shape with an `image`. `generate-bloob-icons.js` (called from `assemble-src.js` Step 10) resizes each image to 24×24 PNG (transparency preserved) and writes it to `src/assets/objects/bloob-icons/[type]-icon.png`. `preprocess-content.js` stores the path on each page's graph node. `internal-links.js` reads `graph.json` and injects the icon `<img>` when adding the class, if icons are on (`features.link_icons`).
 
 **`image` field values in `_bloob-objects.md`:**
 
 | Value | Behaviour |
 |---|---|
-| `none` | No icon — pill text only |
+| `none` | No icon: link text only |
 | `default` | Falls back to `/favicon.png` (the site's own favicon) |
 | `![](media/file.png)` | Markdown image syntax — path is URL-decoded and resolved from `src/` |
 | `[[filename.png]]` | Wiki-link — resolved to `src/media/filename.png` |

@@ -714,37 +714,16 @@ th {
     font-weight: 700;
 }
 
-/* THEME STANDARD: internal link pills */
+/* THEME STANDARD: internal links. Plain inline links; base.css draws the
+   hover pill from these colours without moving the text. */
 a.internal-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-    padding: 0.05em 0.55em 0.05em 0.35em;
-    background: rgba(210, 105, 30, 0.06);
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
+    --internal-link-hover-bg: rgba(210, 105, 30, 0.12);
+    --internal-link-hover-ring: var(--accent-color);
     color: var(--link-color);
-    text-decoration: none;
-    vertical-align: baseline;
-    line-height: inherit;
-    transition:
-        background 0.15s,
-        border-color 0.15s;
 }
 
 a.internal-link:hover {
-    background: rgba(210, 105, 30, 0.12);
-    border-color: var(--accent-color);
     color: var(--accent-dark);
-    text-decoration: none;
-}
-
-.internal-link__icon {
-    width: 1em;
-    height: 1em;
-    object-fit: contain;
-    border-radius: 0;
-    flex-shrink: 0;
 }
 
 /* 404 page */

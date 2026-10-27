@@ -1,5 +1,5 @@
 {# Internal link pills + bloob-object icons (client-side, reads graph.json) #}
-<script src="{{ '/assets/js/internal-links.js' | url }}"></script>
+<script src="{{ '/assets/js/internal-links.js' | url }}"{% if site.features.link_icons %} data-link-icons{% endif %}></script>
 
 {# Visualizer scripts (auto-generated from lib/visualizers/) #}
 <!--bloob:visualizer-js-->

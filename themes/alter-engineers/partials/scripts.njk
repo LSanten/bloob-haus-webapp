@@ -6,7 +6,7 @@
 <script src="{{ "/assets/js/theme.min.js" | url }}"></script>
 
 <!-- Bloob Haus: internal link pills -->
-<script src="{{ "/assets/js/internal-links.js" | url }}"></script>
+<script src="{{ "/assets/js/internal-links.js" | url }}"{% if site.features.link_icons %} data-link-icons{% endif %}></script>
 
 {# Image zoom — PhotoSwipe 5, on by default (opt-out via features.image_zoom: false) #}
 {# CSS is loaded in head.njk. JS uses ES modules (no build step needed). #}

@@ -527,11 +527,11 @@ body.has-bg-image {
   color: var(--color-text-muted);
 }
 
-/* Required: internal link pills */
+/* Required: internal links. Plain inline links (base.css); only the hover
+   pill colour is melt's. melt does not load internal-links.js, so this only
+   reaches the links transclusion-handler.js writes. */
 a.internal-link {
-  border-radius: 4px;
-  padding: 1px 5px;
-  background: var(--color-surface);
+  --internal-link-hover-bg: var(--color-surface);
 }
 
 /* Required: .button CTA contract (docs/architecture/theme-standards.md).

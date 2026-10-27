@@ -143,6 +143,12 @@ Both fields accept the same value formats:
 |-----|------|---------|-------------|
 | `default_shape` | string | — | Fallback shape for pages with no `bloob-shape:` in frontmatter. Governs their **layout** and, through it, their **commentability** (see `docs/architecture/shapes.md` → "Comments — a shape behavior"). Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` (which is commentable). This lets you declare a future shape name without breaking the build. Optional — an undeclared page is a valid "undefined pile" state. Example: `default_shape: marble`. |
 
+#### Internal links
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.link_icons` | bool | `false` | Put the linked page's shape icon in front of internal links (the pre-2026-10-26 look, now without the pill). Off by default: internal links render as plain inline links with a hover pill. A page can also turn icons on for one part by wrapping it in a `data-link-icons` container. See `docs/architecture/theme-standards.md` → "Internal links". |
+
 #### Folds (`## > Heading`)
 
 | Key | Type | Default | Description |

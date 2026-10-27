@@ -149,7 +149,9 @@ needs a pure renderer.
 
 **Conforming** (`parser.js` + `renderer.js`): `card-preview`, `image-grid`, `image-text`,
 `photo-grid`, `quotes-stack`, `scene-nav`, `services`, `slideshow`, `testimonials`,
-`heading-and-paragraph`, **`collection`** (2026-07-27).
+`heading-and-paragraph`, **`collection`** (2026-07-27). `foldable` (2026-10-26) produces all
+of its markup at build time from pure functions too (`fold-headings.js`, `peek.js`); its
+`browser.js` only opens folds around a `#hash` target.
 
 **Not yet conforming, generates content** — `folder-preview`, `circular-nav`, `fridge-magnets`,
 `tags`, `graph`. Tracked as **TECH-DEBT #40**. Convert each when next touched; do not retrofit
@@ -552,6 +554,22 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 
 > **Dev workflow note:** `bundle-visualizers.js` only runs as part of the full build (`build-site.js`). After adding a new visualizer during a dev session, run `node scripts/bundle-visualizers.js` manually before expecting the JS bundle and `visualizers.json` manifest to be updated.
 
+## Two optional hooks in `index.js` (2026-10-26)
+
+Both added for the `foldable` shape; both are opt-in exports, so no other shape changes.
+
+- **`export function markdownItPlugin(md, { siteConfig })`**: for a shape that changes how
+  markdown itself renders rather than replacing a block. `eleventy.config.js` registers every
+  visualizer that exports one, after its own plugins (footnotes, attrs, `:::` containers), and
+  hands it the site config so a site can opt out with a feature flag. `foldable` uses it for
+  `## > Heading`. Prefer it over a regex pass in the preprocessor whenever the syntax has to
+  respect code blocks, blockquotes and `:::` boundaries: markdown-it has already parsed those.
+- **`export const transformOrder = <number>`**: build-time transforms run in ascending order
+  (default `0`, stable sort, so shapes without it keep their discovery order). Use it only when
+  a transform reads markup another shape's transform writes: `foldable` (`100`) fills its peek
+  row from the cards `collection` has drawn. Before this, transform order was `readdir` order,
+  which is alphabetical on macOS but not guaranteed on Linux CI.
+
 ## Shared helpers — `lib/visualizers/_utils/`
 
 **Status: in use by 7 shapes across 2 modules (2026-08-15).**
@@ -569,7 +587,7 @@ phantom always-loaded shape also skews `audit-visualizer-detection.js`. Pinned b
 | Module | Does | Used by |
 |---|---|---|
 | `bg-color.js` | `bg=` / `color=` fence params → CSS class or inline style | `folder-preview`, `heading-and-paragraph`, `image-text`, `services`, `slideshow`, `testimonials` |
-| `ref-encoding.js` | `safeDecode` / `encodeRef` — the stored-decoded / emitted-encoded contract | `scene-nav`, `garden` |
+| `ref-encoding.js` | `safeDecode` / `encodeRef`: the stored-decoded / emitted-encoded contract | `scene-nav`, `garden`, `collection` (`safeDecode` only, for list targets) |
 
 ### What belongs here
 

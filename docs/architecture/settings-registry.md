@@ -143,6 +143,12 @@ Both fields accept the same value formats:
 |-----|------|---------|-------------|
 | `default_shape` | string | — | Fallback shape for pages with no `bloob-shape:` in frontmatter. Governs their **layout** and, through it, their **commentability** (see `docs/architecture/shapes.md` → "Comments — a shape behavior"). Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` (which is commentable). This lets you declare a future shape name without breaking the build. Optional — an undeclared page is a valid "undefined pile" state. Example: `default_shape: marble`. |
 
+#### Folds (`## > Heading`)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.foldable_headings` | bool | `true` | A heading that starts with `>` renders folded, one that starts with `^` renders open but foldable (the `foldable` shape, `lib/visualizers/foldable/schema.md`). `false` turns the markers off: they render as text. Theme look via `--fold-*` tokens in `main.css` (all optional). |
+
 **How to wire in a new theme:** No theme-level changes needed. Layout selection is handled entirely by the preprocessor — it reads the shape's `manifest.json.defaultLayout`, copies the shape's `layout.njk` into `src/_includes/layouts/`, and injects the `layout:` key into each page's frontmatter automatically.
 
 #### Shape identity registry (`_bloob-shapes.md`)
@@ -459,13 +465,23 @@ Settings that apply to specific visualizers regardless of theme.
 | `quotes[].date` | string | — | Display date |
 | `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
 
-### `collection` code fence
+### `collection` code fence and `:::collection` block
 
 Full reference: `lib/visualizers/collection/schema.md`. Settings added since:
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `placeholder` | string | `Search...` | Placeholder text for the collection's own filter input (added 2026-07-27) |
+| *(bullet list of links)* | list | none | A hand-written list in the block (`- [[PAGE]]`, `- [[PAGE\|Label]]`, `- [Title](marbles/PAGE.md)`, `- [Site](https://…)`) picks exactly which pages get a card, in that order. Replaces `source:` (added 2026-10-26) |
+| `show` | list | none | `image, subtitle, date, excerpt, tags` (or `all`): turns `display: cards` into post cards. Title is always shown. Without it the cards are unchanged (added 2026-10-26) |
+| `columns` | int 1-6 | theme ladder (3/2/1) | Card columns on wide screens; tablets get at most 2, phones 1. `1` lays a post card out with the picture beside the text (added 2026-10-26) |
+| `excerpt_length` | int or `"N sentences"` | `30` (words) | Length of the post-card excerpt (added 2026-10-26) |
+| `titles` | `page` / `link` | `page` | Card title: the page's own title, or the link text from the list (added 2026-10-26) |
+| `search` | | combined; **`off` for a hand-written list** | A curated list has no filter box unless `search:` asks for one (added 2026-10-26) |
+
+Post-card excerpts, dates and tags come from `_data/pagePreviews.json`, written by the
+preprocessor (excerpt: `excerpt:` or `description:` frontmatter, else the first prose of
+the page; date: `date_created`). It is build data and never served.
 
 The filter input reads the shared `--sv-*` search-surface tokens, so it matches the
 site-wide Pagefind bar in whatever theme is active.

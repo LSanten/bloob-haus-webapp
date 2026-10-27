@@ -51,6 +51,11 @@ describe("base sitemap.xml", () => {
     expect(xml.startsWith("<?xml")).toBe(true);
   });
 
+  it("declares the sitemaps.org namespace (Google ignores a urlset without it)", () => {
+    const xml = render("sitemap.njk", { site, collections: { all: [] } });
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+  });
+
   it("never lists an unlisted page", () => {
     const xml = render("sitemap.njk", {
       site,

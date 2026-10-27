@@ -1,0 +1,161 @@
+/* Foldable: collapsible heading sections (`## > Title`, `## ^ Title`).
+ *
+ * Markup comes from fold-headings.js:
+ *   details.bloob-fold > summary.bloob-fold__summary > (h2 + span.bloob-fold__peek)
+ *   details.bloob-fold > div.bloob-fold__body
+ *
+ * Look, after Leon's Jekyll collapsibles: a closed fold is a small card with a
+ * triangle and the heading; an open fold drops the card and keeps the triangle.
+ * Every colour is a token with a fallback, so a theme restyles folds from its
+ * main.css without touching this file:
+ *
+ *   --fold-closed-bg      card background of a closed fold
+ *   --fold-closed-text    heading + triangle colour on that card
+ *   --fold-closed-shadow  card shadow
+ *   --fold-open-text      triangle colour of an open fold (the heading keeps the theme's own colour)
+ *   --fold-peek-ring      border around the preview circles
+ */
+
+/* A theme may style every <details> (marbles-pouch boxes them in a border,
+   pads their children and clips overflow). A fold is not such a box, so the
+   properties that would leak in are reset here, on the shape's own classes. */
+.bloob-fold {
+  margin: var(--spacing-md, 1.5rem) 0 var(--spacing-sm, 1rem);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: none;
+}
+
+.bloob-fold > .bloob-fold__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  list-style: none;
+  cursor: pointer;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--border-radius, 10px);
+  background: var(
+    --fold-closed-bg,
+    color-mix(in srgb, var(--accent-color, #6b5bd2) 10%, var(--card-bg, #fff))
+  );
+  color: var(--fold-closed-text, var(--accent-dark, var(--accent-color, inherit)));
+  box-shadow: var(--fold-closed-shadow, 0 1px 3px rgba(0, 0, 0, 0.08));
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* No native disclosure marker: the triangle below replaces it. */
+.bloob-fold > .bloob-fold__summary::-webkit-details-marker {
+  display: none;
+}
+.bloob-fold > .bloob-fold__summary::marker {
+  content: "";
+}
+
+.bloob-fold > .bloob-fold__summary:focus-visible {
+  outline: 2px solid var(--accent-color, currentColor);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .bloob-fold:not([open]) > .bloob-fold__summary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Triangle: points right when closed, down when open. */
+.bloob-fold > .bloob-fold__summary::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid currentColor;
+  color: inherit;
+  font-size: 1rem;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+.bloob-fold[open] > .bloob-fold__summary::before {
+  transform: rotate(0deg);
+}
+
+/* The heading keeps its level's size but none of its block margins.
+   Scoped with the summary so a theme's `.page-body h2 { margin… }` cannot
+   push it off the card. */
+.bloob-fold > .bloob-fold__summary > :is(h1, h2, h3, h4, h5, h6) {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+.bloob-fold:not([open]) > .bloob-fold__summary > :is(h1, h2, h3, h4, h5, h6) {
+  color: inherit;
+}
+
+/* Open: the card dissolves, the text stays where it was (same padding, so the
+   heading does not jump sideways when toggled). */
+.bloob-fold[open] > .bloob-fold__summary {
+  background: transparent;
+  box-shadow: none;
+  color: var(--fold-open-text, var(--accent-color, inherit));
+}
+
+.bloob-fold > .bloob-fold__body {
+  padding: var(--spacing-xs, 0.5rem) 0 0;
+}
+
+/* A fold inside a fold sits slightly in, as in the Jekyll original. */
+.bloob-fold__body .bloob-fold {
+  margin-left: 0.5rem;
+}
+
+/* ── Peek: round previews of the cards inside a closed fold ─────────────── */
+
+.bloob-fold__peek {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  /* line up under the heading text, past the triangle */
+  padding-left: calc(12px + 0.6rem);
+  margin: 0.15rem 0 0.2rem;
+}
+.bloob-fold__peek:empty,
+.bloob-fold[open] > .bloob-fold__summary > .bloob-fold__peek {
+  display: none;
+}
+
+.bloob-fold__peek-img {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-left: -10px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--fold-peek-ring, var(--card-bg, #fff));
+  background: var(--card-bg, #fff);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.bloob-fold__peek-img:first-child {
+  margin-left: 0;
+}
+
+@media (hover: hover) {
+  .bloob-fold__peek-img:hover {
+    z-index: 2;
+    transform: scale(3.2) translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bloob-fold > .bloob-fold__summary,
+  .bloob-fold > .bloob-fold__summary::before,
+  .bloob-fold__peek-img {
+    transition: none;
+  }
+}

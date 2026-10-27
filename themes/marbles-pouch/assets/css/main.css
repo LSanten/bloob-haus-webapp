@@ -53,6 +53,14 @@
   --sv-input-bg: rgba(255, 255, 255, 0.85);
   --sv-input-bg-focus: rgba(255, 255, 255, 0.85);
   --sv-input-focus-ring: 0 0 0 3px rgba(145, 76, 154, 0.12);
+
+  /* Folds (`## > Heading`, the foldable shape): the blue-to-purple card of
+     the collapsible sections on Leon's Jekyll site, with white text. */
+  --fold-closed-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --fold-closed-text: #ffffff;
+  --fold-closed-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --fold-open-text: #764ba2;
+  --fold-peek-ring: #ffffff;
 }
 
 *,

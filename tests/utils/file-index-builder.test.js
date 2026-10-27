@@ -101,6 +101,16 @@ describe('buildFileIndex', () => {
       expect(page.title).toBe('Come to MELT');
     });
 
+    it('leaves a fold marker out of a heading-derived title', async () => {
+      const index = await writeAndIndex([
+        makeFile('sets/set.md', '---\n---\nIntro\n\n## > Track list as played'),
+        makeFile('sets/open.md', '---\n---\n## ^**Open** notes'),
+        makeFile('sets/plain.md', '---\n---\n## A > B'),
+      ]);
+      const titles = Object.values(index.pages).map((p) => p.title).sort();
+      expect(titles).toEqual(['A > B', 'Open notes', 'Track list as played']);
+    });
+
     it('still resolves wiki-links written against the raw filename', async () => {
       const index = await writeAndIndex([
         makeFile('recipes/come-to-MELT.md', '---\n---\nJust content'),

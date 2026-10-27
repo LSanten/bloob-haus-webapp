@@ -28,6 +28,14 @@ function stripInlineMarkdown(text) {
 }
 
 /**
+ * A heading's fold marker (`## > Title`, `## ^ Title`, see the foldable shape)
+ * is syntax, not part of the title. Only the heading fallback can carry one.
+ */
+function stripFoldMarker(text) {
+  return text.replace(/^[>^][ \t]*(?=\S)/, "");
+}
+
+/**
  * Extracts the plain-text title from a markdown file.
  * Priority: 1) frontmatter title (stripped), 2) first # or ## heading (stripped), 3) filename
  */
@@ -43,7 +51,7 @@ function extractTitle(frontmatter, content, filename) {
   // 2. First heading (# or ##) in content
   const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
   if (headingMatch) {
-    const raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "");
+    const raw = stripFoldMarker(headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, ""));
     return stripInlineMarkdown(raw).trim();
   }
 
@@ -62,7 +70,7 @@ function extractTitleMd(frontmatter, content, filename) {
   } else {
     const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
     if (headingMatch) {
-      raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim();
+      raw = stripFoldMarker(headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim());
     } else {
       return null;
     }

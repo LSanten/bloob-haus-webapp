@@ -2,6 +2,12 @@
 
 # Foldable shape: implementation plan
 
+> **Status 2026-10-26: built, differently.** `lib/visualizers/foldable/` implements the `## > Heading`
+> shortcut (plus `## ^ Heading` for open-by-default) as a markdown-it token rule that emits
+> `<details>`/`<summary>`, not as a rewrite into `:::foldable` blocks: the rewrite would have been cut
+> short by the first `:::` inside a fold. No verbose `:::foldable` primitive and no `title=` option
+> yet. State is build-time only (option A below). See the shape's `schema.md` and `shapes.md`.
+
 A small, focused plan for adding the `foldable` shape and the `## > Heading` shortcut to Bloob Haus. Two forms, one underlying primitive.
 
 ## Goal

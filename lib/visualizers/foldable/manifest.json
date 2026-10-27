@@ -1,0 +1,19 @@
+{
+  "name": "foldable",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Collapsible sections from a heading marker: `## > Title` renders folded, `## ^ Title` renders open but foldable. Built at markdown time as <details>/<summary>, so it works without JavaScript and the folded text stays searchable. Closed folds show small round previews of the cards they hold.",
+  "activation": {
+    "method": "heading-marker",
+    "pattern": "#{1,6} > Title | #{1,6} ^ Title"
+  },
+  "files": {
+    "js": "foldable.js",
+    "css": "foldable.css"
+  },
+  "detect": {
+    "selectors": [
+      ".bloob-fold"
+    ]
+  }
+}

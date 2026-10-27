@@ -211,6 +211,15 @@ export default async function (eleventyConfig) {
         return `<section class="${cls}"${settingsAttr}${rawAttr}${rawSourceAttr}>\n`;
       },
     });
+
+    // Shapes that change how markdown itself renders export a markdown-it
+    // plugin from their index.js (today: foldable, for `## > Heading`). It is
+    // handed the site config so a site can opt out through a feature flag.
+    for (const viz of visualizers) {
+      if (typeof viz.markdownItPlugin === "function") {
+        mdLib.use(viz.markdownItPlugin, { siteConfig });
+      }
+    }
   });
 
   // Date formatting filter — see scripts/utils/format-date.js.
@@ -677,9 +686,12 @@ export default async function (eleventyConfig) {
   // Runs each visualizer's transform() on rendered HTML output.
   // Runtime-only visualizers (like checkbox-tracker) return content unchanged.
   // Build-time visualizers (future: timeline, recipe-card) modify HTML here.
-  const buildTimeVisualizers = visualizers.filter(
-    (v) => typeof v.transform === "function" && v.type !== "runtime",
-  );
+  // `transformOrder` (default 0) lets a shape run after the others when it reads
+  // their output: foldable's peek row reads the card images collection draws.
+  // The sort is stable, so shapes with equal order keep their discovery order.
+  const buildTimeVisualizers = visualizers
+    .filter((v) => typeof v.transform === "function" && v.type !== "runtime")
+    .sort((a, b) => (a.transformOrder || 0) - (b.transformOrder || 0));
 
   if (buildTimeVisualizers.length > 0) {
     eleventyConfig.addTransform("visualizers", function (content) {

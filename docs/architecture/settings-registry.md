@@ -8,6 +8,8 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
+**Not built yet:** `docs/settings-backlog.md` (shared with `../bloob-haus-cloud`).
+
 **Last Updated:** 2026-07-20
 
 ---

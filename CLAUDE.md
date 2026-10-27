@@ -43,6 +43,8 @@ The session checklists below are a reminder for the END of the session.
 - `docs/CLAUDE_CONTEXT.md` — project status and architecture overview
 - `docs/TECH-DEBT.md` — a reminder list of things that are (or might still be) wrong. Verify a row
   before acting on it; delete the row when it's fixed
+- `docs/settings-backlog.md` — settings not built yet, shared with `../bloob-haus-cloud` (account
+  settings, the one-setting-several-doors rule)
 
 ## Sibling Repo: Planning Vault
 The product vision, values, room concepts, and engineering reports live in a separate Obsidian vault at `../bloobhaus-notes/` (see its `CLAUDE.md`). If you need context on *why* things are designed a certain way, check there. This repo is the source of truth for *how* — technical architecture, build pipeline, and implementation plans.

@@ -54,6 +54,7 @@ import {
   parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
+import { extractExcerpt } from "./utils/page-excerpt.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -137,6 +138,11 @@ export async function preprocessContent({
 
   // Collect per-page outgoing links for graph.json (built after file loop)
   const perPageLinks = {};
+
+  // Per-page card text (excerpt, date, tags) for collection post cards.
+  // Build data only (_data/pagePreviews.json): kept out of graph.json, which is
+  // public and fetched by every graph view.
+  const pagePreviews = {};
 
   // Step 1: Read Obsidian config
   console.log("--- Step 1: Reading Obsidian config ---");
@@ -688,6 +694,22 @@ export async function preprocessContent({
       outputFrontmatter.date_updated = toDateOnly(outputFrontmatter.date_updated);
     }
 
+    // Card text for collection post cards. Same visibility rule as graph.json:
+    // unlisted pages are never listed, so they get no card text either.
+    if (pageInfo && frontmatter.website_status !== "unlisted" && !isUnlisted) {
+      const authored = frontmatter.excerpt || frontmatter.description;
+      const excerpt = authored ? String(authored).trim() : extractExcerpt(processedContent);
+      const dateMatch = /\d{4}-\d{2}-\d{2}/.exec(String(outputFrontmatter.date_created ?? ""));
+      const cardTags = pageTags.filter(
+        (t) => !["all", "nav", "posts", "not-for-public"].includes(String(t).toLowerCase()),
+      );
+      pagePreviews[pageInfo.url] = {
+        ...(excerpt && { excerpt }),
+        ...(dateMatch && { date: dateMatch[0] }),
+        ...(cardTags.length && { tags: cardTags }),
+      };
+    }
+
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 
@@ -727,6 +749,11 @@ export async function preprocessContent({
   console.log(
     `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
   );
+
+  // Card text for collection post cards (see pagePreviews above).
+  const pagePreviewsPath = path.join(tagIndexDir, "pagePreviews.json");
+  await fs.writeJson(pagePreviewsPath, pagePreviews, { spaces: 0 });
+  console.log(`[previews] Wrote pagePreviews.json (${Object.keys(pagePreviews).length} pages)`);
 
   // Step 8: Build and write graph.json + run visualizer preprocess hooks
   console.log("\n--- Step 8: Building graph data + visualizer hooks ---");

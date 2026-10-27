@@ -10,6 +10,26 @@ The visualizer (engine) behind this shape reads `graph.json` at build time and r
 
 ## Activation
 
+### `:::collection` block (inline, exact placement)
+
+````markdown
+:::collection
+display: cards
+show: image, date, excerpt
+- [[LAMP-BUCKET-HAT]]
+- [[MMSMammalWeight-A|the mammals graphic]]
+- [CO2 in cars](marbles/MMSCO2InCars.md)
+- [A good website](https://example.org)
+:::
+````
+
+Same settings as the code fence, one `key: value` per line, plus an optional bullet list
+of links (see "Hand-written list" below). Settings may also sit on the opener line
+(`::: collection display=cards columns=2`); lines inside the block win. The space after
+`:::` is optional. **Prefer this form for a list**: its links are resolved by the
+preprocessor like any other link, so they count as backlinks and graph edges, and Obsidian
+shows them as real links.
+
 ### Code fence (inline, exact placement)
 
 ````markdown
@@ -39,7 +59,11 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 | `sort` | string | `alpha` | `alpha` or `reverse-alpha` |
 | `limit` | number | — | Max pages to show |
 | `show_fields` | string or list | — | Extra frontmatter fields to show on each card. Must be declared in `sites/[site].yaml` `graph.extra_fields`. Comma-separated: `building_type, location` |
-| `search` | string | combined | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. |
+| `search` | string | combined (`off` for a hand-written list) | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. A hand-written list has no search input unless this is set. |
+| `show` | string or list | none | `display: cards` only. Turns the cards into **post cards**: any of `image, subtitle, date, excerpt, tags` (or `all`). The title is always shown. Without `show` the cards render exactly as before. |
+| `columns` | number 1–6 | 3 / 2 / 1 ladder | Card columns on wide screens. Tablets still get at most 2 and phones 1. With post cards, `columns: 1` puts the picture beside the text. |
+| `excerpt_length` | number or `"N sentences"` | `30` words | Length of a post card's excerpt. |
+| `titles` | string | `page` | `page`: a card shows the page's own title. `link`: it shows the link text from the hand-written list instead. |
 | `width` | string | `wide` | `prose` \| `wide` \| `full`. How wide the collection asks to be. See Width preference below. |
 | `title` | string | `ARTICLES` | Label shown above `display: slider` |
 | `placeholder` | string | `Search...` | Placeholder text for the filter input |
@@ -56,8 +80,54 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 
 Folder-index stubs (`/projects/`, `/projects/index/`) are always excluded.
 
-Phase 1: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`.
-Deferred: `links-here`, `links-from`, explicit wikilink lists in the body.
+Phase 1: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`, and a hand-written list (below).
+Deferred: `links-here`, `links-from`.
+
+### Hand-written list
+
+A bullet list of links inside the block says exactly which pages get a card, in that order.
+It takes the place of `source:`.
+
+| Line | Card |
+|---|---|
+| `- [[PAGE-NAME]]` | that page |
+| `- [[PAGE-NAME\|Label]]` | that page (the label is for you in Obsidian; see `titles`) |
+| `- [Title](marbles/PAGE.md)` | that page; relative paths like `../portfolio/X.md` work too |
+| `- [Title](https://example.org)` or `- https://example.org` | a card with just the title (or the site's name) and the link, opening in a new tab |
+
+- Order is kept. `sort:` re-sorts, `limit:` cuts.
+- A page listed twice gets one card. A private, unlisted or missing page gets none, and its
+  name does not appear in the page.
+- An archived page you list by hand is shown: listing it is a deliberate choice.
+- A bullet that does not start with a link is a settings line, so a YAML list such as
+  `show_fields:` / `  - location` still works.
+
+## Post cards
+
+`display: cards` plus `show:` gives cards with the picture on top, then title, date, a short
+excerpt and tags (like the feed on leonsanten.info):
+
+````markdown
+:::collection
+display: cards
+show: image, date, excerpt, tags
+columns: 2
+excerpt_length: 25
+- [[ROOTS-OF-RENEWABLES]]
+- [[MMSIcebergDynamics]]
+:::
+````
+
+- **Image:** the page's first image (its `og:image`). A page without one gets a soft tinted
+  panel with its shape icon, never a broken image.
+- **Excerpt:** `excerpt:` or `description:` frontmatter, else the first prose on the page
+  (headings, images, code, tables and `:::` blocks skipped). Up to 60 words are kept per page
+  at build time; `excerpt_length` decides how many show.
+- **Date:** `date_created`, as "August 2024".
+- **Tags:** the page's tags (system tags left out).
+
+Excerpts, dates and tags come from `_data/pagePreviews.json`, which the preprocessor writes
+next to `tagIndex.json`. It is build data, not served: `graph.json` stays as lean as it was.
 
 ## Display modes
 
@@ -67,7 +137,7 @@ behavior (drag physics, Swiper) on top of markup that already exists.
 
 | Mode | Notes | Runtime behavior added |
 |------|-------|------------------------|
-| `cards` (default) | 3-column grid with image, title, subtitle, optional fields | search filtering |
+| `cards` (default) | 3-column grid with image, title, subtitle, optional fields; with `show:`, post cards | search filtering |
 | `list` | Flat list with icon + title | search filtering |
 | `slider` | Swiper carousel (requires Swiper loaded by theme) | Swiper init |
 | `bubbles` | Circular bubbles, scatter layout | search filtering (CSS-only hover) |
@@ -114,7 +184,7 @@ When referenced via `[[wikilink]]` from another page: renders as a standard wiki
 
 ## Placement system
 
-Flow. Cards are ordered by the `sort` setting, not by explicit authoring position. No slots or coordinates.
+Flow. A query source is ordered by the `sort` setting; a hand-written list keeps the order it is written in unless `sort:` is set. No slots or coordinates.
 
 ## Examples
 
@@ -166,9 +236,10 @@ This shape is the reference implementation of the **pure-renderer standard**
 
 | File | Purity | Role |
 |---|---|---|
-| `resolve.js` | pure | source string → filtered/sorted nodes. Nodes are **injected**, never read here. |
+| `parser.js` | pure | block body → settings text + hand-written list items |
+| `resolve.js` | pure | source string or list → filtered/sorted nodes. Nodes are **injected**, never read here. |
 | `renderer.js` | pure | nodes + settings → complete HTML string, for all five display modes |
-| `index.js` | host | reads `graph.json` from disk, calls resolve → render |
+| `index.js` | host | reads `graph.json` (and `_data/pagePreviews.json` for post cards) from disk, finds fences and `:::collection` sections, calls parse → resolve → render |
 | `browser.js` | behavior | drag physics, Swiper, search filtering. **Never builds markup.** |
 
 - All five display modes render at build time; `browser.js` only attaches behavior.

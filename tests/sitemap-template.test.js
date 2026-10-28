@@ -145,8 +145,14 @@ describe("robots meta tag (partials/robots-meta.njk)", () => {
       .map((d) => path.join(THEMES, d.name, "partials/head.njk"))
       .filter((f) => fs.existsSync(f));
     expect(heads.length).toBeGreaterThan(1);
+    // Directly, or through the shared SEO block (partials/seo-meta.njk), which includes it.
+    const seoMeta = fs.readFileSync(path.join(PARTIALS, "seo-meta.njk"), "utf-8");
+    expect(seoMeta).toContain('{% include "partials/robots-meta.njk" %}');
     for (const head of heads) {
-      expect(fs.readFileSync(head, "utf-8"), head).toContain('{% include "partials/robots-meta.njk" %}');
+      const text = fs.readFileSync(head, "utf-8");
+      const reaches =
+        text.includes('{% include "partials/robots-meta.njk" %}') || text.includes('{% include "partials/seo-meta.njk" %}');
+      expect(reaches, head).toBe(true);
     }
   });
 });

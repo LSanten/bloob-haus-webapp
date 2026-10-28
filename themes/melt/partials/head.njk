@@ -12,30 +12,15 @@
 
     {# Homepage tab title prefers the page's own `title:` frontmatter (e.g. _index.md)
        so it can carry the full wordmark; falls back to site.title from _bloob-settings #}
-    <title>{% if page.url == "/" %}{{ title or site.title }}{% else %}{{ title }} · {{ site.title }}{% endif %}</title>
+    {% set seo_title_sep = " · " %}
+    {# Title, description, canonical, robots, Open Graph, Twitter: shared, themes/_base/partials/seo-meta.njk #}
+    {% include "partials/seo-meta.njk" %}
 
-    <meta name="description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
-    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
     <meta name="bloob-page-id" content="{{ bloobPageId }}" />
-
-    {% include "partials/robots-meta.njk" %}
-
     {% if redirect %}
     <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
     <meta http-equiv="refresh" content="0; url={{ redirect }}" />
     <script>window.location.replace("{{ redirect }}");</script>
-    {% endif %}
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="{{ site.title }}" />
-    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
-    <meta property="og:title" content="{% if page.url == '/' %}{{ title or site.title }}{% else %}{{ title }}{% endif %}" />
-    <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
-    {% if image %}
-    <meta property="og:image" content="{{ site.url }}{{ image }}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:type" content="{% if '.png' in image %}image/png{% else %}image/jpeg{% endif %}" />
     {% endif %}
 
     <!-- Favicon -->

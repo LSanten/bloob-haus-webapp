@@ -1,0 +1,32 @@
+{#- The SEO tags every theme head shares: title, description, canonical, robots, Open Graph,
+    Twitter. Each theme's head.njk includes this once; set `seo_title_sep` before the include to
+    change the separator between page and site title (melt: " · ").
+    Description: seo_description (automatic, scripts/utils/seo-description.js) → description →
+    site.description. Homepage title: the homepage's own `title:` → site.title. -#}
+{%- set _sep = seo_title_sep if seo_title_sep else " | " %}
+{%- set _isHome = page.url == "/" %}
+{%- set _title = (title or site.title) if _isHome else title %}
+{%- set _desc = seo_description or description or site.description %}
+<title>{% if _isHome %}{{ _title }}{% else %}{{ title }}{{ _sep }}{{ site.title }}{% endif %}</title>
+<meta name="description" content="{{ _desc }}" />
+<link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+{% include "partials/robots-meta.njk" %}
+
+<meta property="og:type" content="{% if _isHome %}website{% else %}article{% endif %}" />
+<meta property="og:site_name" content="{{ site.title }}" />
+<meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+<meta property="og:title" content="{{ _title }}" />
+<meta property="og:description" content="{{ _desc }}" />
+{%- if image %}
+<meta property="og:image" content="{{ site.url }}{{ image }}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:type" content="{% if '.gif' in image %}image/gif{% elif '.png' in image %}image/png{% else %}image/jpeg{% endif %}" />
+{%- endif %}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content="{{ site.url }}{{ page.url }}" />
+<meta name="twitter:title" content="{{ _title }}" />
+<meta name="twitter:description" content="{{ _desc }}" />
+{%- if image %}
+<meta name="twitter:image" content="{{ site.url }}{{ image }}" />
+{%- endif %}

@@ -56,6 +56,32 @@ describe("base sitemap.xml", () => {
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
   });
 
+  it("always lists the homepage, even when a theme keeps it out of collections", () => {
+    // marbles-pouch's index.njk is eleventyExcludeFromCollections: true, so `/` is not in
+    // collections.all at all. A sitemap without its front door can't be stitched into a
+    // bigger one (rooms, sub-repos) without losing the root.
+    const xml = render("sitemap.njk", { site, collections: { all: [page("/marbles/a/")] } });
+    expect(xml).toContain("<loc>https://leons.bloob.haus/</loc>");
+  });
+
+  it("lists the homepage once when the vault's own index is in collections", () => {
+    const xml = render("sitemap.njk", {
+      site,
+      collections: { all: [page("/", { eleventyExcludeFromCollections: ["tagList"] })] },
+    });
+    expect(xml.match(/<loc>https:\/\/leons\.bloob\.haus\/<\/loc>/g)).toHaveLength(1);
+  });
+
+  it("lists folder index pages (excluded only from tag listings, not from the site)", () => {
+    // preprocess-content.js gives every index.md / _index.md eleventyExcludeFromCollections:
+    // ["tagList"]: out of tag lists, still a real page. Only `true` means "not a page".
+    const xml = render("sitemap.njk", {
+      site,
+      collections: { all: [page("/resources/", { eleventyExcludeFromCollections: ["tagList"] })] },
+    });
+    expect(xml).toContain("<loc>https://leons.bloob.haus/resources/</loc>");
+  });
+
   it("never lists an unlisted page", () => {
     const xml = render("sitemap.njk", {
       site,

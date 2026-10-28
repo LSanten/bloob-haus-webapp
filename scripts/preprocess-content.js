@@ -55,6 +55,7 @@ import {
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
+import { buildSeoDescription } from "./utils/seo-description.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -650,6 +651,15 @@ export async function preprocessContent({
         console.log(`[process]   Extracted hero images: ${heroImages.join(', ')}`);
       }
     }
+
+    // Head-only meta description (partials/seo-meta.njk): the author's description, else
+    // subtitle + first prose, else the site description. Never written into `description`.
+    outputFrontmatter.seo_description = buildSeoDescription({
+      description: frontmatter.description,
+      subtitle: outputFrontmatter.subtitle,
+      body: processedContent,
+      siteDescription: siteConfig.site?.description,
+    });
 
     // Also handle title_md for pages where frontmatter.title contains markdown
     // but no H1 was stripped (e.g. user wrote title: _Italic_ in frontmatter directly).

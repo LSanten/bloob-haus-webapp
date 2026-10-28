@@ -1,11 +1,13 @@
 {#- The SEO tags every theme head shares: title, description, canonical, robots, Open Graph,
     Twitter. Each theme's head.njk includes this once; set `seo_title_sep` before the include to
-    change the separator between page and site title (melt: " · ").
+    change the separator between page and site title (melt: " · "), and
+    `seo_home_uses_page_title = true` to let the homepage's own `title:` be its title (melt, AE;
+    off by default so other homepages keep the site title).
     Description: seo_description (automatic, scripts/utils/seo-description.js) → description →
-    site.description. Homepage title: the homepage's own `title:` → site.title. -#}
+    site.description. -#}
 {%- set _sep = seo_title_sep if seo_title_sep else " | " %}
 {%- set _isHome = page.url == "/" %}
-{%- set _title = (title or site.title) if _isHome else title %}
+{%- set _title = ((title or site.title) if seo_home_uses_page_title else site.title) if _isHome else title %}
 {%- set _desc = seo_description or description or site.description %}
 <title>{% if _isHome %}{{ _title }}{% else %}{{ title }}{{ _sep }}{{ site.title }}{% endif %}</title>
 <meta name="description" content="{{ _desc }}" />

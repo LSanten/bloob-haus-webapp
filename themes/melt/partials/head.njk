@@ -13,6 +13,7 @@
     {# Homepage tab title prefers the page's own `title:` frontmatter (e.g. _index.md)
        so it can carry the full wordmark; falls back to site.title from _bloob-settings #}
     {% set seo_title_sep = " · " %}
+    {% set seo_home_uses_page_title = true %}
     {# Title, description, canonical, robots, Open Graph, Twitter: shared, themes/_base/partials/seo-meta.njk #}
     {% include "partials/seo-meta.njk" %}
 

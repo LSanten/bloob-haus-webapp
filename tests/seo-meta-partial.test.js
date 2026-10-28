@@ -16,17 +16,30 @@ const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(path.join(THE
 
 const site = { title: "Alter Engineers", description: "Engineering an alternative", url: "https://alterengineers.com", features: {} };
 
-function render(ctx, sep) {
-  const prefix = sep === undefined ? "" : `{% set seo_title_sep = "${sep}" %}`;
+function render(ctx, sep, { homeUsesPageTitle = false } = {}) {
+  let prefix = sep === undefined ? "" : `{% set seo_title_sep = "${sep}" %}`;
+  if (homeUsesPageTitle) prefix += "{% set seo_home_uses_page_title = true %}";
   return env.renderString(`${prefix}{% include "partials/seo-meta.njk" %}`, { site, page: { url: "/x/" }, ...ctx });
 }
 const titleOf = (html) => html.match(/<title>([^<]*)<\/title>/)[1];
 const metaContent = (html, attr) => html.match(new RegExp(`${attr}"\\s+content="([^"]*)"`))?.[1];
 
 describe("seo-meta: title", () => {
-  it("uses the homepage's own title when it has one", () => {
-    const html = render({ page: { url: "/" }, title: "Alter Engineers – Sustainable MEP Engineering, Bay Area" });
+  it("uses the homepage's own title when the theme opts in", () => {
+    const html = render(
+      { page: { url: "/" }, title: "Alter Engineers – Sustainable MEP Engineering, Bay Area" },
+      undefined,
+      { homeUsesPageTitle: true },
+    );
     expect(titleOf(html)).toBe("Alter Engineers – Sustainable MEP Engineering, Bay Area");
+    expect(metaContent(html, 'property="og:title')).toBe("Alter Engineers – Sustainable MEP Engineering, Bay Area");
+  });
+
+  it("keeps the site title on the homepage when the theme doesn't opt in", () => {
+    // marbles-pouch and warm-kitchen homepages carry incidental titles; their tab titles must not change.
+    const html = render({ page: { url: "/" }, title: "Fixture Home" });
+    expect(titleOf(html)).toBe("Alter Engineers");
+    expect(metaContent(html, 'property="og:title')).toBe("Alter Engineers");
   });
 
   it("falls back to the site title on a homepage without one", () => {

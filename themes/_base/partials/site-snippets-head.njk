@@ -1,6 +1,8 @@
 {# Raw <head> snippets from _bloob-settings.md fences (header-snippet, goat-counter-tracking).
    Injected on every page including the /slug/embed/ version. Empty when no fences present.
-   See docs plan: snippet-injection-analytics. #}
-{% if site.snippets.head %}
+   See docs plan: snippet-injection-analytics.
+   Unlisted pages get no third-party code: it would send the page's secret URL to the third
+   party (security-by-obscurity.md, Tier C). Applies on every site, no opt-out. #}
+{% if site.snippets.head and not _bloob_unlisted %}
 {{ site.snippets.head | injectPageVars(page, title, site.url, bloobPageId) | safe }}
 {% endif %}

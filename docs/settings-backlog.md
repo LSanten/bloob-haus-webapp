@@ -39,5 +39,6 @@ build actually uses, never a second copy that can disagree.
       answers that one path and lets everything else on `bloob.haus` fall through to the live site.
       Submit it to Search Console once. **Build when the first customer site exists** — until then
       the per-site sitemaps submitted by hand (leons, buffbaby, 2026-10-27) do the same job.
-- [?] **SET6** — melt's `show_in_search` is held back (2026-10-25) until its page list is reviewed:
-      `yes` would announce `/bios-for-whitney-and-vicki/`, which is public but unlinked.
+- [x] **SET6** — melt's `show_in_search` is `yes` (2026-10-28, in the vault's `_bloob-settings.md`).
+      Leon reviewed the page list: the bios page is meant to be found; the four `Resources/` drafts
+      are `visibility: private` and not built at all.

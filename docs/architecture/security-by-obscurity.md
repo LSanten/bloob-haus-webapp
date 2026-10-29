@@ -118,6 +118,7 @@ When `_bloob_unlisted` is set, the pipeline does this **universally, for every t
 |---------|--------|:----------:|
 | `noindex,nofollow` meta tag | `themes/_base/partials/robots-meta.njk` checks `_bloob_unlisted` (and `features.show_in_search: no` for a whole site); included by every theme head except alter-engineers | ✅ Universal |
 | Excluded from RSS / all collections | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✅ Universal |
+| No third-party snippets, comments or visitor count | the four `_base` partials that inject them (`site-snippets-head/-footer`, `comments`, `visitor-count`) render nothing when `_bloob_unlisted` (2026-10-28) | ✅ Universal |
 | Excluded from internal search (Pagefind) | layout swaps `data-pagefind-body` → `data-pagefind-ignore` | ⚠️ Per-theme obligation |
 | Excluded from `sitemap.xml` | `themes/_base/pages/sitemap.njk` filters `_bloob_unlisted` (and excluded collections); one sitemap for every theme except alter-engineers, built only when the site sets `features.show_in_search: yes` | ✅ Universal |
 
@@ -287,6 +288,13 @@ request: under the default referrer policy Google learns the *origin* of an unli
 secret path. Acceptable for "unlisted", but it means **a rendered page is never 100% dependency-free.**
 For maximum-obscurity client work, a **self-contained raw HTML file (Tier A only)** is the safest
 vehicle, because you control every byte and can guarantee zero external requests.
+
+**Site-configured Tier C code is kept off unlisted pages automatically** (since 2026-10-28): the
+`_bloob-settings.md` snippet fences (`header-snippet`, `goat-counter-tracking`, `footer-snippet`,
+`embed-endofbody`), the `fast-comments-embed` fence and the GoatCounter visitor count are not
+rendered when `_bloob_unlisted` is set. Before that, any site with analytics or comments sent every
+unlisted page's secret URL to those services. Fonts and theme CSS from CDNs (Tier B) still load. A
+shape that loads its own third-party script is not covered: check it in the dependency scan.
 
 ### Other leak vectors (not dependency-related)
 

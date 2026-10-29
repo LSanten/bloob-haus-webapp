@@ -55,6 +55,7 @@ import {
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
+import { isPageUnlisted, isInUnlistedFolder } from "./utils/unlisted-folders.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -160,6 +161,15 @@ export async function preprocessContent({
     ...(siteConfig.content?.status_field && { statusField: siteConfig.content.status_field }),
     ...(siteConfig.content?.publish_by_default !== undefined && { publishByDefault: siteConfig.content.publish_by_default }),
   };
+
+  // unlisted_folders: every page inside them is unlisted. Warn about a folder that doesn't
+  // exist, so a typo doesn't silently protect nothing.
+  const unlistedFolders = siteConfig.unlisted_folders || [];
+  for (const folder of unlistedFolders) {
+    if (!(await fs.pathExists(path.join(contentDir, folder)))) {
+      console.warn(`[process] ⚠️  unlisted_folders: "${folder}" does not exist in the vault`);
+    }
+  }
 
   // Step 2: Filter publishable files
   console.log("\n--- Step 2: Filtering publishable files ---");
@@ -416,11 +426,21 @@ export async function preprocessContent({
       frontmatter.title ||
       path.basename(file.relativePath, ".md");
 
+    // Normalize visibility into a single internal flag that templates, layouts, and
+    // eleventyComputed read: visibility: unlisted, website_status: unlisted, the #unlisted
+    // tag, or living inside an unlisted_folders folder (which wins over the page's own YAML).
+    const isUnlisted = isPageUnlisted({
+      frontmatter,
+      tags: pageTags,
+      relativePath: file.relativePath,
+      unlistedFolders,
+    });
+
     // 6g: Collect outgoing links for graph data (wiki-links + markdown links).
     // unlisted pages are excluded entirely — they must not appear in graph.json
     // or any runtime visualizer. archived/public pages carry website_status for
     // visualizers that need to filter them from listings.
-    if (pageInfo && frontmatter.website_status !== "unlisted") {
+    if (pageInfo && !isUnlisted) {
       const outgoing = [
         ...wikiLinkResult.resolved.map((r) => r.url),
         ...mdLinkResult.resolved.map((r) => r.url),
@@ -446,13 +466,6 @@ export async function preprocessContent({
       frontmatter.redirect || frontmatter.Redirect,
       fileIndex,
     );
-
-    // Normalize visibility: unlisted, website_status: unlisted, or #unlisted tag
-    // into a single internal flag that templates, layouts, and eleventyComputed read.
-    const isUnlisted =
-      frontmatter.visibility === "unlisted" ||
-      frontmatter.website_status === "unlisted" ||
-      pageTags.some((t) => t === "unlisted" || t === "#unlisted");
 
     const outputFrontmatter = {
       ...frontmatter,
@@ -696,7 +709,7 @@ export async function preprocessContent({
 
     // Card text for collection post cards. Same visibility rule as graph.json:
     // unlisted pages are never listed, so they get no card text either.
-    if (pageInfo && frontmatter.website_status !== "unlisted" && !isUnlisted) {
+    if (pageInfo && !isUnlisted) {
       const authored = frontmatter.excerpt || frontmatter.description;
       const excerpt = authored ? String(authored).trim() : extractExcerpt(processedContent);
       const dateMatch = /\d{4}-\d{2}-\d{2}/.exec(String(outputFrontmatter.date_created ?? ""));
@@ -863,6 +876,13 @@ export async function preprocessContent({
       if (await fs.pathExists(indexPath) || await fs.pathExists(_indexPath)) continue;
       const folderContents = await fs.readdir(path.join(outputDir, folderSlug));
       if (folderContents.some((f) => (f.startsWith("index.") || f.startsWith("_index.")) && f !== "index.md" && f !== "_index.md")) continue;
+
+      // An unlisted_folders folder gets no index page at all: /clients/ answers 404 instead of
+      // announcing that the folder exists (security-by-obscurity.md, step 4).
+      if (isInUnlistedFolder(`${folderSlug}/`, unlistedFolders)) {
+        console.log(`[folder-index] Skipping stub for /${folderSlug}/ — unlisted_folders`);
+        continue;
+      }
 
       // Skip if a root-level file claims the same permalink slug (e.g. Notes.md → /notes/)
       if (rootFileSlugs.has(folderSlug.toLowerCase())) {

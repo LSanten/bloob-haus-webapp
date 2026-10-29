@@ -69,6 +69,50 @@ export function parseEmbedFences(markdownBody) {
 }
 
 /**
+ * The `structured-data` fence: schema.org JSON-LD (JSON only, no <script> tag) that tells search
+ * engines who the site belongs to. Returns the JSON wrapped in a JSON-LD script tag, minified, or
+ * null (with a warning) when the JSON doesn't parse — a typo must not break every page's <head>.
+ * `<` is escaped as \u003c so a value containing "</script>" can't close the tag early.
+ *
+ * @param {string} raw - fence content
+ * @returns {string|null}
+ */
+export function structuredDataScript(raw) {
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (error) {
+    console.warn(`[settings] structured-data is not valid JSON, skipped: ${error.message}`);
+    return null;
+  }
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json">${json}</script>`;
+}
+
+/**
+ * Pre-concatenates the auto-injected fences into `site.snippets.{head,bodyEnd}` for the shared
+ * partials (site-snippets-head.njk / site-snippets-footer.njk). Structured data goes first in
+ * the head.
+ *
+ * @param {Object} embeds - map from parseEmbedFences
+ * @returns {{ head: string, bodyEnd: string }}
+ */
+export function composeSnippets(embeds = {}) {
+  const snippets = { head: "", bodyEnd: "" };
+  const add = (target, text) => {
+    snippets[target] = snippets[target] ? `${snippets[target]}\n${text}` : text;
+  };
+  if (embeds["structured-data"]) {
+    const script = structuredDataScript(embeds["structured-data"]);
+    if (script) add("head", script);
+  }
+  for (const [name, target] of Object.entries(EMBED_TARGETS)) {
+    if (embeds[name]) add(target, embeds[name]);
+  }
+  return snippets;
+}
+
+/**
  * Extracts the GoatCounter site code from the `goat-counter-tracking` snippet.
  *
  * The user already pastes their tracking script, which carries the code in its

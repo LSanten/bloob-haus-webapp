@@ -87,6 +87,25 @@ The count is fetched as JSON and rendered in your own theme's styling, so there 
 GoatCounter badge or branding. Hide it on one note with `visitor_count: false` in that
 note's frontmatter; show it on one note with `visitor_count: true`.
 
+### Who this site is about (structured data) → injected in `<head>`
+
+Search engines read this to know for certain who or what the site belongs to: your full name,
+your business, where you are, your other profiles. Visitors never see it. Leave the block
+empty to skip it.
+
+Paste **JSON only** (no `<script>` tag; the builder adds it). The easiest way is to ask an AI:
+
+> Write schema.org JSON-LD for my website `https://YOU.bloob.haus`. I am a [Person / business]:
+> name …, what I do …, location …, my other profiles (LinkedIn, Instagram, GitHub …).
+> Return only the JSON, no `<script>` tag.
+
+Check it with Google's [Rich Results Test](https://search.google.com/test/rich-results) after
+the next deploy. If the JSON has a typo, the build skips it and prints a warning; no page breaks.
+
+```structured-data
+
+```
+
 ### FastComments → placed at the bottom of each page's content
 
 `urlId: "{{ page_id }}"` locks the comment thread to the filename. Omit `urlId` to key by URL.

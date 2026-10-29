@@ -24,7 +24,8 @@ const BASE_PAGES = path.join(THEMES, "_base/pages");
 /** Template body without its frontmatter, the way Eleventy hands it to Nunjucks. */
 function body(file, dir = BASE_PAGES) {
   const text = fs.readFileSync(path.join(dir, file), "utf-8");
-  return text.replace(/^---[\s\S]*?\n---\n/, "");
+  // \r?\n: on Windows the template is checked out with CRLF line endings.
+  return text.replace(/^---[\s\S]*?\r?\n---\r?\n/, "");
 }
 
 function render(file, ctx) {

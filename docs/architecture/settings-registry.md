@@ -246,6 +246,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 |-----------|-------------|-------|
 | `header-snippet` | `<head>` | Generic head injection (meta tags, `<link>`, verification tags) |
 | `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
+| `structured-data` | `<head>` | schema.org JSON-LD about who the site belongs to (Person, business). **JSON only**: the builder wraps it in `<script type="application/ld+json">` (`structuredDataScript` in `scripts/utils/bloob-settings-reader.js`), escapes `<`, and skips it with a build warning when the JSON does not parse. Empty fence = off. The vault template suggests asking an AI to write it. Added 2026-10-29. |
 | `footer-snippet` | before `</body>` | Generic end-of-body injection |
 | `embed-endofbody` | before `</body>` | Generic end-of-body injection |
 | `fast-comments-embed` | content-bottom of `page.njk` **and of the `article` shape** (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. On by default wherever the partial is included; opt out per-page with `comments: false`; renders nothing at all when this fence is absent. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). Guarded by `tests/comments-partial.test.js`. |

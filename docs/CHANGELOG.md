@@ -6,6 +6,15 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 72 — October 28, 2026 (from the AE fork)
+**Worked on:** SEO for the alterengineers.com go-live, built on upstream's `show_in_search` (spec `docs/superpowers/specs/2026-10-20-seo-go-live-design.md`, plan `docs/superpowers/plans/2026-10-28-seo-go-live.md`).
+
+- **Automatic meta descriptions** (`seo_description`): subtitle + first prose via upstream's `extractExcerpt`, ~155 characters; the author's `description` wins.
+- **One shared SEO head block** (`_base/partials/seo-meta.njk`) for every theme; melt gains Twitter tags; the homepage title from the page is a per-theme opt-in.
+- **No third-party snippets, comments or visitor count on unlisted pages**, on every site.
+- **`scripts/compare-builds.js`**: head/body diff of two builds, used with a fixture vault per theme (the private vaults aren't reachable from the AE machine): zero body and title changes outside unlisted pages. (The sitemap homepage/folder-index fix landed upstream separately, 1789e33.)
+- **Windows:** the sitemap test's frontmatter regex assumed LF; fixed.
+
 ### Session 71 — August 15, 2026
 **Worked on:** two link/encoding bugs on melt, both rooted in percent-encoding never being decoded. Suite 851 → **899 tests**.
 

@@ -2,45 +2,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>{% if page.url == "/" %}{{ site.title }}{% else %}{{ title }} | {{ site.title }}{% endif %}</title>
+    {# Title, description, canonical, robots, Open Graph, Twitter: shared, themes/_base/partials/seo-meta.njk #}
+    {% include "partials/seo-meta.njk" %}
 
-    <!-- Meta description -->
-    <meta
-        name="description"
-        content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}"
-    />
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
     <meta name="bloob-page-id" content="{{ bloobPageId }}" />
-
-    {% include "partials/robots-meta.njk" %}
-
     {% if redirect %}
     <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
     <meta http-equiv="refresh" content="0; url={{ redirect }}" />
     <script>window.location.replace("{{ redirect }}");</script>
-    {% endif %}
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="{% if layout %}article{% else %}website{% endif %}" />
-    <meta property="og:site_name" content="{{ site.title }}" />
-    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
-    <meta property="og:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
-    <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
-    {% if image %}
-    <meta property="og:image" content="{{ site.url }}{{ image }}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:type" content="{% if '.gif' in image %}image/gif{% elif '.png' in image %}image/png{% else %}image/jpeg{% endif %}" />
-    {% endif %}
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="{{ site.url }}{{ page.url }}" />
-    <meta name="twitter:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
-    <meta name="twitter:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
-    {% if image %}
-    <meta name="twitter:image" content="{{ site.url }}{{ image }}" />
     {% endif %}
 
     <!-- RSS Feed -->

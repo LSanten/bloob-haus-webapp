@@ -30,7 +30,8 @@ These settings work identically across every theme. They are part of the Bloob H
 | `bloob-shape` | string | — | **Primary identity + rendering key.** Names the page's shape and drives (a) layout selection, (b) `renderFilescope()` body rendering (`lib/visualizers/[name]/index.js`), and (c) identity — banner image/text, graph icon, display name — looked up in `_bloob-shapes.md`. Identity resolves via `resolveIdentityKey` (precedence below). Shape config goes in a `::: settings` block in the body, not frontmatter. See `docs/architecture/shapes.md` + `visualizers.md`. |
 | `bloob-type` | string | — | **Legacy identity alias** for `bloob-shape` (older vaults; registry `_bloob-types.md`). Still accepted, and **wins for identity when explicitly set** — precedence `bloob-type` > `bloob-object` > `bloob-shape` — so a page may render as one shape while identifying as another. New content should use `bloob-shape:`. |
 | `bloob-object` | string | — | Oldest legacy identity alias (registry `_bloob-objects.md`). Same precedence rules as `bloob-type`. New content should use `bloob-shape:`. |
-| `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
+| `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. When absent, the build writes an automatic `seo_description` (subtitle + first prose, ~155 characters; `scripts/utils/seo-description.js`) and the head uses that, then `site.description`. Only set when the page deserves a distinct description. |
+| `seo_description` | string (build-generated) | — | Not authored. Written by the preprocessor on every page; read only by `_base/partials/seo-meta.njk` for the meta, `og:` and `twitter:` descriptions. Never copied into `description`, which melt and warm-kitchen render on the page. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `date_created` | string | — | Creation date (`YYYY-MM-DD`). Available to every theme via the data cascade; rendered as a pill only where a theme wires it up. Written by the bloob-haus Obsidian plugin. |
 | `date_updated` | list of strings | — | Chronological list of significant-edit dates (`YYYY-MM-DD`). Appended by the Obsidian plugin. Available to every theme; the shared `dateFormat` filter accepts the array and formats the most recent entry (`{{ date_updated \| dateFormat }}`). Rendered only where a theme opts in. |
@@ -83,7 +84,9 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 | Concern | Mechanism | Automatic? |
 |---------|-----------|------------|
 | Excluded from RSS | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✓ Universal |
-| `noindex` meta | `_base/partials/robots-meta.njk` checks `_bloob_unlisted`; every theme head includes it (tested) | ✓ Universal |
+| `noindex` meta | `_base/partials/robots-meta.njk` checks `_bloob_unlisted`; every theme head reaches it through `_base/partials/seo-meta.njk` (tested) | ✓ Universal |
+| No third-party code | `_base/partials/site-snippets-head.njk`, `site-snippets-footer.njk`, `comments.njk`, `visitor-count.njk` render nothing when `_bloob_unlisted` (tested; a scan test keeps themes from reading snippets elsewhere) | ✓ Universal |
+| SEO head tags | `_base/partials/seo-meta.njk`: title, description, canonical, robots, Open Graph, Twitter. Theme heads set `seo_title_sep` (melt `" · "`) and `seo_home_uses_page_title` (melt, alter-engineers: the homepage's own `title:` becomes its tab title; off elsewhere) before including it | ✓ Universal |
 | Excluded from pagefind | Layout must check `_bloob_unlisted` and swap `data-pagefind-body` → `data-pagefind-ignore` | Per-theme obligation |
 | Excluded from sitemap | `_base/pages/sitemap.njk` filters `_bloob_unlisted` entries; themes may not ship their own (tested) | ✓ Universal |
 

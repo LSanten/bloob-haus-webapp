@@ -101,6 +101,11 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     [`${SRC}/_data/tagIndex.json`]: "tagIndex.json",
   });
+  // Cloudflare Pages _headers — composed by assemble-src.js (writeComposedHeaders) from the
+  // theme's _headers and the magic machines' COOP/COEP rules.
+  if (existsSync(`${SRC}/_headers`)) {
+    eleventyConfig.addPassthroughCopy({ [`${SRC}/_headers`]: "_headers" });
+  }
   // Favicons — generated at build time by scripts/generate-favicons.js into src/
   eleventyConfig.addPassthroughCopy({ [`${SRC}/favicon.png`]: "favicon.png" });
   eleventyConfig.addPassthroughCopy({
@@ -122,10 +127,6 @@ export default async function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy({
       "lib/magic-machines/scene-nav-builder/app/": "tools/scene-nav-builder/",
     });
-    // Cloudflare Pages _headers — COOP/COEP for magic machines requiring SharedArrayBuffer
-    if (existsSync("lib/magic-machines/_headers")) {
-      eleventyConfig.addPassthroughCopy({ "lib/magic-machines/_headers": "_headers" });
-    }
   }
 
   // Watch for changes during development

@@ -3,8 +3,10 @@
    indexed by search. Opt out per-page with `comments: false`. No-op when the fence is absent,
    so sites without comments are unaffected.
    The `{{ page_id }}` token inside the snippet resolves to the page slug (see injectPageVars),
-   which is how FastComments' urlId locks a thread to the file. #}
-{% if site.embeds['fast-comments-embed'] and comments != false %}
+   which is how FastComments' urlId locks a thread to the file.
+   Unlisted pages get no third-party code: it would send the page's secret URL to the third
+   party (security-by-obscurity.md, Tier C). Applies on every site, no opt-out. #}
+{% if site.embeds['fast-comments-embed'] and comments != false and not _bloob_unlisted %}
 <section class="bloob-comments" data-pagefind-ignore>
   {{ site.embeds['fast-comments-embed'] | injectPageVars(page, title, site.url, bloobPageId) | safe }}
 </section>

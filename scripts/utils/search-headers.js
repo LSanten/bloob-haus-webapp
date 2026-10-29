@@ -10,6 +10,26 @@ import fs from "fs-extra";
 import path from "path";
 
 /**
+ * `unlisted_folders`: one X-Robots-Tag rule per folder, for the files no theme head reaches
+ * (raw HTML, PDFs, images). Appended like addNoindexHeader; nothing written for no folders.
+ *
+ * @param {string} deployDir  the folder Cloudflare Pages deploys (`_site`)
+ * @param {string[]} folders  normalized unlisted folders
+ * @param {string} [mountPath]  the site's mount_path, if it lives under one
+ */
+export async function addFolderNoindexHeaders(deployDir, folders, mountPath) {
+  if (!folders || folders.length === 0) return;
+  const file = path.join(deployDir, "_headers");
+  const existing = (await fs.pathExists(file)) ? await fs.readFile(file, "utf-8") : "";
+  const prefix = mountPath ? `/${mountPath.replace(/^\/|\/$/g, "")}` : "";
+  const rules = folders
+    .map((f) => `# unlisted_folders\n${prefix}/${f}/*\n  X-Robots-Tag: noindex, nofollow\n`)
+    .join("\n");
+  const joined = existing && !existing.endsWith("\n") ? `${existing}\n` : existing;
+  await fs.writeFile(file, existing ? `${joined}\n${rules}` : rules);
+}
+
+/**
  * @param {string} deployDir  the folder Cloudflare Pages deploys (`_site`)
  * @param {string} [mountPath]  the site's mount_path, if it lives under one
  */

@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 
 import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
 import { assembleSrc, showInSearch } from "./assemble-src.js";
-import { addNoindexHeader } from "./utils/search-headers.js";
+import { addNoindexHeader, addFolderNoindexHeaders } from "./utils/search-headers.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
@@ -170,6 +170,11 @@ async function buildSite() {
     if (showInSearch(config.features) === "no") {
       await addNoindexHeader(path.join(ROOT_DIR, "_site"), config.mount_path);
       console.log("[build] show_in_search: no → X-Robots-Tag: noindex on every path (_headers)");
+    }
+    // unlisted_folders: raw HTML, PDFs and images in them get X-Robots-Tag too.
+    if (config.unlisted_folders?.length) {
+      await addFolderNoindexHeaders(path.join(ROOT_DIR, "_site"), config.unlisted_folders, config.mount_path);
+      console.log(`[build] unlisted_folders → X-Robots-Tag: noindex on ${config.unlisted_folders.join(", ")} (_headers)`);
     }
 
     // Build summary

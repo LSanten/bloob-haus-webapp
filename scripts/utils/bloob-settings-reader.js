@@ -7,6 +7,7 @@
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
+import { normalizeUnlistedFolders } from "./unlisted-folders.js";
 
 const SETTINGS_FILENAME = "_bloob-settings.md";
 
@@ -232,6 +233,12 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     show_visitor_count:
       bloobSettings.show_visitor_count ?? siteConfig.analytics?.show_visitor_count ?? false,
   };
+
+  // Folders whose pages are always unlisted (scripts/utils/unlisted-folders.js). Owned by the
+  // vault: _bloob-settings.md wins over sites/*.yaml.
+  merged.unlisted_folders = normalizeUnlistedFolders(
+    bloobSettings.unlisted_folders ?? siteConfig.unlisted_folders,
+  );
 
   // Theme-specific settings — opaque bag passed through to site.theme_settings in templates
   if (bloobSettings.theme_settings) {

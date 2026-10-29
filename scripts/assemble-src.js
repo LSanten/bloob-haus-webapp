@@ -100,6 +100,26 @@ export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true, sh
   return { copy, skipped };
 }
 
+/**
+ * Compose `<src>/_headers` (Cloudflare Pages) from the theme's own `_headers` and, when magic
+ * machines are on, `lib/magic-machines/_headers`. eleventy.config.js copies the result to the
+ * output root; build-site step 7.1 may append the show_in_search: no rule after that.
+ * With only one source the file is copied byte for byte, so sites without a theme `_headers`
+ * get exactly what they got before. Removes a stale composed file when no source remains.
+ */
+export async function writeComposedHeaders({ themeFile, magicFile, magicEnabled, srcDir }) {
+  const parts = [];
+  if (await fs.pathExists(themeFile)) parts.push(await fs.readFile(themeFile, "utf-8"));
+  if (magicEnabled && (await fs.pathExists(magicFile))) parts.push(await fs.readFile(magicFile, "utf-8"));
+  const dest = path.join(srcDir, "_headers");
+  if (parts.length === 0) {
+    await fs.remove(dest);
+    return;
+  }
+  const joined = parts.map((p) => (p.endsWith("\n") ? p : `${p}\n`)).join("\n");
+  await fs.outputFile(dest, parts.length === 1 ? parts[0] : joined);
+}
+
 export async function assembleSrc(config, contentDir = null) {
   const SRC_DIR = getActiveSrcDir();
   const themeName = config.theme;
@@ -328,6 +348,14 @@ export async function assembleSrc(config, contentDir = null) {
     }
   }
   await fs.writeJson(path.join(SRC_DIR, "_data", "themeVisualizerCss.json"), themeVizCssNames);
+
+  // Step 6.6: Cloudflare Pages _headers (theme rules + magic-machine rules)
+  await writeComposedHeaders({
+    themeFile: path.join(themeDir, "_headers"),
+    magicFile: path.join(ROOT_DIR, "lib", "magic-machines", "_headers"),
+    magicEnabled: config.features?.magic_machines !== false,
+    srcDir: SRC_DIR,
+  });
 
   // Step 7: Generate src/_data/site.js from config
   console.log("[assemble] Generating site data...");

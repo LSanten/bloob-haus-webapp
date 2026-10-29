@@ -59,6 +59,13 @@ describe("buildSeoDescription", () => {
     expect(words.startsWith(kept + " ")).toBe(true);
   });
 
+  it("drops Obsidian callout markers", () => {
+    const body = "> [!info] Note\n> Callout text here.";
+    expect(buildSeoDescription({ body, siteDescription: SITE })).toBe("Note Callout text here.");
+    const folded = "> [!warning]- Careful\n> Folded text.";
+    expect(buildSeoDescription({ body: folded, siteDescription: SITE })).toBe("Careful Folded text.");
+  });
+
   it("ignores a blank frontmatter description", () => {
     expect(buildSeoDescription({ description: "  ", body: "Body text.", siteDescription: SITE })).toBe("Body text.");
   });

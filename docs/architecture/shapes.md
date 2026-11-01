@@ -966,6 +966,7 @@ The longer-term goal is that anyone (human or AI) can create a shape by followin
 - [ ] `schema.md` filled in for those reference shapes so there's something to imitate
 - [ ] Clear documentation of what CSS tokens a shape can safely use (partially done in "Token-based styles.css" above)
 - [ ] Documented: how a vault-local shape in `/bloob-haus-shapes/` gets picked up by the build pipeline (not yet implemented — see conceptual doc)
+- [x] A one-page guide for writing notes a shape can read later: `writing-notes-for-shapes.md` (2026-10-25)
 
 The vault-local shapes folder (defined in the conceptual doc) is the gateway to shapes becoming a community thing. Nothing in the current build pipeline supports scanning a vault's shape folder yet. That's the missing technical piece between "creator" shapes and "user" shapes.
 
@@ -1017,3 +1018,36 @@ leaf vs. container.
 Context: raised in the workbench session (2026-10-23), where a rung-0 shape became a folder of plain
 HTML templates (`open.html`, optional `closed.html`, `style.css`) filled from `{{yaml.x}}` and
 `{{body}}`. The canvas is the natural room those shapes get placed in.
+
+---
+
+### 11. Choosing a shape automatically (raised 2026-10-25, direction, nothing built)
+
+Leon, 2026-10-25: people now make folders of markdown with AI, and nothing turns them into something
+you can browse. If Bloob Haus could look at any markdown and pick a good shape for it, reliably and
+cheaply ("some algorithm and some very simple AI that isn't expensive"), it would be a strong
+visualization tool on its own.
+
+**Three different mechanisms hide in "automatic". Keep them apart:**
+1. **Recognize (code, free).** Each shape ships a small pure test, e.g. `fits(note)` → how well this
+   note matches, read from the look of its lines (`writing-notes-for-shapes.md` #3). Deterministic and
+   testable. A small form already exists: checkbox-tracker and citations switch on by themselves from
+   plain markdown.
+2. **Judge (cheap AI, only for ties).** When several shapes fit, or none clearly does. Runs once, when
+   a note arrives or changes, never on every view.
+3. **Write it down.** The pick becomes `bloob-shape:` in the file, suggested rather than silent, so the
+   same note always looks the same and the person can change it. A pick that is not written down lets a
+   site change its look between builds, which reads as broken. Reliability comes from 1 and 3; the AI
+   only breaks ties.
+
+**Constraints already in these docs:**
+- **Locked notes.** A server cannot read a private (locked) note, so for those, recognizing runs where
+  the key is: the reader's browser. `fits()` must be pure for that reason (the same "three hosts, one
+  renderer" rule as renderers, `visualizers.md`). An AI judge on a server only ever sees what the
+  person chose to show it.
+- **It needs shapes to choose from.** With three shapes the answer is always `article`. This comes
+  after the workbench and its first ~10 shapes, and does not change that order. The cheap step now:
+  every new shape, on the workbench too, declares what notes it fits from day one.
+- **What makes it ours.** Turning text into a nicer page is something many tools already do. The
+  difference here is that the pick is a *shape*: an object with an outside and an inside that can be
+  placed in a world, and the decision stays in the person's own markdown file.

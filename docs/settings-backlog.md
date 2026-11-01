@@ -39,6 +39,18 @@ build actually uses, never a second copy that can disagree.
       answers that one path and lets everything else on `bloob.haus` fall through to the live site.
       Submit it to Search Console once. **Build when the first customer site exists** — until then
       the per-site sitemaps submitted by hand (leons, buffbaby, 2026-10-27) do the same job.
+- [ ] **SET7** — what AIs may do with a site, three switches in `_bloob-settings.md` (Leon,
+      2026-11-01). Defaults: **reading by link on, AI search on, training off**, for every site.
+      Leon's format, one line, any order, write only what differs from the default:
+      `ai: read_links:yes, search:yes, train:no`. No space after the colons on one line (YAML
+      would read `ai: read_links: yes` as broken and fail the whole file), so the reader also
+      accepts the nested form (`ai:` + `  train: no`). Written to each site's `robots.txt` by
+      user agent: read_links → ChatGPT-User, Claude-User, Perplexity-User; search →
+      OAI-SearchBot, Claude-SearchBot, PerplexityBot; train → GPTBot, ClaudeBot,
+      Google-Extended, CCBot, Applebot-Extended. So every site gets a `robots.txt` (today only
+      `show_in_search: yes` sites have one, which means every AI is currently allowed
+      everything on quiet sites). Say plainly in the docs: robots.txt is a request the big
+      companies honour, not a lock; only a login keeps a page from an AI.
 - [x] **SET6** — melt's `show_in_search` is `yes` (2026-10-28, in the vault's `_bloob-settings.md`).
       Leon reviewed the page list: the bios page is meant to be found; the four `Resources/` drafts
       are `visibility: private` and not built at all.

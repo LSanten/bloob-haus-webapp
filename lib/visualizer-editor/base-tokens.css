@@ -1,0 +1,58 @@
+/* The preview's one look: a first draft of the base theme's tokens.
+   Every visualizer reads these names (docs/architecture/themes.md → "CSS Token
+   Contract"), so a visualizer built against them works in any theme that
+   declares them. Lives in the editor until the base theme is designed; moving
+   it into themes/_base would change live sites, so that is its own decision. */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+
+:root {
+  --accent-color: #2a55c4;
+  --accent-dark: #1f3f94;
+  --bg-color: #ffffff;
+  --text-color: #1d221e;
+  --text-light: #59625b;
+  --surface-text-color: #1d221e;
+  --link-color: #2a55c4;
+  --link-hover: #1f3f94;
+  --border-color: #d6dbd3;
+  --card-bg: #f8f9f6;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --border-radius: 10px;
+  --border-radius-sm: 6px;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2.5rem;
+  --spacing-xl: 4rem;
+  --max-width: 1100px;
+  --nav-height: 0px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font: 16px/1.6 var(--font-body);
+}
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); line-height: 1.2; letter-spacing: -0.01em; }
+a { color: var(--link-color); }
+a:hover { color: var(--link-hover); }
+img { max-width: 100%; }
+.label { color: var(--pair-label, var(--accent-color)); }
+.button {
+  display: inline-block;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--border-radius-sm);
+  background: var(--accent-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Color pairs (themes.md → "Color Pair Contract"): a few neutral ones. */
+.bg-muted { --pair-bg: var(--card-bg); --pair-title: var(--text-color); --pair-text: var(--text-color); --pair-label: var(--accent-color); }
+.bg-dark { --pair-bg: #1d221e; --pair-title: #ffffff; --pair-text: #e4e9e2; --pair-label: #93b1fb; }
+.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff; --pair-text: #ffffff; --pair-label: #dfe7fb; }
+[class*="bg-"] { background: var(--pair-bg); }
+[class*="bg-"] :is(h1, h2, h3, h4) { color: var(--pair-title); }
+[class*="bg-"] :is(p, li) { color: var(--pair-text); }

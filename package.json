@@ -12,6 +12,7 @@
     "dev:melt": "node scripts/dev-local.js --site=melt --content=../melt-website",
     "dev:alter-engineers": "node scripts/dev-local.js --site=alter-engineers \"--content=G:/Shared drives/ACE_Drive/04_Marketing/Website/_live-website-content-obsidian-repo\"",
     "dev:magic-machine": "node scripts/dev-magic-machine.js",
+    "visualizers": "node scripts/build-visualizer-editor.js --serve",
     "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site",

@@ -2,10 +2,6 @@ import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "
 import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
-import taskLists from "markdown-it-task-lists";
-import markdownItContainer from "markdown-it-container";
-import markdownItAttrs from "markdown-it-attrs";
-import markdownItFootnote from "markdown-it-footnote";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import Image from "@11ty/eleventy-img";
 import {
@@ -13,6 +9,7 @@ import {
   resolveSiteName,
 } from "./scripts/utils/config-loader.js";
 import { formatDate } from "./scripts/utils/format-date.js";
+import { configureMarkdown } from "./scripts/utils/markdown-setup.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
@@ -149,77 +146,10 @@ export default async function (eleventyConfig) {
   eleventyConfig.addFilter("md", (str) => mdLib ? mdLib.render(String(str || "")) : str);
   eleventyConfig.addFilter("mdinline", (str) => mdLib ? mdLib.renderInline(String(str || "")) : str);
 
-  // Single line breaks → <br> by default (matches Obsidian behavior).
-  // Opt out per-site with features: { soft_breaks: false } in _bloob-settings.md.
+  // The markdown-it setup lives in one place, shared with the live visualizer
+  // editor, so a note renders the same in both hosts (scripts/utils/markdown-setup.js).
   eleventyConfig.amendLibrary("md", (mdLib) => {
-    mdLib.set({ linkify: true });
-    if (siteConfig.features?.soft_breaks !== false) {
-      mdLib.set({ breaks: true });
-    }
-    mdLib.use(markdownItFootnote);
-    mdLib.use(taskLists, { enabled: false, label: true });
-    // {.class} {#id} {attr=value} attribute syntax on links, images, headings
-    // e.g. [CONTACT US](#footer){.button} → <a href="#footer" class="button">
-    mdLib.use(markdownItAttrs);
-
-    // ::: name [key=value ...] — section containers for styling and visualizers.
-    // First word = CSS class. Additional key=value pairs → data-vis-settings JSON.
-    // Examples:
-    //   ::: bg-dark                        → <section class="bg-dark">
-    //   ::: image-grid title="Our Team"    → <section class="image-grid" data-vis-settings='{"title":"Our Team"}'>
-    // Backwards compatible — single-word fences are unchanged.
-    mdLib.use(markdownItContainer, "section", {
-      validate: () => true,
-      render(tokens, idx) {
-        if (tokens[idx].nesting !== 1) return `</section>\n`;
-        const info = tokens[idx].info.trim();
-        const spaceIdx = info.indexOf(" ");
-        if (spaceIdx === -1) {
-          return `<section class="${info}">\n`;
-        }
-        const cls = info.slice(0, spaceIdx);
-        const settingsStr = info.slice(spaceIdx + 1).trim();
-        const settings = {};
-        const kvPattern = /([\w-]+)=(?:"([^"]*)"|([\S]*))/g;
-        let m;
-        while ((m = kvPattern.exec(settingsStr)) !== null) {
-          settings[m[1]] = m[2] !== undefined ? m[2] : m[3];
-        }
-
-        // _raw is injected by inject-container-raw.js during preprocessing.
-        // Decode it and emit as data-vis-raw so build-time visualizer transforms
-        // can parse raw markdown instead of rendered HTML — keeping parser.js
-        // shareable across Eleventy, browser preview, and Obsidian plugin.
-        const rawBase64 = settings._raw;
-        delete settings._raw;
-        const rawAttr = rawBase64
-          ? ` data-vis-raw="${rawBase64}"`
-          : "";
-
-        // _rawsource is the optional PRE-resolution capture (scene-nav only) — lets a
-        // shape's builder round-trip authored, un-resolved refs. Additive; only present
-        // when inject-container-raw injected it.
-        const rawSourceBase64 = settings._rawsource;
-        delete settings._rawsource;
-        const rawSourceAttr = rawSourceBase64
-          ? ` data-vis-raw-source="${rawSourceBase64}"`
-          : "";
-
-        const settingsAttr = Object.keys(settings).length
-          ? ` data-vis-settings='${JSON.stringify(settings)}'`
-          : "";
-        return `<section class="${cls}"${settingsAttr}${rawAttr}${rawSourceAttr}>\n`;
-      },
-    });
-
-    // Shapes that change how markdown itself renders export a markdown-it
-    // plugin from their index.js (today: foldable, for `## > Heading`). It is
-    // handed the site config so a site can opt out through a feature flag.
-    for (const viz of visualizers) {
-      if (typeof viz.markdownItPlugin === "function") {
-        mdLib.use(viz.markdownItPlugin, { siteConfig });
-      }
-    }
+    configureMarkdown(mdLib, { siteConfig, visualizers });
   });
 
   // Date formatting filter — see scripts/utils/format-date.js.

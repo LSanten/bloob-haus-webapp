@@ -1,0 +1,54 @@
+name: Deploy Visualizers
+
+# bloob.haus/visualizers/: the visualizer catalog, live editors and AI cards.
+# Built from lib/visualizers (the same code that builds every site) and deployed
+# to the Cloudflare Pages project "visualizers"; the bloob-haus-worker in the cloud
+# repo serves it at bloob.haus/visualizers/.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/visualizers/**'
+      - 'lib/visualizer-editor/**'
+      - 'scripts/build-visualizer-editor.js'
+      - 'scripts/utils/markdown-setup.js'
+      - 'scripts/utils/inject-container-raw.js'
+      - 'scripts/utils/title-deduplicator.js'
+      - 'themes/_base/assets/css/base.css'
+      - '.github/workflows/deploy-visualizers.yml'
+  workflow_dispatch:
+
+jobs:
+  test-build-deploy:
+    # Only in Leon's canonical repo; forks never deploy (same guard as the site workflows).
+    if: ${{ github.repository == 'LSanten/bloob-haus-webapp' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build the visualizer editor
+        run: node scripts/build-visualizer-editor.js
+
+      - name: Deploy to Cloudflare Pages
+        # Pinned to a commit, because this step holds the Cloudflare token
+        # (v3 is what the site workflows use).
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _visualizers --project-name=visualizers --branch=main

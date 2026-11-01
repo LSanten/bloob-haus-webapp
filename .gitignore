@@ -10,6 +10,7 @@ content-source/
 
 # Build output
 _site/
+_visualizers/
 .cache/
 public/
 

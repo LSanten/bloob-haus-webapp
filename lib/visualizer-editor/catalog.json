@@ -1,0 +1,21 @@
+{
+  "alwaysOn": {
+    "title": "Writing rules",
+    "description": "Things that work in every note with nothing to switch on: folds, checkboxes, footnotes.",
+    "visualizers": [
+      "foldable",
+      "checkbox-tracker",
+      "citations"
+    ]
+  },
+  "blurbs": {
+    "heading-and-paragraph": "A heading and a paragraph as one section, with an optional background.",
+    "image-grid": "A table of photos, names and roles becomes a grid of people.",
+    "image-text": "An image beside text, as one section. Stacks on a phone.",
+    "photo-grid": "A list of images becomes a tidy photo grid.",
+    "quotes-stack": "Quote cards from a short list: quote, name, date, color.",
+    "services": "A title, a sentence and a list, as a two-column section.",
+    "slideshow": "A row of images that scrolls by on its own.",
+    "testimonials": "Quotes with a name and role, shown one at a time."
+  }
+}

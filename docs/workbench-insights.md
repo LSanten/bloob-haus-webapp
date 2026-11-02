@@ -82,11 +82,13 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
   (its title or file name), the same every time. The workbench should show both: the picker and the
   default it falls back to.
 
-## Where it lives (decided)
+## Where it lives (leaning, reopened)
 
 - **A private third repo, `bloob-shapes`** (Leon, 2026-11-01; Oct 25 dig R2): the engine plus the new
   visualizers. The builder and the post office install a pinned version; the workbench is built from
   it. Existing visualizers move in only when touched. Private until the license question is settled.
+- **Reopened the same night:** Leon is unsure whether splitting into a third repo makes sense, and
+  worries the builder "can't run on its own anymore". Talk it through before building anything.
 
 ## Saving
 

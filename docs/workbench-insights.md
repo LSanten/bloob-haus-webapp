@@ -59,6 +59,27 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
 - **Movement follows the input the visitor has:** the cursor where there is one, scrolling on phones
   (`hover: hover` and `pointer: fine`). Keep it subtle. *(2026-11-01, Leon)*
 
+## Icons come from the closed look
+
+- A visualizer's icon is its closed look drawn small, so no visualizer needs separate icon work.
+  If it has no closed look: the object type's `image` from the vault's `_bloob-objects.md`, else a
+  calm plain dot. Baked when the site builds (image files in the HTML, a tab icon per page);
+  JavaScript only adds live movement on top. The workbench should show the icon at 16, 32, 64 px
+  next to the closed look. *(2026-11-02, Leon asked how this generalizes beyond the marble)*
+
+## Containers hold another visualizer
+
+- A marble is a wrapping with something inside: an article by default, or a note, an embedded
+  website, any visualizer (`inside:` in the YAML). The workbench needs a way to pick what goes
+  inside and see the wrapping around it. *(2026-11-02)*
+
+## Behaviors in nested objects
+
+- **The outermost object shares** (Leon, 2026-11-02): "share" is a toolbox switch, and when one
+  object sits inside another (an article inside a marble), only the outermost shows it, because
+  that is the thing you hand someone. An article on its own keeps its share bar. Other behaviors may
+  follow the same rule; decide each when it comes up.
+
 ## Previews the workbench needs
 
 - **An opening scrubber:** a 0-to-1 slider that plays the transition by hand. *(2026-11-01)*
@@ -82,13 +103,17 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
   (its title or file name), the same every time. The workbench should show both: the picker and the
   default it falls back to.
 
-## Where it lives (leaning, reopened)
+## Where it lives (decided 2026-11-02)
 
-- **A private third repo, `bloob-shapes`** (Leon, 2026-11-01; Oct 25 dig R2): the engine plus the new
-  visualizers. The builder and the post office install a pinned version; the workbench is built from
-  it. Existing visualizers move in only when touched. Private until the license question is settled.
-- **Reopened the same night:** Leon is unsure whether splitting into a third repo makes sense, and
-  worries the builder "can't run on its own anymore". Talk it through before building anything.
+- **One home for every visualizer: `lib/visualizers/`.** The engine is `lib/visualizers/_engine/`
+  (the underscore means "not a visualizer", like `_utils/`). Note and marble are ordinary folders
+  next to the others, in the five-layer format; older visualizers move to that format when touched.
+- **An automatic check** fails the build if the engine, note or marble reach into the rest of the
+  builder, so they can be lifted out whole later. The post office gets a compiled copy of the
+  engine plus the visualizers it needs.
+- A separate repo was considered (Oct 25 dig R2) and set aside for now: it doubles every change
+  while Leon is the only one changing visualizers. Revisit the day others need to work on them.
+- The wider repo tidy-up for newcomers is its own job: `docs/TECH-DEBT.md` #49.
 
 ## Saving
 

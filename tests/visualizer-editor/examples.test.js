@@ -35,6 +35,14 @@ describe("starter notes", () => {
     expect(pages.map((p) => p.name).sort()).toEqual(["always-on", ...catalog.listed].sort());
   });
 
+  it("the AI index points to the making guide, and the guide exists", async () => {
+    const { aiIndex } = await import("../../lib/visualizer-editor/ai-card.js");
+    expect(aiIndex([])).toContain("/making-a-visualizer.md");
+    const guide = readFileSync(path.join(ROOT, "lib/visualizer-editor/making-a-visualizer.md"), "utf-8");
+    expect(guide).toContain("bloob-shape:");
+    expect(guide).not.toContain("\u2014"); // no em dashes in copy people read
+  });
+
   it("the always-on page uses every always-on rule", async () => {
     const visualizers = await Promise.all(catalog.alwaysOn.visualizers.map(load));
     const html = createNoteRenderer({ visualizers })(readFileSync(path.join(EXAMPLES, "always-on.md"), "utf-8"));

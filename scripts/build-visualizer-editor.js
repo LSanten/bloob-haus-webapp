@@ -172,6 +172,7 @@ export async function build() {
   await fs.copy(path.join(EDITOR, "base-tokens.css"), path.join(OUT, "themes", "base-tokens.css"));
   await fs.outputFile(path.join(OUT, "index.html"), page({ title: "Bloob Haus visualizers", view: "catalog", root: "./" }));
   await fs.outputFile(path.join(OUT, "llms.txt"), aiIndex(pages));
+  await fs.copy(path.join(EDITOR, "making-a-visualizer.md"), path.join(OUT, "making-a-visualizer.md"));
 
   console.log(`[visualizers] ${pages.length} pages, ${shapes.length} shapes: ${shapes.map((v) => v.name).join(", ")}`);
   return { shapes, pages };

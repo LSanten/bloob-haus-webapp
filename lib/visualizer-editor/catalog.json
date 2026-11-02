@@ -1,4 +1,5 @@
 {
+  "listed": [],
   "alwaysOn": {
     "title": "Writing rules",
     "description": "Things that work in every note with nothing to switch on: folds, checkboxes, footnotes.",

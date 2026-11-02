@@ -65,6 +65,9 @@ async function shapeInfo(name) {
 /**
  * What the editor shows, from lib/visualizer-editor/:
  *   catalog.json → alwaysOn: the writing rules every note gets (one shared page)
+ *   catalog.json → listed: the visualizers you place that get a page. Leon, 2026-11-02: start
+ *     with the big shiny visualizers, so the small ones keep their starter notes (still tested)
+ *     but are not listed until they are added here.
  *   examples/<name>.md → a visualizer you place, with its starter note
  * Returns the shape modules to load and the pages to build.
  */
@@ -73,6 +76,7 @@ export async function liveVisualizers() {
   const placed = (await fs.readdir(path.join(EDITOR, "examples")))
     .filter((f) => f.endsWith(".md") && f !== "always-on.md")
     .map((f) => f.slice(0, -3))
+    .filter((name) => (catalog.listed ?? []).includes(name))
     .sort();
   const shapes = await Promise.all([...new Set([...catalog.alwaysOn.visualizers, ...placed])].map(shapeInfo));
 

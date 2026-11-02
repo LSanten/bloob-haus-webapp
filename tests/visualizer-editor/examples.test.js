@@ -8,6 +8,7 @@ import { readdirSync, readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createNoteRenderer } from "../../lib/visualizer-editor/render-note.js";
+import { liveVisualizers } from "../../scripts/build-visualizer-editor.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const EXAMPLES = path.join(ROOT, "lib/visualizer-editor/examples");
@@ -27,6 +28,11 @@ describe("starter notes", () => {
     // Untransformed blocks keep their raw text attribute or their code fence.
     expect(html).not.toContain("data-vis-raw");
     expect(html).not.toContain(`language-${name}`);
+  });
+
+  it("only the writing rules and the listed visualizers get a page", async () => {
+    const { pages } = await liveVisualizers();
+    expect(pages.map((p) => p.name).sort()).toEqual(["always-on", ...catalog.listed].sort());
   });
 
   it("the always-on page uses every always-on rule", async () => {

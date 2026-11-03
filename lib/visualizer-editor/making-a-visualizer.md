@@ -13,10 +13,10 @@ in; the theme provides that background, so a visualizer never paints a page back
 
 - Name the visualizer in the frontmatter with `bloob-shape: <name>`. Not `visualizer:` or `type:`.
 - Keep the frontmatter flat and everything optional. Write only what differs from the defaults.
-- **The frontmatter is the outside, the body is the inside.** The closed look may only use
-  frontmatter values. Private notes are encrypted, and their body is not available until someone
-  opens them, so anything the closed look needs (a title, a cover image, a color) belongs in the
-  frontmatter.
+- **The frontmatter is the outside, the body is the inside.** For a public note, the closed look may
+  use both (its first lines, its first image). For a note that is encrypted or sealed, the body is
+  not available until someone opens it, so its closed look can only use frontmatter values. Design
+  the closed look so it still works with only the frontmatter (a title, a cover image, a color).
 - The note should read fine in Obsidian first. Prefer plain markdown (lists, headings, images,
   checkboxes, quotes, tables) over new syntax, and make each kind of line look different.
 - Images and links: accept both `![[photo.png]]` / `[[Other note]]` and `![alt](photo.png)` /

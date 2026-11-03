@@ -1,0 +1,119 @@
+/* The marble: a glass ball on the haus's own background. Clicked, its page pours out of it
+   through a funnel onto a sheet. Everything between closed and open is drawn from --open. */
+
+.bloob-object--marble {
+  --marble-size: clamp(150px, 34vw, 230px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: var(--sheet-width, 760px);
+  margin: 4vh auto 0;
+}
+
+.bloob-object--marble .bloob-object__closed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.marble-ball {
+  position: relative;
+  width: var(--marble-size);
+  height: var(--marble-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  /* the shadow falls away from the light (top right by day) */
+  filter: drop-shadow(calc(var(--light-x, 0.7) * -14px + 6px) 14px 18px var(--object-shadow, rgba(60, 40, 20, 0.25)));
+  transform: scale(calc(1 + var(--open) * 0.04));
+}
+.marble-ball:focus-visible {
+  outline: 2px solid var(--link-color, currentColor);
+  outline-offset: 6px;
+}
+.bloob-object .marble-ball__picture,
+.marble-ball canvas {
+  background: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+/* once the live glass draws, the baked picture steps back */
+.marble-ball.is-live .marble-ball__picture { visibility: hidden; }
+.marble-ball__picture[src=""] { display: none; }
+/* the light swells from the center as it opens */
+.marble-ball::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 250, 235, 0.9), transparent 60%);
+  opacity: calc(var(--open) * 0.55);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marble-title {
+  margin: 4px 0 0;
+  font-family: var(--font-heading, serif);
+  font-size: 1.35rem;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.marble-about {
+  font: 500 0.82rem/1.4 var(--font-label, sans-serif);
+  color: var(--text-light);
+  text-align: center;
+  max-width: 34rem;
+}
+.marble-about summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+}
+.marble-about summary::-webkit-details-marker { display: none; }
+.marble-about p { margin: 10px 0 0; }
+.marble-about:has(p:empty) { display: none; }
+
+/* the open part: a funnel flaring from under the marble, then the sheet */
+.bloob-object--marble .bloob-object__open {
+  width: 100%;
+  overflow: hidden;
+  max-height: calc(var(--open) * var(--full-height, 100000px));
+}
+.marble-funnel {
+  display: block;
+  width: 100%;
+  height: 90px;
+  margin-top: -6px;
+  opacity: calc(var(--open) * 0.9);
+}
+.marble-funnel__top { stop-color: var(--marble-tint, var(--world-glow, #f3d9b0)); stop-opacity: 0.55; }
+.marble-funnel__bottom { stop-color: var(--card-bg, #fbf7ef); stop-opacity: 1; }
+
+/* the sheet is the theme's own reading sheet, so it reads well by day and by night */
+.marble-sheet {
+  --text-color: var(--surface-text-color, inherit);
+  background: var(--card-bg, #fbf7ef);
+  color: var(--surface-text-color, inherit);
+  border-radius: 0 0 14px 14px;
+  padding: 8px clamp(18px, 5vw, 56px) 40px;
+  box-shadow: 0 18px 40px -24px var(--object-shadow, rgba(60, 40, 20, 0.3));
+}
+
+/* print: the page as a document */
+@media print {
+  .world, .site-footer, .bloob-share, .marble-about, .marble-funnel { display: none !important; }
+  .bloob-object--marble { --open: 1 !important; }
+  .marble-ball { width: 120px; height: 120px; filter: none; }
+  .marble-sheet { box-shadow: none; padding: 0; }
+}

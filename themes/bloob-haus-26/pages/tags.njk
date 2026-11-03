@@ -1,0 +1,27 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: collections
+  size: 1
+  alias: tag
+  filter:
+    - all
+    - nav
+    - posts
+    - tagList
+    - not-for-public
+    - sections
+    - withBacklinks
+permalink: /tags/{{ tag | slugify }}/
+eleventyComputed:
+  title: "Tagged: {{ tag }}"
+eleventyExcludeFromCollections: true
+---
+{# A tag's page is a room of its pages, newest first. #}
+<section class="room-page">
+  <h1 class="room-page__title">#{{ tag }}</h1>
+  {% set tagUrls = [] %}
+  {% for post in collections[tag] | reverse %}{% set tagUrls = (tagUrls.push(post.url), tagUrls) %}{% endfor %}
+  {% bloobRoomOf tagUrls %}
+  <p class="room-page__back"><a href="{{ "/tags/" | url }}">All tags</a></p>
+</section>

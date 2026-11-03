@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
+import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync, statSync } from "fs";
 import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
@@ -12,6 +12,10 @@ import { formatDate } from "./scripts/utils/format-date.js";
 import { configureMarkdown } from "./scripts/utils/markdown-setup.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
+import { loadTemplateShapes } from "./scripts/utils/template-shapes.js";
+import { renderRoom, roomNodes, nodesForUrls } from "./lib/visualizers/_engine/room.js";
+import { renderObject } from "./lib/visualizers/_engine/index.js";
+import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
 import {
   detectVisualizers,
@@ -69,6 +73,41 @@ export default async function (eleventyConfig) {
 
   // Load visualizer modules for build-time transforms
   const visualizers = await loadVisualizers();
+
+  // Template shapes (note, marble, ...) are drawn by the engine. Their layouts call
+  // {% bloobObject "<name>", content %}; the page's frontmatter reaches the engine through this.ctx.
+  const templateShapes = await loadTemplateShapes("lib/visualizers");
+  // How the page's own object starts, decided in <head> before the first paint (themes with objects).
+  eleventyConfig.addShortcode("bloobHeadInit", (pageId) => headInitScript({ pageId: pageId || "" }));
+  eleventyConfig.addShortcode("bloobObject", function (name, content, inside) {
+    const shape = templateShapes.get(name);
+    if (!shape) return content;
+    const ctx = this.ctx || {};
+    // What the haus says about this kind of object (_bloob-objects.md), for "What is a marble?".
+    const about = ctx.bloobObjects?.[ctx.bloob_object || name];
+    const data = { ...ctx, object_label: (about?.display_name || name).toLowerCase(), object_about: about?.description };
+    return renderObject(
+      shape,
+      { data, html: content, url: this.page?.url, pageId: ctx.bloobPageId || this.page?.url },
+      { inside: inside == null ? null : String(inside) },
+    );
+  });
+  // {% bloobRoom folder %}: a folder's pages as their closed objects (themes with objects). Reads
+  // the page catalog preprocess wrote; read again only when it changes.
+  let roomCatalog = { mtime: 0, nodes: [] };
+  const catalogNodes = () => {
+    const file = join(SRC, "graph.json");
+    try {
+      const mtime = statSync(file).mtimeMs;
+      if (mtime !== roomCatalog.mtime) roomCatalog = { mtime, nodes: JSON.parse(readFileSync(file, "utf-8")).nodes || [] };
+    } catch {
+      return [];
+    }
+    return roomCatalog.nodes;
+  };
+  eleventyConfig.addShortcode("bloobRoom", (folder) => renderRoom(roomNodes(catalogNodes(), folder || ""), templateShapes));
+  // {% bloobRoomOf urls %}: the named pages as a room (a tag's pages).
+  eleventyConfig.addShortcode("bloobRoomOf", (urls) => renderRoom(nodesForUrls(catalogNodes(), urls), templateShapes));
   // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
   eleventyConfig.addPlugin(pluginRss);
 
@@ -78,6 +117,9 @@ export default async function (eleventyConfig) {
 
   // Pass through static assets
   eleventyConfig.addPassthroughCopy(`${SRC}/assets`);
+  // Markdown that objects offer to share (preprocess writes src/_share/<page>/source.md)
+  eleventyConfig.addPassthroughCopy({ [`${SRC}/_share`]: "/" });
+  eleventyConfig.ignores.add(`${SRC}/_share/**`);
   // Media files — serve at /media/ (covers optimized/ subdirectory and any media-folder files)
   eleventyConfig.addPassthroughCopy({ [`${SRC}/media`]: "media" });
   // Vault attachment files at vault-relative paths outside src/media/

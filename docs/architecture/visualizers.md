@@ -570,6 +570,21 @@ Both added for the `foldable` shape; both are opt-in exports, so no other shape 
   row from the cards `collection` has drawn. Before this, transform order was `readdir` order,
   which is alphabetical on macOS but not guaranteed on Linux CI.
 
+## The engine — `lib/visualizers/_engine/` (2026-11-02)
+
+The one home for what every visualizer needs and should never rewrite: filling a template shape
+from a note (`blanks.js`, `fill.js`, `render.js`), and in the browser the shared toolbox (opening,
+remembering, the 0-to-1 progress, the light, sharing). Its underscore keeps it out of visualizer
+discovery, like `_utils/`. The engine and the new-format visualizers import nothing outside their
+own family, so they can run in every host and be lifted out whole; a test enforces it.
+
+**A visualizer has five layers, plus an optional sixth**, one file and one workbench pane each:
+*reads* (blanks from the note, or `parser.js`), *draws* (`open.html` / `closed.html`, or
+`renderer.js`), *does* (toolbox switches in `manifest.json`; own `browser.js` only for its own
+behavior), *looks* (`style.css`, tokens only), *promises* (`manifest.json` + `schema.md`), and
+*writes* (an optional `builder/`, the GUI people use to write a note for it). Template shapes need
+no `index.js`: the engine supplies the plumbing that today's visualizers each copy.
+
 ## Shared helpers — `lib/visualizers/_utils/`
 
 **Status: in use by 7 shapes across 2 modules (2026-08-15).**

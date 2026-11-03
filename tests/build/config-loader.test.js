@@ -118,6 +118,21 @@ features:
 });
 
 describe('mergeBloobSettings', () => {
+  it("THEME_OVERRIDE wins over the vault's theme", () => {
+    process.env.THEME_OVERRIDE = 'bloob-haus-26';
+    try {
+      const merged = mergeBloobSettings({ theme: 'marbles-pouch' }, { theme: 'marbles-pouch' });
+      expect(merged.theme).toBe('bloob-haus-26');
+      expect(mergeBloobSettings({ theme: 'marbles-pouch' }, null).theme).toBe('bloob-haus-26');
+    } finally {
+      delete process.env.THEME_OVERRIDE;
+    }
+  });
+
+  it('without THEME_OVERRIDE the vault theme still wins', () => {
+    expect(mergeBloobSettings({ theme: 'melt' }, { theme: 'marbles-pouch' }).theme).toBe('marbles-pouch');
+  });
+
   it('merges site-level settings', () => {
     const baseConfig = {
       site: { url: 'https://test.bloob.haus' },

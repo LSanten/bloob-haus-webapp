@@ -157,7 +157,8 @@ a {
    post-action confirmation — "Copied!" behind a collapsed label would be invisible. */
 .share-bar .share-btn.is-open .share-btn__label,
 .share-bar .share-btn--confirmed .share-btn__label,
-.share-bar .share-btn:focus-visible .share-btn__label {
+.share-bar .share-btn:focus-visible .share-btn__label,
+.share-bar.is-open .share-btn__label {
   max-width: 12rem;
   opacity: 1;
   margin-left: 0.42em;
@@ -165,7 +166,8 @@ a {
 
 .share-bar .share-btn.is-open,
 .share-bar .share-btn--confirmed,
-.share-bar .share-btn:focus-visible {
+.share-bar .share-btn:focus-visible,
+.share-bar.is-open .share-btn {
   padding-right: 0.95em;
   z-index: 2;
 }
@@ -174,8 +176,10 @@ a {
    a phone can never leave a button latched in its hover state. */
 @media (hover: hover) {
   /* Approaching the bar un-squishes it — the stack spreads into a row. */
-  .share-bar:hover .share-btn { margin-left: var(--share-btn-gap, 0.35rem); }
-  .share-bar:hover .share-btn:first-child { margin-left: 0; }
+  .share-bar:hover .share-btn,
+  .share-bar.is-open .share-btn { margin-left: var(--share-btn-gap, 0.35rem); }
+  .share-bar:hover .share-btn:first-child,
+  .share-bar.is-open .share-btn:first-child { margin-left: 0; }
 
   .share-bar .share-btn:hover .share-btn__label {
     max-width: 12rem;

@@ -17,6 +17,7 @@ import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
 import { assembleSrc } from "./assemble-src.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
+import { bakeMarbles } from "./bake-marbles.js";
 import { getSrcDir } from "./utils/get-src-dir.js";
 import { optimizeGifs } from "./optimize-gifs.js";
 
@@ -87,6 +88,8 @@ async function devLocal() {
   if (config.features?.og_images && !pageFilter) {
     await generateOgImages();
   }
+  // Step 1.6: Bake every marble into a picture (after the link previews it reads)
+  if (!pageFilter) await bakeMarbles({ srcDir });
 
   // Step 2: Assemble theme (favicon generation reads from src/media/ populated in step 1)
   await assembleSrc(config, contentDir);
@@ -97,6 +100,13 @@ async function devLocal() {
     cwd: ROOT_DIR,
     stdio: "inherit",
   });
+
+  // --build: build once into _site and stop (before/after comparisons, screenshots)
+  if (process.argv.includes("--build")) {
+    console.log("\n--- Building once with Eleventy ---\n");
+    execSync("npx @11ty/eleventy", { cwd: ROOT_DIR, stdio: "inherit", env: { ...process.env, SITE_NAME: siteName } });
+    return;
+  }
 
   // Step 4: Serve with Eleventy + watch themes concurrently
   console.log("\n--- Starting Eleventy dev server ---\n");

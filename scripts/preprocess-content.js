@@ -55,6 +55,10 @@ import {
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
+import { pageShape, loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
+import { dropHausStampedKeys } from "./utils/haus-stamped.js";
+import { catalogFields } from "./utils/catalog-fields.js";
+import { cleanMarkdownForSharing } from "./utils/share-markdown.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -153,6 +157,10 @@ export async function preprocessContent({
   // not from env vars that may not be set (e.g. during `npm run dev:*`).
   const siteName = resolveSiteName();
   const siteConfig = await loadSiteConfig(siteName, { contentDir });
+  // Template shapes (lib/visualizers/*/manifest.json "format": "template") are drawn by the engine.
+  // Without their own layout.njk they only come alive on a theme with objects: true.
+  const templateShapes = await loadTemplateShapes(path.join(ROOT_DIR, "lib/visualizers"));
+  const themeHasObjects = themeSupportsObjects(siteConfig, ROOT_DIR);
   const publishOptions = {
     ...(siteConfig.content?.publish_mode && { publishMode: siteConfig.content.publish_mode }),
     ...(siteConfig.content?.blocklist_tag && { blocklistTag: siteConfig.content.blocklist_tag }),
@@ -255,12 +263,19 @@ export async function preprocessContent({
   // Step 6: Process each file
   console.log("\n--- Step 6: Processing markdown files ---");
 
+  // Every marble the engine draws, for the bake (scripts/bake-marbles.js), listed or not.
+  const marblePictures = [];
+  // Notes that are published, by name: "copy markdown" keeps links only to these.
+  const publishedSlugs = new Set(published.map((f) => path.basename(f.relativePath, ".md").toLowerCase()));
   for (const file of published) {
     console.log(`\n[process] ${file.relativePath}`);
 
     // Read file content
     const rawContent = await fs.readFile(file.path, "utf-8");
-    const { data: frontmatter, content: body } = matter(rawContent);
+    const { data: authoredFrontmatter, content: body } = matter(rawContent);
+    // Names only the haus may write (opened, fetched, date_postmarked, mark_*) never come from a note.
+    const { frontmatter, dropped: stampedKeys } = dropHausStampedKeys(authoredFrontmatter);
+    if (stampedKeys.length) console.warn(`[process] ignored haus-only keys: ${stampedKeys.join(", ")}`);
 
     // Process content through each resolver
     let processedContent = body;
@@ -328,7 +343,13 @@ export async function preprocessContent({
     // bloobShape   = explicitly declared shape (drives body rendering + settings extraction)
     // effectiveShape = bloobShape ?? site default (drives layout selection only)
     const bloobShape = frontmatter["bloob-shape"] || null;
-    const effectiveShape = bloobShape || siteConfig.default_shape || null;
+    const effectiveShape = pageShape({
+      bloobShape,
+      defaultShape: siteConfig.default_shape,
+      relativePath: file.relativePath,
+      objects: themeHasObjects,
+      templateShapes,
+    });
     let shapeSettings = {};
     if (bloobShape) {
       const extracted = extractSettingsBlock(processedContent);
@@ -359,7 +380,11 @@ export async function preprocessContent({
     //   b) Layout shape — shape has no renderFilescope (or no index.js at all).
     //      Treated as a layout reference: layouts/[name].njk wraps the page as chrome.
     let bloobShapeLayout = null;
-    if (effectiveShape) {
+    if (effectiveShape && templateShapes.has(effectiveShape)) {
+      bloobShapeLayout = templateShapeLayout(templateShapes.get(effectiveShape), { objects: themeHasObjects });
+      if (bloobShapeLayout) console.log(`[shape] "${effectiveShape}" is drawn by the engine → ${bloobShapeLayout}`);
+      else if (bloobShape) console.warn(`[shape] bloob-shape: "${effectiveShape}" needs a theme with objects — falling back to page.njk`);
+    } else if (effectiveShape) {
       const shapePath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "index.js");
       if (await fs.pathExists(shapePath)) {
         try {
@@ -531,6 +556,8 @@ export async function preprocessContent({
       // encodeURIComponent the filename so URLs are valid (spaces → %20, @ → %40, etc.)
       // The OG generator writes files with the same encoding so names match on disk.
       outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
+      // Taken from the body, so it is inside data: a locked or sealed note may not show it outside.
+      outputFrontmatter.image_source = "body";
       // Also store image on the graph node for hover previews
       if (pageInfo && perPageLinks[pageInfo.url]) {
         perPageLinks[pageInfo.url].image = outputFrontmatter.image;
@@ -708,6 +735,34 @@ export async function preprocessContent({
         ...(dateMatch && { date: dateMatch[0] }),
         ...(cardTags.length && { tags: cardTags }),
       };
+      // Themes that draw objects get each page's kind and outside details in the catalog, so
+      // rooms can draw closed objects. Other themes' catalogs stay exactly as they were.
+      if (themeHasObjects && perPageLinks[pageInfo.url]) {
+        const fields = catalogFields({
+          effectiveShape,
+          frontmatter,
+          url: pageInfo.url,
+          fileName: path.basename(file.relativePath, ".md"),
+          excerpt,
+        });
+        Object.assign(perPageLinks[pageInfo.url], fields);
+      }
+    }
+
+    // A marble drawn by the engine shows its baked picture and its color when closed, listed or
+    // not (an unlisted page is exactly the one shared by link); the bake reads this list.
+    if (themeHasObjects && pageInfo && bloobShapeLayout && effectiveShape === "marble") {
+      const outside = catalogFields({ effectiveShape, frontmatter, url: pageInfo.url, fileName: path.basename(file.relativePath, ".md") });
+      outputFrontmatter.closed_picture = outside.closedPicture;
+      outputFrontmatter.color = outside.color;
+      marblePictures.push({ id: pageInfo.url, image: outputFrontmatter.image, color: outside.color });
+    }
+
+    // An object that shares offers its note as markdown: written beside the page as source.md
+    // (src/_share/ is copied to the site as is, never read as a page).
+    if (themeHasObjects && pageInfo && bloobShapeLayout && templateShapes.get(effectiveShape)?.manifest?.shares) {
+      const sharePath = path.join(outputDir, "_share", pageInfo.url, "source.md");
+      await fs.outputFile(sharePath, cleanMarkdownForSharing(rawContent, { publishedSlugs }));
     }
 
     // Reconstruct the file with frontmatter
@@ -749,6 +804,8 @@ export async function preprocessContent({
   console.log(
     `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
   );
+
+  if (themeHasObjects) await fs.outputJson(path.join(tagIndexDir, "marblePictures.json"), marblePictures);
 
   // Card text for collection post cards (see pagePreviews above).
   const pagePreviewsPath = path.join(tagIndexDir, "pagePreviews.json");

@@ -1,0 +1,87 @@
+/* The note: paper hanging from its top edge. At --open 0 only the tip shows; the rest is rolled
+   up below, the roll is the handle. The toolbox measures the paper (--full-height) and moves
+   --open from 0 to 1. Without script, --open is 1 and nothing is cut off. Tokens only. */
+.bloob-object--note {
+  --note-tip: 172px;
+  display: block;
+  width: min(600px, 100%);
+  margin: 0 auto;
+}
+.bloob-object--note .note-paper {
+  position: relative;
+  overflow: hidden;
+  max-height: calc(var(--note-tip) + var(--open) * (var(--full-height, 100000px) - var(--note-tip)));
+  background: var(--object-paper, #f6efdf);
+  color: var(--object-ink, #2a2118);
+  filter: brightness(var(--light-level, 1));
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 1px 0 rgba(70, 50, 20, 0.06), 8px 14px 26px -12px var(--object-shadow, rgba(70, 50, 20, 0.38));
+}
+.bloob-object--note .note-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 7px;
+  background: linear-gradient(180deg, rgba(120, 90, 50, 0.16), transparent);
+  pointer-events: none;
+}
+/* The paper curling into the roll: strong while rolled, faint once open. */
+.bloob-object--note .note-paper::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 46px;
+  background: linear-gradient(180deg, transparent, rgba(150, 120, 70, 0.2));
+  opacity: calc(1 - 0.65 * var(--open));
+  pointer-events: none;
+}
+.bloob-object--note .note-text {
+  padding: 30px 38px 34px;
+  font: 400 17px/1.6 var(--font-body, Georgia, serif);
+}
+.bloob-object--note .note-title {
+  font: 600 22px/1.25 var(--font-heading, Georgia, serif);
+  margin: 0 0 0.6em;
+}
+.bloob-object--note .note-title:empty {
+  display: none;
+}
+.bloob-object--note .note-text a {
+  color: var(--link-color, var(--accent-color));
+}
+/* While rolled, the whole tip is one button; once open, the paper is for reading. */
+.bloob-object--note .note-tip {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.bloob-object--note:not([data-state="closed"]) .note-tip {
+  display: none;
+}
+html:not(.bh-js) .bloob-object--note .note-tip,
+html:not(.bh-js) .bloob-object--note .note-roll {
+  display: none;
+}
+.bloob-object--note .note-roll {
+  display: block;
+  width: calc(100% + 14px);
+  height: calc(34px - 18px * var(--open));
+  margin: -2px -7px 0;
+  border: 0;
+  border-radius: 17px;
+  cursor: pointer;
+  filter: brightness(var(--light-level, 1));
+  background:
+    repeating-linear-gradient(180deg, rgba(120, 90, 50, 0.05) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #fcf8ee 0%, var(--object-paper, #f6efdf) 40%, #d9cbac 100%);
+  box-shadow: 8px 14px 26px -12px var(--object-shadow, rgba(70, 50, 20, 0.38));
+}
+.bloob-object--note .bloob-object__closed .bloob-object__title {
+  margin: 0;
+  padding: 30px 38px;
+  background: var(--object-paper, #f6efdf);
+  color: var(--object-ink, #2a2118);
+  font: 600 20px/1.3 var(--font-heading, Georgia, serif);
+}

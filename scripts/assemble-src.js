@@ -23,6 +23,7 @@ import { generateBloobIcons } from "./generate-bloob-icons.js";
 import { generateBackground, generatePageBackgrounds } from "./generate-background.js";
 import { EMBED_TARGETS } from "./utils/bloob-settings-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
+import { loadTemplateShapes, themeSupportsObjects, writeTemplateShapeLayouts } from "./utils/template-shapes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -157,6 +158,13 @@ export async function assembleSrc(config, contentDir = null) {
       console.warn(`[assemble] Skipping shape layout for ${entry.name}: ${e.message}`);
     }
   }
+
+  // Step 2b.6: One-line layouts for template shapes drawn by the engine (themes with objects only)
+  const templateLayouts = await writeTemplateShapeLayouts(await loadTemplateShapes(visualizersDir), {
+    objects: themeSupportsObjects(config, ROOT_DIR),
+    layoutsDir: path.join(SRC_DIR, "_includes", "layouts"),
+  });
+  for (const name of templateLayouts) console.log(`[assemble] Engine layout: layouts/${name}`);
 
   // Step 2c: Copy base layouts (theme layouts in Step 3 override these)
   if (fs.existsSync(path.join(baseDir, "layouts"))) {

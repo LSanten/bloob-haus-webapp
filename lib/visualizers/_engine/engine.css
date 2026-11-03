@@ -1,0 +1,61 @@
+/* Shared by every object the engine draws. Until the toolbox has applied the starting state,
+   an object that should start closed is held closed, so it never flashes open. */
+html.bh-js[data-bh-initial="closed"] .bloob-object[data-opens],
+html.bh-js[data-bh-initial="play"] .bloob-object[data-opens] {
+  --open: 0 !important;
+}
+.bloob-object [data-bloob-toggle] {
+  cursor: pointer;
+}
+
+/* The outermost object's share row: small buttons collapsed together; the row opens every name
+   while the pointer or focus is on it (share.js keeps it open with a short grace). Needs script. */
+.bloob-share {
+  display: none;
+}
+html.bh-js .bloob-share {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 4px;
+}
+.bloob-share__btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 8px;
+  margin-left: -8px;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
+  border-radius: 999px;
+  background: var(--card-bg, rgba(255, 255, 255, 0.7));
+  color: var(--text-color, #333);
+  font: 500 12px/1 var(--font-label, sans-serif);
+  cursor: pointer;
+  transition: margin-left 0.22s ease, padding-right 0.22s ease, border-color 0.15s, color 0.15s;
+}
+.bloob-share__btn:first-child { margin-left: 0; }
+.bloob-share__btn svg { flex: 0 0 auto; }
+.bloob-share__label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.22s ease, opacity 0.15s ease, margin-left 0.22s ease;
+}
+.bloob-share.is-open .bloob-share__btn,
+.bloob-share:focus-within .bloob-share__btn { margin-left: 6px; padding-right: 11px; }
+.bloob-share.is-open .bloob-share__btn:first-child,
+.bloob-share:focus-within .bloob-share__btn:first-child { margin-left: 0; }
+.bloob-share.is-open .bloob-share__label,
+.bloob-share:focus-within .bloob-share__label,
+.bloob-share__btn.is-done .bloob-share__label { max-width: 10rem; opacity: 1; margin-left: 6px; }
+.bloob-share__btn:hover,
+.bloob-share__btn.is-done { border-color: var(--link-color, currentColor); color: var(--link-color, currentColor); }
+
+/* Once an object is fully open its page grows freely: the graph, comments or a late image that
+   arrive after the opening was measured are never cut off. (While it opens or closes, the shape's
+   own CSS holds it to the measured height.) */
+html.bh-js .bloob-object[data-state="open"] .bloob-object__open,
+html.bh-js .bloob-object[data-state="open"] [data-bloob-measure] {
+  max-height: none !important;
+}

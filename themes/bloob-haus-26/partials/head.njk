@@ -1,0 +1,81 @@
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    {# Decide how this page's object starts, before any stylesheet loads (no flash). #}
+    {% bloobHeadInit bloobPageId %}
+    {# The visitor's own choice of day or night, applied before the first paint #}
+    <script>try{var bhSky=localStorage.getItem("bh-sky");if(bhSky==="day"||bhSky==="night")document.documentElement.setAttribute("data-sky",bhSky);}catch(e){}</script>
+
+    <title>{% if page.url == "/" %}{{ site.title }}{% else %}{{ title }} | {{ site.title }}{% endif %}</title>
+
+    <!-- Meta description -->
+    <meta
+        name="description"
+        content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+    <meta name="bloob-page-id" content="{{ bloobPageId }}" />
+
+    {% include "partials/robots-meta.njk" %}
+
+    {% if redirect %}
+    <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
+    <meta http-equiv="refresh" content="0; url={{ redirect }}" />
+    <script>window.location.replace("{{ redirect }}");</script>
+    {% endif %}
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{% if layout %}article{% else %}website{% endif %}" />
+    <meta property="og:site_name" content="{{ site.title }}" />
+    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+    <meta property="og:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
+    <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
+    {% if image %}
+    <meta property="og:image" content="{{ site.url }}{{ image }}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:type" content="{% if '.gif' in image %}image/gif{% elif '.png' in image %}image/png{% else %}image/jpeg{% endif %}" />
+    {% endif %}
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="{{ site.url }}{{ page.url }}" />
+    <meta name="twitter:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
+    <meta name="twitter:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
+    {% if image %}
+    <meta name="twitter:image" content="{{ site.url }}{{ image }}" />
+    {% endif %}
+
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ "/feed.xml" | url }}" />
+
+    <!-- Favicon (generated at build time from site.logo; see scripts/generate-favicons.js) -->
+    <link rel="icon" type="image/png" href="{{ "/favicon.png" | url }}" />
+    <link rel="apple-touch-icon" href="{{ "/apple-touch-icon.png" | url }}" />
+
+    <!-- Newsreader for reading and headings, Instrument Sans for labels -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,500&display=swap"
+        rel="stylesheet"
+    />
+    <!-- Quicksand, for the bloob.haus wordmark in the footer (as melt sets it) -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&text=bloob.hausBLOHAUS&display=swap" rel="stylesheet" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ "/assets/css/base.css" | url }}" />
+    <link rel="stylesheet" href="{{ "/assets/css/bloob-engine.css" | url }}" />
+    <link rel="stylesheet" href="{{ "/assets/css/main.css" | url }}" />
+    {% include "partials/photoswipe-head.njk" %}
+    <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
+    <!--bloob:visualizer-css-->
+    <!-- Pagefind UI styles — loaded on all pages when search is enabled -->
+    {% if site.features.search != false %}
+    <link rel="stylesheet" href="{{ "/pagefind/pagefind-ui.css" | url }}" />
+    {% endif %}
+
+    {% include "partials/site-snippets-head.njk" %}
+</head>

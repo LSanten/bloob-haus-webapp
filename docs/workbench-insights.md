@@ -46,6 +46,10 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
   have to create it every time." And: "in general the user shouldn't have to create code that exists
   for most visualizers." The workbench should **show** which shared behaviors a shape uses and let
   you read their code, without putting it in the shape's folder. *(2026-11-01)*
+- **Makers may recreate things; the easy path should be the shared one** *(Leon, 2026-11-02)*: "if
+  they want to recreate things, that's fine I guess. but we could make the overall code or the way
+  they can code simple by having certain placeholder functions". A starter visualizer comes with the
+  hooks in place (when it opens, when it closes, each frame of the opening, where the light is).
 - A shape only brings code for what is truly its own (the marble's glass bending). If a second shape
   wants the same thing, it moves into the toolbox. *(2026-11-01)*
 - **One sun for the room** belongs in the toolbox: the theme says where the light comes from, and
@@ -116,6 +120,17 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
 - The wider repo tidy-up for newcomers is its own job: `docs/TECH-DEBT.md` #49.
 
 ## Saving
+
+- **Who may use it and save** *(Leon, 2026-11-02)*: an admin area where Leon types the email
+  addresses that get workbench access; their edits save as **edit requests into a review folder**
+  automatically, and some people (Leon's own `leon.santen@gmail.com` first) may update a shape such as
+  the letter directly. Careful: Google may report a Gmail login as `@googlemail.com` (Leon's own
+  login does), so the allow-list must treat `gmail.com` and `googlemail.com` as the same. Sign-in can
+  reuse the post office's Google login at `auth.bloob.haus`. Part of the workbench build, after the
+  engine.
+- **The letter is the first visualizer people should edit there** *(Leon)*, because its writing GUI
+  is core. Today it lives in the cloud repo, outside `/visualizers/`, so it reaches the workbench
+  once it moves onto the engine.
 
 - Start with "download the folder". Review folder vs GitHub pull request is still open (Leon leans
   to whichever is easier; GitHub welcome if in reach). *(2026-11-01)*

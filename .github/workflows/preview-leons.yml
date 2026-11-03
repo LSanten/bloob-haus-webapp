@@ -1,0 +1,52 @@
+name: PR Preview — leons
+
+# A preview of leons.bloob.haus for every pull request, on the branch's own address
+# (<branch>.leons.pages.dev). Production deploys only from main (deploy-marbles.yml).
+# When the branch has the bloob-haus-26 theme, the preview uses it through THEME_OVERRIDE,
+# so the new base theme can be looked at without touching the vault's live settings.
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '.gitignore'
+
+jobs:
+  preview:
+    # Only runs in Leon's canonical repo; skipped in forks (see deploy-*.yml for rationale).
+    if: ${{ github.repository == 'LSanten/bloob-haus-webapp' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Use bloob-haus-26 when the branch has it
+        run: |
+          if [ -d themes/bloob-haus-26 ]; then echo "THEME_OVERRIDE=bloob-haus-26" >> "$GITHUB_ENV"; fi
+
+      - name: Build leons
+        run: SITE_NAME=marbles node scripts/build-site.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - name: Deploy preview to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=leons --branch=${{ github.head_ref }}

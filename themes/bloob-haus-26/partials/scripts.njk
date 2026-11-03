@@ -1,0 +1,24 @@
+{# Internal link pills + bloob-object icons (client-side, reads graph.json) #}
+<script src="{{ '/assets/js/internal-links.js' | url }}"{% if site.features.link_icons %} data-link-icons{% endif %}></script>
+
+{# The engine's toolbox: opening, remembering, arrival, light (lib/visualizers/_engine) #}
+<script src="{{ '/assets/js/bloob-engine.js' | url }}"></script>
+{# The background's warm dots near the cursor or a finger #}
+<script src="{{ '/assets/js/world.js' | url }}"></script>
+
+{# Visualizer scripts (auto-generated from lib/visualizers/) #}
+<!--bloob:visualizer-js-->
+
+{% if site.features.external_links_new_tab != false %}
+<script>
+  document.querySelectorAll('main a[href^="http"]').forEach(function(a) {
+    if (!a.hostname || a.hostname !== location.hostname) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    }
+  });
+</script>
+{% endif %}
+
+{% include "partials/photoswipe-scripts.njk" %}
+{% include "partials/iframe-resize.njk" %}

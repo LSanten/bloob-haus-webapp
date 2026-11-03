@@ -247,6 +247,38 @@ build time. The cloud app renders sealed files' *closed* state on the server and
 in the browser after unsealing — through the same pure renderer (see `visualizers.md` → "three hosts,
 one renderer").
 
+## Step one: template shapes (2026-11-02)
+
+The simplest kind of shape is a folder of plain files, no code. Built by the engine at
+`lib/visualizers/_engine/` (design: `docs/superpowers/specs/2026-11-02-base-haus-design.md`).
+
+```
+note/
+  manifest.json   "format": "template", plus switches for shared behavior (opens, remembers, ...)
+  schema.md       the promise in words: settings, examples, the AI card
+  open.html       the inside (required)
+  closed.html     the outside, only when it looks different from the inside
+  style.css       the look, theme tokens only (docs/architecture/tokens.md)
+```
+
+- **Blanks, not logic.** Templates use `{{ title }}`, `{{ subtitle }}`, `{{ image }}`,
+  `{{ color }}`, `{{ firstLines }}`, `{{ yaml.<key> }}` (escaped), and `{{ body }}` / `{{ inside }}`
+  (HTML). No ifs, no loops, so a template from anyone is safe to run anywhere (`fill.js`).
+- **The outside-only rule, by construction.** `deriveBlanks` (`blanks.js`) sorts a note into
+  outside (frontmatter) and inside (body). A locked note can't be read and a sealed one shouldn't
+  be, so both get no inside at all. `closed.html` never receives `{{ body }}`; it gets
+  `{{ firstLines }}` and a body image only while the note is open to read. An image the builder took
+  from the body is marked `image_source: body` and counts as inside.
+- **No `closed.html`** means the closed look is the open one at 0 (a sticky note, a rolled note's
+  tip). When such a note is locked or sealed, the engine draws a quiet outside look with its title.
+- **Transitions are one number.** `renderObject` (`render.js`) writes one `.bloob-object` with a
+  closed part and an open part, starting open (`data-state="open"`, `--open:1`) so a page without
+  script shows everything. The browser toolbox counts the gesture and moves `--open` from 0 to 1;
+  the shape's CSS draws every frame from it. Same idea as the letter's `renderTearing`.
+- **Shared behavior is switched on, not copied.** Manifest keys `opens`, `remembers`, `arrives`,
+  `shares` become data attributes the toolbox reads. A shape brings its own `browser.js` only for
+  what is truly its own.
+
 ## What a complete shape carries
 
 A shape has **one core** (the saved data) and up to two faces over it: a **renderer** (read) and an

@@ -1,0 +1,21 @@
+{#- Around every page's words: tags, pages that link here, the graph, comments. The reading
+    sheet and the objects that open into an article (a marble) both include it. -#}
+  {% if tags %}
+  {% set displayTags = tags | filterTagList %}
+  {% if displayTags.length %}
+  <div class="page-tags" data-pagefind-ignore>
+    {% for tag in displayTags %}
+    <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge" data-pagefind-filter="tag">{{ tag }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% include "partials/backlinks.njk" %}
+
+  {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
+  <div class="graph-visualizer" data-current-page="{{ page.url }}" {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
+  {% endif %}{% endfor %}
+
+  {# Comments live on the sheet, so they stay readable by day and night #}
+  {% include "partials/comments.njk" %}

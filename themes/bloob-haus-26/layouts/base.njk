@@ -1,0 +1,29 @@
+<!doctype html>
+{# The look preset (dawn-dusk, flat-warm, forest-light) comes from theme_settings.look in
+   _bloob-settings.md; it only changes the background's colors, never the objects. #}
+<html lang="{{ site.languageCode or 'en' }}" class="look-{{ site.theme_settings.look or 'dawn-dusk' }}">
+  {% include "partials/head.njk" %}
+  <body>
+    {# The haus's background: two colour fields that cross-fade with day and night, the dot grid,
+       warmer dots near the cursor or a finger, and a faint live grain. Objects sit above it. #}
+    <div class="world" aria-hidden="true">
+      <div class="world__day"></div>
+      <div class="world__night"></div>
+      <div class="world__dots"></div>
+      <div class="world__dots-warm"></div>
+      <div class="world__grain"></div>
+    </div>
+
+    <main class="site-main">
+      {% block main %}{{ content | safe }}{% endblock %}
+    </main>
+
+    {% if not hide_footer %}
+      {% include "partials/footer.njk" %}
+      {% include "partials/toolbelt.njk" %}
+    {% endif %}
+
+    {% include "partials/scripts.njk" %}
+    {% include "partials/site-snippets-footer.njk" %}
+  </body>
+</html>

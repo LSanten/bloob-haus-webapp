@@ -153,6 +153,20 @@ document.addEventListener('DOMContentLoaded', function () {
   // it reaches any button's own handler. navigator.share still works: the second
   // tap is itself a user gesture.
   var shareBars = document.querySelectorAll('.share-bar');
+
+  // ── Pointer: hovering the bar opens every name, and it stays open while the pointer is
+  // anywhere on it, with a short grace, so moving between two buttons never closes it.
+  shareBars.forEach(function (bar) {
+    var t = null;
+    bar.addEventListener('pointerenter', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(t); bar.classList.add('is-open');
+    });
+    bar.addEventListener('pointerleave', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(t); t = setTimeout(function () { bar.classList.remove('is-open'); }, 250);
+    });
+  });
   if (window.matchMedia && window.matchMedia('(hover: none)').matches) {
     shareBars.forEach(function (bar) {
       bar.classList.add('share-bar--touch');

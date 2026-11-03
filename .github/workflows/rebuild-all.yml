@@ -19,7 +19,7 @@ jobs:
       - name: Find configured sites
         id: find-sites
         run: |
-          sites=$(ls sites/*.yaml 2>/dev/null | xargs -I{} basename {} .yaml | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          sites=$(ls sites/*.yaml 2>/dev/null | xargs -I{} basename {} .yaml | jq -R -s -c 'split("\n") | map(select(length > 0 and (startswith("_") | not)))')
           echo "sites=$sites" >> "$GITHUB_OUTPUT"
           echo "Discovered sites: $sites"
 
@@ -72,9 +72,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 
+      # The marbles site deploys to the Pages project "leons" (see deploy-marbles.yml).
+      - name: Pick the Pages project
+        id: project
+        run: |
+          if [ "${{ matrix.site }}" = "marbles" ]; then echo "name=leons" >> "$GITHUB_OUTPUT"; else echo "name=${{ matrix.site }}" >> "$GITHUB_OUTPUT"; fi
+
       - name: Deploy ${{ matrix.site }} to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy _site --project-name=${{ matrix.site }}
+          command: pages deploy _site --project-name=${{ steps.project.outputs.name }}

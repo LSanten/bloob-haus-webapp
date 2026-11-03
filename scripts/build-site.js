@@ -20,6 +20,7 @@ import { addNoindexHeader } from "./utils/search-headers.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
+import { bakeMarbles } from "./bake-marbles.js";
 import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
 import { getSrcDir } from "./utils/get-src-dir.js";
@@ -139,6 +140,9 @@ async function buildSite() {
     if (config.features?.og_images) {
       await generateOgImages();
     }
+
+    // Step 5.55: Bake every marble into a picture (after the link previews it reads)
+    await bakeMarbles({ srcDir });
 
     // Step 5.6: Re-run favicon generation as a safety pass
     // (assemble-src step 9 now runs after preprocessing, so this is normally redundant)

@@ -901,3 +901,30 @@ html.bh-peeking .room-object--marble .room-object__glass { animation-play-state:
 @media (prefers-reduced-motion: reduce) {
   .room-object--marble .room-object__glass { animation: none; }
 }
+
+/* a glint on marbles in a room, now and then, each at its own time */
+.room-object--marble::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: calc(50% + 12px);
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M12 0c.6 6.6 5.4 11.4 12 12-6.6.6-11.4 5.4-12 12-.6-6.6-5.4-11.4-12-12C6.6 11.4 11.4 6.6 12 0z'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.9));
+  opacity: 0;
+  pointer-events: none;
+}
+.room-object--marble.is-floating::after {
+  animation: room-glint 7s ease-in-out infinite;
+  animation-delay: calc(var(--float-delay, 0s) * 1.7);
+}
+@keyframes room-glint {
+  0%, 82%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  89% { opacity: 1; transform: scale(1) rotate(25deg); }
+  95% { opacity: 0; transform: scale(0.6) rotate(45deg); }
+}
+html.bh-peeking .room-object--marble::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .room-object--marble::after { animation: none; }
+}

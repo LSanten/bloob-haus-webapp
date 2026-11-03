@@ -21,6 +21,7 @@ beforeAll(async () => {
   await fs.outputFile(path.join(vis, "article/closed.html"), "<h2>{{ title }}</h2>");
   await fs.outputFile(path.join(vis, "article/layout.njk"), "---\nlayout: layouts/base.njk\n---\n");
   await fs.outputJson(path.join(vis, "collection/manifest.json"), { name: "collection", type: "hybrid" });
+  await fs.outputJson(path.join(vis, "marble/manifest.json"), { name: "marble", format: "template" });
   await fs.outputFile(path.join(root, "themes/with-objects/theme.yaml"), "name: with-objects\nobjects: true\n");
   await fs.outputFile(path.join(root, "themes/plain/theme.yaml"), "name: plain\n");
   await fs.ensureDir(path.join(root, "themes/no-yaml"));
@@ -30,7 +31,7 @@ afterAll(() => fs.remove(root));
 describe("loadTemplateShapes", () => {
   it("finds only shapes whose manifest says format: template", async () => {
     const shapes = await loadTemplateShapes(path.join(root, "lib/visualizers"));
-    expect([...shapes.keys()].sort()).toEqual(["article", "note"]);
+    expect([...shapes.keys()].sort()).toEqual(["article", "marble", "note"]);
   });
 
   it("reads open.html, closed.html when there is one, and whether the shape has its own layout", async () => {
@@ -39,6 +40,15 @@ describe("loadTemplateShapes", () => {
     expect(shapes.get("article").templates.closed).toBe("<h2>{{ title }}</h2>");
     expect(shapes.get("note").hasOwnLayout).toBe(false);
     expect(shapes.get("article").hasOwnLayout).toBe(true);
+  });
+});
+
+describe("drafts", () => {
+  it("a template shape without its open.html yet is a draft that no theme draws", async () => {
+    const shapes = await loadTemplateShapes(path.join(root, "lib/visualizers"));
+    expect(shapes.get("marble").draft).toBe(true);
+    expect(templateShapeLayout(shapes.get("marble"), { objects: true })).toBeNull();
+    expect(await writeTemplateShapeLayouts(shapes, { objects: true, layoutsDir: path.join(root, "draft-out") })).not.toContain("marble.njk");
   });
 });
 

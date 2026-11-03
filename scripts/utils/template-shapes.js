@@ -26,7 +26,13 @@ export async function loadTemplateShapes(visualizersDir) {
       continue;
     }
     if (manifest.format !== "template") continue;
-    const templates = { open: await fs.readFile(path.join(dir, "open.html"), "utf-8") };
+    const openPath = path.join(dir, "open.html");
+    if (!(await fs.pathExists(openPath))) {
+      // Being built: no theme draws it yet, and the builder must not guess a layout for it.
+      shapes.set(entry.name, { name: entry.name, manifest, templates: {}, hasOwnLayout: false, draft: true });
+      continue;
+    }
+    const templates = { open: await fs.readFile(openPath, "utf-8") };
     const closedPath = path.join(dir, "closed.html");
     if (await fs.pathExists(closedPath)) templates.closed = await fs.readFile(closedPath, "utf-8");
     shapes.set(entry.name, {
@@ -50,6 +56,7 @@ export function themeSupportsObjects(config, rootDir) {
 }
 
 export function templateShapeLayout(shape, { objects }) {
+  if (shape.draft) return null;
   if (shape.hasOwnLayout) return `layouts/${path.basename(shape.manifest.defaultLayout || `${shape.name}.njk`)}`;
   return objects ? `layouts/${shape.name}.njk` : null;
 }
@@ -62,7 +69,7 @@ export async function writeTemplateShapeLayouts(shapes, { objects, layoutsDir })
   if (!objects) return [];
   const written = [];
   for (const shape of shapes.values()) {
-    if (shape.hasOwnLayout) continue;
+    if (shape.hasOwnLayout || shape.draft) continue;
     await fs.outputFile(path.join(layoutsDir, `${shape.name}.njk`), generatedLayout(shape.name));
     written.push(`${shape.name}.njk`);
   }

@@ -9,6 +9,7 @@
 import taskLists from "markdown-it-task-lists";
 import markdownItContainer from "markdown-it-container";
 import markdownItAttrs from "markdown-it-attrs";
+import { renderSectionOpen } from "./section-container.js";
 import markdownItFootnote from "markdown-it-footnote";
 
 /**
@@ -27,7 +28,15 @@ export function configureMarkdown(mdLib, { siteConfig = {}, visualizers = [] } =
   mdLib.use(taskLists, { enabled: false, label: true });
   // {.class} {#id} {attr=value} attribute syntax on links, images, headings
   // e.g. [CONTACT US](#footer){.button} → <a href="#footer" class="button">
-  mdLib.use(markdownItAttrs);
+  // Allow-listed (PR #4): without this, `{onclick=…}` or `{href=javascript:…}` in authored
+  // markdown would be emitted verbatim. Defence in depth only: this markdown-it runs with
+  // html:true, so authored raw HTML is trusted; hardening untrusted markdown starts with html:false.
+  mdLib.use(markdownItAttrs, {
+    allowedAttributes: [
+      "id", "class", "title", "target", "rel", "width", "height", "loading",
+      "style", "role", /^data-/, /^aria-/,
+    ],
+  });
 
   // ::: name [key=value ...] — section containers for styling and visualizers.
   // First word = CSS class. Additional key=value pairs → data-vis-settings JSON.
@@ -37,41 +46,12 @@ export function configureMarkdown(mdLib, { siteConfig = {}, visualizers = [] } =
   // Backwards compatible — single-word fences are unchanged.
   mdLib.use(markdownItContainer, "section", {
     validate: () => true,
+    // The opening tag is built by section-container.js (escaped; unit-tested). _raw / _rawsource
+    // are injected by inject-container-raw.js during preprocessing and emitted as data-vis-raw /
+    // data-vis-raw-source, so build-time visualizer transforms parse raw markdown.
     render(tokens, idx) {
       if (tokens[idx].nesting !== 1) return `</section>\n`;
-      const info = tokens[idx].info.trim();
-      const spaceIdx = info.indexOf(" ");
-      if (spaceIdx === -1) {
-        return `<section class="${info}">\n`;
-      }
-      const cls = info.slice(0, spaceIdx);
-      const settingsStr = info.slice(spaceIdx + 1).trim();
-      const settings = {};
-      const kvPattern = /([\w-]+)=(?:"([^"]*)"|([\S]*))/g;
-      let m;
-      while ((m = kvPattern.exec(settingsStr)) !== null) {
-        settings[m[1]] = m[2] !== undefined ? m[2] : m[3];
-      }
-
-      // _raw is injected by inject-container-raw.js during preprocessing.
-      // Decode it and emit as data-vis-raw so build-time visualizer transforms
-      // can parse raw markdown instead of rendered HTML — keeping parser.js
-      // shareable across Eleventy, browser preview, and Obsidian plugin.
-      const rawBase64 = settings._raw;
-      delete settings._raw;
-      const rawAttr = rawBase64 ? ` data-vis-raw="${rawBase64}"` : "";
-
-      // _rawsource is the optional PRE-resolution capture (scene-nav only) — lets a
-      // shape's builder round-trip authored, un-resolved refs. Additive; only present
-      // when inject-container-raw injected it.
-      const rawSourceBase64 = settings._rawsource;
-      delete settings._rawsource;
-      const rawSourceAttr = rawSourceBase64 ? ` data-vis-raw-source="${rawSourceBase64}"` : "";
-
-      const settingsAttr = Object.keys(settings).length
-        ? ` data-vis-settings='${JSON.stringify(settings)}'`
-        : "";
-      return `<section class="${cls}"${settingsAttr}${rawAttr}${rawSourceAttr}>\n`;
+      return renderSectionOpen(tokens[idx].info);
     },
   });
 

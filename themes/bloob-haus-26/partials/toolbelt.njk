@@ -1,0 +1,20 @@
+{#- The visitor's tool belt: their own settings for this site, kept in their browser only
+    (lib/visualizers/_engine/toolbelt.js). Needs script, so it shows only when script runs. -#}
+<div class="toolbelt" data-pagefind-ignore>
+  <button class="toolbelt__open" type="button" aria-expanded="false" aria-controls="bh-toolbelt" aria-label="Your settings">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+  </button>
+  <div class="toolbelt__panel" id="bh-toolbelt" hidden>
+    <p class="toolbelt__heading">Your settings</p>
+    <label class="toolbelt__setting">
+      <input type="checkbox" data-setting="bh-peek">
+      <span>Peek first<small>Links open over this page, so you can look before you go.</small></span>
+    </label>
+    <div class="sky-control" role="group" aria-label="Day or night">
+      <button type="button" data-sky-choice="auto">auto</button>
+      <button type="button" data-sky-choice="day">day</button>
+      <button type="button" data-sky-choice="night">night</button>
+    </div>
+    <p class="toolbelt__note">Kept in this browser only.</p>
+  </div>
+</div>

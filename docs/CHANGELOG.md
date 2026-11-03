@@ -6,6 +6,17 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 73 — November 2, 2026: the base haus goes live
+**Worked on:** the plan `docs/superpowers/plans/2026-11-02-base-haus-first-build.md` (spec `docs/superpowers/specs/2026-11-02-base-haus-design.md`), run natively with one final reviewer; ledger in the worktree's `.superpowers/sdd/`. Suite 1173 → **1358 tests**.
+
+- **The engine** (`lib/visualizers/_engine/`): pure `renderObject` / `fillTemplate` / `deriveBlanks` / `renderRoom`, and a browser toolbox (opening on `--open`, remember, arrival, light, share row, peek, tool belt, feedback, floating rooms). Published at `bloob.haus/visualizers/engine/<version>/` and `/stable/`.
+- **Template shapes note and marble**: the note unrolls; the marble's glass is pure math, baked at build (512 px plus room and icon sizes, `scripts/bake-marbles.js`) and drawn live, with Leon's marble picture burnt in.
+- **Theme `bloob-haus-26`** (gated by `objects: true`, so other sites are unchanged): dawn/dusk world, dots that clear near the cursor, day/night following the system or the visitor's choice, rooms for folders and tags, a `/tags/` index, a glowing house on the homepage and in the footer.
+- **Visitor's tool belt**: peek first, peek eyes, day/night, and a note to the maker that can point at something on the page (posts to the post office feedback pile, app:35).
+- **Collections** gain `display: objects` (closed objects; a click peeks).
+- **Merged outside PRs** #4 (escaped `:::` sections, ported to `markdown-setup.js`), #5 (SEO head), #6 (structured data), #7 (`unlisted_folders`, fixes the `graph.json` unlisted leak #8).
+- **leons.bloob.haus switched** to `bloob-haus-26` (vault `_bloob-settings.md`; rollback is that one line). melt and buffbaby compared before and after: identical. The homepage shows the selected marbles closed; 86 sketchy marbles became notes.
+
 ### Session 72 — October 28, 2026 (from the AE fork)
 **Worked on:** SEO for the alterengineers.com go-live, built on upstream's `show_in_search` (spec `docs/superpowers/specs/2026-10-20-seo-go-live-design.md`, plan `docs/superpowers/plans/2026-10-28-seo-go-live.md`).
 

@@ -140,6 +140,17 @@ Related: `docs/superpowers/specs/2026-11-01-base-haus-dig.md`,
 - Write it from making the note, not in advance. It must say, from day one: the outside-only rule,
   the file names, the 0-to-1 number, and "use the toolbox, don't rewrite it". *(2026-11-01)*
 
+## From the first build (2026-11-02)
+
+- A theme opts into objects with `objects: true`; that one gate kept melt and buffbaby byte-identical
+  through the whole build. Worth keeping for every future engine step.
+- Rooms are the catalog drawn as closed objects: once `graph.json` carries kind, color and picture,
+  folders, tags and collections all get rooms for free.
+- Leon judges looks by eye in minutes; numbers in the plan were a starting point, not a contract
+  (the marble was retuned three times in one evening).
+- A cache keyed by file name silently served stale pictures; anything the build regenerates must
+  skip it (`no-optimize`).
+
 ## Open
 
 - How the workbench shows which behaviors from the toolbox a shape uses.

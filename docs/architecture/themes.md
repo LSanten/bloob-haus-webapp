@@ -1,6 +1,6 @@
 # Theme Architecture
 
-**Status:** Two themes (`warm-kitchen`, `marbles-pouch` in progress), contract updated
+**Status:** `bloob-haus-26` is the base haus every haus starts from (leons since 2026-11-02); `warm-kitchen`, `marbles-pouch`, `melt`, `alter-engineers` stay; contract updated
 **Location:** `docs/architecture/`
 **Updated:** 2026-02-28
 
@@ -32,7 +32,8 @@ themes/
 │   │   ├── css/main.css
 │   │   └── objects/          ← Default object-type images for this theme
 │   └── theme.yaml
-├── marbles-pouch/            ← Leon's marbles theme
+├── marbles-pouch/            ← Leon's marbles theme (until 2026-11-02)
+├── bloob-haus-26/            ← the base haus: objects on a dawn/dusk world (objects: true); leons since 2026-11-02
 │   ├── layouts/
 │   ├── partials/
 │   │   ├── banner.njk        ← Full-width banner (object-aware)

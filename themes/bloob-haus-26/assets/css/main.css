@@ -845,10 +845,12 @@ html.bh-pointing, html.bh-pointing * { cursor: crosshair !important; }
 html.bh-peek-eyes-off .bloob-peek-eye { display: none; }
 
 /* marbles in a room float a little, and can be dragged around (room-play.js) */
-.room-object--marble .room-object__glass {
+.room-object--marble.is-floating .room-object__glass {
   animation: room-float 6s ease-in-out infinite;
   animation-delay: var(--float-delay, 0s);
 }
+/* while a peek is open nothing moves underneath, so its blur stays cheap */
+html.bh-peeking .room-object--marble .room-object__glass { animation-play-state: paused; }
 @keyframes room-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-7px); }

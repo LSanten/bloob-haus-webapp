@@ -37,6 +37,7 @@ describe("room play", () => {
   it("marbles float", async () => {
     if (!browser) return;
     const { ctx, p } = await open();
+    await p.waitForTimeout(150);
     expect(await p.$eval(".room-object--marble .room-object__glass", (e) => getComputedStyle(e).animationName)).not.toBe("none");
     await ctx.close();
   });
@@ -60,6 +61,34 @@ describe("room play", () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await Promise.all([p.waitForURL("https://test.local/m/a/"), p.click(".room-object--marble")]);
+    await ctx.close();
+  });
+
+  it("an interrupted drag ends: the marble stops following, and the next click still works", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    const [x, y] = await center(p, ".room-object--marble");
+    await p.evaluate(([x, y]) => {
+      const m = document.querySelector(".room-object--marble");
+      const ev = (type, cx, cy, extra = {}) => new PointerEvent(type, { bubbles: true, clientX: cx, clientY: cy, pointerType: "mouse", button: 0, buttons: 1, ...extra });
+      m.dispatchEvent(ev("pointerdown", x, y));
+      window.dispatchEvent(ev("pointermove", x + 80, y));
+      window.dispatchEvent(ev("pointercancel", x + 80, y));
+      window.dispatchEvent(ev("pointermove", x + 300, y + 200, { buttons: 0 }));
+    }, [x, y]);
+    const [x2] = await center(p, ".room-object--marble");
+    expect(x2).toBeLessThan(x + 150);
+    await Promise.all([p.waitForURL("https://test.local/m/b/"), p.click(".room-object--marble >> nth=1")]);
+    await ctx.close();
+  });
+
+  it("only marbles on screen float, and none while peeking", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    await p.waitForTimeout(200);
+    expect(await p.$eval(".room-object--marble", (e) => e.classList.contains("is-floating"))).toBe(true);
+    await p.evaluate(() => document.documentElement.classList.add("bh-peeking"));
+    expect(await p.$eval(".room-object--marble .room-object__glass", (e) => getComputedStyle(e).animationPlayState)).toBe("paused");
     await ctx.close();
   });
 });

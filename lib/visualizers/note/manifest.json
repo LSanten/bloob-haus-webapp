@@ -1,0 +1,11 @@
+{
+  "name": "note",
+  "format": "template",
+  "description": "A note on paper, hanging from its top edge: the beginning shows, the rest is rolled up below. Click to unroll it.",
+  "scope": "page",
+  "opens": "click",
+  "remembers": "visitor",
+  "arrives": "open-from-site",
+  "pace": "length",
+  "detect": { "selectors": [".bloob-object--note"] }
+}

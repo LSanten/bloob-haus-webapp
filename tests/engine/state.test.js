@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { decideInitialState, rememberKey, arrivedFromSite } from "../../lib/visualizers/_engine/state.js";
+import { decideInitialState, rememberKey, arrivedFromSite, openDuration } from "../../lib/visualizers/_engine/state.js";
 import { headInitScript } from "../../lib/visualizers/_engine/head-init.js";
 
 const SITE = "https://leons.bloob.haus";
@@ -67,5 +67,14 @@ describe("headInitScript", () => {
     expect(s.startsWith("<script>")).toBe(true);
     expect(s).not.toMatch(/fetch|XMLHttpRequest|import\(/);
     expect(s).not.toContain('"x"y"');
+  });
+});
+
+describe("openDuration", () => {
+  it("is 900 ms unless the object paces by length", () => expect(openDuration({ height: 3000, pace: undefined })).toBe(900));
+  it("a short note opens quickly and a long one takes longer, between 0.65 and 2.2 s", () => {
+    expect(openDuration({ height: 200, pace: "length" })).toBe(650);
+    expect(openDuration({ height: 1500, pace: "length" })).toBeGreaterThan(1000);
+    expect(openDuration({ height: 20000, pace: "length" })).toBe(2200);
   });
 });

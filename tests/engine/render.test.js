@@ -30,6 +30,7 @@ describe("renderObject", () => {
   it("carries its identity and the manifest's switches as data attributes", () => {
     const html = renderObject(tip, note({ title: "T" }));
     expect(html).toContain('data-shape="note"');
+    expect(html).toContain('class="bloob-object bloob-object--note"');
     expect(html).toContain('data-page-id="n"');
     expect(html).toContain('data-opens="click"');
     expect(html).toContain('data-remembers="visitor"');

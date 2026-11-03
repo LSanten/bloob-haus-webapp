@@ -57,6 +57,7 @@ import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
 import { loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
 import { dropHausStampedKeys } from "./utils/haus-stamped.js";
+import { catalogFields } from "./utils/catalog-fields.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -723,6 +724,17 @@ export async function preprocessContent({
         ...(dateMatch && { date: dateMatch[0] }),
         ...(cardTags.length && { tags: cardTags }),
       };
+      // Themes that draw objects get each page's kind and outside details in the catalog, so
+      // rooms can draw closed objects. Other themes' catalogs stay exactly as they were.
+      if (themeHasObjects && perPageLinks[pageInfo.url]) {
+        Object.assign(perPageLinks[pageInfo.url], catalogFields({
+          effectiveShape,
+          frontmatter,
+          url: pageInfo.url,
+          fileName: path.basename(file.relativePath, ".md"),
+          excerpt,
+        }));
+      }
     }
 
     // Reconstruct the file with frontmatter

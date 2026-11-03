@@ -26,7 +26,7 @@ const pages = [
 ];
 export async function init() {}
 export async function preload() {}
-export async function filters() { return { tag: { yoga: 3, lists: 1 } }; }
+export async function filters() { return { tag: { yoga: 3, lists: 1, "living-systems": 2 } }; }
 export async function search(q, opts = {}) {
   let r = q ? pages.filter((p) => (p.meta.title + p.excerpt).toLowerCase().includes(q.toLowerCase())) : [];
   const want = opts.filters?.tag?.any || [];
@@ -34,18 +34,18 @@ export async function search(q, opts = {}) {
   return { results: r.map((p) => ({ id: p.url, data: async () => p })) };
 }`;
 
-const page = () => `<!doctype html><html class="bh-js" data-search-style="quiet"><head><style>${css}</style></head><body>
+const page = (settings = '{"placeholder":"Look through my Bloob Haus...","show_tags":true}') => `<!doctype html><html class="bh-js" data-search-style="quiet"><head><style>${css}</style></head><body>
 <script type="application/json" id="bloob-shape-about">{"marble":"A glass marble you open.","note":"A note on paper."}</script>
-<div class="search-visualizer" data-search-settings='{"placeholder":"Look through my Bloob Haus...","show_tags":true}'></div>
+<div class="search-visualizer" data-search-settings='${settings}'></div>
 <script>${searchJs}</script></body></html>`;
 
-async function open() {
+async function open(settings) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 800 } });
   await ctx.route("https://test.local/**", (r) => {
     const u = new URL(r.request().url()).pathname;
     if (u === "/pagefind/pagefind.js") return r.fulfill({ contentType: "text/javascript", body: FAKE });
     if (u.endsWith(".png")) return r.fulfill({ status: 404, body: "" });
-    return r.fulfill({ contentType: "text/html", body: u === "/" ? page() : "<p>arrived</p>" });
+    return r.fulfill({ contentType: "text/html", body: u === "/" ? page(settings) : "<p>arrived</p>" });
   });
   const p = await ctx.newPage();
   await p.goto("https://test.local/");
@@ -127,6 +127,23 @@ describe("quiet search", () => {
     expect(first.text).toContain("3 pages");
     await search(p, "list");
     expect(await p.$$eval(".sq-item--tag .sq-link", (e) => e.map((a) => a.getAttribute("href")))).toEqual(["/tags/lists/"]);
+    await ctx.close();
+  });
+
+  it("a hyphen in a tag reads as a space", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    await search(p, "living systems");
+    expect(await p.$$eval(".sq-item--tag .sq-link", (e) => e.map((a) => a.getAttribute("href")))).toEqual(["/tags/living-systems/"]);
+    await ctx.close();
+  });
+
+  it("a haus can turn tag results off in the search block (show_tag_results: false)", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open('{"placeholder":"Search","show_tag_results":false}');
+    await search(p, "yoga");
+    expect(await p.$$eval(".sq-item--tag", (e) => e.length)).toBe(0);
+    expect(await p.$$eval(".sq-item", (e) => e.length)).toBe(4);
     await ctx.close();
   });
 

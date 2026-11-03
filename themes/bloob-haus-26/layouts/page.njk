@@ -37,23 +37,5 @@ layout: layouts/base.njk
 
   <div class="page-content">{{ content | safe }}</div>
 
-  {% if tags %}
-  {% set displayTags = tags | filterTagList %}
-  {% if displayTags.length %}
-  <div class="page-tags" data-pagefind-ignore>
-    {% for tag in displayTags %}
-    <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge" data-pagefind-filter="tag">{{ tag }}</a>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endif %}
-
-  {% include "partials/backlinks.njk" %}
-
-  {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
-  <div class="graph-visualizer" data-current-page="{{ page.url }}" {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
-  {% endif %}{% endfor %}
-
-  {# Comments live on the sheet, so they stay readable by day and night #}
-  {% include "partials/comments.njk" %}
+  {% include "partials/page-extras.njk" %}
 </article>

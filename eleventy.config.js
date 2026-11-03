@@ -78,11 +78,18 @@ export default async function (eleventyConfig) {
   const templateShapes = await loadTemplateShapes("lib/visualizers");
   // How the page's own object starts, decided in <head> before the first paint (themes with objects).
   eleventyConfig.addShortcode("bloobHeadInit", (pageId) => headInitScript({ pageId: pageId || "" }));
-  eleventyConfig.addShortcode("bloobObject", function (name, content) {
+  eleventyConfig.addShortcode("bloobObject", function (name, content, inside) {
     const shape = templateShapes.get(name);
     if (!shape) return content;
-    const data = this.ctx || {};
-    return renderObject(shape, { data, html: content, url: this.page?.url, pageId: data.bloobPageId || this.page?.url });
+    const ctx = this.ctx || {};
+    // What the haus says about this kind of object (_bloob-objects.md), for "What is a marble?".
+    const about = ctx.bloobObjects?.[ctx.bloob_object || name];
+    const data = { ...ctx, object_label: (about?.display_name || name).toLowerCase(), object_about: about?.description };
+    return renderObject(
+      shape,
+      { data, html: content, url: this.page?.url, pageId: ctx.bloobPageId || this.page?.url },
+      { inside: inside == null ? null : String(inside) },
+    );
   });
   // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
   eleventyConfig.addPlugin(pluginRss);
@@ -93,6 +100,9 @@ export default async function (eleventyConfig) {
 
   // Pass through static assets
   eleventyConfig.addPassthroughCopy(`${SRC}/assets`);
+  // Markdown that objects offer to share (preprocess writes src/_share/<page>/source.md)
+  eleventyConfig.addPassthroughCopy({ [`${SRC}/_share`]: "/" });
+  eleventyConfig.ignores.add(`${SRC}/_share/**`);
   // Media files — serve at /media/ (covers optimized/ subdirectory and any media-folder files)
   eleventyConfig.addPassthroughCopy({ [`${SRC}/media`]: "media" });
   // Vault attachment files at vault-relative paths outside src/media/

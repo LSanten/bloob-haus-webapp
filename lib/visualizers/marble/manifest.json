@@ -1,6 +1,12 @@
 {
   "name": "marble",
   "format": "template",
-  "description": "A glass marble. Closed, it holds its picture (or its own color) bent through glass; click and its page pours out of it.",
-  "scope": "page"
+  "description": "A glass marble. Closed, it holds its picture (or its own color) bent through glass; click it and its page pours out of it.",
+  "scope": "page",
+  "opens": "click",
+  "remembers": false,
+  "arrives": "open-from-site",
+  "shares": true,
+  "inside": "article",
+  "detect": { "selectors": [".bloob-object--marble"] }
 }

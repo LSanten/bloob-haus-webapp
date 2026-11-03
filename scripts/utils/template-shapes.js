@@ -61,8 +61,17 @@ export function templateShapeLayout(shape, { objects }) {
   return objects ? `layouts/${shape.name}.njk` : null;
 }
 
-export function generatedLayout(name) {
-  return `---\nlayout: layouts/base.njk\n---\n{% bloobObject "${name}", content %}\n`;
+export function generatedLayout(name, { inside } = {}) {
+  const head = `---\nlayout: layouts/base.njk\n---\n`;
+  if (inside !== "article") return `${head}{% bloobObject "${name}", content %}\n`;
+  // The object opens into the shared article (one article for everyone). The outermost object
+  // shares, so the article's own share bar steps aside; the page's extras ride on the sheet.
+  return (
+    head +
+    `{%- set inside_object = true -%}\n` +
+    `{%- set bloobInside -%}\n{% include "partials/article-reading.njk" %}\n{% include "partials/page-extras.njk" ignore missing %}\n{%- endset -%}\n` +
+    `{% bloobObject "${name}", content, bloobInside %}\n`
+  );
 }
 
 export async function writeTemplateShapeLayouts(shapes, { objects, layoutsDir }) {
@@ -70,7 +79,7 @@ export async function writeTemplateShapeLayouts(shapes, { objects, layoutsDir })
   const written = [];
   for (const shape of shapes.values()) {
     if (shape.hasOwnLayout || shape.draft) continue;
-    await fs.outputFile(path.join(layoutsDir, `${shape.name}.njk`), generatedLayout(shape.name));
+    await fs.outputFile(path.join(layoutsDir, `${shape.name}.njk`), generatedLayout(shape.name, { inside: shape.manifest.inside }));
     written.push(`${shape.name}.njk`);
   }
   return written;

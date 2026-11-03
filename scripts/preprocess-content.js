@@ -58,6 +58,7 @@ import { extractExcerpt } from "./utils/page-excerpt.js";
 import { loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
 import { dropHausStampedKeys } from "./utils/haus-stamped.js";
 import { catalogFields } from "./utils/catalog-fields.js";
+import { cleanMarkdownForSharing } from "./utils/share-markdown.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -262,6 +263,8 @@ export async function preprocessContent({
   // Step 6: Process each file
   console.log("\n--- Step 6: Processing markdown files ---");
 
+  // Notes that are published, by name: "copy markdown" keeps links only to these.
+  const publishedSlugs = new Set(published.map((f) => path.basename(f.relativePath, ".md").toLowerCase()));
   for (const file of published) {
     console.log(`\n[process] ${file.relativePath}`);
 
@@ -727,14 +730,27 @@ export async function preprocessContent({
       // Themes that draw objects get each page's kind and outside details in the catalog, so
       // rooms can draw closed objects. Other themes' catalogs stay exactly as they were.
       if (themeHasObjects && perPageLinks[pageInfo.url]) {
-        Object.assign(perPageLinks[pageInfo.url], catalogFields({
+        const fields = catalogFields({
           effectiveShape,
           frontmatter,
           url: pageInfo.url,
           fileName: path.basename(file.relativePath, ".md"),
           excerpt,
-        }));
+        });
+        Object.assign(perPageLinks[pageInfo.url], fields);
+        // An object drawn by the engine shows its baked picture and color when closed.
+        if (bloobShapeLayout && fields.closedPicture) {
+          outputFrontmatter.closed_picture = fields.closedPicture;
+          outputFrontmatter.color ??= fields.color;
+        }
       }
+    }
+
+    // An object that shares offers its note as markdown: written beside the page as source.md
+    // (src/_share/ is copied to the site as is, never read as a page).
+    if (themeHasObjects && pageInfo && bloobShapeLayout && templateShapes.get(effectiveShape)?.manifest?.shares) {
+      const sharePath = path.join(outputDir, "_share", pageInfo.url, "source.md");
+      await fs.outputFile(sharePath, cleanMarkdownForSharing(rawContent, { publishedSlugs }));
     }
 
     // Reconstruct the file with frontmatter

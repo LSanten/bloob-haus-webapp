@@ -34,3 +34,27 @@ describe('addNoindexHeader', () => {
     expect(text).toContain('/garden/*\n  X-Robots-Tag: noindex, nofollow');
   });
 });
+
+import { addFolderNoindexHeaders } from '../../scripts/utils/search-headers.js';
+
+describe('addFolderNoindexHeaders', () => {
+  it('adds a noindex rule per unlisted folder, keeping existing rules', async () => {
+    await fs.writeFile(path.join(dir, '_headers'), '/magic-machine/*\n  X-Test: 1\n');
+    await addFolderNoindexHeaders(dir, ['clients', 'work/private']);
+    const text = await fs.readFile(path.join(dir, '_headers'), 'utf-8');
+    expect(text.startsWith('/magic-machine/*\n  X-Test: 1\n')).toBe(true);
+    expect(text).toContain('/clients/*\n  X-Robots-Tag: noindex, nofollow');
+    expect(text).toContain('/work/private/*\n  X-Robots-Tag: noindex, nofollow');
+  });
+
+  it('scopes the rules under the mount path', async () => {
+    await addFolderNoindexHeaders(dir, ['clients'], 'marbles');
+    const text = await fs.readFile(path.join(dir, '_headers'), 'utf-8');
+    expect(text).toContain('/marbles/clients/*\n');
+  });
+
+  it('writes nothing when there are no folders', async () => {
+    await addFolderNoindexHeaders(dir, []);
+    expect(await fs.pathExists(path.join(dir, '_headers'))).toBe(false);
+  });
+});

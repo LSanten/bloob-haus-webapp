@@ -111,6 +111,9 @@ internal `_bloob_unlisted: true` flag):
 - `visibility: unlisted` (frontmatter) — **most portable; works in any `publish_mode`. Prefer this.**
 - `website_status: unlisted` (frontmatter) — only meaningful when `publish_mode: status_field`.
 - `#unlisted` (tag, in frontmatter or inline body).
+- **Living inside a folder listed in `unlisted_folders`** (`_bloob-settings.md`), whatever the page's
+  own YAML says. **Recommended for any client container**: one forgotten `visibility: unlisted`
+  can no longer publish the token in the sitemap, search, RSS or graph.json.
 
 When `_bloob_unlisted` is set, the pipeline does this **universally, for every theme**:
 
@@ -186,11 +189,14 @@ it is unreachable without the token, and a wrong guess returns a 404 that doesn'
 The preprocessor (`preprocess-content.js`, "Generating folder index stubs") auto-creates a rendered
 `index.md` for **every top-level folder** that lacks one — and that stub **is** a page that lands in
 `collections.all` and `sitemap.xml`, publicly announcing the folder. It would not leak the token or
-client (those are nested), but it advertises that the container exists. Two ways to prevent it:
+client (those are nested), but it advertises that the container exists. Three ways to prevent it:
 
+- **List the container in `unlisted_folders`** (`_bloob-settings.md`): no stub is generated at all,
+  `/clients/` answers 404, every page inside is unlisted, and raw files get an `X-Robots-Tag`
+  header. **Recommended** (since 2026-10-29).
 - **Add your own index**, marked unlisted — `clients/_index.md` with `visibility: unlisted`. This
   both suppresses the auto-stub (an existing `_index.md` is respected) **and** keeps `/clients/`
-  out of the sitemap. Gives you a clean `/clients/<token>/…` URL. **Recommended.**
+  out of the sitemap. Gives you a clean `/clients/<token>/…` URL.
 - **Prefix the container with `_`** — `_clients/`. Folders starting with `_` are skipped by the
   stub generator entirely. Simpler (no extra file) but the underscore shows in the URL.
 

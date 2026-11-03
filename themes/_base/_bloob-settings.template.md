@@ -24,6 +24,8 @@ url:                            # how URLs are built — see docs/architecture/u
   mount_path: ""                # optional subpath, e.g. "marbles"
 publish_mode: blocklist         # blocklist | allowlist
 blocklist_tag: private
+unlisted_folders: []            # folders whose pages are ALWAYS unlisted, e.g. [clients]: no Google,
+                                # sitemap, search, RSS, graph or analytics, whatever a page's YAML says
 visualizers: []
 features:
   rss: true

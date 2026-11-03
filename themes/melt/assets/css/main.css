@@ -814,9 +814,9 @@ a.button:focus-visible {
 
 /* ============================================================
    The new article look (2026-11-03, the base haus's "sheet on the background"):
-   an article sits on a soft sheet over the watercolor instead of straight on it,
-   and melt follows the system's night setting. No blur and no blend modes, so it
-   stays cheap to draw.
+   an article sits on a soft white sheet over the watercolor instead of straight on it.
+   melt keeps its own palette, green and white, soft and textured, by day and by night
+   (Leon, 2026-11-03). No blur and no blend modes, so it stays cheap to draw.
    ============================================================ */
 :root {
   --melt-sheet: rgba(255, 255, 255, 0.66);
@@ -834,37 +834,4 @@ a.button:focus-visible {
   padding-right: clamp(20px, 5vw, 56px);
   --article-padding-top: 44px;
   --article-padding-bottom: 56px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --color-bg: #1d1526;
-    --color-text: #f1e7f3;
-    --color-text-muted: rgba(241, 231, 243, 0.66);
-    --color-accent: #f08bbd;
-    --color-accent-2: #c9a3ef;
-    --color-surface: rgba(38, 26, 48, 0.72);
-    --color-border: rgba(241, 231, 243, 0.18);
-    --color-link: #f3a0c8;
-    --color-link-hover: #d6b6f5;
-    --surface-text-color: #f1e7f3;
-    --color-pair-a-bg: rgba(38, 26, 48, 0.78);
-    --color-pair-a-text: #f1e7f3;
-    --color-pair-b-bg: rgba(120, 90, 170, 0.32);
-    --color-pair-b-text: #f1e7f3;
-    --pagefind-ui-background: rgba(38, 26, 48, 0.78);
-    --melt-sheet: rgba(30, 20, 40, 0.76);
-    --melt-sheet-border: rgba(241, 231, 243, 0.1);
-    --melt-sheet-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
-  }
-  /* the veil behind the crumbs, in dusk colors */
-  .melt-nav::before {
-    background: linear-gradient(to bottom, rgba(29, 21, 38, 0.9) 0%, rgba(29, 21, 38, 0.7) 40%, rgba(29, 21, 38, 0.3) 75%, rgba(29, 21, 38, 0) 100%);
-  }
-  /* the watercolor at dusk: the same picture, dimmed */
-  .site-background {
-    background-color: #1d1526;
-    filter: brightness(0.42) saturate(0.85);
-  }
 }

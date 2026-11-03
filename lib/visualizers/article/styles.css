@@ -207,10 +207,10 @@
   color: var(--text-color, #333);
 }
 
+/* Links show by their color, no underline (Leon, 2026-11-03): on every site that uses the article. */
 .article-body a {
   color: var(--accent-color, #555);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .article-body a:hover { opacity: 0.75; }

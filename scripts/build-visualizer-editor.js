@@ -25,6 +25,8 @@
  * lives in its own block); one that does not fails the build loudly.
  */
 import * as esbuild from "esbuild";
+import { loadTemplateShapes } from "./utils/template-shapes.js";
+import { VERSION } from "../lib/visualizers/_engine/version.js";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -99,7 +101,7 @@ export async function liveVisualizers() {
       blurb: catalog.blurbs?.[name],
       example: await fs.readFile(path.join(EDITOR, "examples", `${name}.md`), "utf-8"),
       schema: s.schema,
-      shelf: "placed",
+      shelf: s.manifest.format === "template" ? "objects" : "placed",
       labels: scopeLabels(s.manifest),
     });
   }
@@ -123,13 +125,40 @@ function page({ title, view, root, visualizer }) {
 `;
 }
 
+/**
+ * The engine, published for any page to load: engine/<VERSION>/ and engine/stable/ (the newest
+ * stable, what pages follow for now), each with bloob-engine.js and bloob-engine.css.
+ */
+export async function publishEngine(outDir = OUT) {
+  const js = await esbuild.build({
+    entryPoints: [path.join(SHAPES, "_engine", "toolbox.js")],
+    bundle: true,
+    format: "iife",
+    write: false,
+    logLevel: "warning",
+  });
+  const css = await fs.readFile(path.join(SHAPES, "_engine", "engine.css"), "utf-8");
+  for (const dir of [VERSION, "stable"]) {
+    await fs.outputFile(path.join(outDir, "engine", dir, "bloob-engine.js"), js.outputFiles[0].text);
+    await fs.outputFile(path.join(outDir, "engine", dir, "bloob-engine.css"), css);
+  }
+}
+
 export async function build() {
   const { shapes, pages } = await liveVisualizers();
+  const templates = await loadTemplateShapes(SHAPES);
   await fs.emptyDir(OUT);
+  await publishEngine(OUT);
 
-  // The page: the editor host plus every live shape's own index.js, one bundle.
-  const imports = shapes.map((v, i) => `import * as v${i} from ${JSON.stringify(path.join(SHAPES, v.name, "index.js"))};`);
-  const modules = shapes.map((v, i) => `{ ...${JSON.stringify({ name: v.name, hasCss: v.hasCss, hasBrowser: v.hasBrowser })}, module: v${i} }`);
+  // The page: the editor host plus every live shape's own index.js, one bundle. Template shapes
+  // (note, marble) have no index.js: the engine draws them from their templates, carried here.
+  const isTemplate = (v) => templates.has(v.name);
+  const imports = shapes.map((v, i) => (isTemplate(v) ? `const v${i} = {};` : `import * as v${i} from ${JSON.stringify(path.join(SHAPES, v.name, "index.js"))};`));
+  const modules = shapes.map((v, i) => {
+    const t = templates.get(v.name);
+    const meta = { name: v.name, hasCss: v.hasCss, hasBrowser: v.hasBrowser, ...(t && { object: { name: t.name, manifest: t.manifest, templates: t.templates } }) };
+    return `{ ...${JSON.stringify(meta)}, module: v${i} }`;
+  });
   const pageData = pages.map(({ schema, ...rest }) => rest);
   await esbuild.build({
     stdin: {

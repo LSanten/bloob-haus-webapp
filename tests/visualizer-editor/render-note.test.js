@@ -81,3 +81,27 @@ describe("createPageRenderer (the article page a note sits in)", () => {
     expect(withServices("# P\n\n::: services\n## S\n- a\n:::\n")).toContain('class="services__title"');
   });
 });
+
+import { parseFlatFrontmatter, createObjectPageRenderer } from "../../lib/visualizer-editor/render-note.js";
+import { loadTemplateShapes } from "../../scripts/utils/template-shapes.js";
+
+describe("objects in the editor", () => {
+  it("reads a note's flat frontmatter", () => {
+    expect(parseFlatFrontmatter('---\ntitle: "Hello: you"\ncolor: "#123456"\nbloob-shape: marble\n---\nbody')).toEqual({
+      data: { title: "Hello: you", color: "#123456", "bloob-shape": "marble" },
+      body: "body",
+    });
+    expect(parseFlatFrontmatter("no frontmatter")).toEqual({ data: {}, body: "no frontmatter" });
+  });
+
+  it("draws a marble note as a marble that opens into its article", async () => {
+    const shapes = await loadTemplateShapes(new URL("../../lib/visualizers", import.meta.url).pathname);
+    const render = createObjectPageRenderer({ visualizers: [], shape: shapes.get("marble") });
+    const html = render("---\ntitle: Autopoiesis\ncolor: \"#7a9fd6\"\n---\nIt is quite hard to define life.");
+    expect(html).toContain("bloob-object--marble");
+    expect(html).toContain('class="article-page"');
+    expect(html).toContain("It is quite hard to define life.");
+    expect(html).toContain("Autopoiesis");
+    expect(html).not.toContain('class="bloob-share"'); // nothing to share from the editor
+  });
+});

@@ -13,9 +13,12 @@ import { liveVisualizers } from "../../scripts/build-visualizer-editor.js";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const EXAMPLES = path.join(ROOT, "lib/visualizer-editor/examples");
 const catalog = JSON.parse(readFileSync(path.join(ROOT, "lib/visualizer-editor/catalog.json"), "utf-8"));
-const names = readdirSync(EXAMPLES)
+const all = readdirSync(EXAMPLES)
   .filter((f) => f.endsWith(".md") && f !== "always-on.md")
   .map((f) => f.slice(0, -3));
+const isTemplate = (name) => JSON.parse(readFileSync(path.join(ROOT, "lib/visualizers", name, "manifest.json"), "utf-8")).format === "template";
+const names = all.filter((n) => !isTemplate(n));
+const objects = all.filter(isTemplate);
 const load = async (name) => ({ name, ...(await import(path.join(ROOT, "lib/visualizers", name, "index.js"))) });
 
 describe("starter notes", () => {
@@ -29,6 +32,19 @@ describe("starter notes", () => {
     expect(html).not.toContain("data-vis-raw");
     expect(html).not.toContain(`language-${name}`);
   });
+
+  it("note and marble have starter notes, drawn as their objects", async () => {
+    expect(objects.sort()).toEqual(["marble", "note"]);
+    const { loadTemplateShapes } = await import("../../scripts/utils/template-shapes.js");
+    const { createObjectPageRenderer } = await import("../../lib/visualizer-editor/render-note.js");
+    const shapes = await loadTemplateShapes(path.join(ROOT, "lib/visualizers"));
+    for (const name of objects) {
+      const html = createObjectPageRenderer({ visualizers: [], shape: shapes.get(name) })(readFileSync(path.join(EXAMPLES, `${name}.md`), "utf-8"));
+      expect(html).toContain(`bloob-object--${name}`);
+    }
+  });
+
+  it("note and marble are listed", () => expect([...catalog.listed].sort()).toEqual(["marble", "note"]));
 
   it("only the writing rules and the listed visualizers get a page", async () => {
     const { pages } = await liveVisualizers();

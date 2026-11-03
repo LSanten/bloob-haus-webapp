@@ -1,0 +1,54 @@
+{#- The article's reading part: header, dates, share bar, body. One article for everyone: the
+    article layout (melt) and a marble's open page both include it, so they can never drift.
+    Inside another object (inside_object) the outermost object shares, so the share bar steps aside. -#}
+{% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
+<article class="article-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
+  <header class="article-header">
+    {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
+    <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="article-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
+    {% if typeData and typeData.banner_text %}<p class="article-banner-text">{{ typeData.banner_text }}</p>{% endif %}
+    {% if author %}<p class="article-author">By {{ author }}</p>{% endif %}
+    {% if byline %}<p class="article-byline">{{ byline }}</p>{% endif %}
+
+    {#
+      Date pills. Two authoring conventions, both supported (see
+      scripts/utils/date-field.js):
+        comma form    date_created: 2024-11-07, Published on
+        separate key  date_created: 2024-11-07  +  date_created_text: Published on
+      `date_updated:` may be a list — the LATEST entry wins, regardless of order.
+      The updated pill is suppressed when it would duplicate the created pill.
+
+      Opt out per page via a ::: settings block:
+        show_date_created: false
+        show_date_updated: false
+    #}
+    {% set dcFmt = date_created | dateValue | dateFormat %}
+    {% set duFmt = date_updated | dateValue | dateFormat %}
+
+    {% if dcFmt and shape_settings.show_date_created !== false %}
+    <p class="article-date" data-pagefind-ignore>{{ date_created | dateLabel(date_created_text, "Written on") }} {{ dcFmt }}</p>
+    {% endif %}
+
+    {% if duFmt and duFmt != dcFmt and shape_settings.show_date_updated !== false %}
+    <p class="article-date article-date--updated" data-pagefind-ignore>{{ date_updated | dateLabel(date_updated_text, "Updated on") }} {{ duFmt }}</p>
+    {% endif %}
+
+    {% if shape_settings.share_bar !== false and not inside_object %}
+      {% include "partials/share-bar.njk" %}
+    {% endif %}
+
+    {# Visitor count sits with the other metadata pills. Self-guarding: renders nothing
+       unless the vault opted in AND the GoatCounter site allows the counter. #}
+    {% include "partials/visitor-count.njk" %}
+  </header>
+
+  {% if slug %}
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
+  {% endif %}
+
+  <div class="article-body">
+    {{ content | safe }}
+  </div>
+</article>

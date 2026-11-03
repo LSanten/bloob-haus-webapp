@@ -16,7 +16,7 @@ const INLINE_TAG_REGEX = /(?:^|\s)#([a-zA-Z][\w/-]*)/g;
  * System tags used for publishing logic, not content taxonomy.
  * Stripped from the public tag list.
  */
-const SYSTEM_TAGS = new Set(["not-for-public", "gardenentry", "all", "nav"]);
+const SYSTEM_TAGS = new Set(["not-for-public", "gardenentry", "all", "nav", "to-review"]); // to-review: a maker's own reminder, never shown
 
 /**
  * Tags to ignore from public display.

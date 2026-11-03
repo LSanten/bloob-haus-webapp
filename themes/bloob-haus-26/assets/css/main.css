@@ -225,8 +225,8 @@ a:hover {
 }
 /* near the cursor the dots clear away: an area of focus */
 .is-near .world__dots {
-  -webkit-mask-image: radial-gradient(circle 150px at var(--mx, -999px) var(--my, -999px), transparent 0 35%, #000 100%);
-  mask-image: radial-gradient(circle 150px at var(--mx, -999px) var(--my, -999px), transparent 0 35%, #000 100%);
+  -webkit-mask-image: radial-gradient(circle 120px at var(--mx, -999px) var(--my, -999px), transparent 0 55%, #000 100%);
+  mask-image: radial-gradient(circle 120px at var(--mx, -999px) var(--my, -999px), transparent 0 55%, #000 100%);
 }
 .world__dots-warm {
   background-image: radial-gradient(var(--dot-warm) 1.9px, transparent 2.4px);
@@ -236,9 +236,9 @@ a:hover {
   -webkit-mask-image: radial-gradient(circle 140px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
   mask-image: radial-gradient(circle 140px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
 }
-/* the warm glow lasts a moment (world.js), then the dots are simply gone near the cursor */
-.is-glowing .world__dots-warm {
-  opacity: 1;
+/* no glow: near the cursor the dots are simply gone, a clear spot to look through */
+.world__dots-warm {
+  display: none;
 }
 /* live grain: specks with their own colour and transparency, moved a few times a second */
 .world__grain {

@@ -1,22 +1,19 @@
-// The background's dots near the cursor or a finger glow for a moment, then clear, leaving a calm
-// area of focus. The position is written only to the world layer, once per frame.
+// The background's dots clear away near the cursor or a finger: a clear spot to look through. The position is written only to the world layer, once per frame.
 // Also: the visitor's day/night choice (auto, day, night), kept in their browser.
 (function () {
   var world = document.querySelector(".world");
   var html = document.documentElement;
   if (world) {
-    var x = 0, y = 0, queued = false, glow = null;
+    var x = 0, y = 0, queued = false;
     var paint = function () { queued = false; world.style.setProperty("--mx", x + "px"); world.style.setProperty("--my", y + "px"); };
     var near = function (e) {
       x = e.clientX; y = e.clientY;
       if (!queued) { queued = true; requestAnimationFrame(paint); }
-      html.classList.add("is-near", "is-glowing");
-      clearTimeout(glow);
-      glow = setTimeout(function () { html.classList.remove("is-glowing"); }, 300);
+      html.classList.add("is-near");
     };
     addEventListener("pointermove", near, { passive: true });
     addEventListener("pointerdown", near, { passive: true });
-    document.addEventListener("pointerleave", function () { html.classList.remove("is-near", "is-glowing"); });
+    document.addEventListener("pointerleave", function () { html.classList.remove("is-near"); });
     addEventListener("pointerup", function (e) {
       if (e.pointerType !== "mouse") setTimeout(function () { html.classList.remove("is-near"); }, 900);
     });

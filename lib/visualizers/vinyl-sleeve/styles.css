@@ -1,0 +1,32 @@
+/* The vinyl sleeve: a record sleeve on the haus's background. The cover is a real picture; once
+   the 3D sleeve has drawn, it takes the cover's place. Everything between closed and open is
+   drawn from --open, as for every object. */
+.bloob-object--vinyl-sleeve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: var(--sheet-width, 760px);
+  margin: 3vh auto 0;
+}
+.bloob-object--vinyl-sleeve .bloob-object__closed { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.vinyl-sleeve { position: relative; width: min(560px, 88vw); aspect-ratio: 1; }
+.vinyl-cover { position: absolute; inset: 9%; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px; box-shadow: 0 30px 50px -30px var(--object-shadow, rgba(0,0,0,.45)); }
+.vinyl-cover:focus-visible { outline: 2px solid var(--link-color, currentColor); outline-offset: 6px; }
+.bloob-object .vinyl-cover__picture { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; background: none; }
+.vinyl-stage { position: absolute; inset: 0; display: none; }
+.bloob-object--vinyl-sleeve.is-live .vinyl-stage { display: block; }
+.bloob-object--vinyl-sleeve.is-live .vinyl-cover { visibility: hidden; }
+.vinyl-title { margin: 4px 0 0; font-family: var(--font-heading, serif); font-size: 1.35rem; text-align: center; color: var(--text-color); }
+.vinyl-subtitle { margin: -4px 0 0; font: italic 1rem/1.4 var(--font-body, serif); color: var(--text-light); text-align: center; }
+.vinyl-subtitle:empty { display: none; }
+.vinyl-hint { margin: 0; font: 500 0.78rem/1.3 var(--font-label, sans-serif); color: var(--text-light); opacity: 0; transition: opacity .4s; }
+html.bh-js .bloob-object--vinyl-sleeve[data-state="closed"] .vinyl-hint { opacity: .8; }
+@media (hover: none) { .vinyl-hint { font-size: 0; } .vinyl-hint::after { content: "Tap the sleeve to take out the record"; font-size: 0.78rem; } }
+
+.bloob-object--vinyl-sleeve .bloob-object__open { width: 100%; overflow: hidden; max-height: calc(var(--open) * var(--full-height, 100000px)); }
+.vinyl-open { padding-top: 18px; }
+.vinyl-video { margin: 0 0 18px; text-align: center; }
+.vinyl-video:has(a[href=""]) { display: none; }
+.vinyl-video a { font: 500 0.95rem/1 var(--font-label, sans-serif); color: var(--link-color); }
+.vinyl-video iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 14px; }
+.vinyl-sheet { background: var(--card-bg, #fbf7ef); color: var(--surface-text-color, inherit); border-radius: 14px; padding: 8px clamp(18px, 5vw, 56px) 40px; box-shadow: 0 18px 40px -24px var(--object-shadow, rgba(60, 40, 20, 0.3)); --text-color: var(--surface-text-color, inherit); }

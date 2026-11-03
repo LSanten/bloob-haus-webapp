@@ -33,8 +33,8 @@ describe("starter notes", () => {
     expect(html).not.toContain(`language-${name}`);
   });
 
-  it("note and marble have starter notes, drawn as their objects", async () => {
-    expect(objects.sort()).toEqual(["marble", "note"]);
+  it("the object shapes have starter notes, drawn as their objects", async () => {
+    expect(objects.sort()).toEqual(["marble", "note", "vinyl-sleeve"]);
     const { loadTemplateShapes } = await import("../../scripts/utils/template-shapes.js");
     const { createObjectPageRenderer } = await import("../../lib/visualizer-editor/render-note.js");
     const shapes = await loadTemplateShapes(path.join(ROOT, "lib/visualizers"));
@@ -44,7 +44,7 @@ describe("starter notes", () => {
     }
   });
 
-  it("note and marble are listed", () => expect([...catalog.listed].sort()).toEqual(["marble", "note"]));
+  it("note, marble and the vinyl sleeve are listed", () => expect([...catalog.listed].sort()).toEqual(["marble", "note", "vinyl-sleeve"]));
 
   it("only the writing rules and the listed visualizers get a page", async () => {
     const { pages } = await liveVisualizers();

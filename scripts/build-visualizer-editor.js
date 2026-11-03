@@ -181,6 +181,8 @@ export async function build() {
   for (const v of shapes) {
     const dir = path.join(SHAPES, v.name);
     if (v.hasCss) await fs.copy(path.join(dir, "styles.css"), path.join(OUT, "assets", `${v.name}.css`));
+    // A shape's example pictures (its starter note points at them), e.g. the vinyl sleeve's covers.
+    if (await fs.pathExists(path.join(dir, "example"))) await fs.copy(path.join(dir, "example"), path.join(OUT, "assets", v.name, "example"));
     if (v.hasBrowser) {
       await esbuild.build({
         entryPoints: [path.join(dir, "browser.js")],
@@ -201,6 +203,9 @@ export async function build() {
   await fs.copy(path.join(EDITOR, "base-tokens.css"), path.join(OUT, "themes", "base-tokens.css"));
   await fs.outputFile(path.join(OUT, "index.html"), page({ title: "Bloob Haus visualizers", view: "catalog", root: "./" }));
   await fs.outputFile(path.join(OUT, "llms.txt"), aiIndex(pages));
+  // The live previews run in a sandboxed frame (origin "null"), so even this site's own example
+  // pictures count as cross-site for a 3D texture: let any page read the public assets.
+  await fs.outputFile(path.join(OUT, "_headers"), "/assets/*\n  Access-Control-Allow-Origin: *\n");
   await fs.copy(path.join(EDITOR, "making-a-visualizer.md"), path.join(OUT, "making-a-visualizer.md"));
 
   console.log(`[visualizers] ${pages.length} pages, ${shapes.length} shapes: ${shapes.map((v) => v.name).join(", ")}`);

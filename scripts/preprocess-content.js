@@ -59,6 +59,7 @@ import { pageShape, loadTemplateShapes, themeSupportsObjects, templateShapeLayou
 import { dropHausStampedKeys } from "./utils/haus-stamped.js";
 import { catalogFields } from "./utils/catalog-fields.js";
 import { cleanMarkdownForSharing } from "./utils/share-markdown.js";
+import { resolveAttachmentPath } from "./utils/attachment-resolver.js";
 import { isPageUnlisted, isInUnlistedFolder } from "./utils/unlisted-folders.js";
 import { buildSeoDescription } from "./utils/seo-description.js";
 
@@ -769,6 +770,18 @@ export async function preprocessContent({
           excerpt,
         });
         Object.assign(perPageLinks[pageInfo.url], fields);
+      }
+    }
+
+    // Pictures a template shape names in its manifest ("images": ["front", "back"]) resolve to
+    // site addresses, like pictures in the body (next to the note first, then by name).
+    const shapeImages = bloobShapeLayout && templateShapes.get(effectiveShape)?.manifest?.images;
+    if (Array.isArray(shapeImages)) {
+      for (const key of shapeImages) {
+        if (!frontmatter[key]) continue;
+        const url = resolveAttachmentPath(String(frontmatter[key]), attachmentIndex, { sourceVaultPath: file.relativePath });
+        if (url) outputFrontmatter[key] = url;
+        else console.warn(`[shape] ${file.relativePath}: ${key}: "${frontmatter[key]}" was not found`);
       }
     }
 

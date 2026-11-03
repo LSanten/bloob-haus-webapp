@@ -1,0 +1,12 @@
+{
+  "name": "vinyl-sleeve",
+  "format": "template",
+  "description": "A record sleeve with its record inside. Closed, it shows its cover; click it and the sleeve turns to the front, the record slides out, and the page with its music video opens below.",
+  "scope": "page",
+  "opens": "click",
+  "remembers": false,
+  "shares": true,
+  "inside": "article",
+  "images": ["front", "back", "label"],
+  "detect": { "selectors": [".bloob-object--vinyl-sleeve"] }
+}

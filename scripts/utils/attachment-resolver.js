@@ -296,3 +296,39 @@ And one that doesn't exist:
   console.log("\nResolved:", result.resolved);
   console.log("Broken:", result.broken);
 }
+
+/**
+ * One picture named in a note's frontmatter (`front: assets/front.png`, `label: [[label.jpg]]`),
+ * resolved the way a picture in the body is: next to the note first, then by its name. A web
+ * address stays as it is. Pure.
+ *
+ * @param {string} value
+ * @param {{ byBasename: Object, byVaultPath: Object }} attachmentIndex
+ * @param {{ sourceVaultPath?: string }} [options]
+ * @returns {string|null}
+ */
+export function resolveAttachmentPath(value, attachmentIndex, { sourceVaultPath = null } = {}) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  let v = value.trim();
+  const wiki = /^!?\[\[([^\]|]+)(?:\|[^\]]*)?\]\]$/.exec(v);
+  if (wiki) v = wiki[1].trim();
+  const md = /^!?\[[^\]]*\]\(([^)\s]+)\)$/.exec(v);
+  if (md) v = md[1];
+  if (/^(https?:)?\/\//i.test(v) || v.startsWith("/")) return v;
+  const { byBasename = {}, byVaultPath = {} } = attachmentIndex || {};
+  const decoded = safeDecode(v);
+  if (sourceVaultPath && !wiki) {
+    const sourceDir = sourceVaultPath.replace(/\\/g, "/").split("/").slice(0, -1).join("/");
+    const parts = (sourceDir ? sourceDir + "/" + decoded : decoded).split("/");
+    const normalized = [];
+    for (const part of parts) {
+      if (part === "..") normalized.pop();
+      else if (part !== ".") normalized.push(part);
+    }
+    const rel = normalized.join("/");
+    const hit = byVaultPath[rel] || byVaultPath[rel.toLowerCase()];
+    if (hit) return hit;
+  }
+  const name = path.basename(decoded);
+  return byBasename[name] || byBasename[name.toLowerCase()] || null;
+}

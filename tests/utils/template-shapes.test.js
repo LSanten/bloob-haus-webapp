@@ -8,6 +8,7 @@ import {
   templateShapeLayout,
   generatedLayout,
   writeTemplateShapeLayouts,
+  pageShape,
 } from "../../scripts/utils/template-shapes.js";
 
 let root;
@@ -50,6 +51,18 @@ describe("drafts", () => {
     expect(templateShapeLayout(shapes.get("marble"), { objects: true })).toBeNull();
     expect(await writeTemplateShapeLayouts(shapes, { objects: true, layoutsDir: path.join(root, "draft-out") })).not.toContain("marble.njk");
   });
+});
+
+describe("pageShape", () => {
+  const shapes = new Map([["marble", {}]]);
+  it("a page takes the haus's default shape", () =>
+    expect(pageShape({ bloobShape: null, defaultShape: "marble", relativePath: "marbles/a.md", objects: true, templateShapes: shapes })).toBe("marble"));
+  it("on a theme with objects the homepage stays a page unless it names a shape", () => {
+    expect(pageShape({ bloobShape: null, defaultShape: "marble", relativePath: "index.md", objects: true, templateShapes: shapes })).toBeNull();
+    expect(pageShape({ bloobShape: "note", defaultShape: "marble", relativePath: "index.md", objects: true, templateShapes: shapes })).toBe("note");
+  });
+  it("other themes keep the default on the homepage too", () =>
+    expect(pageShape({ bloobShape: null, defaultShape: "marble", relativePath: "index.md", objects: false, templateShapes: shapes })).toBe("marble"));
 });
 
 describe("themeSupportsObjects", () => {

@@ -55,7 +55,7 @@ import {
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
-import { loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
+import { pageShape, loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
 import { dropHausStampedKeys } from "./utils/haus-stamped.js";
 import { catalogFields } from "./utils/catalog-fields.js";
 import { cleanMarkdownForSharing } from "./utils/share-markdown.js";
@@ -341,7 +341,13 @@ export async function preprocessContent({
     // bloobShape   = explicitly declared shape (drives body rendering + settings extraction)
     // effectiveShape = bloobShape ?? site default (drives layout selection only)
     const bloobShape = frontmatter["bloob-shape"] || null;
-    const effectiveShape = bloobShape || siteConfig.default_shape || null;
+    const effectiveShape = pageShape({
+      bloobShape,
+      defaultShape: siteConfig.default_shape,
+      relativePath: file.relativePath,
+      objects: themeHasObjects,
+      templateShapes,
+    });
     let shapeSettings = {};
     if (bloobShape) {
       const extracted = extractSettingsBlock(processedContent);

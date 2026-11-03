@@ -84,3 +84,15 @@ export async function writeTemplateShapeLayouts(shapes, { objects, layoutsDir })
   }
   return written;
 }
+
+/**
+ * Which shape a page is drawn as: the one it names, else the haus's default. On a theme with
+ * objects the homepage stays a page (the haus's front door, not one more object) unless it names
+ * a shape itself; other themes are unchanged.
+ */
+export function pageShape({ bloobShape, defaultShape, relativePath, objects, templateShapes }) {
+  if (bloobShape) return bloobShape;
+  const isHome = String(relativePath).replace(/\\/g, "/") === "index.md";
+  if (objects && isHome && templateShapes?.has(defaultShape)) return null;
+  return defaultShape || null;
+}

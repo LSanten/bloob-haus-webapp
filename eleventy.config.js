@@ -12,6 +12,8 @@ import { formatDate } from "./scripts/utils/format-date.js";
 import { configureMarkdown } from "./scripts/utils/markdown-setup.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
+import { loadTemplateShapes } from "./scripts/utils/template-shapes.js";
+import { renderObject } from "./lib/visualizers/_engine/index.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
 import {
   detectVisualizers,
@@ -69,6 +71,16 @@ export default async function (eleventyConfig) {
 
   // Load visualizer modules for build-time transforms
   const visualizers = await loadVisualizers();
+
+  // Template shapes (note, marble, ...) are drawn by the engine. Their layouts call
+  // {% bloobObject "<name>", content %}; the page's frontmatter reaches the engine through this.ctx.
+  const templateShapes = await loadTemplateShapes("lib/visualizers");
+  eleventyConfig.addShortcode("bloobObject", function (name, content) {
+    const shape = templateShapes.get(name);
+    if (!shape) return content;
+    const data = this.ctx || {};
+    return renderObject(shape, { data, html: content, url: this.page?.url, pageId: data.bloobPageId || this.page?.url });
+  });
   // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
   eleventyConfig.addPlugin(pluginRss);
 

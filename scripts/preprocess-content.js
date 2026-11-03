@@ -55,6 +55,8 @@ import {
 } from "./utils/bloob-objects-reader.js";
 import { safeDecode } from "./utils/safe-decode.js";
 import { extractExcerpt } from "./utils/page-excerpt.js";
+import { loadTemplateShapes, themeSupportsObjects, templateShapeLayout } from "./utils/template-shapes.js";
+import { dropHausStampedKeys } from "./utils/haus-stamped.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -153,6 +155,10 @@ export async function preprocessContent({
   // not from env vars that may not be set (e.g. during `npm run dev:*`).
   const siteName = resolveSiteName();
   const siteConfig = await loadSiteConfig(siteName, { contentDir });
+  // Template shapes (lib/visualizers/*/manifest.json "format": "template") are drawn by the engine.
+  // Without their own layout.njk they only come alive on a theme with objects: true.
+  const templateShapes = await loadTemplateShapes(path.join(ROOT_DIR, "lib/visualizers"));
+  const themeHasObjects = themeSupportsObjects(siteConfig, ROOT_DIR);
   const publishOptions = {
     ...(siteConfig.content?.publish_mode && { publishMode: siteConfig.content.publish_mode }),
     ...(siteConfig.content?.blocklist_tag && { blocklistTag: siteConfig.content.blocklist_tag }),
@@ -260,7 +266,10 @@ export async function preprocessContent({
 
     // Read file content
     const rawContent = await fs.readFile(file.path, "utf-8");
-    const { data: frontmatter, content: body } = matter(rawContent);
+    const { data: authoredFrontmatter, content: body } = matter(rawContent);
+    // Names only the haus may write (opened, fetched, date_postmarked, mark_*) never come from a note.
+    const { frontmatter, dropped: stampedKeys } = dropHausStampedKeys(authoredFrontmatter);
+    if (stampedKeys.length) console.warn(`[process] ignored haus-only keys: ${stampedKeys.join(", ")}`);
 
     // Process content through each resolver
     let processedContent = body;
@@ -359,7 +368,11 @@ export async function preprocessContent({
     //   b) Layout shape — shape has no renderFilescope (or no index.js at all).
     //      Treated as a layout reference: layouts/[name].njk wraps the page as chrome.
     let bloobShapeLayout = null;
-    if (effectiveShape) {
+    if (effectiveShape && templateShapes.has(effectiveShape)) {
+      bloobShapeLayout = templateShapeLayout(templateShapes.get(effectiveShape), { objects: themeHasObjects });
+      if (bloobShapeLayout) console.log(`[shape] "${effectiveShape}" is drawn by the engine → ${bloobShapeLayout}`);
+      else if (bloobShape) console.warn(`[shape] bloob-shape: "${effectiveShape}" needs a theme with objects — falling back to page.njk`);
+    } else if (effectiveShape) {
       const shapePath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "index.js");
       if (await fs.pathExists(shapePath)) {
         try {
@@ -531,6 +544,8 @@ export async function preprocessContent({
       // encodeURIComponent the filename so URLs are valid (spaces → %20, @ → %40, etc.)
       // The OG generator writes files with the same encoding so names match on disk.
       outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
+      // Taken from the body, so it is inside data: a locked or sealed note may not show it outside.
+      outputFrontmatter.image_source = "body";
       // Also store image on the graph node for hover previews
       if (pageInfo && perPageLinks[pageInfo.url]) {
         perPageLinks[pageInfo.url].image = outputFrontmatter.image;

@@ -1,0 +1,9 @@
+/* Shared by every object the engine draws. Until the toolbox has applied the starting state,
+   an object that should start closed is held closed, so it never flashes open. */
+html.bh-js[data-bh-initial="closed"] .bloob-object[data-opens],
+html.bh-js[data-bh-initial="play"] .bloob-object[data-opens] {
+  --open: 0 !important;
+}
+.bloob-object [data-bloob-toggle] {
+  cursor: pointer;
+}

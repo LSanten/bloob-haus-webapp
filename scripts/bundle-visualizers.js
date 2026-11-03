@@ -135,6 +135,22 @@ for (const name of visualizerDirs) {
   manifest.push(entry);
 }
 
+// The engine's browser toolbox and shared CSS (lib/visualizers/_engine). Its underscore keeps it
+// out of the visualizer list above; themes with objects load these two files directly.
+const engineEntry = join(VISUALIZERS_DIR, "_engine", "toolbox.js");
+if (existsSync(engineEntry)) {
+  await build({
+    entryPoints: [engineEntry],
+    bundle: true,
+    outfile: join(JS_OUT_DIR, "..", "bloob-engine.js"),
+    format: "iife",
+    minify: process.env.NODE_ENV === "production",
+    sourcemap: process.env.NODE_ENV !== "production",
+  });
+  cpSync(join(VISUALIZERS_DIR, "_engine", "engine.css"), join(CSS_OUT_DIR, "..", "bloob-engine.css"));
+  console.log("[bundle] engine: toolbox.js → assets/js/bloob-engine.js, engine.css → assets/css/bloob-engine.css");
+}
+
 // Write manifest so Nunjucks templates can auto-include visualizer assets
 writeFileSync(DATA_OUT, JSON.stringify(manifest, null, 2));
 console.log(`[bundle] Wrote ${DATA_OUT} (${manifest.length} visualizer(s))`);

@@ -263,6 +263,8 @@ export async function preprocessContent({
   // Step 6: Process each file
   console.log("\n--- Step 6: Processing markdown files ---");
 
+  // Every marble the engine draws, for the bake (scripts/bake-marbles.js), listed or not.
+  const marblePictures = [];
   // Notes that are published, by name: "copy markdown" keeps links only to these.
   const publishedSlugs = new Set(published.map((f) => path.basename(f.relativePath, ".md").toLowerCase()));
   for (const file of published) {
@@ -744,12 +746,16 @@ export async function preprocessContent({
           excerpt,
         });
         Object.assign(perPageLinks[pageInfo.url], fields);
-        // An object drawn by the engine shows its baked picture and color when closed.
-        if (bloobShapeLayout && fields.closedPicture) {
-          outputFrontmatter.closed_picture = fields.closedPicture;
-          outputFrontmatter.color ??= fields.color;
-        }
       }
+    }
+
+    // A marble drawn by the engine shows its baked picture and its color when closed, listed or
+    // not (an unlisted page is exactly the one shared by link); the bake reads this list.
+    if (themeHasObjects && pageInfo && bloobShapeLayout && effectiveShape === "marble") {
+      const outside = catalogFields({ effectiveShape, frontmatter, url: pageInfo.url, fileName: path.basename(file.relativePath, ".md") });
+      outputFrontmatter.closed_picture = outside.closedPicture;
+      outputFrontmatter.color = outside.color;
+      marblePictures.push({ id: pageInfo.url, image: outputFrontmatter.image, color: outside.color });
     }
 
     // An object that shares offers its note as markdown: written beside the page as source.md
@@ -798,6 +804,8 @@ export async function preprocessContent({
   console.log(
     `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
   );
+
+  if (themeHasObjects) await fs.outputJson(path.join(tagIndexDir, "marblePictures.json"), marblePictures);
 
   // Card text for collection post cards (see pagePreviews above).
   const pagePreviewsPath = path.join(tagIndexDir, "pagePreviews.json");

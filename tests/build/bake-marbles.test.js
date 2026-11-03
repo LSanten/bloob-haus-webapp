@@ -47,3 +47,18 @@ describe("bakeMarbles", () => {
     expect(outside).toBe(0);
   });
 });
+
+describe("bakeMarbles reads every engine-drawn marble, listed or not", () => {
+  it("bakes an unlisted marble named in the build data, and survives a bad picture", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "bake2-"));
+    await fs.outputJson(path.join(dir, "_data", "marblePictures.json"), [
+      { id: "/marbles/hidden/", color: "#3366aa" },
+      { id: "/marbles/broken/", image: "/og/broken.png", color: "#3366aa" },
+    ]);
+    await fs.outputFile(path.join(dir, "og", "broken.png"), "not a picture");
+    const written = await bakeMarbles({ srcDir: dir });
+    expect(written).toContain("og/marble/marbles--hidden.png");
+    expect(written).toContain("og/marble/marbles--broken.png");
+    await fs.remove(dir);
+  });
+});

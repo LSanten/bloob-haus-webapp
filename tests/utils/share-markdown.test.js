@@ -21,4 +21,11 @@ describe("cleanMarkdownForSharing", () => {
     expect(clean("---\ntitle: Hello\nvisibility: public\ntags: [a]\n---\nbody")).toBe("---\ntitle: Hello\n---\nbody");
     expect(clean("---\nvisibility: public\n---\nbody")).toBe("body");
   });
+
+  it("strips HTML comments too, as the site does", () =>
+    expect(clean("Hi <!-- private: call Bob --> there")).not.toContain("Bob"));
+  it("embeds of unpublished notes are dropped; pictures and published notes stay", () => {
+    expect(clean("a ![[Secret Diary]] b")).toBe("a  b");
+    expect(clean("![[AUTOPOIESIS-A]] ![[photo.png]]")).toBe("![[AUTOPOIESIS-A]] ![[photo.png]]");
+  });
 });

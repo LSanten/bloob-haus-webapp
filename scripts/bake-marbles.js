@@ -12,17 +12,20 @@ import path from "path";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
 import { glassMap, glassDraw, burnIn, pearlSheen, GLASS } from "../lib/visualizers/marble/glass.js";
-import { insideColor, hexToRgb } from "../lib/visualizers/marble/color.js";
+import { insideColor, hexToRgb, normalizeHex } from "../lib/visualizers/marble/color.js";
 import { closedPicturePath } from "../lib/visualizers/marble/paths.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SIZE = 512; // sharp on a retina screen; rooms use the 256 copy
 
 export async function bakeMarbles({ srcDir }) {
+  // Every marble the engine draws, listed or not (preprocess writes it); else the catalog.
+  const dataPath = path.join(srcDir, "_data", "marblePictures.json");
   const graphPath = path.join(srcDir, "graph.json");
-  if (!(await fs.pathExists(graphPath))) return [];
-  const { nodes = [] } = await fs.readJson(graphPath);
-  const marbles = nodes.filter((n) => n.shape === "marble");
+  let marbles;
+  if (await fs.pathExists(dataPath)) marbles = await fs.readJson(dataPath);
+  else if (await fs.pathExists(graphPath)) marbles = ((await fs.readJson(graphPath)).nodes || []).filter((n) => n.shape === "marble");
+  else return [];
   if (!marbles.length) return [];
 
   const map = glassMap(SIZE);
@@ -51,10 +54,12 @@ export async function bakeMarbles({ srcDir }) {
 async function insidePicture(node, srcDir) {
   if (node.image) {
     const file = path.join(srcDir, decodeURIComponent(node.image).replace(/^\//, ""));
-    if (await fs.pathExists(file)) {
+    if (await fs.pathExists(file)) try {
       const { data, info } = await sharp(file).resize(SIZE, SIZE, { fit: "cover" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       return { data: new Uint8ClampedArray(data), width: info.width, height: info.height, isPhoto: true };
+    } catch (e) {
+      console.warn(`[bake-marbles] ${node.id}: its picture can't be read (${e.message}); using its color`);
     }
   }
-  return { data: insideColor(hexToRgb(node.color || "#9a8fe0"), SIZE), width: SIZE, height: SIZE, isPhoto: false };
+  return { data: insideColor(hexToRgb(normalizeHex(node.color) || "#9a8fe0"), SIZE), width: SIZE, height: SIZE, isPhoto: false };
 }

@@ -8,10 +8,12 @@
   color-scheme: light dark;
 
   /* the haus's background */
-  --bg-color: #f3e6d6;
-  --world-1: #f7cfae;
-  --world-2: #f6e7c4;
-  --world-3: #cfe1ea;
+  /* by day: very light sky blue, warm apricot where the sun is, soft sage (Leon, 2026-11-03:
+     less orange); night is unchanged */
+  --bg-color: #f3efe7;
+  --world-1: #d5e7ef;
+  --world-2: #f7e1c8;
+  --world-3: #d8eadb;
   --world-glow: rgba(214, 140, 70, 0);
 
   /* one light for the room: a sun top right by day, a lamp in the same corner at dusk */
@@ -29,7 +31,7 @@
 
   /* the dot grid and the grain */
   --dot-color: rgba(80, 55, 40, 0.16);
-  --dot-warm: #d4607a;
+  --dot-warm: #e3a35f; /* the house's glow by day: soft amber */
   --grain-strength: 0.07;
 
   /* text, links, borders */

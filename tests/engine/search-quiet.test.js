@@ -76,6 +76,9 @@ describe("quiet search", () => {
     const { ctx, p } = await open();
     await search(p, "yoga");
     expect(await p.$$eval(".sq-item:not(.sq-item--tag) .sq-kind", (e) => e.map((k) => k.textContent.trim()))).toEqual(["Marble", "Note", "Page", "Marble"]);
+    // the kind's name sits under the result's object
+    const pos = await p.$eval(".sq-item:not(.sq-item--tag)", (e) => { const t = e.querySelector(".sq-thumb").getBoundingClientRect(), k = e.querySelector(".sq-kind").getBoundingClientRect(); return { below: k.top >= t.bottom - 1, centred: Math.abs((k.left + k.right) / 2 - (t.left + t.right) / 2) < 6 }; });
+    expect(pos).toEqual({ below: true, centred: true });
     await p.click(".sq-item:not(.sq-item--tag) >> nth=1 >> .sq-kind");
     expect(await p.$eval(".sq-item:not(.sq-item--tag) >> nth=1 >> .sq-about", (e) => e.textContent)).toContain("A note on paper.");
     await ctx.close();

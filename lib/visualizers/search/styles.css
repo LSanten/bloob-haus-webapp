@@ -697,3 +697,17 @@
   .sq-sub { margin: -2px 0 8px 54px; }
   .sq-input { padding: 0 18px 0 44px; }
 }
+
+/* the kind's name sits under the result's object (still its own button: a click reads what it is) */
+.sq-kind {
+  position: absolute; top: 62px; left: 12px; right: auto; width: 44px;
+  padding: 3px 0; text-align: center; font-size: 9px; letter-spacing: .04em;
+  border-color: transparent; background: none;
+}
+.sq-kind:hover, .sq-kind[aria-expanded="true"] { border-color: currentColor; }
+.sq-link { padding-right: 52px; min-height: 86px; }
+@media (max-width: 600px) {
+  .sq-kind { position: absolute; display: block; top: 48px; left: 8px; width: 38px; margin: 0; padding: 2px 0; font-size: 8px; }
+  .sq-link { padding-right: 44px; min-height: 70px; }
+  .sq-about { margin: 0 10px 10px 54px; }
+}

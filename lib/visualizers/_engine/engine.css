@@ -51,3 +51,11 @@ html.bh-js .bloob-share {
 .bloob-share__btn.is-done .bloob-share__label { max-width: 10rem; opacity: 1; margin-left: 6px; }
 .bloob-share__btn:hover,
 .bloob-share__btn.is-done { border-color: var(--link-color, currentColor); color: var(--link-color, currentColor); }
+
+/* Once an object is fully open its page grows freely: the graph, comments or a late image that
+   arrive after the opening was measured are never cut off. (While it opens or closes, the shape's
+   own CSS holds it to the measured height.) */
+html.bh-js .bloob-object[data-state="open"] .bloob-object__open,
+html.bh-js .bloob-object[data-state="open"] [data-bloob-measure] {
+  max-height: none !important;
+}

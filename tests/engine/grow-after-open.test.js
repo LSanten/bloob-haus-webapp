@@ -42,3 +42,14 @@ describe.each(["marble", "note"])("a %s that grows after it opened", (name) => {
     await page.close();
   });
 });
+
+describe("arriving closed or playing", () => {
+  it.each(["closed", "play"])("before script runs (%s), the page is held shut: nothing unfolded flashes", async (initial) => {
+    if (!browser) return;
+    const obj = renderObject(shapes.get("marble"), { data: { title: "T" }, html: "<p>words</p>", url: "/a/", pageId: "a" }, { inside: '<div style="height:600px">inside</div>' });
+    const page = await browser.newPage();
+    await page.setContent(`<!doctype html><html class="bh-js" data-bh-initial="${initial}"><head><style>${css}</style></head><body>${obj}</body></html>`);
+    expect(await page.$eval(".bloob-object__open", (e) => e.getBoundingClientRect().height)).toBeLessThan(2);
+    await page.close();
+  });
+});

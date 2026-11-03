@@ -11,6 +11,9 @@
     {% include "partials/seo-meta.njk" %}
 
     <meta name="bloob-page-id" content="{{ bloobPageId }}" />
+    {# What search shows beside a result: the page's kind (marble, note, page) and its baked picture #}
+    <meta data-pagefind-meta="kind[content]" content="{{ bloob_object if bloob_object else ('marble' if closed_picture else 'page') }}" />
+    {% if closed_picture %}<meta data-pagefind-meta="picture[content]" content="{{ closed_picture | replace('.png', '-256.png') }}" />{% endif %}
 
     {% if redirect %}
     <!-- Redirect — set via `redirect:` frontmatter in the content vault -->

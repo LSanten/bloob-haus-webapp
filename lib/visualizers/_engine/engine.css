@@ -55,7 +55,8 @@ html.bh-js .bloob-share {
 /* Once an object is fully open its page grows freely: the graph, comments or a late image that
    arrive after the opening was measured are never cut off. (While it opens or closes, the shape's
    own CSS holds it to the measured height.) */
-html.bh-js .bloob-object[data-state="open"] .bloob-object__open,
-html.bh-js .bloob-object[data-state="open"] [data-bloob-measure] {
+html.bh-js:not([data-bh-initial="closed"]):not([data-bh-initial="play"]) .bloob-object[data-state="open"] .bloob-object__open,
+html.bh-js:not([data-bh-initial="closed"]):not([data-bh-initial="play"]) .bloob-object[data-state="open"] [data-bloob-measure] {
+  /* not while the page is still held shut before script starts: the HTML arrives as "open" */
   max-height: none !important;
 }

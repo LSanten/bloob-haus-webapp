@@ -1,9 +1,10 @@
 ---
 layout: layouts/base.njk
 ---
-{# A folder's page. It becomes a room of closed objects in a later step; for now its listing sits
-   on a sheet. #}
-<article class="sheet folder-index" data-pagefind-ignore>
-  <h1 class="folder-index__title">{{ folder_display or title }}</h1>
-  {{ content | safe }}
-</article>
+{# A folder's page is a room: its pages as their closed objects on the haus's background, each a
+   real link. Words written on the folder's own note sit above the room. #}
+<section class="room-page">
+  <h1 class="room-page__title">{{ folder_display or title }}</h1>
+  {% if content | striptags | trim %}<div class="room-page__words sheet">{{ content | safe }}</div>{% endif %}
+  {% bloobRoom folder %}
+</section>

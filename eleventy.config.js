@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
+import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync, statSync } from "fs";
 import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
@@ -13,6 +13,7 @@ import { configureMarkdown } from "./scripts/utils/markdown-setup.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
 import { loadTemplateShapes } from "./scripts/utils/template-shapes.js";
+import { renderRoom, roomNodes } from "./lib/visualizers/_engine/room.js";
 import { renderObject } from "./lib/visualizers/_engine/index.js";
 import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
@@ -90,6 +91,19 @@ export default async function (eleventyConfig) {
       { data, html: content, url: this.page?.url, pageId: ctx.bloobPageId || this.page?.url },
       { inside: inside == null ? null : String(inside) },
     );
+  });
+  // {% bloobRoom folder %}: a folder's pages as their closed objects (themes with objects). Reads
+  // the page catalog preprocess wrote; read again only when it changes.
+  let roomCatalog = { mtime: 0, nodes: [] };
+  eleventyConfig.addShortcode("bloobRoom", function (folder) {
+    const file = join(SRC, "graph.json");
+    try {
+      const mtime = statSync(file).mtimeMs;
+      if (mtime !== roomCatalog.mtime) roomCatalog = { mtime, nodes: JSON.parse(readFileSync(file, "utf-8")).nodes || [] };
+    } catch {
+      return "";
+    }
+    return renderRoom(roomNodes(roomCatalog.nodes, folder || ""), templateShapes);
   });
   // RSS feed plugin (provides dateToRfc3339, htmlToAbsoluteUrls, etc.)
   eleventyConfig.addPlugin(pluginRss);

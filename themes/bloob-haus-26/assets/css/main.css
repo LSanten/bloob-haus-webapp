@@ -786,14 +786,41 @@ html.bh-pointing, html.bh-pointing * { cursor: crosshair !important; }
 /* subtitles under closed marbles in a room */
 .room-object__sub--marble { font-size: 0.78rem; opacity: 0.7; margin-top: -6px; }
 
-/* ---------- search box: text sits in the middle (the label font's metrics, as on melt) ---------- */
-.pagefind-ui__search-input {
-  font-family: var(--font-label) !important;
+/* ---------- one look for every text field: the search box and the answer fields ----------
+   The label font sits in the middle of the field (the serif's metrics push text up); the same
+   height, pill, paper and border everywhere. html body … wins over the search visualizer's own
+   !important rules, which load after the theme. */
+html body .pagefind-ui__search-input,
+html body .bloob-ask input,
+html body .bloob-feedback input[type="email"] {
+  font: 500 1rem/1.25 var(--font-label) !important;
+  height: 48px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent) !important;
+  color: var(--surface-text-color) !important;
+  box-shadow: none !important;
 }
-.pagefind-ui__search-input::placeholder {
-  color: color-mix(in srgb, var(--text-color) 62%, transparent) !important;
+html body .bloob-ask input { padding-left: 1.2em !important; padding-right: 1.2em !important; }
+html body .pagefind-ui__search-input::placeholder,
+html body .bloob-ask input::placeholder,
+html body .bloob-feedback textarea::placeholder,
+html body .bloob-feedback input::placeholder {
+  color: color-mix(in srgb, var(--text-color) 58%, transparent) !important;
+  font-weight: 400;
   opacity: 1;
 }
+html body .pagefind-ui__search-input:focus,
+html body .bloob-ask input:focus {
+  outline: none !important;
+  border-color: var(--link-color) !important;
+  background: var(--card-bg) !important;
+}
+html body .bloob-ask button { height: 48px; padding: 0 20px; }
+/* the room below a search box keeps clear of it, floating included */
+.fp-seo-wrapper[data-peek-always] { margin-top: 2.75rem; }
 
 /* ---------- the homepage's house: the footer's house, large, glowing ---------- */
 .home-house {

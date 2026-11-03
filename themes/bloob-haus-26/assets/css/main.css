@@ -389,14 +389,20 @@ code {
   color: inherit;
 }
 .footer-search__toggle {
+  /* the loupe and the word sit on one centre line */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font: inherit;
+  line-height: 1;
   color: inherit;
   background: transparent;
   border: 1px solid var(--border-color);
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 7px 13px;
   cursor: pointer;
 }
+.footer-search__toggle svg { display: block; flex: 0 0 auto; }
 .footer-search__panel {
   max-width: var(--max-width);
   margin: 12px auto 0;

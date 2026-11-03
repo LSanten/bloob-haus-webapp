@@ -680,3 +680,20 @@
 
 .sq-thumb--tag { display: grid; place-items: center; border-radius: 14px; border: 1px solid var(--border-color, rgba(0,0,0,.15)); font: 600 20px/1 var(--font-heading, serif); color: var(--link-color, var(--accent-color, #555)); }
 .sq-kind--static { cursor: default; }
+
+/* on a phone: the text gets the width; only the eye stays on the right, the kind sits under the
+   text, and there's no "/" key to press */
+@media (hover: none) { .sq-kbd { display: none; } }
+@media (max-width: 600px) {
+  .sq-results:not(:empty) { padding: 4px 2px 10px; border-radius: 18px; }
+  .sq-link { gap: 10px; padding: 10px 44px 4px 10px; }
+  .sq-thumb { width: 34px; height: 34px; }
+  .sq-thumb--note { width: 30px; height: 36px; }
+  .sq-title { font-size: 1rem; }
+  .sq-excerpt { font-size: .82rem; }
+  .sq-eye.bloob-peek-eye { top: 8px; right: 4px; }
+  .sq-kind { position: static; display: inline-block; margin: 2px 0 8px 54px; padding: 3px 7px; font-size: 9.5px; }
+  .sq-about { margin: 0 10px 10px 54px; }
+  .sq-sub { margin: -2px 0 8px 54px; }
+  .sq-input { padding: 0 18px 0 44px; }
+}

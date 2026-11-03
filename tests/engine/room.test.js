@@ -47,3 +47,10 @@ describe("nodesForUrls", () => {
   it("takes the pages a list names, in its order, skipping ones the catalog doesn't know", () =>
     expect(nodesForUrls(nodes, ["/marbles/plain/", "/nope/", "/marbles/a-note/"]).map((n) => n.id)).toEqual(["/marbles/plain/", "/marbles/a-note/"]));
 });
+
+describe("the room's marbles keep their glare live", () => {
+  it("a marble in a room has its picture and a shine on top that the light moves", () => {
+    const html = renderRoom(roomNodes(nodes, "marbles"), shapes);
+    expect(html).toMatch(/<span class="room-object__ball">[\s\S]*?<img[^>]*room-object__glass[\s\S]*?<span class="room-object__shine" aria-hidden="true"><\/span><\/span>/);
+  });
+});

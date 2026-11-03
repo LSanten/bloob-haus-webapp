@@ -38,7 +38,7 @@ describe("room play", () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await p.waitForFunction(() => document.querySelector(".room-object--marble")?.classList.contains("is-floating"), null, { timeout: 5000 });
-    expect(await p.$eval(".room-object--marble .room-object__glass", (e) => getComputedStyle(e).animationName)).not.toBe("none");
+    expect(await p.$eval(".room-object--marble .room-object__ball", (e) => getComputedStyle(e).animationName)).not.toBe("none");
     await ctx.close();
   });
 
@@ -88,7 +88,20 @@ describe("room play", () => {
     await p.waitForTimeout(200);
     expect(await p.$eval(".room-object--marble", (e) => e.classList.contains("is-floating"))).toBe(true);
     await p.evaluate(() => document.documentElement.classList.add("bh-peeking"));
-    expect(await p.$eval(".room-object--marble .room-object__glass", (e) => getComputedStyle(e).animationPlayState)).toBe("paused");
+    expect(await p.$eval(".room-object--marble .room-object__ball", (e) => getComputedStyle(e).animationPlayState)).toBe("paused");
+    await ctx.close();
+  });
+
+  it("the glare moves as a marble is dragged: it stays toward the light at the top right", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    const before = await p.$eval(".room-object--marble", (e) => [e.style.getPropertyValue("--sx"), e.style.getPropertyValue("--sy")]);
+    const [x, y] = await center(p, ".room-object--marble");
+    await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x - 200, y + 250, { steps: 10 }); await p.mouse.up();
+    await p.waitForTimeout(100);
+    const after = await p.$eval(".room-object--marble", (e) => [e.style.getPropertyValue("--sx"), e.style.getPropertyValue("--sy")]);
+    expect(before[0]).not.toBe("");
+    expect(after).not.toEqual(before);
     await ctx.close();
   });
 });

@@ -30,6 +30,11 @@ export async function bakeMarbles({ srcDir }) {
 
   const map = glassMap(SIZE);
   const shine = pearlSheen(map);
+  // Rooms draw a live glare that follows the light as marbles move, so their size is baked
+  // without the highlight.
+  const ROOM = 256;
+  const roomMap = glassMap(ROOM);
+  const roomShine = pearlSheen(roomMap);
   const written = [];
   for (const node of marbles) {
     const picture = await insidePicture(node, srcDir);
@@ -39,11 +44,19 @@ export async function bakeMarbles({ srcDir }) {
     });
     burnIn(glass, shine, map.cover, GLASS.shine);
     const png = await sharp(Buffer.from(glass), { raw: { width: SIZE, height: SIZE, channels: 4 } }).png().toBuffer();
-    for (const size of [undefined, 256, 64, 32]) {
+    const roomGlass = glassDraw(picture.data, picture.width, picture.height, roomMap, {
+      seeMiddle: picture.isPhoto ? GLASS.seeImage : GLASS.seeColor,
+      seeEdge: GLASS.seeEdge,
+      specular: 0,
+    });
+    burnIn(roomGlass, roomShine, roomMap.cover, GLASS.shine);
+    const roomPng = await sharp(Buffer.from(roomGlass), { raw: { width: ROOM, height: ROOM, channels: 4 } }).png().toBuffer();
+    for (const size of [undefined, ROOM, 64, 32]) {
       const rel = closedPicturePath(node.id, size).replace(/^\//, "");
       const out = path.join(srcDir, rel);
       await fs.ensureDir(path.dirname(out));
-      await (size ? sharp(png).resize(size, size) : sharp(png)).png().toFile(out);
+      if (size === ROOM) await sharp(roomPng).png().toFile(out);
+      else await (size ? sharp(png).resize(size, size) : sharp(png)).png().toFile(out);
       written.push(rel);
     }
   }

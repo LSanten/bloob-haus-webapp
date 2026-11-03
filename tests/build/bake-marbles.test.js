@@ -62,3 +62,12 @@ describe("bakeMarbles reads every engine-drawn marble, listed or not", () => {
     await fs.remove(dir);
   });
 });
+
+describe("room pictures leave the glare to the room", () => {
+  it("the room size is baked without the highlight (the room draws a live one)", async () => {
+    const big = await sharp(path.join(src, "og/marble/marbles--plain.png")).resize(256, 256).raw().toBuffer();
+    const room = await sharp(path.join(src, "og/marble/marbles--plain-256.png")).raw().toBuffer();
+    const peak = (b) => { let m = 0; for (let i = 0; i < b.length; i += 4) m = Math.max(m, b[i] + b[i + 1] + b[i + 2]); return m; };
+    expect(peak(room)).toBeLessThan(peak(big) - 20);
+  });
+});

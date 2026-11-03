@@ -934,3 +934,22 @@ html.bh-peeking .room-object--marble::after { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .room-object--marble::after { animation: none; }
 }
+
+/* a marble in a room: its picture and a live glare toward the light (room-play.js sets --sx/--sy) */
+.room-object__ball { position: relative; display: block; width: 116px; height: 116px; }
+.room-object__ball .room-object__glass { width: 100%; height: 100%; }
+.room-object__shine {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle at var(--sx, 62%) var(--sy, 34%), rgba(255, 255, 255, 0.95) 0 2.5%, rgba(255, 255, 255, 0.45) 5%, rgba(255, 255, 255, 0) 13%),
+    radial-gradient(circle at var(--sx, 62%) var(--sy, 34%), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 42%);
+}
+.room-object--marble.is-floating .room-object__ball { animation: room-float 6s ease-in-out infinite; animation-delay: var(--float-delay, 0s); }
+.room-object--marble.is-floating .room-object__glass { animation: none; }
+html.bh-peeking .room-object--marble .room-object__ball { animation-play-state: paused; }
+
+/* links show by their color, also inside marbles, notes and pages (the article's own underline loses) */
+html body .article-body a,
+html body .page-content a,
+html body .note-text a,
+html body .sheet a { text-decoration: none; }

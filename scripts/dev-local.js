@@ -98,6 +98,13 @@ async function devLocal() {
     stdio: "inherit",
   });
 
+  // --build: build once into _site and stop (before/after comparisons, screenshots)
+  if (process.argv.includes("--build")) {
+    console.log("\n--- Building once with Eleventy ---\n");
+    execSync("npx @11ty/eleventy", { cwd: ROOT_DIR, stdio: "inherit", env: { ...process.env, SITE_NAME: siteName } });
+    return;
+  }
+
   // Step 4: Serve with Eleventy + watch themes concurrently
   console.log("\n--- Starting Eleventy dev server ---\n");
   // SITE_NAME is already set in process.env above — child processes inherit it.

@@ -134,8 +134,12 @@ export async function readBloobSettings(contentDir) {
  * @param {Object} bloobSettings - Settings from _bloob-settings.md
  * @returns {Object} Merged configuration
  */
+function withThemeOverride(siteConfig) {
+  return process.env.THEME_OVERRIDE ? { ...siteConfig, theme: process.env.THEME_OVERRIDE } : siteConfig;
+}
+
 export function mergeBloobSettings(siteConfig, bloobSettings) {
-  if (!bloobSettings) return siteConfig;
+  if (!bloobSettings) return withThemeOverride(siteConfig);
 
   // Map _bloob-settings.md fields to siteConfig structure
   const merged = { ...siteConfig };
@@ -157,9 +161,13 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     background_image: bloobSettings.background_image || siteConfig.site?.background_image,
   };
 
-  // Theme
+  // Theme. THEME_OVERRIDE (set only by the leons preview workflow) wins over the vault, so a pull
+  // request can preview a new theme without changing the live site's settings.
   if (bloobSettings.theme) {
     merged.theme = bloobSettings.theme;
+  }
+  if (process.env.THEME_OVERRIDE) {
+    merged.theme = process.env.THEME_OVERRIDE;
   }
 
   // Permalinks

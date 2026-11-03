@@ -1,7 +1,7 @@
 <!doctype html>
 {# The look preset (dawn-dusk, flat-warm, forest-light) comes from theme_settings.look in
    _bloob-settings.md; it only changes the background's colors, never the objects. #}
-<html lang="{{ site.languageCode or 'en' }}" class="look-{{ site.theme_settings.look or 'dawn-dusk' }}">
+<html lang="{{ site.languageCode or 'en' }}" class="look-{{ site.theme_settings.look or 'dawn-dusk' }}" data-search-style="quiet">
   {% include "partials/head.njk" %}
   <body>
     {# The haus's background: two colour fields that cross-fade with day and night, the dot grid,

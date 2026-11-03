@@ -37,7 +37,7 @@ describe("room play", () => {
   it("marbles float", async () => {
     if (!browser) return;
     const { ctx, p } = await open();
-    await p.waitForTimeout(150);
+    await p.waitForFunction(() => document.querySelector(".room-object--marble")?.classList.contains("is-floating"), null, { timeout: 5000 });
     expect(await p.$eval(".room-object--marble .room-object__glass", (e) => getComputedStyle(e).animationName)).not.toBe("none");
     await ctx.close();
   });

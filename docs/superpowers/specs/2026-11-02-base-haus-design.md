@@ -250,6 +250,11 @@ with no look. The year is in the name so a redesign can be `bloob-haus-27` while
   inversion was rejected (images cannot invert).
 - **Fonts** *(Leon likes them)*: Newsreader for reading text and headings, Instrument Sans for labels.
 - Little chrome: leons has "basically none besides website and overview pages" *(Leon)*.
+- **The recipe is settings** *(Leon: "if we can change those settings in a theme settings file,
+  that would be great")*: the world colors, dots, grain and glow live in the theme's settings, with
+  named presets that give very different energies from the same recipe: `dawn-dusk` (the default),
+  `flat-warm`, `forest-light`. A haus picks one in its `_bloob-settings.md` and may override single
+  values.
 
 **How to build it light:** draw the background with soft gradients (no live `filter: blur`); grain
 as a small pre-made noise tile without blend modes, moved with `transform` only; the cursor position
@@ -289,6 +294,9 @@ once at load: make it follow a change or accept a reload), `fridge-magnets` (2 n
   long. The roll stays at the bottom; click it to roll back up. Remembered per visitor *(Leon)*.
 - **Locked or sealed:** the tip shows outside data only (the title).
 - **Material:** natural paper; at night the paper stays paper and dims a little with the light.
+  **No live grain on the paper** *(Leon)*: the grain belongs to the background, under the objects.
+- **Font:** Newsreader by default (Leon loves it); a handwriting font is a setting to try, and
+  later people can upload their own font files *(Leon)*.
 - The words are always in the HTML; without script the note shows open.
 
 ## 10. The marble *(prototyped: `marble-glass-v6.html`, `marble-open-v3.html`)*
@@ -328,7 +336,12 @@ while.
   image's average color.
 - **See-through** *(Leon)*: the room's light glows through the glass (about 0.25 for image marbles,
   0.3 for color marbles, less at the edge), and the rim gets lighter, the way real glass does.
-- **The image moves** with the cursor, or with scrolling on phones, gently (0.12) *(Leon)*.
+- **The image moves with scrolling, not the cursor** *(Leon, after seeing several marbles on one
+  screen: cursor-following looked wrong; the angle changing as you scroll looked right)*. Leon's
+  tuned values (2026-11-02): movement 0.40, see-through middle 0.20 for image marbles and 0.77 for
+  marbles without an image, edge 0.00, glass strength 1.05, how much of the photo 0.91, rainbow
+  0.04, light at the rim 0.57, pearl shine 0.43. The pearl shine is a setting with a slider
+  wherever settings are tuned (Leon wants image marbles shinier, more like a marble).
 - **Baked at build time**: a picture of each closed marble, used when script does not run, as the
   link preview, and as icons (section 11). The browser takes over for live movement.
 
@@ -353,7 +366,10 @@ while.
 - **No big marble image at the top** (marbles-pouch's banner) *(Leon)*; the "What is a marble?" text
   stays, as a small pill that unfolds the vault's own description (`_bloob-objects.md`).
 - **Share, under the marble** *(Leon)*; the article's own share bar steps aside inside a marble
-  (outermost shares). In this build:
+  (outermost shares). The buttons are small and collapsed together like today's share bar; hovering
+  or focusing the row opens it with every button's full name, and it **stays open while the
+  pointer is anywhere on the row** (closing too fast when moving between buttons was a problem
+  before, Leon). The same fix goes into the existing share bar. In this build:
   - **copy link** *(Leon)*, plus the phone's own share sheet where there is one *(call)*;
   - **copy markdown** *(Leon)*: the note's text, cleaned by the same rules that clean the HTML pages
     (`%% %%` comments removed, links to unpublished or blocked notes turned into plain text,

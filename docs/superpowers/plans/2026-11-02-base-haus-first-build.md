@@ -239,6 +239,7 @@ it("the roll is a real button with a label", () => { /* button[aria-label] insid
 
 **Interfaces:**
 - Consumes: tokens (Task 0), `headInitScript()` (Task 4), the shortcode (Task 3).
+- The recipe is settings: `themes/bloob-haus-26/settings.yaml` holds presets (`dawn-dusk` default, `flat-warm`, `forest-light`; values from prototype `base-look-v3.html`) that fill the world, dot, grain and glow tokens; a haus picks one with `look:` in `_bloob-settings.md` and may override single values. The grain layer sits under the objects, never on them.
 - What the theme brings (spec section 8): the background recipe (three blurred world colors as soft gradients, dawn by day, dusk with a warm glow top right at night, a twilight blend between), dot grid, warm dots near the cursor or finger, light live grain, Newsreader for reading and headings, Instrument Sans for labels, little chrome. Machinery kept from marbles-pouch: search markers and hidden ID line, share bar, date pills, tags, backlinks, graph container, comments, canonical, page ID, robots, preview tags, RSS, favicon, the two visualizer markers.
 
 - [ ] **Step 1: Write the failing tests:** the theme assembles (Tier 1 files present, markers printed); `head.njk` puts `headInitScript()` before any stylesheet that styles objects.
@@ -261,7 +262,7 @@ it("the roll is a real button with a label", () => { /* button[aria-label] insid
   - `glassDraw(src: Uint8ClampedArray, sw: number, sh: number, g, see: number, shiftX = 0, shiftY = 0) → Uint8ClampedArray`: RGBA; see-through `see` in the middle and `see * 0.3` at the edge; the rim lightens by `0.3 * rr²`.
   - `insideColor(rgb: [r,g,b], size: number) → Uint8ClampedArray`: the colored inside for marbles without an image; the whole color counts (hue, strength, brightness: inner `l + .06`, outer hue `+40` and `l - .2`, a ribbon at hue `+180`).
   - `defaultMarbleColor({ color?: string, title?: string, fileName: string, imageAverage?: [r,g,b] }) → string` (hex): the named color, else the image's average color, else a steady color hashed from the title, else from the file name.
-  - Constants: image see-through `0.2`, color see-through `0.28`, pearl shine `0.32` (`0.38` with an image), movement `0.12`, highlight natural angle `-30` degrees, sun top right.
+  - Constants (Leon's tuned values, 2026-11-02; they supersede the prototype's): glass strength `1.05`, how much of the photo `0.91`, rainbow `0.04`, light at the rim `0.57`, pearl shine `0.43` (a setting), see-through middle `0.20` with an image and `0.77` without, edge `0.00`, movement `0.40` driven by scrolling only (no cursor mode), highlight natural angle `-30` degrees, sun top right.
 
 - [ ] **Step 1: Write the failing tests.**
 
@@ -330,8 +331,8 @@ it("a darker pick makes a darker marble", () => { /* mean luminance of insideCol
 - Manifest: `{ "name": "marble", "format": "template", "scope": "page", "opens": "click", "remembers": false, "arrives": "open-from-site", "shares": true, "inside": "article", "detect": { "selectors": [".bloob-object[data-shape=marble]"] } }`. `inside:` in a note's YAML picks another inner visualizer later; this build supports `article` only.
 - `closed.html`: the baked marble picture (Task 10) as an `<img>`, the title, the "What is a marble?" pill (text: the vault's `_bloob-objects.md` description for `marble`), and the share row.
 - `open.html`: the funnel (SVG, upright and tapered under the marble, an S-curve flaring to page width, its top fading from the marble's tint) and the sheet holding `{{ inside }}`, then tags, "pages that link here", the graph slot and comments (partials around the object in the generated layout).
-- `browser.js` (its own behavior only): the live glass on a canvas over the baked picture (cursor where there is one, scrolling otherwise; half sharpness while moving), the light swelling from the center as `--open` rises, the pearl shine turned toward the light (`readLight()`), the shadow away from it.
-- Share (toolbox, outermost only): copy link; the phone's share sheet where there is one; copy markdown; picture (the baked marble); PDF through the browser's print with a print style.
+- `browser.js` (its own behavior only): the live glass on a canvas over the baked picture (moving with scrolling only, Leon; half sharpness while moving), the light swelling from the center as `--open` rises, the pearl shine turned toward the light (`readLight()`), the shadow away from it.
+- Share (toolbox, outermost only): copy link; the phone's share sheet where there is one; copy markdown; picture (the baked marble); PDF through the browser's print with a print style. Small buttons collapsed together like the share bar; hovering or focusing the row opens all full names, and the row stays open while the pointer is anywhere on it (with a short grace delay). Apply the same fix to `themes/_base/partials/share-bar.njk` and its script, with a test that moving between two buttons does not close it.
 - `cleanMarkdownForSharing(md: string, { publishedSlugs: Set<string> }) → string`: removes `%% %%` comments, turns links to unpublished or blocked notes into plain text, trims frontmatter to `title`. Preprocess writes the result as a `source.md` next to each marble page.
 
 - [ ] **Step 1: Write the failing tests.**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderRoom, roomNodes } from "../../lib/visualizers/_engine/room.js";
+import { renderRoom, roomNodes, nodesForUrls } from "../../lib/visualizers/_engine/room.js";
 
 const nodes = [
   { id: "/marbles/", type: "page", title: "Marbles" },
@@ -40,4 +40,9 @@ describe("renderRoom", () => {
     expect(html).toContain("Plain &lt;page&gt;");
     expect(html).not.toContain("<page>");
   });
+});
+
+describe("nodesForUrls", () => {
+  it("takes the pages a list names, in its order, skipping ones the catalog doesn't know", () =>
+    expect(nodesForUrls(nodes, ["/marbles/plain/", "/nope/", "/marbles/a-note/"]).map((n) => n.id)).toEqual(["/marbles/plain/", "/marbles/a-note/"]));
 });

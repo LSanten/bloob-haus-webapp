@@ -142,6 +142,7 @@ behavior (drag physics, Swiper) on top of markup that already exists.
 | `slider` | Swiper carousel (requires Swiper loaded by theme) | Swiper init |
 | `bubbles` | Circular bubbles, scatter layout | search filtering (CSS-only hover) |
 | `marbles` | Draggable marbles with collision + float | drag physics, search filtering |
+| `objects` | Every page as its closed object (marbles as glass, notes as their tip, others as cards), on themes with objects | a click shows the peek first; "Go to its page" opens it fully |
 
 ## Width preference
 

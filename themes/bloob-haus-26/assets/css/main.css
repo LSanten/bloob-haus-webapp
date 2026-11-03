@@ -619,3 +619,54 @@ html.bh-peeking { overflow: hidden; }
   color: var(--surface-text-color);
   cursor: pointer;
 }
+
+/* ---------- the tag cloud (```tags), day and night ---------- */
+.tags-visualizer {
+  margin: 1.5rem 0 2.5rem;
+}
+.tags-visualizer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 0.6em;
+  align-items: center;
+}
+.tags-visualizer--cloud {
+  justify-content: center;
+  gap: 0.6em 0.75em;
+  padding: 0.5em 0;
+}
+.tags-visualizer--list {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4em;
+}
+.tags-visualizer__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--surface-text-color);
+  font: 500 0.85rem/1.3 var(--font-label);
+  transition: border-color 0.15s, color 0.15s;
+}
+.tags-visualizer__tag:hover {
+  border-color: var(--link-color);
+  color: var(--link-color);
+}
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="5"] { font-size: 1.2rem; font-weight: 700; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="4"] { font-size: 1.05rem; font-weight: 600; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="3"] { font-size: 0.95rem; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="2"] { font-size: 0.85rem; }
+.tags-visualizer--cloud .tags-visualizer__tag[data-weight="1"] { font-size: 0.78rem; opacity: 0.8; }
+.tags-visualizer__count {
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+.room-page__back {
+  text-align: center;
+  margin: 3rem 0 0;
+  font-family: var(--font-label);
+}

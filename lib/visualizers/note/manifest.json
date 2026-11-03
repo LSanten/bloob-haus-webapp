@@ -7,5 +7,6 @@
   "remembers": "visitor",
   "arrives": "open-from-site",
   "pace": "length",
+  "shares": true,
   "detect": { "selectors": [".bloob-object--note"] }
 }

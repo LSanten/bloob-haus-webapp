@@ -1,0 +1,17 @@
+---
+layout: layouts/base.njk
+permalink: /tags/
+title: Tags
+eleventyExcludeFromCollections: true
+---
+{# Every tag, sized by how many pages carry it. #}
+{% set hidden = ["all", "nav", "posts", "tagList", "not-for-public", "sections", "withBacklinks"] %}
+<section class="room-page">
+  <h1 class="room-page__title">Tags</h1>
+  <div class="tags-visualizer"><div class="tags-visualizer__inner tags-visualizer--cloud">
+  {% for tag in collections | dictsort %}{% set name = tag[0] %}{% if name not in hidden and not (name | lower).startsWith("not-for-public") %}
+    {% set n = collections[name].length %}
+    <a class="tags-visualizer__tag" href="{{ ("/tags/" + (name | slugify) + "/") | url }}" data-weight="{{ 5 if n > 20 else (4 if n > 10 else (3 if n > 5 else (2 if n > 2 else 1))) }}">{{ name }} <span class="tags-visualizer__count">{{ n }}</span></a>
+  {% endif %}{% endfor %}
+  </div></div>
+</section>

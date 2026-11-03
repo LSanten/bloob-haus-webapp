@@ -349,6 +349,8 @@ while.
 - **Arriving from outside the site starts closed** *(Leon)*: a shared link, another site, a typed
   address. The marble sits on the dawn/dusk background with its title, the "What is a marble?" pill
   and the share buttons under it, and the visitor clicks to open.
+- **Arriving from inside the site plays the opening** *(Leon: "it should go through the closed to
+  open motion for me")*: the object starts closed and opens by itself in front of the visitor.
 - **Arriving from inside the site opens** *(Leon)*: any link from a leons page (links in the text,
   "pages that link here", search results, `#heading` links) lands on the marble already opening, so
   nobody clicks twice. No separate per-visitor memory for marbles; the arrival decides.
@@ -383,6 +385,12 @@ while.
 - **Clicked in a room, the light carries over** *(Leon)*: the same rule, with the opening starting in
   the room (browsers that can carry a transition across pages show it; others simply load the page
   opening). Wired in this build, since folder pages become rooms (goal 7a).
+
+### Peek first, the visitor's first tool *(Leon, 2026-11-02)*
+The visitor gets a tool belt of their own settings, kept in their browser. The first tool: **peek
+first**. When it is on, clicking a linked object opens it over the current page, whole and
+readable, before the visitor decides to go to its own page. Off by default *(call)*; the name is a
+working name *(call)*.
 
 ## 11. Icons
 

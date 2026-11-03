@@ -185,7 +185,7 @@ it("writes a layout per template shape only for themes with objects", () => {});
 
 **Interfaces:**
 - Produces:
-  - `decideInitialState({ remembered: boolean, arrivedFromSite: boolean, opensOnArrival: boolean, hash: string }) → "open" | "closed"`.
+  - `decideInitialState({ remembered: boolean, arrivedFromSite: boolean, opensOnArrival: boolean, hash: string }) → "open" | "closed" | "play"`. `"play"` = start closed and play the opening by itself right after load (Leon: arriving from a click goes through the closed-to-open motion, never just appears open). `"open"` = already open from the first paint (remembered notes, `#hash` links).
   - `rememberKey(pageId: string) → string` (`"bh-open:" + pageId`).
   - `arrivedFromSite({ flagPath: string | null, currentPath: string, referrerOrigin: string, siteOrigin: string }) → boolean`: true if the click flag names this path, or the referrer is this site.
   - `headInitScript() → string`: an inline script for `<head>` that adds `bh-js` to `<html>` and sets each object's starting state before first paint.
@@ -196,6 +196,8 @@ it("writes a layout per template shape only for themes with objects", () => {});
 - [ ] **Step 1: Write the failing tests.**
 
 ```js
+it("arriving from a click plays the opening", () =>
+  expect(decideInitialState({ remembered: false, arrivedFromSite: true, opensOnArrival: true, hash: "" })).toBe("play"));
 it("no referrer but a click flag still counts as arriving from the site", () =>
   expect(arrivedFromSite({ flagPath: "/marbles/x/", currentPath: "/marbles/x/", referrerOrigin: "", siteOrigin: "https://leons.bloob.haus" })).toBe(true));
 it("an outside arrival starts closed", () =>
@@ -361,6 +363,18 @@ it("links to unpublished notes become plain text", () => {});
 - Produces: `renderRoom(nodes: object[], shapes: Map<string, ShapeDef>) → string`: each page as its closed object in a plain flow (notes as their tip, marbles as glass, anything else as a calm card with its icon), each a real link. A click in the room sets the arrive flag (Task 4), and where the browser can, the light carries over across pages. Other themes keep `collection` cards.
 
 - [ ] **Steps:** failing test (3 nodes: note, marble, plain → three closed objects, three `<a href>`); implement; run; push; preview link with screenshots of `/marbles/` by day and night to Leon; commit `feat(room): folder pages are rooms of closed objects`.
+
+### Task 12b: Peek first, the first tool in the visitor's tool belt
+
+**Files:**
+- Create: `lib/visualizers/_engine/peek.js` (browser), `lib/visualizers/_engine/toolbelt.js` (browser), `themes/bloob-haus-26/partials/toolbelt.njk`
+- Test: `tests/engine/peek.test.js` (pure parts), a Playwright check
+
+**Interfaces:**
+- Produces: a small tool belt in the visitor's own corner of the page (their settings, kept in their browser), with one setting to start: **peek first** (off by default; working name). When it is on, a click on an object's link (in a room or in text) opens that object over the current page, whole and readable, playing its opening, with a clear way to go to its own page and a way back. Pure parts: `peekTarget(href, siteOrigin) → string | null` (same-site object pages only) and `extractObject(html: string) → string | null` (the `.bloob-object` from the fetched page's HTML).
+- Leon, 2026-11-02: "before i go there to that link, i just have the experience on the same link, before i choose to go there and view it more... i should still be able to preview the whole thing."
+
+- [ ] **Steps:** failing tests for `peekTarget` (outside links and non-object pages return null) and `extractObject`; implement; Playwright check (setting on: a click opens the overlay, the page does not navigate, "go to its page" navigates and arrives opening); preview link to Leon; commit `feat(toolbelt): peek first`.
 
 ### Task 13: Night for what leons uses
 

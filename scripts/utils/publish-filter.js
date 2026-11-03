@@ -22,6 +22,16 @@ const DEFAULTS = {
 };
 
 /**
+ * status_field mode: the values that publish a page. "published" is the older name for
+ * "public". Matching ignores case and surrounding spaces.
+ */
+const PUBLISHED_STATUSES = new Set(["public", "published", "unlisted", "archived"]);
+
+function normalizeStatus(value) {
+  return String(value).trim().toLowerCase();
+}
+
+/**
  * Reads publish configuration from environment variables.
  * @returns {Object} Publish configuration
  */
@@ -57,10 +67,11 @@ function shouldPublish(frontmatter, content, config) {
 
   if (config.publishMode === "status_field") {
     const statusValue = frontmatter[config.statusField];
-    if (statusValue === "draft") return false;
     // Absent field: honour publishByDefault (false = private-by-default, true = public-by-default).
     if (statusValue == null) return config.publishByDefault;
-    return true;
+    // Only a known value publishes. "draft" and anything unrecognised (a typo, a workflow
+    // value like "review") stay out of the build: an unknown status must never go live.
+    return PUBLISHED_STATUSES.has(normalizeStatus(statusValue));
   } else if (config.publishMode === "allowlist") {
     // Only publish if explicitly marked
     return frontmatter[config.allowlistKey] === config.allowlistValue;
@@ -97,7 +108,7 @@ export async function filterPublishableFiles(contentDir, options = {}) {
 
   console.log(`[filter] Mode: ${config.publishMode}`);
   if (config.publishMode === "status_field") {
-    console.log(`[filter] Status field: ${config.statusField} (draft = excluded, publishByDefault: ${config.publishByDefault})`);
+    console.log(`[filter] Status field: ${config.statusField} (publishes: ${[...PUBLISHED_STATUSES].join(", ")}; anything else excluded; absent = publishByDefault: ${config.publishByDefault})`);
   } else if (config.publishMode === "blocklist") {
     console.log(`[filter] Blocklist tag: #${config.blocklistTag}`);
   } else {
@@ -160,21 +171,26 @@ export async function filterPublishableFiles(contentDir, options = {}) {
       });
     } else {
       const statusVal = frontmatter?.[config.statusField];
-      const isDraft = config.publishMode === "status_field" && statusVal === "draft";
+      const isStatusMode = config.publishMode === "status_field";
+      const isDraft = isStatusMode && statusVal != null && normalizeStatus(statusVal) === "draft";
+      const isUnknown = isStatusMode && statusVal != null && !isDraft;
       excluded.push({
         path: filePath,
         relativePath,
         reason:
           config.publishMode === "blocklist"
             ? `contains #${config.blocklistTag}`
-            : config.publishMode === "status_field"
-              ? statusVal === "draft"
+            : isStatusMode
+              ? isDraft
                 ? `website_status: draft`
-                : `website_status: absent (publish_by_default: false)`
+                : isUnknown
+                  ? `website_status: ${statusVal} (unknown value)`
+                  : `website_status: absent (publish_by_default: false)`
               : `missing ${config.allowlistKey}: ${config.allowlistValue}`,
         isDraft,
       });
       console.log(`[filter] Excluding: ${relativePath}`);
+      if (isUnknown) warnUnknownStatus(relativePath, config.statusField, statusVal);
     }
   }
 
@@ -182,6 +198,22 @@ export async function filterPublishableFiles(contentDir, options = {}) {
   console.log(`[filter] Excluding: ${excluded.length} files`);
 
   return { published, excluded, config };
+}
+
+/**
+ * Says loudly that a page was hidden because its status value is unknown. Never throws:
+ * the build carries on without the page. On GitHub Actions the line is a workflow
+ * annotation, so it shows on the run's summary page and not only deep in the log.
+ */
+function warnUnknownStatus(relativePath, field, value) {
+  const msg =
+    `${relativePath} has ${field}: ${value}, which is not a known value ` +
+    `(public, unlisted, archived, draft), so the page is hidden. Fix the value to publish it.`;
+  if (process.env.GITHUB_ACTIONS === "true") {
+    console.warn(`::warning title=Unknown ${field}::${msg}`);
+  } else {
+    console.warn(`[filter] Hidden: ${msg}`);
+  }
 }
 
 /**

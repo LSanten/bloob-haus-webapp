@@ -214,6 +214,69 @@ describe('filterPublishableFiles', () => {
         expect(excluded).toHaveLength(1);
       });
     });
+
+    // A status the builder does not know must never publish: a typo or a workflow value
+    // (e.g. "review") would otherwise put an unfinished page on the live site.
+    describe('unknown status values', () => {
+      const opts = { publishMode: 'status_field', statusField: 'website_status' };
+      let warn;
+
+      beforeEach(() => {
+        warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        warn.mockRestore();
+        delete process.env.GITHUB_ACTIONS;
+      });
+
+      it('excludes a file whose website_status is not a known value', async () => {
+        await writeFile('projects/in-review.md', '---\nwebsite_status: review\n---\nNot ready');
+        const { published, excluded } = await filterPublishableFiles(tmpDir, opts);
+        expect(published).toHaveLength(0);
+        expect(excluded).toHaveLength(1);
+        expect(excluded[0].reason).toBe('website_status: review (unknown value)');
+      });
+
+      it('warns with the file and the value, and does not throw', async () => {
+        await writeFile('projects/in-review.md', '---\nwebsite_status: review\n---\nNot ready');
+        await filterPublishableFiles(tmpDir, opts);
+        const msg = warn.mock.calls.map((c) => c.join(' ')).join('\n');
+        expect(msg).toContain(path.join('projects', 'in-review.md'));
+        expect(msg).toContain('review');
+      });
+
+      it('emits a GitHub Actions annotation when running in Actions', async () => {
+        process.env.GITHUB_ACTIONS = 'true';
+        await writeFile('projects/in-review.md', '---\nwebsite_status: review\n---\nNot ready');
+        await filterPublishableFiles(tmpDir, opts);
+        const msg = warn.mock.calls.map((c) => c.join(' ')).join('\n');
+        expect(msg).toMatch(/^::warning /m);
+      });
+
+      it('reads known values case-insensitively, so "Draft" stays hidden', async () => {
+        await writeFile('projects/a.md', '---\nwebsite_status: Draft\n---\nA');
+        await writeFile('projects/b.md', '---\nwebsite_status: Public\n---\nB');
+        const { published, excluded } = await filterPublishableFiles(tmpDir, opts);
+        expect(published.map((f) => path.basename(f.path))).toEqual(['b.md']);
+        expect(excluded.map((f) => path.basename(f.path))).toEqual(['a.md']);
+        expect(warn).not.toHaveBeenCalled();
+      });
+
+      it('still publishes "published", the older name for public', async () => {
+        await writeFile('projects/old-word.md', '---\nwebsite_status: published\n---\nLive');
+        const { published } = await filterPublishableFiles(tmpDir, opts);
+        expect(published).toHaveLength(1);
+        expect(warn).not.toHaveBeenCalled();
+      });
+
+      it('leaves blocklist mode alone: a website_status value means nothing there', async () => {
+        await writeFile('notes/page.md', '---\nwebsite_status: review\n---\nA note');
+        const { published } = await filterPublishableFiles(tmpDir, { publishMode: 'blocklist' });
+        expect(published).toHaveLength(1);
+        expect(warn).not.toHaveBeenCalled();
+      });
+    });
   });
 
   // --- Universal visibility: private ---

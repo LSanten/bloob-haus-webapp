@@ -672,3 +672,13 @@ html.bh-peeking { overflow: hidden; }
   margin: 3rem 0 0;
   font-family: var(--font-label);
 }
+
+/* inside a marble the greeting sits above the title, in place of the type label */
+.article-type--greeting {
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+}

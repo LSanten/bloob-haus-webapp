@@ -4,10 +4,10 @@
 {% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
 <article class="article-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="article-header">
-    {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
+    {% if inside_object %}{% if typeData and typeData.banner_text %}<p class="article-type article-type--greeting">{{ typeData.banner_text }}</p>{% endif %}{% elif typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
     {% if subtitle %}<p class="article-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
-    {% if typeData and typeData.banner_text %}<p class="article-banner-text">{{ typeData.banner_text }}</p>{% endif %}
+    {% if typeData and typeData.banner_text and not inside_object %}<p class="article-banner-text">{{ typeData.banner_text }}</p>{% endif %}
     {% if author %}<p class="article-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="article-byline">{{ byline }}</p>{% endif %}
 

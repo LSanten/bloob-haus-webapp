@@ -14,4 +14,10 @@ describe("one article for everyone", () => {
   it("inside another object the share bar steps aside (the outermost object shares)", () => {
     expect(read("themes/_base/partials/article-reading.njk")).toContain("shape_settings.share_bar !== false and not inside_object");
   });
+
+  it("inside an object the greeting replaces the type label, so they don't stack", () => {
+    const partial = read("themes/_base/partials/article-reading.njk");
+    expect(partial).toMatch(/inside_object %}\{% if typeData and typeData.banner_text %}<p class="article-type article-type--greeting">/);
+    expect(partial).toContain("typeData.banner_text and not inside_object");
+  });
 });

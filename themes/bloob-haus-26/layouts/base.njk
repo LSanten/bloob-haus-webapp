@@ -15,6 +15,8 @@
     </div>
 
     <main class="site-main">
+      {# The haus's front door: a glowing house above the homepage #}
+      {% if page.url == "/" %}{% include "partials/home-house.njk" %}{% endif %}
       {% block main %}{{ content | safe }}{% endblock %}
     </main>
 

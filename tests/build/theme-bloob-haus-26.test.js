@@ -40,9 +40,11 @@ describe("bloob-haus-26", () => {
   });
 
   it("keeps the grain under the objects and avoids the slow kinds of drawing", () => {
-    const css = read("assets/css/main.css");
-    expect(css).not.toMatch(/filter:\s*blur/);
-    expect(css).not.toMatch(/mix-blend-mode/);
-    expect(css).not.toMatch(/backdrop-filter/);
+    // The one exception (Leon, 2026-11-02): a peek blurs the page behind it, and only while it
+    // is open, so it's clear you are only peeking. Nothing that stays on screen blurs.
+    const outsidePeek = read("assets/css/main.css").replace(/\.bloob-peek \{[^}]*\}/, "");
+    expect(outsidePeek).not.toMatch(/filter:\s*blur/);
+    expect(outsidePeek).not.toMatch(/mix-blend-mode/);
+    expect(outsidePeek).not.toMatch(/backdrop-filter/);
   });
 });

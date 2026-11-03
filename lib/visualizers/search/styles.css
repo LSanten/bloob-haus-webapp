@@ -666,3 +666,14 @@
   box-shadow: 0 30px 60px -40px var(--object-shadow, rgba(0,0,0,.35));
 }
 .sq-results .sq-item:hover, .sq-results .sq-item:focus-within { background: color-mix(in srgb, var(--text-color, #222) 5%, transparent); box-shadow: none; }
+
+/* what kind of object a result is; a click tells what that kind is */
+.sq-kind {
+  position: absolute; top: 50px; right: 8px;
+  font: 600 10.5px/1 var(--font-label, sans-serif); letter-spacing: .06em; text-transform: uppercase;
+  padding: 5px 8px; border-radius: 999px; border: 1px solid var(--border-color, rgba(0,0,0,.15));
+  background: transparent; color: var(--text-light, #777); cursor: pointer;
+}
+.sq-kind:hover, .sq-kind[aria-expanded="true"] { color: var(--link-color, var(--accent-color, #555)); border-color: currentColor; }
+.sq-about { margin: -4px 64px 10px 70px; padding: 10px 12px; border-radius: 12px; font: .85rem/1.45 var(--font-body, serif); color: var(--text-light, #777); background: color-mix(in srgb, var(--text-color, #222) 5%, transparent); }
+.sq-link { padding-right: 92px; }

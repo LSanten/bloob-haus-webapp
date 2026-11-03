@@ -65,5 +65,6 @@ describe("starter notes", () => {
     expect(html).toContain("<details"); // foldable
     expect(html).toContain('type="checkbox"'); // checkbox-tracker
     expect(html).toContain('class="footnote-ref"'); // citations
+    expect(html).toContain('class="callout callout--question"'); // callout
   });
 });

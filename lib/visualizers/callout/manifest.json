@@ -1,0 +1,8 @@
+{
+  "name": "callout",
+  "type": "hybrid",
+  "version": "1.0.0",
+  "description": "Callouts as in Obsidian and GitHub: a quote that starts with [!type] (note, tip, question, warning...) becomes a soft box with a title. An ordinary quote stays a quote.",
+  "activation": { "method": "quote-marker", "pattern": "> [!type] Title" },
+  "detect": { "selectors": [".callout"] }
+}

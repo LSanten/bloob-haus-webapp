@@ -35,6 +35,7 @@ export async function search(q, opts = {}) {
 }`;
 
 const page = () => `<!doctype html><html class="bh-js" data-search-style="quiet"><head><style>${css}</style></head><body>
+<script type="application/json" id="bloob-shape-about">{"marble":"A glass marble you open.","note":"A note on paper."}</script>
 <div class="search-visualizer" data-search-settings='{"placeholder":"Look through my Bloob Haus...","show_tags":true}'></div>
 <script>${searchJs}</script></body></html>`;
 
@@ -61,16 +62,26 @@ describe("quiet search", () => {
     await ctx.close();
   });
 
-  it("groups results by kind: marbles, then notes, then pages", async () => {
+  it("keeps the search's own ranking: what fits best comes first, whatever its kind", async () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await search(p, "yoga");
-    expect(await p.$$eval(".sq-group h3", (e) => e.map((h) => h.textContent.trim().replace(/\s+\d+$/, "")))).toEqual(["Marbles", "Notes", "Pages"]);
-    expect(await p.$$eval(".sq-group:first-child .sq-item", (e) => e.length)).toBe(2);
+    expect(await p.$$eval(".sq-group", (e) => e.length)).toBe(0);
+    expect(await p.$$eval(".sq-item .sq-title", (e) => e.map((t) => t.textContent))).toEqual(["The ethics of Yoga", "Yoga flows I want to do", "Index", "Hatha Yoga Postures"]);
     await ctx.close();
   });
 
-  it("every result has a peek eye, its words lit, a clean excerpt and its ID", async () => {
+  it("each result says what it is; a click on its kind tells what that kind of object is", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    await search(p, "yoga");
+    expect(await p.$$eval(".sq-kind", (e) => e.map((k) => k.textContent.trim()))).toEqual(["Marble", "Note", "Page", "Marble"]);
+    await p.click(".sq-item:nth-child(2) .sq-kind");
+    expect(await p.$eval(".sq-item:nth-child(2) .sq-about", (e) => e.textContent)).toContain("A note on paper.");
+    await ctx.close();
+  });
+
+  it("every result has a peek eye, its words lit, and a clean excerpt without ID blocks", async () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await search(p, "yoga");
@@ -82,7 +93,8 @@ describe("quiet search", () => {
     expect(first).not.toContain("YAMAS AND NIYAMAS");
     expect(first).toContain("more words");
     expect(await p.$$eval(".sq-item mark", (e) => e.length)).toBeGreaterThan(0);
-    expect(await p.$$eval(".sq-item .sv-id-pill", (e) => e.length)).toBeGreaterThan(0);
+    expect(await p.$$eval(".sq-item .sv-id-pill", (e) => e.length)).toBe(0); // the link is there now
+    expect(first).not.toContain("ID:");
     await ctx.close();
   });
 

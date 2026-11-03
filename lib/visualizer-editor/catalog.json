@@ -1,12 +1,16 @@
 {
-  "listed": ["note", "marble"],
+  "listed": [
+    "note",
+    "marble"
+  ],
   "alwaysOn": {
     "title": "Writing rules",
-    "description": "Things that work in every note with nothing to switch on: folds, checkboxes, footnotes.",
+    "description": "Things that work in every note with nothing to switch on: folds, checkboxes, footnotes, callouts.",
     "visualizers": [
       "foldable",
       "checkbox-tracker",
-      "citations"
+      "citations",
+      "callout"
     ]
   },
   "blurbs": {

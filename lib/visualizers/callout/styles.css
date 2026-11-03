@@ -1,0 +1,48 @@
+/* Callouts: a soft box with a title, tinted by its kind. Theme tokens only. */
+.callout {
+  --callout-tint: var(--link-color, var(--accent-color, #8a4b23));
+  margin: 1.4rem 0;
+  padding: 14px 18px 4px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--callout-tint) 30%, transparent);
+  background: color-mix(in srgb, var(--callout-tint) 8%, var(--card-bg, transparent));
+}
+.callout__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font: 600 1rem/1.3 var(--font-heading, var(--font-body, serif));
+  color: var(--surface-text-color, var(--text-color, #222));
+}
+.callout__title::before {
+  content: "i";
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font: 700 12px/1 var(--font-label, sans-serif);
+  color: var(--card-bg, #fff);
+  background: var(--callout-tint);
+}
+.callout > :last-child { margin-bottom: 12px; }
+.callout--question, .callout--faq, .callout--help { --callout-tint: #3d6fa8; }
+.callout--question .callout__title::before, .callout--faq .callout__title::before, .callout--help .callout__title::before { content: "?"; }
+.callout--tip, .callout--hint, .callout--success, .callout--check, .callout--done { --callout-tint: #4f8a5b; }
+.callout--tip .callout__title::before, .callout--hint .callout__title::before { content: "★"; }
+.callout--success .callout__title::before, .callout--check .callout__title::before, .callout--done .callout__title::before { content: "✓"; }
+.callout--warning, .callout--caution, .callout--attention, .callout--important { --callout-tint: #b5762a; }
+.callout--warning .callout__title::before, .callout--caution .callout__title::before, .callout--attention .callout__title::before, .callout--important .callout__title::before { content: "!"; }
+.callout--danger, .callout--error, .callout--failure, .callout--bug { --callout-tint: #b0473f; }
+.callout--danger .callout__title::before, .callout--error .callout__title::before, .callout--failure .callout__title::before, .callout--bug .callout__title::before { content: "!"; }
+.callout--quote, .callout--cite { --callout-tint: #7a6a8f; }
+.callout--quote .callout__title::before, .callout--cite .callout__title::before { content: "“"; }
+.callout--example, .callout--abstract, .callout--summary, .callout--todo { --callout-tint: #6f5fa8; }
+@media (prefers-color-scheme: dark) {
+  .callout--question, .callout--faq, .callout--help { --callout-tint: #8fb4e8; }
+  .callout--tip, .callout--hint, .callout--success, .callout--check, .callout--done { --callout-tint: #8fc79a; }
+  .callout--warning, .callout--caution, .callout--attention, .callout--important { --callout-tint: #f0b46a; }
+  .callout--danger, .callout--error, .callout--failure, .callout--bug { --callout-tint: #ee9a92; }
+}

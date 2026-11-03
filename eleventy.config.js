@@ -105,6 +105,11 @@ export default async function (eleventyConfig) {
     }
     return roomCatalog.nodes;
   };
+  // {% bloobShapeAbout %}: each template shape's own description (its manifest), as JSON, so the
+  // search can say what a marble or a note is.
+  eleventyConfig.addShortcode("bloobShapeAbout", () =>
+    JSON.stringify(Object.fromEntries([...templateShapes].filter(([, sh]) => sh.manifest?.description).map(([n, sh]) => [n, sh.manifest.description]))).replace(/</g, "\\u003c"),
+  );
   eleventyConfig.addShortcode("bloobRoom", (folder) => renderRoom(roomNodes(catalogNodes(), folder || ""), templateShapes));
   // {% bloobRoomOf urls %}: the named pages as a room (a tag's pages).
   eleventyConfig.addShortcode("bloobRoomOf", (urls) => renderRoom(nodesForUrls(catalogNodes(), urls), templateShapes));

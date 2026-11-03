@@ -17,3 +17,11 @@ Click it to open.
 A sentence that says where it came from.[^1]
 
 [^1]: Chris Rose, in conversation, 2024.
+
+## Callouts
+
+> [!question] Which bloob object would you make?
+> A quote that starts with `[!type]` becomes a callout: note, tip, question, warning, quote...
+
+> [!tip]
+> Without a title, the kind names it.

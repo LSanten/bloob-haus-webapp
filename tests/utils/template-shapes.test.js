@@ -90,6 +90,17 @@ describe("templateShapeLayout", () => {
   });
 });
 
+describe("search finds every object page", () => {
+  it("a note's page is marked for the search index, and an unlisted one is kept out", () => {
+    const layout = generatedLayout("note");
+    expect(layout).toContain("data-pagefind-body");
+    expect(layout).toMatch(/_bloob_unlisted[\s\S]*data-pagefind-ignore/);
+  });
+  it("a marble keeps its index mark on the article inside (not twice)", () => {
+    expect(generatedLayout("marble", { inside: "article" })).not.toContain("data-pagefind-body");
+  });
+});
+
 describe("generated layouts", () => {
   it("wraps the page in base.njk and draws the object through the engine", () => {
     const text = generatedLayout("note");

@@ -63,7 +63,11 @@ export function templateShapeLayout(shape, { objects }) {
 
 export function generatedLayout(name, { inside } = {}) {
   const head = `---\nlayout: layouts/base.njk\n---\n`;
-  if (inside !== "article") return `${head}{% bloobObject "${name}", content %}\n`;
+  // The page's words go into the search index (unless the page is unlisted); a shape that opens
+  // into the article gets this from the article itself.
+  if (inside !== "article") {
+    return `${head}<div {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>{% bloobObject "${name}", content %}</div>\n`;
+  }
   // The object opens into the shared article (one article for everyone). The outermost object
   // shares, so the article's own share bar steps aside; the page's extras ride on the sheet.
   return (

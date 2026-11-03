@@ -60,6 +60,7 @@ import { dropHausStampedKeys } from "./utils/haus-stamped.js";
 import { catalogFields } from "./utils/catalog-fields.js";
 import { cleanMarkdownForSharing } from "./utils/share-markdown.js";
 import { isPageUnlisted, isInUnlistedFolder } from "./utils/unlisted-folders.js";
+import { buildSeoDescription } from "./utils/seo-description.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -690,6 +691,15 @@ export async function preprocessContent({
         console.log(`[process]   Extracted hero images: ${heroImages.join(', ')}`);
       }
     }
+
+    // Head-only meta description (partials/seo-meta.njk): the author's description, else
+    // subtitle + first prose, else the site description. Never written into `description`.
+    outputFrontmatter.seo_description = buildSeoDescription({
+      description: frontmatter.description,
+      subtitle: outputFrontmatter.subtitle,
+      body: processedContent,
+      siteDescription: siteConfig.site?.description,
+    });
 
     // Also handle title_md for pages where frontmatter.title contains markdown
     // but no H1 was stripped (e.g. user wrote title: _Italic_ in frontmatter directly).

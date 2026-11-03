@@ -7,6 +7,9 @@ import { glob } from 'glob';
 
 let tmpSrc;
 
+// sharp's file cache keeps handles open; on Windows that locks the temp files (EBUSY on cleanup).
+sharp.cache(false);
+
 beforeAll(async () => {
   tmpSrc = await fs.mkdtemp(path.join(os.tmpdir(), 'gen-bg-'));
   await fs.ensureDir(path.join(tmpSrc, 'media'));

@@ -18,7 +18,9 @@
    site default is off.
 
    The site code is derived from the goat-counter-tracking snippet — see
-   parseGoatCounterCode() in scripts/utils/bloob-settings-reader.js. #}
+   parseGoatCounterCode() in scripts/utils/bloob-settings-reader.js.
+   Unlisted pages get no third-party code: it would send the page's secret URL to the third
+   party (security-by-obscurity.md, Tier C). Applies on every site, no opt-out. #}
 
 {# `is defined` rather than `!== undefined`: a page that sets `visitor_count: false`
    must still count as having made a choice, and it is the only form that survives a
@@ -27,7 +29,7 @@
 {% set vcCode = site.analytics.goatcounter_code if site.analytics else null %}
 {% set vcOn = visitor_count if visitor_count is defined else vcSite %}
 
-{% if vcCode and vcOn %}
+{% if vcCode and vcOn and not _bloob_unlisted %}
 <p class="visitor-count" data-pagefind-ignore hidden
    data-goatcounter-code="{{ vcCode }}">
   <span class="visitor-count__number"></span>

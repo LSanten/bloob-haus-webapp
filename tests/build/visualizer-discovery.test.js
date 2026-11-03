@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { readdirSync, existsSync, readFileSync } from "node:fs";
+import { readdirSync, existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,9 +23,20 @@ describe("visualizer auto-discovery skips underscore-prefixed folders", () => {
   });
 
   it("no underscore-prefixed folder appears in the generated manifest", () => {
-    const manifestPath = path.join(ROOT, "src/_data/visualizers.json");
-    if (!existsSync(manifestPath)) return; // manifest is a build artifact; skip if absent
-    const raw = JSON.parse(readFileSync(manifestPath, "utf-8"));
+    // Run the bundler fresh into a temp dir: src/_data/visualizers.json is a build artifact
+    // whose age depends on the last local build, so reading it tested a stale file.
+    const tmp = mkdtempSync(path.join(os.tmpdir(), "viz-discovery-"));
+    let raw;
+    try {
+      execFileSync(process.execPath, ["scripts/bundle-visualizers.js"], {
+        cwd: ROOT,
+        env: { ...process.env, SRC_DIR: tmp },
+        stdio: "ignore",
+      });
+      raw = JSON.parse(readFileSync(path.join(tmp, "_data/visualizers.json"), "utf-8"));
+    } finally {
+      rmSync(tmp, { recursive: true, force: true, maxRetries: 3 });
+    }
     const names = Array.isArray(raw) ? raw.map((v) => v.name ?? v) : Object.keys(raw);
     const underscored = names.filter((n) => String(n).startsWith("_"));
     expect(underscored).toEqual([]);

@@ -88,6 +88,7 @@ export function extractExcerpt(markdown, { maxWords = EXCERPT_MAX_WORDS } = {}) 
     const text = cleanInline(
       line
         .replace(/^(>\s*)+/, "") // blockquote
+        .replace(/^\[![\w-]+\][+-]?\s*/, "") // Obsidian callout marker: [!info], [!warning]-
         .replace(/^([-*+]|\d+[.)])\s+(\[[ xX]\]\s+)?/, "") // list item, task box
     )
       .replace(/\s+/g, " ")

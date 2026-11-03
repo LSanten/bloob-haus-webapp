@@ -677,3 +677,6 @@
 .sq-kind:hover, .sq-kind[aria-expanded="true"] { color: var(--link-color, var(--accent-color, #555)); border-color: currentColor; }
 .sq-about { margin: -4px 64px 10px 70px; padding: 10px 12px; border-radius: 12px; font: .85rem/1.45 var(--font-body, serif); color: var(--text-light, #777); background: color-mix(in srgb, var(--text-color, #222) 5%, transparent); }
 .sq-link { padding-right: 92px; }
+
+.sq-thumb--tag { display: grid; place-items: center; border-radius: 14px; border: 1px solid var(--border-color, rgba(0,0,0,.15)); font: 600 20px/1 var(--font-heading, serif); color: var(--link-color, var(--accent-color, #555)); }
+.sq-kind--static { cursor: default; }

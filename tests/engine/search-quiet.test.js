@@ -67,7 +67,7 @@ describe("quiet search", () => {
     const { ctx, p } = await open();
     await search(p, "yoga");
     expect(await p.$$eval(".sq-group", (e) => e.length)).toBe(0);
-    expect(await p.$$eval(".sq-item .sq-title", (e) => e.map((t) => t.textContent))).toEqual(["The ethics of Yoga", "Yoga flows I want to do", "Index", "Hatha Yoga Postures"]);
+    expect(await p.$$eval(".sq-item:not(.sq-item--tag) .sq-title", (e) => e.map((t) => t.textContent))).toEqual(["The ethics of Yoga", "Yoga flows I want to do", "Index", "Hatha Yoga Postures"]);
     await ctx.close();
   });
 
@@ -75,9 +75,9 @@ describe("quiet search", () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await search(p, "yoga");
-    expect(await p.$$eval(".sq-kind", (e) => e.map((k) => k.textContent.trim()))).toEqual(["Marble", "Note", "Page", "Marble"]);
-    await p.click(".sq-item:nth-child(2) .sq-kind");
-    expect(await p.$eval(".sq-item:nth-child(2) .sq-about", (e) => e.textContent)).toContain("A note on paper.");
+    expect(await p.$$eval(".sq-item:not(.sq-item--tag) .sq-kind", (e) => e.map((k) => k.textContent.trim()))).toEqual(["Marble", "Note", "Page", "Marble"]);
+    await p.click(".sq-item:not(.sq-item--tag) >> nth=1 >> .sq-kind");
+    expect(await p.$eval(".sq-item:not(.sq-item--tag) >> nth=1 >> .sq-about", (e) => e.textContent)).toContain("A note on paper.");
     await ctx.close();
   });
 
@@ -85,9 +85,9 @@ describe("quiet search", () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await search(p, "yoga");
-    expect(await p.$$eval(".sq-item", (e) => e.length)).toBe(4);
-    expect(await p.$$eval(".sq-item .bloob-peek-eye", (e) => e.length)).toBe(4);
-    const first = await p.$eval(".sq-item", (e) => e.innerText);
+    expect(await p.$$eval(".sq-item:not(.sq-item--tag)", (e) => e.length)).toBe(4);
+    expect(await p.$$eval(".sq-item:not(.sq-item--tag) .bloob-peek-eye", (e) => e.length)).toBe(4);
+    const first = await p.$eval(".sq-item:not(.sq-item--tag)", (e) => e.innerText);
     expect(first).toContain("The Yamas and Niyamas");
     expect(first).not.toMatch(/^\s*for you/m);
     expect(first).not.toContain("YAMAS AND NIYAMAS");
@@ -112,7 +112,21 @@ describe("quiet search", () => {
     await search(p, "yoga");
     await p.click('.sq-chips button[data-tag="lists"]');
     await p.waitForTimeout(300);
-    expect(await p.$$eval(".sq-item", (e) => e.length)).toBe(1);
+    expect(await p.$$eval(".sq-item:not(.sq-item--tag)", (e) => e.length)).toBe(1);
+    await ctx.close();
+  });
+
+  it("a tag that fits is a result of its own, first when its name is what you typed", async () => {
+    if (!browser) return;
+    const { ctx, p } = await open();
+    await search(p, "yoga");
+    const first = await p.$eval(".sq-item", (e) => ({ tag: e.classList.contains("sq-item--tag"), href: e.querySelector(".sq-link").getAttribute("href"), text: e.innerText }));
+    expect(first.tag).toBe(true);
+    expect(first.href).toBe("/tags/yoga/");
+    expect(first.text).toContain("#yoga");
+    expect(first.text).toContain("3 pages");
+    await search(p, "list");
+    expect(await p.$$eval(".sq-item--tag .sq-link", (e) => e.map((a) => a.getAttribute("href")))).toEqual(["/tags/lists/"]);
     await ctx.close();
   });
 
@@ -120,7 +134,7 @@ describe("quiet search", () => {
     if (!browser) return;
     const { ctx, p } = await open();
     await search(p, "yoga");
-    await Promise.all([p.waitForURL("https://test.local/marbles/yamas/"), p.press(".sq-input", "Enter")]);
+    await Promise.all([p.waitForURL("https://test.local/tags/yoga/"), p.press(".sq-input", "Enter")]);
     await ctx.close();
   });
 });

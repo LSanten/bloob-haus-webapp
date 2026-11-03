@@ -66,6 +66,15 @@
   color: var(--text-color);
 }
 
+.marble-subtitle {
+  margin: -6px 0 0;
+  font: italic 1rem/1.4 var(--font-body, serif);
+  color: var(--text-light);
+  text-align: center;
+  max-width: 34rem;
+}
+.marble-subtitle:empty { display: none; }
+
 .marble-about {
   font: 500 0.82rem/1.4 var(--font-label, sans-serif);
   color: var(--text-light);

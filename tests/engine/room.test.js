@@ -4,7 +4,7 @@ import { renderRoom, roomNodes, nodesForUrls } from "../../lib/visualizers/_engi
 const nodes = [
   { id: "/marbles/", type: "page", title: "Marbles" },
   { id: "/marbles/a-note/", type: "page", title: "A note", shape: "note", firstLines: "The beginning of the note." },
-  { id: "/marbles/glass/", type: "page", title: "Glass", shape: "marble", closedPicture: "/og/marble/marbles--glass.png", color: "#123456" },
+  { id: "/marbles/glass/", type: "page", title: "Glass", subtitle: "seen through", shape: "marble", closedPicture: "/og/marble/marbles--glass.png", color: "#123456" },
   { id: "/marbles/plain/", type: "page", title: "Plain <page>", subtitle: "just words", bloobIcon: "/i.png" },
   { id: "/marbles/old/", type: "page", title: "Old", website_status: "archived" },
   { id: "/marbles/deeper/inside/", type: "page", title: "Deeper" },
@@ -33,6 +33,7 @@ describe("renderRoom", () => {
     expect(html).toContain("The beginning of the note.");
     expect(html).toContain('src="/og/marble/marbles--glass-256.png"'); // the room size of the baked marble
     expect(html).toContain("room-object--card");
+    expect(html).toContain("seen through"); // a marble's subtitle shows in the room too
     expect(html).toContain('src="/i.png"');
   });
 

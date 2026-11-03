@@ -16,5 +16,18 @@
       <button type="button" data-sky-choice="night">night</button>
     </div>
     <p class="toolbelt__note">Kept in this browser only.</p>
+    <form class="bloob-feedback" data-feedback-url="{{ site.feedback_url or 'https://post-office.bloob.haus/api/feedback' }}">
+      <p class="toolbelt__heading">Send a note</p>
+      <div class="bloob-feedback__kinds" role="radiogroup" aria-label="What kind of note">
+        <label><input type="radio" name="kind" value="idea" checked> An idea</label>
+        <label><input type="radio" name="kind" value="bug"> Something broke</label>
+      </div>
+      <textarea name="text" rows="3" maxlength="3800" required aria-label="Your note" placeholder="What would you change, or what did you notice?"></textarea>
+      <button type="button" class="bloob-feedback__point" data-feedback-point>Point at something on the page</button>
+      <p class="bloob-feedback__picked" hidden>Pointing at <span></span> <button type="button" data-feedback-unpick aria-label="Stop pointing">×</button></p>
+      <input type="email" name="email" maxlength="200" aria-label="Your email (optional)" placeholder="Your email, if you'd like an answer">
+      <button type="submit" class="bloob-feedback__send">Send</button>
+      <p class="bloob-feedback__status" aria-live="polite"></p>
+    </form>
   </div>
 </div>

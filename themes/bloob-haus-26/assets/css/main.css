@@ -570,7 +570,9 @@ html.bh-js .toolbelt { display: block; }
   position: absolute;
   left: 0;
   bottom: 52px;
-  width: 260px;
+  width: 280px;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--border-color);
@@ -682,3 +684,76 @@ html.bh-peeking { overflow: hidden; }
   font-size: 1rem;
   font-weight: 400;
 }
+
+/* ---------- feedback: a note from the tool belt, pointing at something ---------- */
+.bloob-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+.bloob-feedback .toolbelt__heading { margin: 0; }
+.bloob-feedback__kinds { display: flex; gap: 12px; font-size: 0.8rem; }
+.bloob-feedback textarea,
+.bloob-feedback input[type="email"],
+.bloob-ask input {
+  font: 0.85rem/1.4 var(--font-label);
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 9px;
+  resize: vertical;
+}
+.bloob-feedback__point,
+.bloob-feedback__send,
+.bloob-ask button {
+  font: 500 0.8rem/1 var(--font-label);
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.bloob-feedback__send,
+.bloob-ask button { align-self: flex-start; border-color: var(--link-color); color: var(--link-color); }
+.bloob-feedback__picked { margin: 0; font-size: 0.75rem; opacity: 0.8; word-break: break-word; }
+.bloob-feedback__picked button { border: 0; background: none; color: inherit; cursor: pointer; }
+.bloob-feedback__status,
+.bloob-ask__status { margin: 0; font-size: 0.78rem; min-height: 1em; }
+html.bh-pointing, html.bh-pointing * { cursor: crosshair !important; }
+.bloob-pick-outline {
+  position: fixed;
+  z-index: 90;
+  pointer-events: none;
+  border: 2px solid var(--link-color, #b5652b);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--link-color, #b5652b) 10%, transparent);
+  transition: all 0.08s ease-out;
+}
+.bloob-pick-hint {
+  position: fixed;
+  z-index: 91;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--surface-text-color);
+  border: 1px solid var(--border-color);
+  font: 500 0.85rem/1 var(--font-label);
+  box-shadow: 0 10px 24px -14px var(--object-shadow);
+}
+
+/* a question on a page that anyone can answer (data-bloob-ask) */
+.bloob-ask { margin: 0.5rem 0 1.5rem; }
+.bloob-ask label { display: flex; flex-direction: column; gap: 8px; font-weight: 500; }
+.bloob-ask__row { display: flex; gap: 8px; flex-wrap: wrap; }
+.bloob-ask__row input { flex: 1 1 220px; }
+
+/* subtitles under closed marbles in a room */
+.room-object__sub--marble { font-size: 0.78rem; opacity: 0.7; margin-top: -6px; }

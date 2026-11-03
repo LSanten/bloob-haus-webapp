@@ -8,8 +8,8 @@
  * is only (0,1,0), so every marble title in the nested collection came out
  * underlined.
  *
- * The fix is not to weaken the container — prose links SHOULD be underlined —
- * but to let the nested shape win by scoping its rules to its own container.
+ * The fix is to let the nested shape win by scoping its rules to its own container. (Since
+ * 2026-11-03 the article doesn't underline its own links either: links show by their color.)
  *
  * This is the composition the folder-index design depends on
  * (article shape + collection shape inside), so it needs a guard.
@@ -57,7 +57,7 @@ function nestedPage(display) {
   return `${css}<body>
     <article class="article-page">
       <div class="article-body">
-        <p>Prose with a <a href="/x/">real prose link</a> that SHOULD be underlined.</p>
+        <p>Prose with a <a href="/x/">real prose link</a>, shown by its color.</p>
         <div class="collection-visualizer">${renderer.renderCollectionInner(pages, { display })}</div>
       </div>
     </article>
@@ -98,9 +98,8 @@ describe("a collection nested in an article body keeps its own link styling", ()
         `${selector} inherited the article body's underline — the nested shape must win`
       ).toBe("none");
 
-      // The container's own prose links must still be underlined; the fix must
-      // not have been "stop underlining links".
-      expect(result.proseDecoration, "prose links should still be underlined").toBe("underline");
+      // The article's own prose links show by their color, no underline (Leon, 2026-11-03).
+      expect(result.proseDecoration, "prose links show by their color").toBe("none");
     } finally {
       await page.close();
     }

@@ -1,19 +1,39 @@
-// The background's warm dots follow the cursor or a finger. The position is written only to the
-// warm-dots layer, once per frame, so nothing else restyles on every move.
+// The background's dots near the cursor or a finger glow for a moment, then clear, leaving a calm
+// area of focus. The position is written only to the world layer, once per frame.
+// Also: the visitor's day/night choice (auto, day, night), kept in their browser.
 (function () {
-  var hot = document.querySelector(".world__dots-warm");
-  if (!hot) return;
-  var x = 0, y = 0, queued = false;
-  function paint() { queued = false; hot.style.setProperty("--mx", x + "px"); hot.style.setProperty("--my", y + "px"); }
-  function near(e) {
-    x = e.clientX; y = e.clientY;
-    if (!queued) { queued = true; requestAnimationFrame(paint); }
-    document.documentElement.classList.add("is-near");
+  var world = document.querySelector(".world");
+  var html = document.documentElement;
+  if (world) {
+    var x = 0, y = 0, queued = false, glow = null;
+    var paint = function () { queued = false; world.style.setProperty("--mx", x + "px"); world.style.setProperty("--my", y + "px"); };
+    var near = function (e) {
+      x = e.clientX; y = e.clientY;
+      if (!queued) { queued = true; requestAnimationFrame(paint); }
+      html.classList.add("is-near", "is-glowing");
+      clearTimeout(glow);
+      glow = setTimeout(function () { html.classList.remove("is-glowing"); }, 300);
+    };
+    addEventListener("pointermove", near, { passive: true });
+    addEventListener("pointerdown", near, { passive: true });
+    document.addEventListener("pointerleave", function () { html.classList.remove("is-near", "is-glowing"); });
+    addEventListener("pointerup", function (e) {
+      if (e.pointerType !== "mouse") setTimeout(function () { html.classList.remove("is-near"); }, 900);
+    });
   }
-  addEventListener("pointermove", near, { passive: true });
-  addEventListener("pointerdown", near, { passive: true });
-  document.addEventListener("pointerleave", function () { document.documentElement.classList.remove("is-near"); });
-  addEventListener("pointerup", function (e) {
-    if (e.pointerType !== "mouse") setTimeout(function () { document.documentElement.classList.remove("is-near"); }, 900);
+
+  var buttons = document.querySelectorAll("[data-sky-choice]");
+  var show = function () {
+    var sky = html.getAttribute("data-sky") || "auto";
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.skyChoice === sky)); });
+  };
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var choice = b.dataset.skyChoice;
+      try { choice === "auto" ? localStorage.removeItem("bh-sky") : localStorage.setItem("bh-sky", choice); } catch (e) {}
+      if (choice === "auto") html.removeAttribute("data-sky"); else html.setAttribute("data-sky", choice);
+      show();
+    });
   });
+  show();
 })();

@@ -53,6 +53,7 @@ layout: layouts/base.njk
   {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
   <div class="graph-visualizer" data-current-page="{{ page.url }}" {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
   {% endif %}{% endfor %}
-</article>
 
-{% include "partials/comments.njk" %}
+  {# Comments live on the sheet, so they stay readable by day and night #}
+  {% include "partials/comments.njk" %}
+</article>

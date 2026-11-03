@@ -4,6 +4,8 @@
     <meta name="color-scheme" content="light dark" />
     {# Decide how this page's object starts, before any stylesheet loads (no flash). #}
     {% bloobHeadInit bloobPageId %}
+    {# The visitor's own choice of day or night, applied before the first paint #}
+    <script>try{var bhSky=localStorage.getItem("bh-sky");if(bhSky==="day"||bhSky==="night")document.documentElement.setAttribute("data-sky",bhSky);}catch(e){}</script>
 
     <title>{% if page.url == "/" %}{{ site.title }}{% else %}{{ title }} | {{ site.title }}{% endif %}</title>
 
@@ -60,6 +62,9 @@
         href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,500&display=swap"
         rel="stylesheet"
     />
+    <!-- Satoshi, for the bloob.haus wordmark in the footer -->
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700&display=optional" rel="stylesheet" />
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ "/assets/css/base.css" | url }}" />

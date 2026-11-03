@@ -1,6 +1,6 @@
 # Tokens: the shared color and light names
 
-**Status:** proposal for Leon, 2026-11-02 (base haus build, Task 0). Once approved, every theme
+**Status:** approved by Leon, 2026-11-02 (base haus build, Task 0). Every theme
 and every visualizer uses only these names; adding one means adding it here first.
 
 A token is a named setting, like `--bg-color`. Visualizers read the name; each theme fills in the

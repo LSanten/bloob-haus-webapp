@@ -13,6 +13,13 @@
 .vinyl-cover { position: absolute; inset: 9%; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px; box-shadow: 0 30px 50px -30px var(--object-shadow, rgba(0,0,0,.45)); }
 .vinyl-cover:focus-visible { outline: 2px solid var(--link-color, currentColor); outline-offset: 6px; }
 .bloob-object .vinyl-cover__picture { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; background: none; }
+/* closed, the side the 3D sleeve starts on, so nothing flashes: the back, unless start_side is
+   front or there is no back */
+.vinyl-cover__picture--front { display: none; }
+.vinyl-sleeve[data-start-side="front"] .vinyl-cover__picture--front,
+.vinyl-sleeve:has(.vinyl-cover__picture--back[src=""]) .vinyl-cover__picture--front { display: block; }
+.vinyl-sleeve[data-start-side="front"] .vinyl-cover__picture--back,
+.vinyl-cover__picture--back[src=""] { display: none; }
 .vinyl-stage { position: absolute; inset: 0; display: none; }
 .bloob-object--vinyl-sleeve.is-live .vinyl-stage { display: block; }
 .bloob-object--vinyl-sleeve.is-live .vinyl-cover { visibility: hidden; }

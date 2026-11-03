@@ -1,6 +1,7 @@
-<div class="vinyl-sleeve">
+<div class="vinyl-sleeve" data-start-side="{{ yaml.start_side }}">
   <button class="vinyl-cover" type="button" data-bloob-toggle aria-label="Take out the record: {{ title }}">
-    <img class="vinyl-cover__picture no-zoom" src="{{ yaml.front }}" alt="" width="1000" height="1000" data-bloob-picture>
+    <img class="vinyl-cover__picture vinyl-cover__picture--back no-zoom" src="{{ yaml.back }}" alt="" width="1000" height="1000">
+    <img class="vinyl-cover__picture vinyl-cover__picture--front no-zoom" src="{{ yaml.front }}" alt="" width="1000" height="1000" data-bloob-picture>
   </button>
   <div class="vinyl-stage" aria-hidden="true" data-front="{{ yaml.front }}" data-back="{{ yaml.back }}" data-label="{{ yaml.label }}" data-start-side="{{ yaml.start_side }}" data-vinyl-color="{{ yaml.vinyl_color }}"></div>
 </div>

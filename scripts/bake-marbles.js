@@ -1,6 +1,6 @@
 /**
  * Bakes every marble into a picture when the site builds: the glass (with the marble's picture
- * inside, or its own color), the pearl shine turned toward the sun, at 256 px plus 64 and 32 px
+ * inside, or its own color), its highlight and pearly sheen drawn by the glass, at 512 px plus 256, 64 and 32 px
  * icons. Used where script doesn't run, as the link preview, and as the page's tab icon. The
  * browser draws the live glass on top.
  *
@@ -11,14 +11,12 @@ import fs from "fs-extra";
 import path from "path";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
-import { glassMap, glassDraw, GLASS } from "../lib/visualizers/marble/glass.js";
+import { glassMap, glassDraw, burnIn, pearlSheen, GLASS } from "../lib/visualizers/marble/glass.js";
 import { insideColor, hexToRgb } from "../lib/visualizers/marble/color.js";
 import { closedPicturePath } from "../lib/visualizers/marble/paths.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PEARL = path.join(ROOT, "lib/visualizers/marble/assets/pearl.png");
-const SIZE = 256;
-const SUN_ANGLE = 45; // top right, as the room's light by day
+const SIZE = 512; // sharp on a retina screen; rooms use the 256 copy
 
 export async function bakeMarbles({ srcDir }) {
   const graphPath = path.join(srcDir, "graph.json");
@@ -28,7 +26,7 @@ export async function bakeMarbles({ srcDir }) {
   if (!marbles.length) return [];
 
   const map = glassMap(SIZE);
-  const shine = await pearlShine();
+  const shine = pearlSheen(map);
   const written = [];
   for (const node of marbles) {
     const picture = await insidePicture(node, srcDir);
@@ -36,9 +34,9 @@ export async function bakeMarbles({ srcDir }) {
       seeMiddle: picture.isPhoto ? GLASS.seeImage : GLASS.seeColor,
       seeEdge: GLASS.seeEdge,
     });
-    addShine(glass, shine, map.cover);
+    burnIn(glass, shine, map.cover, GLASS.shine);
     const png = await sharp(Buffer.from(glass), { raw: { width: SIZE, height: SIZE, channels: 4 } }).png().toBuffer();
-    for (const size of [undefined, 64, 32]) {
+    for (const size of [undefined, 256, 64, 32]) {
       const rel = closedPicturePath(node.id, size).replace(/^\//, "");
       const out = path.join(srcDir, rel);
       await fs.ensureDir(path.dirname(out));
@@ -59,30 +57,4 @@ async function insidePicture(node, srcDir) {
     }
   }
   return { data: insideColor(hexToRgb(node.color || "#9a8fe0"), SIZE), width: SIZE, height: SIZE, isPhoto: false };
-}
-
-// Lays the shine on the glass (screen), only where the ball is.
-function addShine(glass, shine, cover) {
-  for (let i = 0; i < cover.length; i++) {
-    const c = cover[i];
-    if (!c) continue;
-    const o = i * 4, a = (shine[o + 3] / 255) * c;
-    if (!a) continue;
-    for (let k = 0; k < 3; k++) glass[o + k] = 255 - ((255 - glass[o + k]) * (255 - shine[o + k] * a)) / 255;
-    glass[o + 3] = glass[o + 3] + (255 * c - glass[o + 3]) * a;
-  }
-}
-
-// The pearl's highlight, turned toward the sun, at the shine strength Leon tuned (raw RGBA).
-async function pearlShine() {
-  const turned = await sharp(PEARL)
-    .resize(SIZE, SIZE)
-    .rotate(SUN_ANGLE - GLASS.naturalHighlightDeg, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .resize(SIZE, SIZE, { fit: "cover", position: "centre" })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const px = turned.data;
-  for (let i = 3; i < px.length; i += 4) px[i] = Math.round(px[i] * GLASS.shine);
-  return px;
 }

@@ -46,17 +46,6 @@
 /* once the live glass draws, the baked picture steps back */
 .marble-ball.is-live .marble-ball__picture { visibility: hidden; }
 .marble-ball__picture[src=""] { display: none; }
-/* the pearl shine, turned toward the room's light (the baked picture carries its own) */
-.marble-ball.is-live::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at calc(20% + var(--light-x, 1) * 50%) calc(18% + var(--light-y, 0) * 40%), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 32%);
-  opacity: 0.43;
-  pointer-events: none;
-}
 /* the light swells from the center as it opens */
 .marble-ball::after {
   content: "";

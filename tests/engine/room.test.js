@@ -31,7 +31,7 @@ describe("renderRoom", () => {
   it("a note shows its tip, a marble its glass, anything else a calm card with its icon", () => {
     expect(html).toContain("room-object--note");
     expect(html).toContain("The beginning of the note.");
-    expect(html).toContain('src="/og/marble/marbles--glass.png"');
+    expect(html).toContain('src="/og/marble/marbles--glass-256.png"'); // the room size of the baked marble
     expect(html).toContain("room-object--card");
     expect(html).toContain('src="/i.png"');
   });

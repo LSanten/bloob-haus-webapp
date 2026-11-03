@@ -1,0 +1,9 @@
+---
+layout: layouts/base.njk
+---
+{# A folder's page. It becomes a room of closed objects in a later step; for now its listing sits
+   on a sheet. #}
+<article class="sheet folder-index" data-pagefind-ignore>
+  <h1 class="folder-index__title">{{ folder_display or title }}</h1>
+  {{ content | safe }}
+</article>

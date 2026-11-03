@@ -1,0 +1,58 @@
+---
+layout: layouts/base.njk
+---
+{# A reading sheet sitting on the background. Notes and marbles draw themselves through the engine
+   instead; this is for every page that names no object. #}
+<article class="sheet page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
+  {% if image %}
+  <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden style="display:none" />
+  {% endif %}
+
+  {% if hero_images %}
+  <div class="page-hero">
+    {% for imgSrc in hero_images %}
+    <img src="{{ imgSrc }}" alt="{{ title }}" class="page-hero__image">
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <header class="page-header">
+    <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
+
+    {% set dcFmt = date_created | dateFormat %}
+    {% set duFmt = date_updated | dateFormat %}
+    <div class="page-dates" data-pagefind-ignore>
+      {% if dcFmt %}<p class="page-date">{{ date_created_text if date_created_text else "Started on" }} {{ dcFmt }}</p>{% endif %}
+      {% if duFmt and duFmt != dcFmt %}<p class="page-date">{{ date_updated_text if date_updated_text else "Updated on" }} {{ duFmt }}</p>{% endif %}
+    </div>
+
+    {% include "partials/share-bar.njk" %}
+  </header>
+
+  {% if slug %}
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
+  {% endif %}
+
+  <div class="page-content">{{ content | safe }}</div>
+
+  {% if tags %}
+  {% set displayTags = tags | filterTagList %}
+  {% if displayTags.length %}
+  <div class="page-tags" data-pagefind-ignore>
+    {% for tag in displayTags %}
+    <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge" data-pagefind-filter="tag">{{ tag }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% include "partials/backlinks.njk" %}
+
+  {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
+  <div class="graph-visualizer" data-current-page="{{ page.url }}" {% if graph %}data-page-settings='{{ graph | dump }}'{% endif %}></div>
+  {% endif %}{% endfor %}
+</article>
+
+{% include "partials/comments.njk" %}

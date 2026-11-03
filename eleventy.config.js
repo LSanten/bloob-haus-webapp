@@ -14,6 +14,7 @@ import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js"
 import { derivePageId } from "./scripts/utils/page-id.js";
 import { loadTemplateShapes } from "./scripts/utils/template-shapes.js";
 import { renderObject } from "./lib/visualizers/_engine/index.js";
+import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
 import {
   detectVisualizers,
@@ -75,6 +76,8 @@ export default async function (eleventyConfig) {
   // Template shapes (note, marble, ...) are drawn by the engine. Their layouts call
   // {% bloobObject "<name>", content %}; the page's frontmatter reaches the engine through this.ctx.
   const templateShapes = await loadTemplateShapes("lib/visualizers");
+  // How the page's own object starts, decided in <head> before the first paint (themes with objects).
+  eleventyConfig.addShortcode("bloobHeadInit", (pageId) => headInitScript({ pageId: pageId || "" }));
   eleventyConfig.addShortcode("bloobObject", function (name, content) {
     const shape = templateShapes.get(name);
     if (!shape) return content;

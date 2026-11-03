@@ -49,6 +49,14 @@ async function openPage() {
 }
 const openValue = (page) => page.$eval(".bloob-object", (el) => parseFloat(getComputedStyle(el).getPropertyValue("--open")));
 
+const longShape = {
+  name: "scroll",
+  manifest: { name: "scroll", opens: "click", pace: "length" },
+  templates: {
+    open: '<div class="paper" data-bloob-measure style="overflow:hidden;max-height:calc(100px + var(--open) * (var(--full-height, 100000px) - 100px))">{{ body }}</div><button data-bloob-toggle>roll</button>',
+  },
+};
+
 describe("toolbox in a browser", () => {
   it("an outside arrival starts closed and a click opens it", async () => {
     if (!browser) return;
@@ -90,6 +98,23 @@ describe("toolbox in a browser", () => {
     const states = await page.evaluate(() => window.__states);
     expect(states).toContain("opening");
     expect(states.at(-1)).toBe("open");
+    await context.close();
+  });
+
+  it("an unrolled paper reaches its full height", async () => {
+    if (!browser) return;
+    const context = await browser.newContext();
+    const body = Array.from({ length: 40 }, (_, i) => `<p>line ${i}</p>`).join("");
+    const obj = renderObject(longShape, { data: {}, html: body, url: "/s/", pageId: "s" });
+    await context.route("https://test.local/**", (route) => route.fulfill({ contentType: "text/html",
+      body: `<!doctype html><html><head><meta name="bloob-page-id" content="s">${headInitScript({ pageId: "s" })}<style>${engineCss}</style></head><body>${obj}<script>${toolbox}</script></body></html>` }));
+    const page = await context.newPage();
+    await page.goto("https://test.local/s/");
+    await page.click("[data-bloob-toggle]");
+    await page.waitForFunction(() => document.querySelector(".bloob-object").dataset.state === "open");
+    const [shown, full] = await page.$eval(".paper", (el) => [el.clientHeight, el.scrollHeight]);
+    expect(shown).toBeGreaterThanOrEqual(full - 1);
+    expect(shown).toBeGreaterThan(400);
     await context.close();
   });
 });

@@ -1,0 +1,10 @@
+name: bloob-haus-26
+version: "0.1.0"
+# The base every haus starts from (docs/superpowers/specs/2026-11-02-base-haus-design.md).
+# objects: true lets the engine draw template shapes (note, marble, ...) on this theme.
+objects: true
+visualizer_defaults:
+  latex: true
+  graph: true
+feature_defaults:
+  image_zoom: true

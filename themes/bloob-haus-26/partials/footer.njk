@@ -1,0 +1,41 @@
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__text">{% if site.footer_text %}{{ site.footer_text }}{% else %}CC BY-NC-SA 4.0{% endif %}</p>
+    {% if site.footer_searchbar and site.features.search != false %}
+    <div class="footer-search" data-pagefind-ignore>
+      <button class="footer-search__toggle" aria-expanded="false" aria-controls="footer-search-panel">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" width="16" height="16">
+          <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/>
+        </svg>
+        Search
+      </button>
+      <div class="footer-search__panel" id="footer-search-panel" hidden>
+        {# Same search visualizer as the rest of the site — browser.js mounts into
+           .search-visualizer automatically, giving parity with the homepage search
+           (ID pills, action buttons, subtitle injection, thumbnail lightbox). #}
+        <div class="search-visualizer"></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var btn = document.querySelector('.footer-search__toggle');
+        var panel = document.getElementById('footer-search-panel');
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () {
+          var open = panel.hidden;
+          panel.hidden = !open;
+          btn.style.display = open ? 'none' : '';
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if (open) {
+            setTimeout(function () {
+              var input = panel.querySelector('.pagefind-ui__search-input');
+              if (input) input.focus();
+            }, 50);
+          }
+        });
+      })();
+    </script>
+    {% endif %}
+    <p class="site-footer__credit"><a href="{{ '/' | url }}">home</a> · built with <a href="https://bloob.haus/">bloob.haus</a></p>
+  </div>
+</footer>

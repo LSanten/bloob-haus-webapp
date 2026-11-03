@@ -1,0 +1,346 @@
+/* bloob-haus-26: the base every haus starts from.
+   Tokens follow docs/architecture/tokens.md. Day by default, night with prefers-color-scheme.
+   The background is drawn with soft gradients (never a live blur), the grain sits under the
+   objects, and nothing uses blend modes or backdrop filters: all of that made the prototypes lag. */
+
+/* ---------- tokens: day (dawn) ---------- */
+:root {
+  color-scheme: light dark;
+
+  /* the haus's background */
+  --bg-color: #f3e6d6;
+  --world-1: #f7cfae;
+  --world-2: #f6e7c4;
+  --world-3: #cfe1ea;
+  --world-glow: rgba(214, 140, 70, 0);
+
+  /* one light for the room: a sun top right by day, a lamp in the same corner at dusk */
+  --light-x: 1;
+  --light-y: 0;
+  --light-warmth: 0;
+  --light-level: 1;
+
+  /* objects */
+  --object-paper: #f6efdf;
+  --object-ink: #2a2118;
+  --object-shadow: rgba(70, 50, 20, 0.38);
+  --card-bg: #fbf8f1;
+  --surface-text-color: #2a2118;
+
+  /* the dot grid and the grain */
+  --dot-color: rgba(80, 55, 40, 0.16);
+  --dot-warm: #d4607a;
+  --grain-strength: 0.07;
+
+  /* text, links, borders */
+  --text-color: #2a2118;
+  --text-light: #6e5848;
+  --accent-color: #8a4b23;
+  --accent-dark: #6b3a1a;
+  --link-color: #8a4b23;
+  --link-hover: #b4563a;
+  --border-color: rgba(120, 90, 50, 0.18);
+
+  /* type and space */
+  --font-body: "Newsreader", Georgia, serif;
+  --font-heading: "Newsreader", Georgia, serif;
+  --font-label: "Instrument Sans", system-ui, sans-serif;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2.5rem;
+  --spacing-xl: 4rem;
+  --max-width: 760px;
+  --border-radius: 12px;
+  --border-radius-sm: 6px;
+}
+
+/* ---------- tokens: night (dusk) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1b1a24;
+    --world-1: #3a2d4f;
+    --world-2: #1c3440;
+    --world-3: #1b1a24;
+    --world-glow: rgba(214, 140, 70, 0.45);
+    --light-x: 0.85;
+    --light-y: 0.12;
+    --light-warmth: 1;
+    --light-level: 0.86;
+    --object-paper: #f6efdf;
+    --object-ink: #2a2118;
+    --object-shadow: rgba(0, 0, 0, 0.7);
+    --card-bg: #1f1d26;
+    --surface-text-color: #ece6dc;
+    --dot-color: rgba(255, 235, 215, 0.13);
+    --dot-warm: #f2b35e;
+    --grain-strength: 0.11;
+    --text-color: #ece6dc;
+    --text-light: #c4b8cc;
+    --accent-color: #e2b07a;
+    --accent-dark: #f0c896;
+    --link-color: #e2b07a;
+    --link-hover: #f3c98f;
+    --border-color: rgba(255, 235, 215, 0.14);
+  }
+}
+
+/* ---------- look presets: the same recipe, different energies ---------- */
+.look-flat-warm {
+  --world-1: #efe6d4;
+  --world-2: #efe6d4;
+  --world-3: #efe6d4;
+  --bg-color: #efe6d4;
+}
+.look-forest-light {
+  --world-1: #fbf0bf;
+  --world-2: #a9bd78;
+  --world-3: #8fa766;
+  --bg-color: #d8d9a8;
+  --dot-color: rgba(40, 50, 20, 0.16);
+  --dot-warm: #c98a1e;
+}
+@media (prefers-color-scheme: dark) {
+  .look-flat-warm {
+    --world-1: #1d1813;
+    --world-2: #1d1813;
+    --world-3: #1d1813;
+    --bg-color: #1d1813;
+  }
+  .look-forest-light {
+    --world-1: #1d3326;
+    --world-2: #18291f;
+    --world-3: #101a14;
+    --bg-color: #101a14;
+    --world-glow: rgba(255, 196, 120, 0.34);
+    --dot-color: rgba(230, 240, 210, 0.09);
+    --dot-warm: #f0c46a;
+  }
+}
+
+/* ---------- page ---------- */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  font: 400 18px/1.62 var(--font-body);
+  overflow-x: hidden;
+}
+a {
+  color: var(--link-color);
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+/* ---------- the world behind everything ---------- */
+.world {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.world__day,
+.world__night,
+.world__dots,
+.world__dots-warm {
+  position: absolute;
+  inset: 0;
+}
+/* three soft colours, already blurred by their own gradients */
+.world__day {
+  background:
+    radial-gradient(circle at 15% 20%, var(--world-1), transparent 55%),
+    radial-gradient(circle at 82% 28%, var(--world-2), transparent 50%),
+    radial-gradient(circle at 62% 92%, var(--world-3), transparent 58%),
+    var(--bg-color);
+  transition: background-color 1.6s ease;
+}
+/* the warm glow where the light is (only visible at dusk) */
+.world__night {
+  background: radial-gradient(
+    circle at calc(var(--light-x) * 100%) calc(var(--light-y) * 100% + 8%),
+    var(--world-glow),
+    transparent 45%
+  );
+}
+.world__dots {
+  background-image: radial-gradient(var(--dot-color) 1.3px, transparent 1.7px);
+  background-size: 20px 20px;
+}
+.world__dots-warm {
+  background-image: radial-gradient(var(--dot-warm) 1.9px, transparent 2.4px);
+  background-size: 20px 20px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  -webkit-mask-image: radial-gradient(circle 140px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 140px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
+}
+.is-near .world__dots-warm {
+  opacity: 1;
+}
+/* live grain: specks with their own colour and transparency, moved a few times a second */
+.world__grain {
+  position: absolute;
+  inset: -50%;
+  will-change: transform;
+  opacity: calc(var(--grain-strength) * 4);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0 0.08  0 0 0 1.4 -0.55'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain 0.9s steps(1) infinite;
+}
+@media (prefers-color-scheme: dark) {
+  .world__grain {
+    opacity: calc(var(--grain-strength) * 1.8);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.96  0 0 0 0 0.9  0 0 0 1.4 -0.55'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  12% { transform: translate(-4%, 3%); }
+  25% { transform: translate(3%, -5%); }
+  37% { transform: translate(-6%, -2%); }
+  50% { transform: translate(5%, 4%); }
+  62% { transform: translate(-2%, 6%); }
+  75% { transform: translate(6%, -3%); }
+  87% { transform: translate(-5%, -6%); }
+  100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world__grain { animation: none; }
+}
+
+/* ---------- objects and sheets sit above the world ---------- */
+.site-main {
+  position: relative;
+  z-index: 1;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 8vh 20px 10vh;
+}
+.site-main > .bloob-object {
+  margin: 4vh auto 6vh;
+}
+.sheet {
+  background: var(--card-bg);
+  color: var(--surface-text-color);
+  border-radius: 14px;
+  padding: clamp(24px, 6vw, 60px);
+  box-shadow: 0 30px 50px -30px var(--object-shadow);
+}
+.sheet img,
+.bloob-object img {
+  max-width: 100%;
+  height: auto;
+  /* images keep white behind them, even at night */
+  background: #fff;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.22;
+}
+.page-title,
+.folder-index__title {
+  font-size: clamp(28px, 4vw, 38px);
+  margin: 0 0 0.35em;
+}
+.page-subtitle {
+  font-style: italic;
+  font-size: 20px;
+  margin: 0 0 1em;
+  opacity: 0.85;
+}
+.page-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 1em;
+}
+.page-date {
+  margin: 0;
+  font: 500 12.5px/1 var(--font-label);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  opacity: 0.85;
+}
+.page-content {
+  margin-top: 1.5em;
+}
+.page-hero__image {
+  display: block;
+  margin: 0 auto 1.5em;
+  border-radius: var(--border-radius-sm);
+}
+.page-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2.5em;
+}
+.tag-badge {
+  font: 500 12.5px/1 var(--font-label);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  color: inherit;
+}
+.sheet table {
+  border-collapse: collapse;
+}
+.sheet th,
+.sheet td {
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+}
+blockquote {
+  margin: 1.2em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--border-color);
+}
+code {
+  font-family: var(--font-label);
+  font-size: 0.88em;
+  background: color-mix(in oklab, var(--border-color) 60%, transparent);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* ---------- footer ---------- */
+.site-footer {
+  position: relative;
+  z-index: 1;
+  padding: 6vh 20px 8vh;
+  text-align: center;
+  font: 400 13px/1.6 var(--font-label);
+  color: var(--text-light);
+}
+.site-footer a {
+  color: inherit;
+}
+.footer-search__toggle {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.footer-search__panel {
+  max-width: var(--max-width);
+  margin: 12px auto 0;
+  text-align: left;
+}

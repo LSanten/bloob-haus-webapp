@@ -427,10 +427,12 @@ code {
 @media (prefers-reduced-motion: reduce) {
   .site-footer__home svg { animation: none; }
 }
+/* the bloob.haus wordmark, set as on melt: Quicksand, bold small caps, letter-spaced */
 .bloob-wordmark {
-  font-family: "Satoshi", var(--font-label);
+  font-family: "Quicksand", var(--font-label);
   font-weight: 700;
-  letter-spacing: 0.01em;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
 }
 .sky-control {
   display: inline-flex;

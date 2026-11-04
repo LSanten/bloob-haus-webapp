@@ -1,0 +1,59 @@
+/* award-badge — theme tokens only, scoped under .award-badges.
+   Seal colours come from two local properties so a theme can recolour the seal
+   without touching the shape: --award-seal-fill (the wax) and --award-seal-ink
+   (laurel, number, ring). The label uses --font-mono when a theme defines it. */
+
+.award-badges .award-badge {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+}
+.award-badges .award-badge li { margin: 0; padding: 0; }
+.award-badges .award-badge__item { display: flex; align-items: center; gap: 14px; }
+.award-badges .award-badge__link { color: inherit; text-decoration: none; }
+.award-badges .award-badge__link:hover .award-badge__title { text-decoration: underline; text-underline-offset: 3px; }
+.award-badges .award-badge__link:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 3px; }
+
+.award-badges .award-badge__name {
+  font-family: var(--font-mono, var(--font-body));
+  line-height: 1.35;
+}
+.award-badges .award-badge__name > span { display: block; }
+
+/* The seal */
+.award-badges .award-seal { display: block; flex: none; }
+.award-badges .award-seal__wax { fill: var(--award-seal-fill, var(--accent-color)); }
+.award-badges .award-seal__tail { opacity: 0.8; }
+.award-badges .award-seal__ink { fill: var(--award-seal-ink, var(--bg-color)); }
+.award-badges .award-seal__ring { fill: none; stroke: var(--award-seal-ink, var(--bg-color)); stroke-width: 1.4; opacity: 0.55; }
+.award-badges .award-seal__stem { fill: none; stroke: var(--award-seal-ink, var(--bg-color)); stroke-width: 1.1; opacity: 0.8; }
+.award-badges .award-seal__vein { fill: none; stroke: var(--award-seal-fill, var(--accent-color)); stroke-width: 1.6; }
+.award-badges .award-seal__num { font-family: var(--font-heading); font-weight: 700; }
+
+/* tab: a block for a hero image's edge */
+.award-badges .award-badge--tab {
+  --award-seal-fill: var(--award-tab-seal, var(--bg-color));
+  --award-seal-ink: var(--accent-color);
+  display: grid;
+  background: var(--accent-color);
+  color: var(--bg-color);
+  padding: 4px 18px;
+  max-width: 100%;
+}
+.award-badges .award-badge--tab .award-badge__item { padding-top: 10px; padding-bottom: 10px; }
+.award-badges .award-badge--tab li + li { border-top: 1px solid color-mix(in srgb, var(--bg-color) 25%, transparent); }
+.award-badges .award-badge--tab .award-badge__name { font-size: 0.82rem; }
+.award-badges .award-badge--tab .award-badge__title { font-weight: 700; }
+.award-badges .award-badge--tab .award-badge__sub { opacity: 0.85; }
+
+/* seal: seal + label, wraps to several per row */
+.award-badges .award-badge--seal { display: flex; flex-wrap: wrap; gap: 14px 30px; }
+.award-badges .award-badge--seal .award-badge__name { font-size: 0.92rem; color: var(--accent-color); }
+
+/* line: tiny seal + one line, for cards */
+.award-badges .award-badge--line { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.award-badges .award-badge--line .award-badge__item { gap: 7px; align-items: flex-start; }
+.award-badges .award-badge--line .award-badge__name { font-size: 0.74rem; color: var(--accent-color); }
+.award-badges .award-badge--line .award-badge__name > span { display: inline; }
+.award-badges .award-badge--line .award-badge__sub::before { content: " · "; }

@@ -1,0 +1,12 @@
+{
+  "name": "carousel",
+  "type": "build-time",
+  "activation": "container",
+  "trigger": "carousel",
+  "description": "Photo carousel from a ::: carousel container: one image per slide with an optional caption line under it. The centre photo is large, its neighbours peek in smaller at the sides. Works without JavaScript as a swipeable scroll-snap row; browser.js adds the centred effect, arrows and keys.",
+  "detect": {
+    "selectors": [
+      ".carousel"
+    ]
+  }
+}

@@ -96,6 +96,8 @@
 .carousel .carousel__btn {
   width: 2.4rem;
   height: 2.4rem;
+  padding: 0;               /* themes often pad <button>; the glyph must stay centred */
+  margin: 0;
   display: grid;
   place-items: center;
   font-size: 1.5rem;

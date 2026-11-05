@@ -39,6 +39,7 @@ The original steam boilers. They came out during the project.
 | `ratio` | `3/2` | Frame shape for every photo, e.g. `4/3`, `16/9`, `1/1` (square posters). |
 | `fit` | `contain` | `contain` shows the whole photo inside the frame (nothing cropped, transparency kept). `cover` fills the frame and crops. |
 | `label` | `Photos` | What a screen reader calls the carousel. |
+| `loop` | off | `loop=true` (or `loop=infinite`): endless in both directions. The last photo already peeks in on the left of the first, and arrows, keys and swiping wrap around. Needs 3+ photos; without JavaScript it is a plain row. |
 
 ```markdown
 ::: carousel ratio=1/1

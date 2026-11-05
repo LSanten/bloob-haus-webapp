@@ -38,20 +38,25 @@
   display: grid;
   align-content: start;
   gap: 0.6rem;
-  transform-origin: 50% 40%;
+}
+/* The scaling/fading is on the slide's CONTENTS, never on the slide itself: scroll-snap
+   measures the slide's transformed box, so a slide that animates its own transform makes
+   the snap point move mid-scroll and the photo twitches into place. */
+.carousel .carousel__slide > * {
+  transform-origin: 50% 50%;
   transition: transform 0.4s ease, opacity 0.4s ease;
 }
 .carousel.is-ready .carousel__slide { cursor: pointer; }
 .carousel.is-ready .carousel__slide.is-active { cursor: auto; position: relative; z-index: 1; }  /* neighbours tuck in underneath */
-.carousel.is-ready .carousel__slide.is-before {
+.carousel.is-ready .carousel__slide.is-before > .carousel__media {
   transform: translateX(var(--carousel-side-shift)) scale(var(--carousel-side-scale));
   opacity: 0.6;
 }
-.carousel.is-ready .carousel__slide.is-after {
+.carousel.is-ready .carousel__slide.is-after > .carousel__media {
   transform: translateX(calc(var(--carousel-side-shift) * -1)) scale(var(--carousel-side-scale));
   opacity: 0.6;
 }
-.carousel.is-ready .carousel__slide.is-far { opacity: 0; }
+.carousel.is-ready .carousel__slide.is-far > * { opacity: 0; }
 
 .carousel .carousel__media {
   aspect-ratio: var(--carousel-ratio);
@@ -128,6 +133,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .carousel .carousel__slide,
+  .carousel .carousel__slide > *,
   .carousel .carousel__caption { transition: none; }
 }
+
+/* loop=true: the renderer adds copies of the last/first photos at the ends. Without
+   JavaScript there is no looping, so the copies stay out of the plain row. */
+.carousel:not(.is-ready) .carousel__slide[data-clone] { display: none; }
+/* The jump from a copy to the real photo is instant and must not animate. */
+.carousel.is-jumping .carousel__slide > *,
+.carousel.is-jumping .carousel__caption { transition: none; }

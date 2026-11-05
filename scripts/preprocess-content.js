@@ -798,7 +798,12 @@ export async function preprocessContent({
     // (src/_share/ is copied to the site as is, never read as a page).
     if (themeHasObjects && pageInfo && bloobShapeLayout && templateShapes.get(effectiveShape)?.manifest?.shares) {
       const sharePath = path.join(outputDir, "_share", pageInfo.url, "source.md");
-      await fs.outputFile(sharePath, cleanMarkdownForSharing(rawContent, { publishedSlugs }));
+      await fs.outputFile(sharePath, cleanMarkdownForSharing(rawContent, {
+        publishedSlugs,
+        dates: { created: outputFrontmatter.date_created, updated: outputFrontmatter.date_updated },
+        siteUrl: siteConfig.site?.url,
+        resolveImage: (ref) => resolveAttachmentPath(ref, attachmentIndex, { sourceVaultPath: file.relativePath }),
+      }));
     }
 
     // Reconstruct the file with frontmatter

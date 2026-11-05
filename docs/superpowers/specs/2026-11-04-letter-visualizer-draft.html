@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letter visualizer draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Courier+Prime:ital,wght@0,400;1,400&family=Kalam:wght@300;400&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Plan: the bloob-haus-26 base (dawn by day, dusk with a warm lamp by night, dot grid), one envelope
+   drawn as an object on it. Layout: a narrow reading column; the live envelope first, then every
+   state side by side, then the letter in a locker, then what it reads. */
+:root {
+  --bg: #f3efe7;
+  --world-1: #d5e7ef;
+  --world-2: #f7e1c8;
+  --world-3: #d8eadb;
+  --glow: rgba(214, 140, 70, 0);
+  --dot: rgba(80, 55, 40, 0.16);
+  --text: #2a2118;
+  --muted: #6e5848;
+  --accent: #8a4b23;
+  --line: rgba(120, 90, 50, 0.2);
+  --card: rgba(251, 248, 241, 0.72);
+  --shadow: rgba(70, 50, 20, 0.34);
+  --lamp: 0;
+  --font-body: "Newsreader", Georgia, serif;
+  --font-label: "Instrument Sans", system-ui, sans-serif;
+  --font-hand: "Caveat", "Bradley Hand", cursive;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-sky="day"]) {
+    --bg: #1b1a24; --world-1: #3a2d4f; --world-2: #1c3440; --world-3: #1b1a24; --glow: rgba(214, 140, 70, 0.45);
+    --dot: rgba(255, 235, 215, 0.13); --text: #ece6dc; --muted: #c4b8cc; --accent: #e2b07a;
+    --line: rgba(255, 235, 215, 0.16); --card: rgba(36, 33, 48, 0.72); --shadow: rgba(0, 0, 0, 0.7); --lamp: 1;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]:not([data-sky="day"]), :root[data-sky="night"] {
+  --bg: #1b1a24; --world-1: #3a2d4f; --world-2: #1c3440; --world-3: #1b1a24; --glow: rgba(214, 140, 70, 0.45);
+  --dot: rgba(255, 235, 215, 0.13); --text: #ece6dc; --muted: #c4b8cc; --accent: #e2b07a;
+  --line: rgba(255, 235, 215, 0.16); --card: rgba(36, 33, 48, 0.72); --shadow: rgba(0, 0, 0, 0.7); --lamp: 1;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background:
+    radial-gradient(60vmax 50vmax at 100% 0%, var(--glow), transparent 70%),
+    radial-gradient(70vmax 60vmax at 0% 0%, var(--world-1), transparent 70%),
+    radial-gradient(70vmax 60vmax at 100% 10%, var(--world-2), transparent 70%),
+    radial-gradient(80vmax 70vmax at 30% 100%, var(--world-3), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font: 18px/1.55 var(--font-body);
+  min-height: 100%;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+main { position: relative; max-width: 760px; margin: 0 auto; padding: 48px 20px 96px; display: grid; gap: 56px; }
+header { display: grid; gap: 10px; }
+h1 { font-weight: 500; font-size: clamp(32px, 6vw, 44px); line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-weight: 500; font-size: 26px; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 60ch; }
+.label { font: 600 12px/1.3 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 18px; }
+p { margin: 0; max-width: 62ch; }
+
+/* ---- controls ---- */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font: 500 14px/1.2 var(--font-label); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--card); }
+.seg button { font: inherit; color: var(--text); background: none; border: 0; padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.seg button:focus-visible, .btn:focus-visible, .envelope-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.bh-sticker { cursor: grab; touch-action: none; }
+.bh-sticker:active { cursor: grabbing; }
+label.btn { display: inline-block; }
+.letter-look { display: grid; justify-items: center; gap: 10px; font: 500 14px/1.2 var(--font-label); }
+.settings-block { margin: 0; font: 13px/1.5 ui-monospace, Menlo, monospace; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; }
+.own-stamp { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; font: 500 14px/1.2 var(--font-label); color: var(--muted); }
+.own-stamp input { font: 500 15px/1.2 var(--font-label); color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 14em; }
+.own-stamp input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 500 14px/1.2 var(--font-label); color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+
+/* ---- the stage ---- */
+.stage { display: grid; justify-items: center; gap: 14px; padding: 28px 0 8px; }
+.envelope-hit { background: none; border: 0; padding: 0; cursor: pointer; width: min(440px, 100%); border-radius: 10px; }
+.hint { font: 500 14px/1.3 var(--font-label); color: var(--muted); display: flex; gap: 10px; align-items: center; min-height: 20px; }
+.dots { letter-spacing: 3px; }
+
+/* the object: an SVG envelope with its own light and contact shadow */
+.bh-letter { display: block; width: 100%; height: auto; overflow: visible; }
+.bh-letter .lamp { opacity: calc(var(--lamp) * 0.55); pointer-events: none; }
+[hidden] { display: none !important; }
+.peek-host { width: 600px; text-align: left; font: 18px/1.55 var(--font-body); color: #2a2118; }
+.peek-host .bh-paper { --open: 1; transition: none; box-shadow: none; border-radius: 0; }
+.bh-peek-paper { transition: transform 480ms cubic-bezier(.3,.6,.2,1), opacity 420ms ease-in; }
+.bh-peek-paper.out { transform: translateY(-160px); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .bh-peek-paper { transition: none; } }
+
+/* the open letter: paper folded in thirds, unfolding */
+.paper-wrap { width: min(600px, 100%); perspective: 1400px; }
+.bh-paper {
+  --open: 1;
+  position: relative; background: #fbf7ee; color: #2a2118;
+  border-radius: 3px; padding: 44px clamp(22px, 6vw, 56px) 40px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 18px 40px -18px var(--shadow), 0 4px 10px -6px var(--shadow);
+  transform-origin: 50% 0;
+  transform: rotateX(calc((1 - var(--open)) * 70deg)) scaleY(calc(0.34 + var(--open) * 0.66));
+  opacity: calc(0.2 + var(--open) * 0.8);
+  transition: transform 700ms cubic-bezier(.2,.7,.2,1), opacity 500ms;
+}
+.bh-paper::before, .bh-paper::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(80,60,30,0.16) 12%, rgba(80,60,30,0.16) 88%, transparent);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.7);
+}
+.bh-paper::before { top: 33.3%; }
+.bh-paper::after { top: 66.6%; }
+.bh-paper .date { font: 500 13px/1 var(--font-label); letter-spacing: 0.04em; color: #7a6a58; text-align: right; margin-bottom: 26px; }
+.bh-paper .greet { font: 600 30px/1 var(--font-hand); margin: 0 0 16px; }
+.bh-paper .body p { margin: 0 0 14px; max-width: none; }
+.bh-paper .sign { font: 600 30px/1 var(--font-hand); text-align: right; margin-top: 22px; }
+.bh-paper.font-typewriter .body { font: 16px/1.65 "Courier Prime", "Courier New", monospace; letter-spacing: 0.01em; }
+.bh-paper.font-handwritten .body { font: 300 20px/1.55 "Kalam", "Caveat", cursive; }
+.bh-paper.font-sans .body { font: 16.5px/1.6 var(--font-label); }
+.bh-paper .sign small { display: block; font: 500 12px/1.4 var(--font-label); color: #7a6a58; letter-spacing: 0.04em; margin-bottom: 6px; }
+@media (prefers-reduced-motion: reduce) { .bh-paper { transition: none; } }
+
+/* ---- states gallery ---- */
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px 18px; }
+.state { display: grid; gap: 8px; align-content: start; }
+.state figcaption { font: 500 13px/1.4 var(--font-label); color: var(--muted); }
+.state figcaption b { color: var(--text); font-weight: 600; display: block; }
+figure { margin: 0; }
+
+/* ---- the locker shelf ---- */
+.shelf { position: relative; display: flex; justify-content: center; align-items: flex-end; padding: 18px 10px 0; min-height: 190px; margin-bottom: 26px; }
+.shelf { flex-direction: row-reverse; justify-content: flex-end; padding-left: 4%; }
+.shelf .slot { position: relative; width: 200px; margin-right: -78px; }
+.shelf .slot > svg { transition: transform 200ms; transform-origin: 50% 100%;
+  transform: rotate(calc(var(--i) * 2.5deg - 2deg)) translateY(calc(var(--i) * -3px)) scale(calc(1 - var(--i) * 0.05)); }
+.shelf .slot.newest > svg { transform: rotate(-2deg) translateY(4px); }
+.shelf .slot:hover { z-index: 20 !important; }
+.shelf .slot:hover > svg { transform: translateY(-10px); }
+.slot-date { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font: 500 12px/1.2 var(--font-label); color: var(--muted); opacity: 0; transition: opacity 200ms; }
+.shelf .slot.newest .slot-date, .shelf .slot:hover .slot-date { opacity: 1; }
+.shelf::after { content: ""; position: absolute; left: 4%; right: 4%; bottom: -10px; height: 12px; border-radius: 3px;
+  background: linear-gradient(#b48a5c, #8d6640); box-shadow: 0 8px 14px -6px var(--shadow); }
+
+/* ---- notes ---- */
+.notes { display: grid; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+.notes ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.notes code { font: 14px/1.4 ui-monospace, Menlo, monospace; }
+@media (max-width: 420px) { .shelf .slot { width: 140px; margin-right: -60px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="label">Bloob Haus · visualizer draft · 4 Nov 2026</span>
+    <h1>The letter, drawn as a letter</h1>
+    <p class="lede">A first look at what replaces the post office's character-art envelope. Same rules as today: the outside is drawn from the envelope alone, three taps tear it open, and only then does the letter inside unfold. Comment on anything that feels off.</p>
+  </header>
+
+  <section aria-labelledby="try">
+    <h2 id="try">Try it</h2>
+    <div class="controls">
+      <span class="seg" role="group" aria-label="Stamp">
+        <button type="button" data-stamp="" aria-pressed="false">No stamp</button>
+        <button type="button" data-stamp="no-rush" aria-pressed="true">No rush</button>
+        <button type="button" data-stamp="please-open-soon" aria-pressed="false">Open soon</button>
+        <button type="button" data-stamp="own" aria-pressed="false">Your own</button>
+      </span>
+      <span class="seg" role="group" aria-label="Light">
+        <button type="button" data-sky="" aria-pressed="true">System</button>
+        <button type="button" data-sky="day" aria-pressed="false">Day</button>
+        <button type="button" data-sky="night" aria-pressed="false">Night</button>
+      </span>
+      <button type="button" class="btn" id="reset">Seal it again</button>
+      <label class="btn" for="sticker-file">Add a sticker</label>
+      <input type="file" id="sticker-file" accept="image/*" hidden>
+      <button type="button" class="btn" id="sample">Try a sample sticker</button>
+      <button type="button" class="btn" id="clear-stickers">Peel them off</button>
+      <button type="button" class="btn" id="lots" aria-pressed="false">Write a lot on it</button>
+    </div>
+    <div class="stage">
+      <button type="button" class="envelope-hit" id="hit" aria-describedby="hint"></button>
+      <div class="hint" id="hint" aria-live="polite"></div>
+      <div class="own-stamp" id="own-stamp" hidden>
+        <label for="stamp-words">Words on the stamp</label>
+        <input id="stamp-words" maxlength="30" value="thinking of you">
+        <span class="seg" role="group" aria-label="Stamp picture">
+          <button type="button" data-art="heart" aria-pressed="true">Heart</button>
+          <button type="button" data-art="leaf" aria-pressed="false">Leaf</button>
+          <button type="button" data-art="wave" aria-pressed="false">Wave</button>
+          <button type="button" data-art="moon" aria-pressed="false">Moon</button>
+          <button type="button" data-art="sun" aria-pressed="false">Sun</button>
+        </span>
+        <label class="btn" for="stamp-file">Your own picture</label>
+        <input type="file" id="stamp-file" accept="image/*" hidden>
+      </div>
+      <div class="hint" id="sticker-hint" hidden>Drag a sticker to move it. Scroll over it to resize, or use <button type="button" class="btn" id="smaller" aria-label="Make the last sticker smaller">−</button><button type="button" class="btn" id="bigger" aria-label="Make the last sticker bigger">+</button></div>
+      <div class="paper-wrap" id="paper" hidden></div>
+      <div class="letter-look">
+        <span class="seg" role="group" aria-label="Letter font">
+          <button type="button" data-font="serif" aria-pressed="true">Serif</button>
+          <button type="button" data-font="typewriter" aria-pressed="false">Typewriter</button>
+          <button type="button" data-font="handwritten" aria-pressed="false">Handwritten</button>
+          <button type="button" data-font="sans" aria-pressed="false">Sans</button>
+        </span>
+        <pre class="settings-block" id="settings-block" aria-label="What this adds to the letter"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="states">
+    <h2 id="states">Every state, side by side</h2>
+    <div class="states" id="gallery"></div>
+  </section>
+
+  <section aria-labelledby="locker">
+    <h2 id="locker">In a locker</h2>
+    <p>The closed state is the letter's calling card in someone else's space. A locker's letters stand newest to oldest from left to right: the newest in front, here still sealed and asking to be opened soon, the older ones fanned out behind it. Hover one to lift it.</p>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <section aria-labelledby="reads">
+    <div class="notes">
+      <h2 id="reads">What it reads, and what it doesn't</h2>
+      <ul>
+        <li><b>Outside only, while closed.</b> To, from, the postmark, the stamp, intention, need, stickers and your own envelope fields. Never a word of the inside: a sealed letter can't be read, so the drawing never needs it.</li>
+        <li><b>Stamps</b> come as two presets or your own: your words (up to 30 characters) with a drawn picture or one you upload. The envelope already accepts any words as its stamp; only the picture is new.</li>
+        <li><b>Ink and stickers look made, not printed.</b> The handwriting is blue-black ink with a slightly rough edge and uneven density, blended into the paper so its fibres show through. Every sticker gets a white die-cut border that follows the picture's own edge, transparent PNGs included.</li>
+        <li><b>The letter's own look</b> is set inside the letter, in a <code>::: settings</code> block at the top of its body (<code>font: typewriter</code>, later perhaps <code>paper: lined</code>). The shape is still declared in the YAML; the block only tunes it, and with the defaults there is no block at all. Because it sits inside, it is sealed with the letter. The greeting always comes from the envelope's <code>to</code>, so the renderer knows exactly where it ends.</li>
+        <li><b>Stickers</b> are yours to place anywhere on the outside: upload a picture or try the sample, drag it, resize it. Here they live only in this page. Where they would be stored for a real letter (the post office can read the outside, and pictures are too big to write into the envelope itself) is a structure question, parked for later.</li>
+        <li><b>One date at a glance.</b> The postmark carries the date once the post office has the letter. The written date joins it in pencil only when it is a different day, like a draft finished later or a date you chose, and stands alone before the letter is postmarked. It is always at the top of the letter paper too.</li>
+        <li><b>The first lines show wherever the key is.</b> Everyone in the locker holds its key, so their browser unseals each opened letter and draws the paper peeking out with its first lines. The post office itself never has the key, so where it draws a letter (a link preview, the Your lockers list) the flap is torn and the paper blank. The haus's notes follow the same rule: first lines only where the note can be read.</li>
+        <li><b>Opened is the office's stamp.</b> A letter someone opened shows its torn flap to everyone holding the link, the same fact the character art shows today with "opened".</li>
+        <li><b>Four pure functions</b>, like the post office's <code>closed.ts</code>: <code>renderClosed(envelope)</code>, <code>renderTearing(envelope, tears)</code>, <code>renderOpened(envelope, firstLines)</code> and <code>renderOpen(envelope, body)</code>. Data in, HTML out, so the post office, a haus and the visualizer catalog draw the same letter.</li>
+        <li><b>The light</b> comes from the top right, like the haus's sun by day and its lamp at dusk. Paper and wax keep their own colors at night; only the light changes.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===== the renderer: pure functions, envelope in, markup out ===== */
+
+const W = 360, H = 236, PAD = 10;
+const FLAP_TIP = { x: W / 2, y: 112 };
+const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const fit = (s, n) => { s = String(s ?? ""); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+
+// A small deterministic number from a string, so the same envelope always draws the same way.
+function seedOf(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+
+// The flap's lower edges at x: where the triangle's edge is.
+const flapEdgeY = (x) => PAD + (FLAP_TIP.y - PAD) * (1 - Math.abs(x - W / 2) / (W / 2 - PAD));
+
+// A torn edge: a ragged vertical line at x from the top down to the flap's edge.
+function tornEdge(x, rand) {
+  const pts = [];
+  const bottom = flapEdgeY(x);
+  for (let y = PAD; y < bottom; y += 7) pts.push([x + (rand() - 0.5) * 7, y]);
+  pts.push([x, bottom]);
+  return pts;
+}
+
+// The opened letter peeks out of its envelope: its first lines, readable above the torn edge.
+const RISE = 48;
+function wrapLines(text, width, max) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const out = []; let line = "", used = 0;
+  for (const word of words) {
+    if (!line) line = word;
+    else if ((line + " " + word).length <= width) line += " " + word;
+    else { out.push(line); line = word; if (out.length === max) break; }
+    used++;
+  }
+  if (line && out.length < max) out.push(line);
+  // An ellipsis only when words were left out.
+  if (used < words.length && out.length) out[out.length - 1] = out[out.length - 1].replace(/[.,;:]?$/, "…");
+  return out;
+}
+// The peek IS the open letter (Leon: "the same object, just smaller and cut off"): renderOpen's
+// paper, scaled into the envelope and clipped by its opening, so the two can never disagree.
+const PAPER_W = 600;
+function peekSvg(paperHtml, flap) {
+  const x = PAD + 28, w = W - 2 * PAD - 56, top = PAD - RISE, k = w / PAPER_W;
+  return `<clipPath id="bh-peek-clip"><rect x="0" y="-400" width="${W}" height="${400 + PAD}"/><polygon points="${flap}"/></clipPath>
+  <g clip-path="url(#bh-peek-clip)"><g class="bh-peek-paper">
+    <rect x="${x}" y="${top}" width="${w}" height="${H}" rx="1.5" fill="#fbf7ee" filter="url(#bh-soft)"/>
+    <foreignObject x="0" y="0" width="${PAPER_W}" height="${H / k}" transform="translate(${x} ${top}) scale(${k.toFixed(4)})">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="peek-host">${paperHtml}</div>
+    </foreignObject>
+  </g></g>
+  <g clip-path="url(#bh-inside)">
+    <polygon points="${flap}" fill="url(#bh-deep)"/>
+    <polyline points="${PAD},${PAD + 2} ${FLAP_TIP.x},${FLAP_TIP.y + 2} ${W - PAD},${PAD + 2}" fill="none" stroke="#3a2410" stroke-opacity="0.45" stroke-width="7" filter="url(#bh-lip-shadow)"/>
+  </g>
+  <polyline points="${PAD},${PAD} ${FLAP_TIP.x},${FLAP_TIP.y} ${W - PAD},${PAD}" fill="none" stroke="#f7ecd4" stroke-width="1.3" clip-path="url(#bh-body)"/>`;
+}
+
+// What the writer put on the outside, laid out from the bottom up: the notes (intention, need,
+// your own fields) sit along the bottom edge, and who it is to and from rises above them as they
+// grow. Long names and many notes write smaller; past five note lines the rest is counted, not cut
+// silently ("+ 3 more").
+const MACHINERY = new Set(["to", "from", "date_created", "date_postmarked", "timing", "stamp", "stamp_art", "intention", "need", "opened", "fetched", "stickers"]);
+function layoutWriting(env, MAX = 5) {
+  const own = Object.keys(env).filter((k) => !MACHINERY.has(k) && !k.startsWith("sealed-") && !k.startsWith("bloob") && typeof env[k] === "string" && env[k]);
+  const items = [env.intention, env.need && `need: ${env.need}`, ...own.map((k) => `${k.replace(/_/g, " ")}: ${env[k]}`)].filter(Boolean);
+  const many = items.length > 2 || items.some((t) => t.length > 40);
+  const stamped = env.timing || env.stamp_art || env.date_postmarked;
+  const noteSize = many ? 11 : 13, width = Math.floor((stamped ? 200 : 290) / (0.34 * (many ? 11 : 13))), lineH = many ? 10.5 : 12;
+  let lines = items.flatMap((t) => wrapLines(t, width, 2));
+  if (lines.length > MAX) { const rest = lines.length - (MAX - 1); lines = [...lines.slice(0, MAX - 1), `+ ${rest} more`]; }
+  const base = H - PAD - 10;                       // the last note line sits here
+  const notesTop = base - (lines.length - 1) * lineH;
+  // Names shrink to the free width left of the stamp and postmark (Caveat runs about 0.34 em per
+  // letter); a very long "to" wraps onto two lines instead of shrinking further.
+  const free = env.timing || env.stamp_art || env.date_postmarked ? 188 : 290;
+  const sizeFor = (text, max, min) => Math.max(min, Math.min(max, free / (Math.max(text.length, 1) * 0.34)));
+  const toName = env.to ? `to ${env.to}` : "", fromName = env.from ? `from ${fit(env.from, 60)}` : "";
+  let toSize = sizeFor(toName, 29, 18), toLines = [toName].filter(Boolean);
+  if (toName && toName.length * 0.34 * 18 > free) { toSize = 18; toLines = wrapLines(toName, Math.floor(free / (0.34 * 18)), 2); }
+  const fromSize = sizeFor(fromName, 20, 13);
+  const fromLine = fromName && fromName.length * 0.34 * fromSize > free ? fit(fromName, Math.floor(free / (0.34 * fromSize))) : fromName;
+  const fromY = Math.min(192, notesTop - (lines.length ? 14 : 0));
+  const toY = fromY - (fromName ? fromSize + 6 : 0) - (toLines.length - 1) * (toSize + 2);
+  // Never write over the wax seal: if the names would rise into it, fold one more note line away.
+  const SEAL_CLEAR = FLAP_TIP.y + 24;
+  if (MAX > 1 && toLines.length && toY - toSize * 0.8 < SEAL_CLEAR && lines.length > 1) return layoutWriting(env, Math.min(MAX, lines.length) - 1);
+  return {
+    svg: [
+      ...toLines.map((t, i) => `<text x="38" y="${(toY + i * (toSize + 2)).toFixed(1)}" font-family="Caveat, cursive" font-size="${toSize.toFixed(1)}" font-weight="600" fill="#16234a">${esc(t)}</text>`),
+      fromLine && `<text x="40" y="${fromY.toFixed(1)}" font-family="Caveat, cursive" font-size="${fromSize.toFixed(1)}" font-weight="500" fill="#1c2a55">${esc(fromLine)}</text>`,
+      ...lines.map((t, i) => `<text x="40" y="${(notesTop + i * lineH).toFixed(1)}" font-family="Caveat, cursive" font-size="${noteSize}" fill="#4a556e">${esc(t)}</text>`),
+    ].filter(Boolean).join(""),
+  };
+}
+
+// One date at a glance: the postmark's, when there is one. The written date joins it in pencil
+// only when it is a different day (a draft finished later, a date the writer chose), and stands
+// alone before the letter is postmarked.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const nice = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ""); return m ? `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}` : d; };
+function writtenSvg(written, postmarked) {
+  if (!written || written === postmarked) return "";
+  return `<text x="${W - PAD - 14}" y="${H - PAD - 8}" text-anchor="end" font-family="Caveat, cursive" font-size="14" fill="#6b5d4a">written ${esc(nice(written))}</text>`;
+}
+
+// Stickers: images the writer placed on the outside, each with where it sits, its turn and size.
+function stickersSvg(stickers) {
+  return (stickers || []).map((st, i) =>
+    `<g class="bh-sticker" data-i="${i}" transform="translate(${st.x.toFixed(1)} ${st.y.toFixed(1)}) rotate(${st.r || 0})">
+      <image href="${esc(st.src)}" x="${-st.w / 2}" y="${-st.w / 2}" width="${st.w}" height="${st.w}" preserveAspectRatio="xMidYMid meet" filter="url(#bh-diecut)"/>
+    </g>`).join("");
+}
+
+// Stamp pictures, drawn around the stamp's picture centre (cx, cy). A stamp shows one of these,
+// or a picture the writer uploaded, and its words: a preset or the writer's own.
+const STAMP_ART = {
+  moon: { tint: "#6d8a7a", draw: (cx, cy) => `<path d="M${cx + 6} ${cy - 11} a14 14 0 1 0 6 22 a11 11 0 1 1 -6 -22z" fill="#f3ead3"/>` },
+  sun: { tint: "#b4563a", draw: (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="9" fill="#f6d27a"/>` + Array.from({ length: 8 }, (_, i) => { const a = (i * Math.PI) / 4; return `<line x1="${cx + Math.cos(a) * 13}" y1="${cy + Math.sin(a) * 13}" x2="${cx + Math.cos(a) * 18}" y2="${cy + Math.sin(a) * 18}" stroke="#f6d27a" stroke-width="2" stroke-linecap="round"/>`; }).join("") },
+  heart: { tint: "#a8475e", draw: (cx, cy) => `<path d="M${cx} ${cy + 12} c -16 -10 -18 -22 -9 -26 c 5 -2 8 1 9 4 c 1 -3 4 -6 9 -4 c 9 4 7 16 -9 26z" fill="#f6dcdf"/>` },
+  leaf: { tint: "#5f7d4e", draw: (cx, cy) => `<path d="M${cx - 12} ${cy + 12} c 0 -18 10 -26 24 -26 c 0 16 -8 26 -24 26z" fill="#e3edd2"/><path d="M${cx - 12} ${cy + 12} l 18 -20" stroke="#5f7d4e" stroke-width="1.4"/>` },
+  wave: { tint: "#3f6b8a", draw: (cx, cy) => [0, 7, 14].map((d) => `<path d="M${cx - 16} ${cy - 6 + d} q 5 -6 10 0 t 10 0 t 10 0" fill="none" stroke="#e1edf3" stroke-width="2.2" stroke-linecap="round"/>`).join("") },
+};
+const PRESET = { "no-rush": { art: "moon", word: "no rush", sub: "open whenever" }, "please-open-soon": { art: "sun", word: "open soon", sub: "please" } };
+
+function stampSvg(timing, art) {
+  if (!timing && !art) return "";
+  const preset = PRESET[timing];
+  const artKey = art || preset?.art || "moon";
+  const uploaded = artKey.startsWith("data:");
+  const tint = uploaded ? "#7a6a58" : (STAMP_ART[artKey] ?? STAMP_ART.moon).tint;
+  const x = 262, y = 130, w = 66, h = 78, cx = x + w / 2, cy = y + 31;
+  let perf = "";
+  for (let i = 0; i <= 10; i++) { const px = x + (w * i) / 10; perf += `<circle cx="${px}" cy="${y}" r="2.4"/><circle cx="${px}" cy="${y + h}" r="2.4"/>`; }
+  for (let i = 0; i <= 12; i++) { const py = y + (h * i) / 12; perf += `<circle cx="${x}" cy="${py}" r="2.4"/><circle cx="${x + w}" cy="${py}" r="2.4"/>`; }
+  const picture = uploaded
+    ? `<clipPath id="bh-stamp-pic"><rect x="${x + 5}" y="${y + 5}" width="${w - 10}" height="${h - 30}"/></clipPath><image href="${esc(artKey)}" x="${x + 5}" y="${y + 5}" width="${w - 10}" height="${h - 30}" preserveAspectRatio="xMidYMid slice" clip-path="url(#bh-stamp-pic)"/>`
+    : (STAMP_ART[artKey] ?? STAMP_ART.moon).draw(cx, cy);
+  // Words: a preset's two lines, or the writer's own, uppercase when short, two small lines when long.
+  const words = preset ? [preset.word.toUpperCase()] : timing ? (timing.length <= 12 ? [timing.toUpperCase()] : wrapLines(timing, 15, 2)) : [];
+  const sub = preset?.sub ?? "";
+  const small = !preset && timing && timing.length > 12;
+  const wordsSvg = words.map((t, i) => `<text x="${cx}" y="${y + h - (sub ? 19 : small ? 17 - i * 0 : 13) + i * 8}" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-size="${small ? 6.8 : 8.5}" font-weight="600" fill="#fbf6ea" letter-spacing="${small ? 0.2 : 0.6}">${esc(t)}</text>`).join("");
+  return `<g transform="rotate(-4 ${cx} ${y + h / 2})" filter="url(#bh-stamp)">
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fbf6ea"/>
+    <rect x="${x + 5}" y="${y + 5}" width="${w - 10}" height="${h - 10}" fill="${tint}"/>
+    ${picture}
+    ${wordsSvg}
+    ${sub ? `<text x="${cx}" y="${y + h - 10}" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-size="6.5" fill="#fbf6ea" opacity="0.85">${esc(sub)}</text>` : ""}
+    <g fill="var(--paper-env)">${perf}</g>
+  </g>`;
+}
+
+function postmarkSvg(date, hasStamp) {
+  if (!date) return "";
+  const cx = hasStamp ? 254 : 292, cy = 150;
+  const waves = Array.from({ length: 4 }, (_, i) => `<path d="M${cx + 26} ${cy - 12 + i * 8} q 10 -5 20 0 t 20 0 t 20 0" fill="none"/>`).join("");
+  return `<g stroke="#3d4f6e" stroke-width="1.3" opacity="0.62" fill="none" transform="rotate(-9 ${cx} ${cy})">
+    <circle cx="${cx}" cy="${cy}" r="25"/><circle cx="${cx}" cy="${cy}" r="20" stroke-width="0.7"/>
+    ${hasStamp ? "" : waves}
+    <text x="${cx}" y="${cy - 5}" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-size="5.6" letter-spacing="0.8" fill="#3d4f6e" stroke="none">BLOOB HAUS</text>
+    <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-size="7" font-weight="600" fill="#3d4f6e" stroke="none">${esc(date.slice(5).replace("-", "·"))}</text>
+    <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-family="Instrument Sans, sans-serif" font-size="5.2" letter-spacing="0.6" fill="#3d4f6e" stroke="none">${esc(date.slice(0, 4))}</text>
+  </g>`;
+}
+
+// The wax seal: deep red, its highlight toward the light (top right). cracks: 0 whole, 1 cracked.
+function sealSvg(cracked, half) {
+  const { x, y } = FLAP_TIP;
+  const blob = `M${x - 18} ${y - 2} c -2 -10 8 -19 18 -19 c 12 -1 21 8 20 19 c 1 11 -9 19 -20 19 c -11 1 -20 -8 -18 -19z`;
+  const crack = cracked ? `<path d="M${x - 4} ${y - 19} l 3 9 l -4 7 l 5 8 l -2 14" fill="none" stroke="#5a170f" stroke-width="1.6" stroke-linecap="round"/>` : "";
+  const clip = half ? `clip-path="url(#bh-right-half)"` : "";
+  return `<g ${clip}>
+    <path d="${blob}" fill="#9b2d20" filter="url(#bh-soft)"/>
+    <circle cx="${x}" cy="${y}" r="11" fill="none" stroke="#7d2116" stroke-width="2"/>
+    <text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Newsreader, serif" font-style="italic" font-size="15" fill="#6b1b12">b</text>
+    <ellipse cx="${x + 7}" cy="${y - 9}" rx="6" ry="3" fill="#ffffff" opacity="0.28" transform="rotate(-30 ${x + 7} ${y - 9})"/>
+    ${crack}
+  </g>`;
+}
+
+/**
+ * The envelope at `torn` (0 = sealed, 1 = flap torn all the way). Everything comes from `env`.
+ * `tornBy`: "tearing" (this reader is tearing it) or "opened" (the office says someone opened it).
+ */
+function drawEnvelope(env, torn, peek) {
+  const rand = rng(seedOf(JSON.stringify(env)));
+  const tornX = PAD + (W - 2 * PAD) * torn;
+  const edge = torn > 0 && torn < 1 ? tornEdge(tornX, rand) : [];
+  const flap = `${PAD},${PAD} ${FLAP_TIP.x},${FLAP_TIP.y} ${W - PAD},${PAD}`;
+  // The part of the flap still there: right of the tear.
+  const keep = torn >= 1 ? "" : torn <= 0 ? flap
+    : [[tornX, PAD], [W - PAD, PAD], ...(tornX < FLAP_TIP.x ? [[FLAP_TIP.x, FLAP_TIP.y]] : []), [tornX, flapEdgeY(tornX)], ...edge.slice().reverse()]
+        .map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(" ");
+  const pocket = torn > 0;
+  const peeking = torn >= 1 && peek && peek.length > 0;
+  const lay = layoutWriting(env);
+  const hasStamp = Boolean(env.timing || env.stamp_art);
+  const label = `${env.opened || torn >= 1 ? "an opened" : torn > 0 ? "a half-torn" : "a sealed"} letter${env.to ? " to " + env.to : ""}${env.from ? " from " + env.from : ""}`;
+  const top = peeking ? -RISE - 8 : 0;
+  return `<svg class="bh-letter" viewBox="0 ${top} ${W} ${H + 24 - top}" role="img" aria-label="${esc(label)}" style="--paper-env:#eadcbf">
+  <defs>
+    <linearGradient id="bh-paper" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3e8d0"/><stop offset="1" stop-color="#e3d2b0"/>
+    </linearGradient>
+    <linearGradient id="bh-flap" x1="1" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#f6ecd6"/><stop offset="1" stop-color="#ddcaa5"/>
+    </linearGradient>
+    <linearGradient id="bh-pocket" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#8f7650"/><stop offset="1" stop-color="#c8b28a"/>
+    </linearGradient>
+    <radialGradient id="bh-lamp" cx="1" cy="0" r="1.1"><stop offset="0" stop-color="#ffb867"/><stop offset="1" stop-color="#ffb867" stop-opacity="0"/></radialGradient>
+    <filter id="bh-soft" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="-1.2" dy="1.6" stdDeviation="1.2" flood-color="#3a2410" flood-opacity="0.35"/></filter>
+    <filter id="bh-fiber" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/>
+      <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.10 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="bh-diecut" x="-25%" y="-25%" width="150%" height="150%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="2.6" result="grown"/>
+      <feGaussianBlur in="grown" stdDeviation="1.1" result="soft"/>
+      <feComponentTransfer in="soft" result="edge"><feFuncA type="linear" slope="6" intercept="-1.6"/></feComponentTransfer>
+      <feFlood flood-color="#fffdf8"/>
+      <feComposite in2="edge" operator="in" result="outline"/>
+      <feDropShadow in="outline" dx="-1" dy="1.6" stdDeviation="1.3" flood-color="#3a2410" flood-opacity="0.38" result="lifted"/>
+      <feMerge><feMergeNode in="lifted"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="bh-ink" x="-4%" y="-30%" width="108%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.8" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feGaussianBlur in="rough" stdDeviation="0.18" result="bled"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="flow"/>
+      <feColorMatrix in="flow" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0.62" result="density"/>
+      <feComposite in="bled" in2="density" operator="in"/>
+    </filter>
+    <filter id="bh-stamp" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="-0.5" dy="0.8" stdDeviation="0.6" flood-color="#3a2410" flood-opacity="0.16"/></filter>
+    <linearGradient id="bh-deep" gradientUnits="userSpaceOnUse" x1="0" y1="${PAD}" x2="0" y2="${FLAP_TIP.y}">
+      <stop offset="0" stop-color="#3a2410" stop-opacity="0.04"/><stop offset="1" stop-color="#3a2410" stop-opacity="0.34"/>
+    </linearGradient>
+    <filter id="bh-lip-shadow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="3.2"/></filter>
+    <filter id="bh-contact" x="-30%" y="-200%" width="160%" height="500%"><feGaussianBlur stdDeviation="7"/></filter>
+    <clipPath id="bh-right-half"><rect x="${FLAP_TIP.x}" y="0" width="${W}" height="${H}"/></clipPath>
+    <clipPath id="bh-inside"><polygon points="${flap}"/></clipPath>
+    <clipPath id="bh-body"><rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${H - 2 * PAD}" rx="7"/></clipPath>
+  </defs>
+  <ellipse cx="${W / 2 - 6}" cy="${H + 6}" rx="${W / 2 - 28}" ry="9" fill="var(--shadow)" filter="url(#bh-contact)"/>
+  <rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${H - 2 * PAD}" rx="7" fill="url(#bh-paper)"/>
+  <rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${H - 2 * PAD}" rx="7" fill="#fff" filter="url(#bh-fiber)"/>
+  <g clip-path="url(#bh-body)">
+  <path d="M${PAD} ${H - PAD} L${W / 2} ${H * 0.52} L${W - PAD} ${H - PAD}" fill="none" stroke="#b9a37c" stroke-width="0.8" opacity="0.6"/>
+  ${peeking ? `<polygon points="${flap}" fill="url(#bh-pocket)"/>` : ""}
+  </g>
+  ${peeking ? peekSvg(peek, flap) : ""}
+  <g clip-path="url(#bh-body)">
+  ${pocket && !peeking ? `<g clip-path="url(#bh-inside)">
+    <polygon points="${flap}" fill="url(#bh-pocket)"/>
+    <rect x="${PAD + 22}" y="${PAD + 12}" width="${W - 2 * PAD - 44}" height="120" fill="#fbf7ee"/>
+    <g stroke="#b8a888" stroke-width="0.7" opacity="0.7">${[34, 44, 54, 64].map((yy) => `<line x1="${PAD + 40}" y1="${yy}" x2="${W - PAD - 40}" y2="${yy}"/>`).join("")}</g>
+  </g>` : ""}
+  ${keep ? `<polygon points="${keep}" fill="url(#bh-flap)" stroke="#bfa880" stroke-width="0.8" filter="url(#bh-soft)"/>` : ""}
+  ${torn >= 1 && !peeking ? `<polyline points="${PAD},${PAD} ${FLAP_TIP.x},${FLAP_TIP.y} ${W - PAD},${PAD}" fill="none" stroke="#a88f66" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>` : ""}
+  </g>
+  ${torn < 1 ? sealSvg(torn > 0, torn >= 0.5) : ""}
+  ${stampSvg(env.timing, env.stamp_art)}
+  ${postmarkSvg(env.date_postmarked, hasStamp)}
+  <g filter="url(#bh-ink)" style="mix-blend-mode: multiply">
+  ${lay.svg}
+  </g>
+  <g filter="url(#bh-ink)" style="mix-blend-mode: multiply" opacity="0.8">${writtenSvg(env.date_created, env.date_postmarked)}</g>
+  ${stickersSvg(env.stickers)}
+  <rect class="lamp" x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${H - 2 * PAD}" rx="7" fill="url(#bh-lamp)"/>
+</svg>`;
+}
+
+/** Closed state: drawn from the envelope alone. `opened` (the office's stamp) shows the torn flap. */
+function renderClosed(env) { return drawEnvelope(env, env.opened ? 1 : 0); }
+
+/**
+ * Opened, drawn where the key is (everyone in the locker): the paper peeks out with its first
+ * lines (Leon's comment). The post office never holds the key, so where it draws the letter
+ * (previews, lists) it uses renderClosed's torn flap. Same rule as the haus's notes: first lines only while open to read.
+ */
+function renderOpened(env, bodyHtml, settings = {}) { return drawEnvelope({ ...env, opened: env.opened || "yes" }, 1, renderOpen(env, bodyHtml, settings)); }
+
+/** The frames between closed and open: tears of TEARS. Never says "opened". */
+const TEARS = 3;
+function renderTearing(env, tears) { return drawEnvelope(env, Math.min(Math.max(tears, 0), TEARS) / TEARS); }
+
+/** Open state: the letter paper, its body already rendered markdown (from the letter's own renderer). */
+// The inside's own look comes from the letter's ::: settings block (font: serif | typewriter |
+// handwritten | sans). It is part of the inside, so it is sealed with the letter and the closed
+// state never needs it. No block means the default, serif.
+const LETTER_FONTS = ["serif", "typewriter", "handwritten", "sans"];
+function renderOpen(env, bodyHtml, settings = {}) {
+  const first = String(env.to ?? "").split(" ")[0];
+  const font = LETTER_FONTS.includes(settings.font) ? settings.font : "serif";
+  return `<article class="bh-paper font-${font}" aria-label="The letter">
+    <div class="date">${esc(env.date_created ?? "")}</div>
+    ${first ? `<p class="greet">Dear ${esc(first)},</p>` : ""}
+    <div class="body">${bodyHtml}</div>
+    ${env.from ? `<div class="sign"><small>yours,</small>${esc(String(env.from).split(" ")[0])}</div>` : ""}
+  </article>`;
+}
+
+/* ===== the page: a host that counts taps and hands the renderer one number ===== */
+
+const base = {
+  to: "Whitney Budhi", from: "Leon Walnut Santen", date_created: "2026-11-03", date_postmarked: "2026-11-04",
+  timing: "no-rush", intention: "a small update from the workshop", need: "nothing, just to share",
+};
+const body = `<p>The marbles finally float in their rooms. You can drag one across the screen and it drifts back like it's on water. I keep doing it instead of working.</p>
+<p>The post office learned to keep one row per locker, so ours stops showing up twice. Small thing, but it made me happy.</p>
+<p>Write when you can. No rush at all.</p>`;
+
+let env = { ...base }, tears = 0, reading = false, letterSettings = {};
+const firstText = body.replace(/<[^>]+>/g, " ");
+const hit = document.getElementById("hit"), hint = document.getElementById("hint"), paper = document.getElementById("paper");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function draw() {
+  const opened = tears >= TEARS;
+  // Opened: the paper peeks out with its first lines, or, while you read it, the envelope is empty.
+  hit.innerHTML = !opened ? (tears > 0 ? renderTearing(env, tears) : renderClosed(env))
+    : reading ? renderClosed({ ...env, opened: "yes" }) : renderOpened(env, body, letterSettings);
+  const dots = "▮".repeat(tears) + "▯".repeat(TEARS - tears);
+  hint.innerHTML = opened
+    ? (reading ? "Tap the envelope to slide the letter back in." : "Tap the letter to slide it out and read it.")
+    : `<span class="dots" aria-hidden="true">${dots}</span>${tears === 0 ? "Tap three times to tear it open" : tears === 1 ? "The seal cracks. Two more." : "Almost. One more."}`;
+  hit.setAttribute("aria-label", opened ? (reading ? "Slide the letter back into its envelope" : "Take the letter out and read it") : `Tear the envelope open, ${TEARS - tears} more tap${TEARS - tears === 1 ? "" : "s"}`);
+}
+
+// Out: the peeking paper slides up and away, then the letter unfolds on the screen.
+function takeOut() {
+  const sheet = hit.querySelector(".bh-peek-paper");
+  sheet?.classList.add("out");
+  setTimeout(() => {
+    reading = true; draw();
+    paper.hidden = false;
+    paper.innerHTML = renderOpen(env, body, letterSettings);
+    const p = paper.querySelector(".bh-paper");
+    p.style.setProperty("--open", "0");
+    requestAnimationFrame(() => requestAnimationFrame(() => p.style.setProperty("--open", "1")));
+  }, reduced ? 0 : 460);
+}
+// In: the letter folds away and slides back down into the envelope.
+function putBack() {
+  paper.hidden = true; paper.innerHTML = "";
+  reading = false; draw();
+  const sheet = hit.querySelector(".bh-peek-paper");
+  if (sheet && !reduced) { sheet.classList.add("out"); sheet.getBoundingClientRect(); requestAnimationFrame(() => sheet.classList.remove("out")); }
+}
+
+hit.addEventListener("click", (e) => {
+  if (suppressClick || e.target.closest?.(".bh-sticker")) return;
+  if (tears < TEARS) {
+    tears++;
+    if (tears === TEARS) {
+      // The paper rises out of the torn envelope, then (the first time) comes out to be read.
+      draw();
+      const sheet = hit.querySelector(".bh-peek-paper");
+      if (sheet && !reduced) { sheet.classList.add("out"); sheet.style.transform = "translateY(60px)"; sheet.style.opacity = "1"; sheet.getBoundingClientRect();
+        requestAnimationFrame(() => { sheet.classList.remove("out"); sheet.style.transform = ""; sheet.style.opacity = ""; }); }
+      setTimeout(takeOut, reduced ? 300 : 1100);
+    } else draw();
+  } else if (reading) putBack();   // re-reading never re-tears
+  else takeOut();
+});
+// ---- stickers: placed by the writer, stored on the envelope, drawn by the same renderer ----
+const SAMPLE = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g transform="translate(50 50)">${[0,72,144,216,288].map((a)=>`<ellipse rx="15" ry="27" cy="-24" fill="#f2b8c6" transform="rotate(${a})"/>`).join("")}<circle r="13" fill="#f6d27a"/></g></svg>`);
+let drag = null, lastSticker = -1, suppressClick = false;
+const stickerHint = document.getElementById("sticker-hint");
+function addSticker(src) {
+  const list = [...(env.stickers || [])];
+  list.push({ src, x: 120 + Math.random() * 120, y: 60 + Math.random() * 40, r: Math.round(Math.random() * 24 - 12), w: 64 });
+  env = { ...env, stickers: list }; lastSticker = list.length - 1;
+  stickerHint.hidden = false; draw();
+}
+document.getElementById("sticker-file").addEventListener("change", (e) => {
+  const file = e.target.files?.[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => addSticker(String(reader.result));
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+document.getElementById("sample").addEventListener("click", () => addSticker(SAMPLE));
+document.getElementById("clear-stickers").addEventListener("click", () => { env = { ...env, stickers: [] }; lastSticker = -1; stickerHint.hidden = true; draw(); });
+function resize(i, factor) {
+  if (i < 0 || !env.stickers?.[i]) return;
+  env = { ...env, stickers: env.stickers.map((st, j) => (j === i ? { ...st, w: Math.min(200, Math.max(22, st.w * factor)) } : st)) };
+  draw();
+}
+document.getElementById("smaller").addEventListener("click", () => resize(lastSticker, 0.85));
+document.getElementById("bigger").addEventListener("click", () => resize(lastSticker, 1.18));
+function svgPoint(e) {
+  const svg = hit.querySelector("svg"); const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+hit.addEventListener("pointerdown", (e) => {
+  const g = e.target.closest?.(".bh-sticker"); if (!g) return;
+  e.preventDefault();
+  const i = Number(g.dataset.i), p = svgPoint(e), st = env.stickers[i];
+  drag = { i, dx: st.x - p.x, dy: st.y - p.y }; lastSticker = i; suppressClick = true;
+  hit.setPointerCapture(e.pointerId);
+});
+hit.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  const p = svgPoint(e);
+  env = { ...env, stickers: env.stickers.map((st, j) => (j === drag.i ? { ...st, x: p.x + drag.dx, y: p.y + drag.dy } : st)) };
+  draw();
+});
+hit.addEventListener("pointerup", () => { drag = null; setTimeout(() => { suppressClick = false; }, 0); });
+hit.addEventListener("wheel", (e) => {
+  const g = e.target.closest?.(".bh-sticker"); if (!g) return;
+  e.preventDefault(); lastSticker = Number(g.dataset.i);
+  resize(lastSticker, e.deltaY > 0 ? 0.93 : 1.07);
+}, { passive: false });
+
+const LOTS = {
+  to: "Whitney Budhi and everyone at the studio", from: "Leon Walnut Santen, from the workshop",
+  intention: "a long update from the workshop, with photos of the marbles and the new rooms",
+  need: "your honest opinion on the graph, and maybe a call this week if you have time",
+  mood: "tired but happy", soundtrack: "rain on the skylight all afternoon", ps: "the cat says hi",
+};
+document.getElementById("lots").addEventListener("click", (e) => {
+  const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+  e.currentTarget.setAttribute("aria-pressed", String(on));
+  e.currentTarget.textContent = on ? "Write less" : "Write a lot on it";
+  const { mood, soundtrack, ps, ...rest } = env;
+  env = on ? { ...env, ...LOTS } : { ...rest, to: base.to, from: base.from, intention: base.intention, need: base.need };
+  draw(); drawGallery(); drawShelf();
+  if (reading) paper.innerHTML = renderOpen(env, body, letterSettings);
+});
+
+const settingsBlock = document.getElementById("settings-block");
+function showSettings() {
+  settingsBlock.textContent = letterSettings.font && letterSettings.font !== "serif"
+    ? `::: settings\nfont: ${letterSettings.font}\n:::` : "No settings block: the serif default.";
+}
+document.querySelectorAll("[data-font]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-font]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  letterSettings = b.dataset.font === "serif" ? {} : { font: b.dataset.font };
+  showSettings(); draw(); drawGallery(); drawShelf();
+  if (reading) paper.innerHTML = renderOpen(env, body, letterSettings);
+}));
+showSettings();
+
+document.getElementById("reset").addEventListener("click", () => { tears = 0; reading = false; paper.hidden = true; paper.innerHTML = ""; draw(); });
+
+const ownStamp = document.getElementById("own-stamp"), stampWords = document.getElementById("stamp-words");
+let ownArt = "heart";
+function applyStamp(kind) {
+  document.querySelectorAll("[data-stamp]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.stamp === kind)));
+  ownStamp.hidden = kind !== "own";
+  const { stamp_art, ...rest } = env;
+  env = kind === "own" ? { ...rest, timing: stampWords.value.trim(), stamp_art: ownArt } : { ...rest, timing: kind };
+  draw(); drawGallery(); drawShelf();
+  if (reading) paper.innerHTML = renderOpen(env, body, letterSettings);
+}
+document.querySelectorAll("[data-stamp]").forEach((b) => b.addEventListener("click", () => applyStamp(b.dataset.stamp)));
+stampWords.addEventListener("input", () => applyStamp("own"));
+document.querySelectorAll("[data-art]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-art]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  ownArt = b.dataset.art; applyStamp("own");
+}));
+document.getElementById("stamp-file").addEventListener("change", (e) => {
+  const file = e.target.files?.[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { document.querySelectorAll("[data-art]").forEach((x) => x.setAttribute("aria-pressed", "false")); ownArt = String(reader.result); applyStamp("own"); };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+document.querySelectorAll("[data-sky]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-sky]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  if (b.dataset.sky) document.documentElement.dataset.sky = b.dataset.sky; else delete document.documentElement.dataset.sky;
+}));
+
+function drawGallery() {
+  const items = [
+    ["Sealed", "Nobody has opened it. The wax seal is whole.", renderClosed(env)],
+    ["First tap", "The seal cracks. Nothing has changed yet: a transition is not a state.", renderTearing(env, 1)],
+    ["Second tap", "The flap tears from the left; the paper inside shows.", renderTearing(env, 2)],
+    ["Opened, in the locker", "Everyone in the locker holds its key, so their browser unseals it and the paper peeks out with its first lines.", renderOpened({ ...env, opened: "2026-11-04" }, body)],
+    ["Opened, drawn without a key", "Where the post office draws the letter itself, like a link preview or the Your lockers list: it can't read the words, so the flap is torn and the paper stays blank.", renderClosed({ ...env, opened: "2026-11-04" })],
+    ["Just written", "No postmark yet, so the date it was written is the one you see, in pencil. Once postmarked, the postmark carries the date.", renderClosed({ to: "Michelle", from: "Leon", date_created: "2026-11-04" })],
+    ["A lot written on it", "Notes grow up from the bottom edge and write smaller; who it is for rises above them. Past five lines the rest is counted, never cut silently.", renderClosed({ ...base, ...LOTS, timing: env.timing, stamp_art: env.stamp_art })],
+    ["Bare", "An envelope with nothing written on it still reads as a letter.", renderClosed({})],
+  ];
+  document.getElementById("gallery").innerHTML = items.map(([t, c, svg]) =>
+    `<figure class="state">${svg}<figcaption><b>${t}</b>${c}</figcaption></figure>`).join("");
+}
+
+// A collection of letters, newest to oldest from left to right (Leon): the newest sits in front,
+// usually still sealed; older ones fan out behind it. Order comes from the postmark, as in the
+// locker room (sort: postmark).
+function drawShelf() {
+  const letters = [
+    { to: "Leon", from: "Michelle", date_created: "2026-11-04", date_postmarked: "2026-11-04", timing: "please-open-soon" },
+    { ...env, date_created: "2026-11-02", date_postmarked: "2026-11-02", opened: "2026-11-02", peek: true },
+    { to: "Leon", from: "Whitney", date_created: "2026-10-28", date_postmarked: "2026-10-29", timing: "no-rush", opened: "2026-10-30" },
+    { to: "Whitney", from: "Leon", date_created: "2026-10-20", date_postmarked: "2026-10-21", opened: "2026-10-22" },
+  ].sort((x, y) => (x.date_postmarked < y.date_postmarked ? 1 : -1));
+  // Oldest first in the page and laid out right to left, so the newest is painted last, on top.
+  document.getElementById("shelf").innerHTML = letters.map((l, i) => {
+    const { peek, ...e } = l;
+    const art = peek ? renderOpened(e, body) : renderClosed(e);
+    return `<div class="slot${i === 0 ? " newest" : ""}" style="--i:${i}; z-index:${letters.length - i}">${art}<span class="slot-date">${nice(e.date_postmarked)}${i === 0 ? " · newest" : ""}</span></div>`;
+  }).reverse().join("");
+}
+
+draw(); drawGallery(); drawShelf();
+</script>
+</body>
+</html>

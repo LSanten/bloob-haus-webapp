@@ -29,3 +29,34 @@ describe("cleanMarkdownForSharing", () => {
     expect(clean("![[AUTOPOIESIS-A]] ![[photo.png]]")).toBe("![[AUTOPOIESIS-A]] ![[photo.png]]");
   });
 });
+
+// Triage 130abcf3 (Leon, 2026-11-04): the export carries its dates, and pictures point at the
+// files the site actually serves, so a copied note still shows them anywhere.
+describe("cleanMarkdownForSharing: dates and pictures", () => {
+  const media = { "media/DSC00287.png": "/media/DSC00287.png", "photo one.png": "/media/photo one.png" };
+  const opts = (extra = {}) => ({
+    publishedSlugs: published,
+    siteUrl: "https://leons.bloob.haus",
+    resolveImage: (ref) => media[ref] ?? null,
+    ...extra,
+  });
+
+  it("adds the created and updated dates the page shows", () => {
+    const out = cleanMarkdownForSharing("---\ntitle: Hat\n---\nbody", opts({ dates: { created: "2025-09-17, Written on", updated: ["2025-10-01", "2025-12-24"] } }));
+    expect(out).toBe("---\ntitle: Hat\ndate_created: 2025-09-17\ndate_updated: 2025-12-24\n---\nbody");
+  });
+  it("leaves out an updated date that equals the created one, and any missing date", () => {
+    expect(cleanMarkdownForSharing("body", opts({ dates: { created: "2025-09-17", updated: "2025-09-17" } }))).toBe("---\ndate_created: 2025-09-17\n---\nbody");
+    expect(cleanMarkdownForSharing("body", opts({ dates: {} }))).toBe("body");
+  });
+  it("points pictures at the site's public files", () => {
+    expect(cleanMarkdownForSharing("![](media/DSC00287.png)", opts())).toBe("![](https://leons.bloob.haus/media/DSC00287.png)");
+    expect(cleanMarkdownForSharing("![[photo one.png]]", opts())).toBe("![](https://leons.bloob.haus/media/photo%20one.png)");
+    expect(cleanMarkdownForSharing("![[photo one.png|a hat]]", opts())).toBe("![a hat](https://leons.bloob.haus/media/photo%20one.png)");
+    expect(cleanMarkdownForSharing("![[photo one.png|300]]", opts())).toBe("![](https://leons.bloob.haus/media/photo%20one.png)");
+  });
+  it("leaves pictures it cannot find, web pictures and note embeds alone", () => {
+    expect(cleanMarkdownForSharing("![](gone.png) ![x](https://e.com/a.png) ![[AUTOPOIESIS-A]]", opts()))
+      .toBe("![](gone.png) ![x](https://e.com/a.png) ![[AUTOPOIESIS-A]]");
+  });
+});

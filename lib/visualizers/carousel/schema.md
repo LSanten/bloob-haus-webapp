@@ -25,7 +25,10 @@ The original steam boilers. They came out during the project.
 ## What goes inside
 
 - **Every image line starts a photo.** `![[file.jpg]]` and `![alt](file.jpg)` both work.
-  `![[file.jpg|300]]` is fine too; the width is ignored.
+- **Size from the first photo.** Obsidian's size on the *first* image sets the size for the
+  whole carousel: `![[poster.png|611]]` shows every photo 611px wide (never wider than the page
+  allows); `![[poster.png|611x400]]` also makes the frame 611:400 unless `ratio=` is given. Sizes
+  on later images are ignored.
 - **Text lines right under an image are its caption.** A caption can wrap over several lines;
   a blank line ends it.
 - **No caption is fine.** Put images on consecutive lines, or separate them with blank lines.
@@ -36,7 +39,7 @@ The original steam boilers. They came out during the project.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `ratio` | `3/2` | Frame shape for every photo, e.g. `4/3`, `16/9`, `1/1` (square posters). |
+| `ratio` | `3/2` | The shape of the frame every photo sits in, width / height: `3/2` landscape, `4/3`, `16/9`, `1/1` square (posters). Photos are fitted inside without cropping; the frame's height is its width ÷ ratio. |
 | `fit` | `contain` | `contain` shows the whole photo inside the frame (nothing cropped, transparency kept). `cover` fills the frame and crops. |
 | `label` | `Photos` | What a screen reader calls the carousel. |
 | `loop` | off | `loop=true` (or `loop=infinite`): endless in both directions. The last photo already peeks in on the left of the first, and arrows, keys and swiping wrap around. Needs 3+ photos; without JavaScript it is a plain row. |

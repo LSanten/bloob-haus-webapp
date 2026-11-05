@@ -247,3 +247,15 @@ describe('showInSearch: one of yes | quiet | no', () => {
     expect(showInSearch({ invite_search_engines: true })).toBe('quiet');
   });
 });
+
+describe('theme asset copy skips visualizer overrides (regression: AE award-badge.css clobbered shared CSS)', () => {
+  it('excludes assets/css/visualizers/** from the general theme asset copy', async () => {
+    const { isThemeAssetCopied } = await import('../../scripts/assemble-src.js');
+    const assets = path.join('themes', 'x', 'assets');
+    expect(isThemeAssetCopied(assets, path.join(assets, 'css', 'main.css'))).toBe(true);
+    expect(isThemeAssetCopied(assets, path.join(assets, 'css'))).toBe(true);
+    expect(isThemeAssetCopied(assets, path.join(assets, 'css', 'visualizers'))).toBe(false);
+    expect(isThemeAssetCopied(assets, path.join(assets, 'css', 'visualizers', 'award-badge.css'))).toBe(false);
+    expect(isThemeAssetCopied(assets, path.join(assets, 'css', 'visualizers-extra.css'))).toBe(true);
+  });
+});

@@ -1,0 +1,212 @@
+/* carousel — theme tokens only. Scoped under .carousel so a container's prose rules
+   (figure margins, img sizing) don't restyle it (see shapes.md, container-contents policy).
+
+   Without JavaScript: a swipeable scroll-snap row, every photo and caption visible.
+   With browser.js (.is-ready): the centre photo is full size, its neighbours peek in
+   smaller at the sides, captions show only under the centre photo. */
+
+.carousel {
+  --carousel-slide: 66cqi;        /* width of the centre photo, as a share of the carousel's width */
+  --carousel-ratio: 3/2;          /* frame of every photo; ::: carousel ratio=4/3 overrides */
+  --carousel-side-scale: 0.78;    /* neighbours' size relative to the centre photo */
+  --carousel-side-shift: 18%;     /* how far neighbours tuck in toward the centre */
+  position: relative;
+  container-type: inline-size;    /* cqi below = the carousel's own width, not the track's padded box */
+  margin-top: var(--spacing-md, 2rem);
+  margin-bottom: var(--spacing-md, 2rem);
+}
+
+.carousel .carousel__track {
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  padding-left: calc((100cqi - var(--carousel-slide)) / 2);
+  padding-right: calc((100cqi - var(--carousel-slide)) / 2);
+  scrollbar-width: thin;
+}
+.carousel.is-ready .carousel__track { scrollbar-width: none; }
+.carousel.is-ready .carousel__track::-webkit-scrollbar { display: none; }
+.carousel .carousel__track:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 4px; }
+
+.carousel .carousel__slide {
+  flex: 0 0 var(--carousel-slide);
+  min-width: 0;
+  margin: 0;
+  scroll-snap-align: center;
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+}
+/* The scaling/fading is on the slide's CONTENTS, never on the slide itself: scroll-snap
+   measures the slide's transformed box, so a slide that animates its own transform makes
+   the snap point move mid-scroll and the photo twitches into place. */
+.carousel .carousel__slide > * {
+  transform-origin: 50% 50%;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+.carousel.is-ready .carousel__slide { cursor: pointer; }
+.carousel.is-ready .carousel__slide.is-active { cursor: auto; position: relative; z-index: 1; }  /* neighbours tuck in underneath */
+.carousel.is-ready .carousel__slide.is-before > .carousel__media {
+  transform: translateX(var(--carousel-side-shift)) scale(var(--carousel-side-scale));
+  opacity: 0.6;
+}
+.carousel.is-ready .carousel__slide.is-after > .carousel__media {
+  transform: translateX(calc(var(--carousel-side-shift) * -1)) scale(var(--carousel-side-scale));
+  opacity: 0.6;
+}
+.carousel.is-ready .carousel__slide.is-far > * { opacity: 0; }
+
+.carousel .carousel__media {
+  aspect-ratio: var(--carousel-ratio);
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--card-bg);
+  border-radius: var(--border-radius-sm, 0);
+}
+.carousel .carousel__media > a,
+.carousel .carousel__media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.carousel .carousel__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  object-fit: contain;      /* whole photo, no cropping; transparent PNGs show the card colour */
+}
+.carousel.carousel--fit-cover .carousel__media img { object-fit: cover; }
+
+.carousel .carousel__caption {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-light, var(--text-color));
+  text-align: center;
+  /* Centred under the photo; may run a little wider than a narrow (portrait) photo. */
+  justify-self: center;
+  width: max(100%, min(32rem, 90cqi));
+  max-width: 90cqi;
+  transition: opacity 0.3s ease;
+}
+.carousel.is-ready .carousel__slide:not(.is-active) .carousel__caption { opacity: 0; }
+
+.carousel .carousel__controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.carousel .carousel__controls[hidden] { display: none; }
+.carousel .carousel__btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;               /* themes often pad <button>; the glyph must stay centred */
+  margin: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-family: var(--font-body);
+  color: var(--accent-color);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius, 50%);
+  cursor: pointer;
+}
+.carousel .carousel__btn:hover { border-color: var(--accent-color); }
+.carousel .carousel__btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.carousel .carousel__btn:disabled { opacity: 0.35; cursor: default; }
+.carousel .carousel__count {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color);
+  min-width: 3.5em;
+  text-align: center;
+}
+
+.carousel.carousel--single { --carousel-slide: 100cqi; }
+
+@media (max-width: 600px) {
+  .carousel { --carousel-slide: 82cqi; --carousel-side-shift: 8%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel .carousel__slide > *,
+  .carousel .carousel__caption { transition: none; }
+}
+
+/* loop=true: the renderer adds copies of the last/first photos at the ends. Without
+   JavaScript there is no looping, so the copies stay out of the plain row. */
+.carousel:not(.is-ready) .carousel__slide[data-clone] { display: none; }
+/* The jump from a copy to the real photo is instant and must not animate. */
+.carousel.is-jumping .carousel__slide > *,
+.carousel.is-jumping .carousel__caption { transition: none; }
+
+/* ---------- natural layout (the default, no ratio=): one height, each photo its own shape ---------- */
+.carousel.carousel--natural .carousel__track {
+  padding-left: var(--carousel-pad-start, 25cqi);
+  padding-right: var(--carousel-pad-end, 25cqi);
+}
+.carousel.carousel--natural .carousel__slide {
+  flex: 0 0 auto;
+  width: min(calc(var(--carousel-height) * var(--slide-aspect)), 90cqi);
+}
+.carousel.carousel--natural .carousel__media {
+  width: 100%;
+  aspect-ratio: var(--slide-aspect);
+}
+/* Unknown shape (no width/height on the image): fixed height, width from the photo itself */
+.carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) { width: auto; }
+.carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) .carousel__media {
+  width: auto;
+  height: var(--carousel-height);
+  aspect-ratio: auto;
+}
+.carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) .carousel__media img { width: auto; }
+
+/* ---------- zoom hint: hovering the centre photo shows a magnifier ---------- */
+.carousel .carousel__media > a.pswp-gallery__item { position: relative; }
+.carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item { cursor: zoom-in; }
+.carousel .carousel__media > a.pswp-gallery__item::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: var(--bg-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='18' fill='black'/%3E%3C/svg%3E");
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='18' fill='black'/%3E%3C/svg%3E");
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.carousel .carousel__media > a.pswp-gallery__item::before {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 2.25rem;
+  height: 2.25rem;
+  z-index: 1;
+  background-color: var(--accent-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='6.5'/%3E%3Cpath d='M21 21l5 5M16 13v6M13 16h6'/%3E%3C/svg%3E") center / 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='6.5'/%3E%3Cpath d='M21 21l5 5M16 13v6M13 16h6'/%3E%3C/svg%3E") center / 100% no-repeat;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.carousel:not(.is-ready) .carousel__media > a.pswp-gallery__item:hover::before,
+.carousel:not(.is-ready) .carousel__media > a.pswp-gallery__item:hover::after,
+.carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:hover::before,
+.carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:hover::after,
+.carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:focus-visible::before,
+.carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:focus-visible::after { opacity: 1; }

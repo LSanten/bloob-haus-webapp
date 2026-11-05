@@ -1,0 +1,12 @@
+{
+  "name": "award-badge",
+  "type": "build-time",
+  "activation": "layout-slot",
+  "trigger": "award-badge-slot",
+  "description": "Award and certification badges (wax seal + label) drawn from a page's `awards:` and `certifications:` frontmatter lists. A layout places a <div class=\"award-badge-slot\"> carrying the frontmatter; this transform replaces it. Styles: tab, seal, line.",
+  "detect": {
+    "selectors": [
+      ".award-badges"
+    ]
+  }
+}

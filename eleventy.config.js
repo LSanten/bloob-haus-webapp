@@ -17,6 +17,7 @@ import { renderRoom, roomNodes, nodesForUrls } from "./lib/visualizers/_engine/r
 import { renderObject } from "./lib/visualizers/_engine/index.js";
 import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
+import { encodeSrcset, encodeSrcsetAttributes } from "./scripts/utils/srcset-encode.js";
 import {
   detectVisualizers,
   renderAssetTags,
@@ -619,12 +620,14 @@ export default async function (eleventyConfig) {
             }
           }
 
-          const pictureHtml = Image.generateHTML(metadata, {
+          // encodeSrcsetAttributes: a file name with spaces would otherwise break srcset
+          // parsing and every browser would fall back to the large PNG (srcset-encode.js).
+          const pictureHtml = encodeSrcsetAttributes(Image.generateHTML(metadata, {
             alt,
             sizes: "(max-width: 600px) 100vw, 800px",
             loading: "lazy",
             decoding: "async",
-          });
+          }));
 
           // no-pswp: optimize but skip PhotoSwipe wrapper (e.g., images inside a Swiper gallery)
           if ((before + after).includes("no-pswp")) {
@@ -636,12 +639,12 @@ export default async function (eleventyConfig) {
           const webpImages = metadata.webp || [];
           const allImages = webpImages.length > 0 ? webpImages : (metadata.png || []);
           const largest = allImages[allImages.length - 1];
-          const pswpSrcset = webpImages.map((img) => `${img.url} ${img.width}w`).join(", ");
+          const pswpSrcset = encodeSrcset(webpImages.map((img) => `${img.url} ${img.width}w`).join(", "));
 
           const wrapped = [
             `<a class="pswp-gallery__item"`,
             ` href="${src}"`,
-            ` data-pswp-src="${largest.url}"`,
+            ` data-pswp-src="${largest.url.replace(/ /g, "%20")}"`,
             pswpSrcset ? ` data-pswp-srcset="${pswpSrcset}"` : "",
             ` data-pswp-width="${largest.width}"`,
             ` data-pswp-height="${largest.height}"`,

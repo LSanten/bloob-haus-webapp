@@ -53,7 +53,7 @@ Build-time transforms can't read frontmatter, so the layout writes a slot that c
 
 Add `awards` and `certifications` to `graph.extra_fields` for the page type in the site yaml.
 Cards drawn by `collection` (`.fp-card`) and `card-preview` (`.projects__container`) that link
-to such a page then get icon seals pinned to the top-right of their image. Sites without those
+to such a page then get icon seals pinned to the card's bottom-right corner. Sites without those
 fields see no change.
 
 ## Styling

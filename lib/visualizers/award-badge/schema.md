@@ -18,8 +18,11 @@ certifications:
 
 | Key | Each line | Notes |
 |---|---|---|
-| `awards` | NAME, LEVEL, YEAR, PLACE, LINK | PLACE: `1`, `1st` or `First Place` → seal shows "1st", label "1st Place". No place → a star. |
-| `certifications` | NAME, LEVEL, YEAR, LINK | Seal shows a leaf; label "LEED Gold / Certified 2023". |
+| `awards` | NAME, LEVEL, YEAR, PLACE, LINK | Rosette with ribbon tails. Inside: the first word of NAME ("ASHRAE") and "1st" (or the year). PLACE: `1`, `1st` or `First Place`. |
+| `certifications` | NAME, LEVEL, YEAR, LINK | Round plaque with a dotted rim. Inside: the first word of NAME ("LEED") and the LEVEL ("GOLD"). Label "LEED Gold / Certified 2023". |
+
+The icon carries the first word of NAME, so write NAME starting with the short name people
+know ("ASHRAE Technology Award", "LEED", "GreenPoint"). Long words are squeezed to fit.
 
 - Always the plural key, always a list (Obsidian gives a property one type across the vault).
   A plain string still works.
@@ -42,14 +45,22 @@ Build-time transforms can't read frontmatter, so the layout writes a slot that c
 
 | Slot attribute | Values | Default |
 |---|---|---|
-| `data-style` | `tab` (block for a hero edge), `seal` (seal + label), `line` (compact, for cards) | `tab` |
-| `data-edge` | `wax`, `scallop`, `star`, `circle`, `ribbon` | `wax` |
+| `data-style` | `tab` (block for a hero edge), `seal` (seal + label), `line` (compact), `icon` (seals only) | `tab` |
+| `data-edge` | award outline: `ribbon`, `wax`, `scallop`, `star`, `circle` (certifications are always a plaque) | `ribbon` |
 | `data-placement` | any word, added as `award-badges--<word>` for theme positioning | none |
+
+## On cards (automatic, opt-in by config)
+
+Add `awards` and `certifications` to `graph.extra_fields` for the page type in the site yaml.
+Cards drawn by `collection` (`.fp-card`) and `card-preview` (`.projects__container`) that link
+to such a page then get icon seals pinned to the top-right of their image. Sites without those
+fields see no change.
 
 ## Styling
 
-Theme tokens only. Recolour the seal with `--award-seal-fill` / `--award-seal-ink`, the tab's
-seal with `--award-tab-seal`. Labels use `--font-mono` when the theme defines it, else the body
+Theme tokens only. Recolour the seal with `--award-seal-fill` / `--award-seal-ink`, the ribbon tails with
+`--award-ribbon-fill`, the tab's seal with `--award-tab-seal`. Plaques carry a
+`award-seal--level-<level>` class (e.g. `award-seal--level-gold`) for per-level colours. Labels use `--font-mono` when the theme defines it, else the body
 font. Theme overrides: `themes/<theme>/assets/css/visualizers/award-badge.css`.
 
 No JavaScript: the seal is inline SVG, the label is real text.

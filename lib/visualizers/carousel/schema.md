@@ -25,10 +25,13 @@ The original steam boilers. They came out during the project.
 ## What goes inside
 
 - **Every image line starts a photo.** `![[file.jpg]]` and `![alt](file.jpg)` both work.
-- **Size from the first photo.** Obsidian's size on the *first* image sets the size for the
-  whole carousel: `![[poster.png|611]]` shows every photo 611px wide (never wider than the page
-  allows); `![[poster.png|611x400]]` also makes the frame 611:400 unless `ratio=` is given. Sizes
-  on later images are ignored.
+- **Every photo keeps its own shape** (the default). All photos are shown at the same height,
+  each at its own width: a portrait photo is a narrow slide, a panorama a wide one. Nothing is
+  cropped or boxed in, and the carousel never changes height while you slide.
+- **Size from the first photo, as in Obsidian.** `![[poster.png|611]]` on the *first* image shows
+  that photo 611px wide; the height that gives it becomes the height of every photo.
+  `![[poster.png|611x400]]` means 611 wide, 400 tall. Sizes on later images are ignored. Widths
+  never exceed 90% of the carousel, so phones shrink everything to fit.
 - **Text lines right under an image are its caption.** A caption can wrap over several lines;
   a blank line ends it.
 - **No caption is fine.** Put images on consecutive lines, or separate them with blank lines.
@@ -39,17 +42,20 @@ The original steam boilers. They came out during the project.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `ratio` | `3/2` | The shape of the frame every photo sits in, width / height: `3/2` landscape, `4/3`, `16/9`, `1/1` square (posters). Photos are fitted inside without cropping; the frame's height is its width ÷ ratio. |
+| `height` | `420` | Height of every photo in px, when the first image carries no size. |
+| `ratio` | off | Switches to **frames**: every photo sits in the same frame shape, width / height (`3/2`, `4/3`, `1/1`…), fitted inside without cropping. Use it when you want identical slides; `\|611` on the first image then sets the frame's width. |
 | `fit` | `contain` | `contain` shows the whole photo inside the frame (nothing cropped, transparency kept). `cover` fills the frame and crops. |
 | `label` | `Photos` | What a screen reader calls the carousel. |
 | `loop` | off | `loop=true` (or `loop=infinite`): endless in both directions. The last photo already peeks in on the left of the first, and arrows, keys and swiping wrap around. Needs 3+ photos; without JavaScript it is a plain row. |
 
 ```markdown
-::: carousel ratio=1/1
-![[poster-1.png]]
+::: carousel
+![[poster-1.png|611]]
 ![[poster-2.png]]
 :::
 ```
+
+Hovering the centre photo shows a magnifier: a click opens it full size in the site's lightbox.
 
 ## How it behaves
 

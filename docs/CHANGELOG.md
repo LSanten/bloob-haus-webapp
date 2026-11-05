@@ -6,6 +6,14 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 74 — November 4, 2026: website feedback from the post office inbox
+**Worked on:** three reports sent from leons.bloob.haus's tool belt (PR #12).
+
+- **Peek images get bigger in place** (`lib/visualizers/_engine/peek.js`): PhotoSwipe only bound the galleries present at start, so an image in a peek opened its bare file. The peek now hands its gallery to `window.bloobOpenLightbox`; Esc closes the picture first, then the peek.
+- **Copied markdown carries its dates and real picture links** (`scripts/utils/share-markdown.js`): `date_created` / `date_updated` as the page shows them, and pictures resolved to `https://<site>/media/...` (they were relative and broke outside the site).
+- **The graph is drawn like Obsidian's** (`lib/visualizers/graph/`): ported from Quartz's open graph (MIT): d3-force for physics, PixiJS for drawing, both from jsDelivr, loaded only when a graph nears the screen. Grey nodes sized by links, the current page in the accent, labels for it and its neighbours at rest and the rest fading in with zoom, hover lights one neighbourhood, a gentle centre pull rings unlinked pages. Numbers in `look.js` (pure, tested). Still not on the pure-renderer standard (TECH-DEBT #40); that conversion was left for its own session.
+- Suite 1409 → **1417**. Checked in Chromium on the live site with the new bundles swapped in, then on the PR preview.
+
 ### Session 73 — November 2, 2026: the base haus goes live
 **Worked on:** the plan `docs/superpowers/plans/2026-11-02-base-haus-first-build.md` (spec `docs/superpowers/specs/2026-11-02-base-haus-design.md`), run natively with one final reviewer; ledger in the worktree's `.superpowers/sdd/`. Suite 1173 → **1358 tests**.
 

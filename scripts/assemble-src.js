@@ -333,9 +333,16 @@ export async function assembleSrc(config, contentDir = null) {
   }
 
   // Step 6: Copy theme assets (CSS, JS)
+  // assets/css/visualizers/ is skipped here: those are per-shape overrides that Step 6.5 copies
+  // to theme-visualizers/. Copying them to src assets/css/visualizers/ too would overwrite the
+  // bundled shared stylesheet of the same name whenever assemble runs after bundling (the dev
+  // theme watcher does exactly that), leaving the shape unstyled.
   if (fs.existsSync(path.join(themeDir, "assets"))) {
     console.log("[assemble] Copying theme assets...");
-    await fs.copy(path.join(themeDir, "assets"), path.join(SRC_DIR, "assets"));
+    const themeAssetsDir = path.join(themeDir, "assets");
+    await fs.copy(themeAssetsDir, path.join(SRC_DIR, "assets"), {
+      filter: (src) => isThemeAssetCopied(themeAssetsDir, src),
+    });
   }
 
   // Step 6.5: Copy theme-specific visualizer CSS overrides
@@ -601,4 +608,13 @@ if (isMainModule(import.meta.url)) {
       console.error("❌ Assembly failed:", error.message);
       process.exit(1);
     });
+}
+
+/**
+ * Pure: should a path under a theme's assets/ dir be copied by the general asset copy?
+ * Everything except assets/css/visualizers/** (theme overrides go to theme-visualizers/).
+ */
+export function isThemeAssetCopied(themeAssetsDir, srcPath) {
+  const rel = path.relative(themeAssetsDir, srcPath).split(path.sep).join("/");
+  return !(rel === "css/visualizers" || rel.startsWith("css/visualizers/"));
 }

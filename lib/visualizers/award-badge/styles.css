@@ -66,9 +66,10 @@
 .award-badges .award-badge--icon { display: flex; gap: 4px; }
 .award-badges .award-badge__icon { position: relative; display: block; line-height: 0; filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--text-color) 35%, transparent)); }
 
-/* placement=card: pinned to the card's bottom-right corner, in its text area.
-   A thin outline in the card colour keeps it clean if it ever overlaps a photo. */
-:has(> .award-badges--card) { position: relative; }
-.award-badges--card { position: absolute; bottom: 10px; right: 10px; z-index: 2; pointer-events: none; }
+/* placement=card: pinned to the card's bottom-left corner, in its text area, with room
+   reserved under the text so the icons never cover it. A thin outline in the card colour
+   keeps them clean if they ever overlap a photo. */
+:has(> .award-badges--card) { position: relative; padding-bottom: var(--award-card-room, 76px); }
+.award-badges--card { position: absolute; bottom: 10px; left: var(--award-card-inset, 14px); z-index: 2; pointer-events: none; }
 .award-badges--card .award-badge__icon { filter: drop-shadow(0 0 1px var(--card-bg, var(--bg-color))) drop-shadow(0 1px 2px color-mix(in srgb, var(--text-color) 25%, transparent)); }
 .award-badges--card .award-badge__icon { pointer-events: auto; }

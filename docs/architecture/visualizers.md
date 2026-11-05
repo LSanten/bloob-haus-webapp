@@ -570,6 +570,19 @@ Both added for the `foldable` shape; both are opt-in exports, so no other shape 
   row from the cards `collection` has drawn. Before this, transform order was `readdir` order,
   which is alphabetical on macOS but not guaranteed on Linux CI.
 
+## Appear whole (Leon, 2026-11-04)
+
+A visualizer's object appears **as one finished piece, never layer by layer**. A marble must not
+show its bare picture and then gain its glass; a vinyl sleeve must not show a flat cover and then
+turn 3D; a room marble must not show its glare over an empty spot.
+
+How: a shape whose look is assembled from layers sets `"assembles": true` in its manifest. While
+script is starting, the engine holds that object invisible; the shape's `browser.js` calls
+`BloobObjects.assembled(el)` once its look is complete (or once its finished static picture has
+loaded, when the live layer can't run), and the object fades in at once. Its opening waits for that
+too. A CSS fallback shows it after 3 s anyway, so a slow phone or a script error never leaves it
+hidden, and without script it shows straight away as plain HTML (the no-JS rule still holds).
+
 ## The engine — `lib/visualizers/_engine/` (2026-11-02)
 
 The one home for what every visualizer needs and should never rewrite: filling a template shape

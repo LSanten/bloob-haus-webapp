@@ -953,3 +953,8 @@ html body .article-body a,
 html body .page-content a,
 html body .note-text a,
 html body .sheet a { text-decoration: none; }
+
+/* appear whole: a room marble shows once its picture has loaded (3 s at most) */
+html.bh-js .room-object__ball:not(.is-loaded) { opacity: 0; animation: bh-room-appear 0.3s ease 3s forwards; }
+html.bh-js .room-object__ball.is-loaded { opacity: 1; transition: opacity 0.3s ease; }
+@keyframes bh-room-appear { to { opacity: 1; } }

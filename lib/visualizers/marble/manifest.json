@@ -8,5 +8,10 @@
   "arrives": "open-from-site",
   "shares": true,
   "inside": "article",
-  "detect": { "selectors": [".bloob-object--marble"] }
+  "detect": {
+    "selectors": [
+      ".bloob-object--marble"
+    ]
+  },
+  "assembles": true
 }

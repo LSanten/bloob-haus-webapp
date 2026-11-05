@@ -32,6 +32,10 @@ in; the theme provides that background, so a visualizer never paints a page back
   read that HTML.
 - **`browser.js` adds behavior only:** clicks, animation, physics, 3D. It never builds the markup.
   Load heavy libraries only on pages where the visualizer appears.
+- **Show the finished piece at once.** If the look is built in layers (a picture, then an effect,
+  then a 3D scene), it must not appear layer by layer. Set `"assembles": true` in the manifest and
+  call `BloobObjects.assembled(el)` once everything is drawn; the object fades in whole. If the
+  effect can't run, call it once the plain picture has loaded.
 - **Opening is one number.** Draw every moment between closed (0) and open (1) from a single
   progress value. The page around the visualizer counts the click; the visualizer draws.
 - **Styles use the theme's variables only:** `--bg-color`, `--text-color`, `--accent-color`,

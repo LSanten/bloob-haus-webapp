@@ -7,6 +7,15 @@
   "remembers": false,
   "shares": true,
   "inside": "article",
-  "images": ["front", "back", "label"],
-  "detect": { "selectors": [".bloob-object--vinyl-sleeve"] }
+  "images": [
+    "front",
+    "back",
+    "label"
+  ],
+  "detect": {
+    "selectors": [
+      ".bloob-object--vinyl-sleeve"
+    ]
+  },
+  "assembles": true
 }

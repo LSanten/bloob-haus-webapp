@@ -26,6 +26,8 @@ describe.each(["marble", "note"])("a %s that grows after it opened", (name) => {
     const obj = renderObject(shapes.get(name), { data: { title: "T" }, html: "<p>words</p>", url: "/a/", pageId: "a" }, { inside: '<div class="sheet-inside"><p>words</p></div>' });
     const page = await browser.newPage();
     await page.setContent(`<!doctype html><html class="bh-js" data-bh-initial="closed"><head><style>${css}</style></head><body>${obj}<script>${toolbox}</script></body></html>`);
+    // (a marble's own script says when it is whole; here the toolbox alone stands in for it)
+    await page.evaluate(() => document.querySelectorAll(".bloob-object").forEach((e) => window.BloobObjects.assembled(e)));
     await page.click("[data-bloob-toggle]");
     await page.waitForFunction(() => document.querySelector(".bloob-object").dataset.state === "open", null, { timeout: 5000 });
     await page.evaluate(() => {

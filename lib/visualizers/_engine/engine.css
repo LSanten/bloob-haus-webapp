@@ -60,3 +60,21 @@ html.bh-js:not([data-bh-initial="closed"]):not([data-bh-initial="play"]) .bloob-
   /* not while the page is still held shut before script starts: the HTML arrives as "open" */
   max-height: none !important;
 }
+
+/* Appear whole: an object built from layers (manifest "assembles": true: a marble's live glass,
+   a vinyl sleeve's 3D) waits invisibly until its own script says it is assembled
+   (BloobObjects.assembled(el)), then fades in as one piece, never layer by layer. If that never
+   comes (a slow phone, a script error), it shows after 3 s anyway. Without script (no bh-js) it
+   simply shows. */
+html.bh-js .bloob-object[data-assembles]:not(.is-assembled) {
+  opacity: 0;
+  animation: bh-appear 0.35s ease 3s forwards;
+}
+html.bh-js .bloob-object[data-assembles].is-assembled {
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+@keyframes bh-appear { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  html.bh-js .bloob-object[data-assembles].is-assembled { transition: none; }
+}

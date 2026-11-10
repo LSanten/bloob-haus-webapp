@@ -17,7 +17,7 @@ Development session history and completed work.
 - **Plugin** (`bloob-haus-obsidian-plugin`, uncommitted): same date regex, `none` strips like `strip`. 61 tests pass.
 - Checked by full local builds: marbles (7 redirects, broken links unchanged at 21), buffbaby (2 redirects, 0 broken), melt (no dated notes, no `_redirects`). Suite 1419 → **1437**.
 - **Plugin 1.3.1 released**; new CLAUDE.md rule "Keep the Obsidian Plugin in Sync" with `scripts/check-plugin-sync.js` (builder vs plugin URLs on a filename grid: 112 compared, 0 mismatches).
-- **Deployed** webapp + all three vaults. A marbles vault-triggered deploy (old code) finished after the webapp one and overwrote it; re-ran the webapp deploy (new debt #50). Live check of the Aden links still to do.
+- **Deployed** webapp + all three vaults. A marbles vault-triggered deploy (old code) finished after the webapp one and overwrote it; re-ran the webapp deploy (new debt #50). Live: the dated Aden link answers 200, the undated one 301s to it.
 
 ### Session 74 — November 4, 2026: website feedback from the post office inbox
 **Worked on:** three reports sent from leons.bloob.haus's tool belt (PR #12).

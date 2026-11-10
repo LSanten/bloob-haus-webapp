@@ -9,7 +9,7 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-08-22 (S71)
+**Last updated:** 2026-11-10 (S75)
 
 ---
 
@@ -59,6 +59,8 @@ Two things it left open:
 10. **Cheap high-leverage Phase-2 task, still open:** the canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36).
 
 ## What's Done
+
+- **Dated filenames keep their date when asked; the other link forwards** (2026-11-10, S75). A space after the date wasn't recognised, so Eleventy silently dropped it on `date_prefix: keep` vaults. Now: filename date → `date_created` everywhere, `none` = `strip`, new `url.date_redirect` (default on). All three of Leon's vaults on `keep`. Plugin 1.3.1 matches; `scripts/check-plugin-sync.js` checks the two stay aligned. New debt #50 (deploy race). See CHANGELOG S75 + DECISIONS 2026-11-10.
 
 - **Percent-encoding fixed end to end: transclusions, the scene-nav builder round-trip, and a build-killing crash** (2026-08-15, S71). Markdown-style embeds with a space in the filename (`![x](A%20B.md)`) silently produced a "Could not embed" placeholder — the target was never decoded before the file-index lookup — while the wiki form worked; fixing it *inside* the transclusion handler also made **nested** markdown-style embeds work for the first time and taught it `#heading` specifiers. The scene-nav builder's "Copy ::: block" emitted literal spaces, so a pasted block showed broken links in Obsidian; refs are now emitted percent-encoded, and `goto:` keeps its verbatim guarantee **except** for spaces in a markdown-link target — **wiki-links are never re-encoded**, since spaces are legal in Obsidian's own syntax. That contradicted `shapes.md` convention #4, which conflated a decoded *model* (correct) with literal-space *emission* (never argued for); amended, with the requirement baked into the canonical `schema.md` Builder template. Separately, a literal `%` in **any** filename (`50% off flyer.png`) threw `URIError` and killed the whole build from 13 unguarded `decodeURIComponent` sites across 10 files — all now route through `scripts/utils/safe-decode.js`. Suite 851 → **909**; melt's rendered output byte-identical throughout. Garden's attribute tokenizer gained quote awareness in the same session, which also fixed a **lossy round-trip in garden's own serializer** (`bg:"my backdrop.png"` read back as `"my`); `safeDecode`/`encodeRef` now live in `lib/visualizers/_utils/ref-encoding.js`, shared by scene-nav and garden — and `_utils/` is now a **documented pattern** (`visualizers.md` → "Shared helpers"), with the underscore convention actually enforced by the bundler. New debt #48 (`ken-burns-zoom` has no manifest, so it always loads). See CHANGELOG S71 + DECISIONS 2026-08-15.
 

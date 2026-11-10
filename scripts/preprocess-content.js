@@ -41,7 +41,8 @@ import { stripLeadingTitleHeading, stripInlineMarkdown } from "./utils/title-ded
 import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
-import { stripDatePrefix } from "./utils/date-prefix.js";
+import { stripDatePrefix, resolveDatePrefixMode } from "./utils/date-prefix.js";
+import { buildDateRedirects } from "./utils/date-redirects.js";
 import { smartTitleCase } from "./utils/smart-title-case.js";
 import { slugifyPath } from "./utils/slug-strategy.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
@@ -208,13 +209,12 @@ export async function preprocessContent({
   // Step 3: Build file index
   console.log("\n--- Step 3: Building file index ---");
   const slugStrategy = process.env.SLUG_STRATEGY || "slugify";
-  // Jekyll-style date-prefixed filenames — two independent opt-in behaviors:
-  //   date_from_filename: a leading YYYY-MM-DD- supplies date_created when
-  //     frontmatter omits one; the prefix STAYS in the URL slug.
-  //   date_prefix_slugs: strip that prefix from the URL slug (clean URLs).
-  // A site can enable either, both, or neither.
-  const dateFromFilename = siteConfig.features?.date_from_filename === true;
-  const datePrefixSlugs = siteConfig.features?.date_prefix_slugs === true;
+  // Date-prefixed filenames ("2026-06-24-my-post", "2026-06-24 My Post"):
+  //   - the date always fills a missing date_created (universal, below)
+  //   - url.date_prefix decides whether it stays in the URL: keep | strip (default)
+  //   - url.date_redirect (on by default) redirects the other form of the URL
+  const datePrefixSlugs = resolveDatePrefixMode(siteConfig.features) === "strip";
+  const dateRedirectsOn = siteConfig.features?.date_redirects !== false;
   // In status_field mode, draft files are excluded from publishing but their URLs
   // are stable and should resolve when referenced via wiki-links (e.g. card-preview).
   // In blocklist/allowlist modes, excluded files are private and must not be indexed.
@@ -708,25 +708,23 @@ export async function preprocessContent({
       outputFrontmatter.title_md = pageInfo.title_md;
     }
 
-    // Jekyll-style date prefix handling for a leading YYYY-MM-DD- on the filename.
-    // Two opt-in behaviors, both keyed off the date prefix:
+    // Date prefix on the filename (YYYY-MM-DD- or "YYYY-MM-DD ").
     const { date: filenameDate } = stripDatePrefix(path.basename(file.relativePath, ".md"));
 
-    //   date_from_filename: supply date_created when frontmatter omits one
-    //   (frontmatter always wins — this only fills a missing value).
-    if (dateFromFilename && filenameDate && outputFrontmatter.date_created == null) {
+    //   The filename date supplies date_created when frontmatter omits one —
+    //   universal Bloob Haus behavior (frontmatter always wins).
+    if (filenameDate && outputFrontmatter.date_created == null) {
       outputFrontmatter.date_created = filenameDate;
     }
 
     //   URL control: Eleventy NATIVELY strips a leading YYYY-MM-DD- from the
-    //   fileSlug/filePathStem (it treats the date as the page date), so by default
-    //   the date is dropped from the URL no matter what. To make that a real,
-    //   two-way setting we pin an explicit permalink to the index's computed URL
-    //   (which already honors date_prefix_slugs): off → keep the date in the URL,
-    //   on → strip it. Only for date-prefixed, non-index files on opt-in sites, so
-    //   default sites keep Eleventy's native behavior. This also keeps the served
-    //   URL identical to the one internal links resolve to (pageInfo.url).
-    if (filenameDate && (dateFromFilename || datePrefixSlugs)
+    //   fileSlug/filePathStem (it treats the date as the page date), so left alone
+    //   the date is dropped from the URL no matter what. We pin an explicit
+    //   permalink to the index's computed URL (which honors url.date_prefix:
+    //   keep/strip), so the setting really decides and the served URL is the
+    //   same one internal links resolve to (pageInfo.url). In strip mode this is
+    //   the URL Eleventy would have produced anyway.
+    if (filenameDate
         && pageInfo?.url && outputFrontmatter.permalink == null) {
       outputFrontmatter.permalink = pageInfo.url;
     }
@@ -1066,7 +1064,17 @@ export async function preprocessContent({
   }
   console.log("========================================\n");
 
-  return { ...stats, brokenLinkDetails };
+  // Date redirects (url.date_redirect, on by default): the other form of every
+  // date-prefixed URL → the real one. Written to _redirects after Eleventy builds
+  // (build-site.js / dev-local.js --build), since Eleventy owns the output folder.
+  const dateRedirects = dateRedirectsOn
+    ? buildDateRedirects(fileIndex.pages, { published: new Set(published.map((f) => f.relativePath)) })
+    : [];
+  if (dateRedirects.length) {
+    console.log(`[date-redirects] ${dateRedirects.length} date-prefixed URL redirect(s) queued for _redirects`);
+  }
+
+  return { ...stats, brokenLinkDetails, dateRedirects };
 }
 
 // Run directly if this is the main module

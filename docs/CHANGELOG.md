@@ -6,6 +6,17 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 75 — November 10, 2026: dated filenames keep their date in the URL
+**Worked on:** `2026-11-07 Aden Bday Dolores Park Set` (marbles) was served without its date although the vault says `url.date_prefix: keep`, while the plugin's copied link had it.
+
+- **Bug:** `stripDatePrefix` only knew a hyphen after the date. Obsidian-style names (`2026-11-07 My Note`) were missed, so no permalink was pinned and Eleventy silently stripped the date. Now a hyphen or spaces both count (`scripts/utils/date-prefix.js`). Three live marbles pages move to their dated URL.
+- **The filename date fills a missing `date_created` on every site** (was opt-in). Frontmatter still wins.
+- **`url.date_prefix: none` = `strip`**, which is what Eleventy always did with it. Strip is also the default. Every dated file now gets a pinned permalink, so internal links on `none`/default sites point at the URL actually served (they used to point at the dated one).
+- **New `url.date_redirect`** (default on): the other form of every dated URL gets a 301 in Cloudflare's `_redirects` (`scripts/utils/date-redirects.js`; build-site step 7.2 and `dev-local --build`). Covers the three moved marbles pages and the two moved buffbaby recipes.
+- **Vaults:** buffbaby and melt set to `date_prefix: keep` (Leon's preference); `date_redirect: true` written out in all three; settings tables updated.
+- **Plugin** (`bloob-haus-obsidian-plugin`, uncommitted): same date regex, `none` strips like `strip`. 61 tests pass.
+- Checked by full local builds: marbles (7 redirects, broken links unchanged at 21), buffbaby (2 redirects, 0 broken), melt (no dated notes, no `_redirects`). Suite 1419 → **1437**.
+
 ### Session 74 — November 4, 2026: website feedback from the post office inbox
 **Worked on:** three reports sent from leons.bloob.haus's tool belt (PR #12).
 

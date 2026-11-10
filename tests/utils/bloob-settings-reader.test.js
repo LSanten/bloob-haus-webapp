@@ -117,17 +117,27 @@ describe('mergeBloobSettings — url: block', () => {
     expect(merged.mount_path).toBe('marbles');
   });
 
-  it('maps case: lower → slugify and date_prefix: none → no date flags', () => {
+  it('maps case: lower → slugify and date_prefix: none → same as strip', () => {
     const merged = mergeBloobSettings({}, {
       url: { base: 'https://melt.bloob.haus', case: 'lower', date_prefix: 'none' },
     });
     expect(merged.permalinks.strategy).toBe('slugify');
-    expect(merged.features.date_from_filename).toBe(false);
+    // `none` is a legacy name for `strip`: it is what Eleventy always did with it.
+    expect(merged.features.date_prefix_slugs).toBe(true);
   });
 
-  it('date_prefix: strip → date_from_filename + date_prefix_slugs', () => {
+  it('url.date_redirect: false turns the date redirects off', () => {
+    const merged = mergeBloobSettings({}, { url: { date_prefix: 'keep', date_redirect: false } });
+    expect(merged.features.date_redirects).toBe(false);
+  });
+
+  it('date redirects stay on when url.date_redirect is absent or true', () => {
+    expect(mergeBloobSettings({}, { url: { date_prefix: 'keep' } }).features.date_redirects).toBeUndefined();
+    expect(mergeBloobSettings({}, { url: { date_redirect: true } }).features?.date_redirects).toBe(true);
+  });
+
+  it('date_prefix: strip → date_prefix_slugs (filename date → date_created is universal now)', () => {
     const merged = mergeBloobSettings({}, { url: { date_prefix: 'strip' } });
-    expect(merged.features.date_from_filename).toBe(true);
     expect(merged.features.date_prefix_slugs).toBe(true);
   });
 

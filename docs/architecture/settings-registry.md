@@ -115,7 +115,8 @@ split between `_bloob-settings.md` and `sites/*.yaml`. Full spec: **`docs/archit
 url:
   base: https://leons.bloob.haus   # subdomain or custom domain
   case: preserve                   # preserve | lower
-  date_prefix: keep                # keep | strip | none
+  date_prefix: keep                # keep | strip   (none = old name for strip)
+  date_redirect: true              # the other form of a dated URL forwards to the real one
   mount_path: ""                   # optional subpath, e.g. "marbles"
 ```
 
@@ -123,7 +124,8 @@ url:
 |-----|--------|---------|-------------|
 | `url.base` | full URL | `site.url` | Site origin. |
 | `url.case` | `preserve` / `lower` | `permalinks.strategy` | `lower`→slugify (lowercase), `preserve`→preserve-case. |
-| `url.date_prefix` | `keep` / `strip` / `none` | `features.date_from_filename` + `date_prefix_slugs` | Leading `YYYY-MM-DD-` handling: keep in URL / strip from URL / ignore. |
+| `url.date_prefix` | `keep` / `strip` (default) / `none` | `features.date_from_filename` (keep) / `date_prefix_slugs` (strip) | A date at the start of a filename (`2026-06-24-my-post` or `2026-06-24 My Post`): `keep` = stays in the URL, `strip` = removed. `none` = legacy name for `strip` (since 2026-11-10; Eleventy always stripped it). The filename date fills a missing `date_created` in every mode — universal, not a setting. Read back through `resolveDatePrefixMode()` (`scripts/utils/date-prefix.js`). |
+| `url.date_redirect` | `true` (default) / `false` | `features.date_redirects` | The other form of every dated URL (undated when `keep`, dated when `strip`) gets a 301 to the real one in Cloudflare's `_redirects` (`scripts/utils/date-redirects.js`, written after Eleventy by build-site step 7.2 and `dev-local --build`). Skipped when the alias is another page's URL, when the page sets its own `permalink`, or when two dated notes share one alias. Added 2026-11-10. |
 | `url.mount_path` | string | `mount_path` | Mount site under a subpath. Empty = root. |
 
 Legacy flat keys (`permalink_strategy`, and `sites/*.yaml` values) still work; the `url:` block
@@ -201,10 +203,11 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
 | `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
 | `features.transclusion_indicators` | `true` | Site-wide default for transclusion indicator display. When `false`, all `![[embeds]]` across the site are inlined seamlessly. Override per-page with `transclusion_indicators:` frontmatter. |
-| `features.date_from_filename` | `false` | Jekyll-style date-prefixed filenames. When `true`, a leading `YYYY-MM-DD-` on a filename supplies `date_created` when frontmatter omits one (frontmatter always wins), and the prefix **stays in the URL** (`/2026-06-24-my-post/`). Set in `sites/*.yaml`. Enabled for marbles. |
-| `features.date_prefix_slugs` | `false` | When `true`, strip the leading `YYYY-MM-DD-` from the URL (`2026-06-24-my-post.md` → `/my-post/`). Combine with `date_from_filename` to also pick up the date. Set in `sites/*.yaml`. Off for now. |
+| `features.date_from_filename` | — | Internal: what `url.date_prefix: keep` maps to. On its own in a `sites/*.yaml` (legacy) it still means "date stays in the URL". It no longer gates `date_created` — the filename date always fills a missing one (2026-11-10). |
+| `features.date_prefix_slugs` | — | Internal: what `url.date_prefix: strip` / `none` map to. Strip is also the default when neither flag is set. |
+| `features.date_redirects` | `true` | Internal: what `url.date_redirect` maps to. |
 
-> **Why both flags exist / how the URL is controlled:** Eleventy *natively* strips a leading `YYYY-MM-DD-` from `fileSlug`/`filePathStem` and treats it as the page date — so by default the date is dropped from the URL no matter what. When either flag is set, `preprocess-content.js` pins an explicit `permalink` (the index's computed URL) on date-prefixed, non-index files, which overrides Eleventy's native stripping: `date_from_filename` (without `date_prefix_slugs`) keeps the date in the URL; `date_prefix_slugs` strips it intentionally. This also guarantees the served URL matches what internal links resolve to.
+> **How the URL is controlled:** Eleventy *natively* strips a leading `YYYY-MM-DD-` from `fileSlug`/`filePathStem` and treats it as the page date — so left alone the date is dropped from the URL no matter what. `preprocess-content.js` pins an explicit `permalink` (the index's computed URL) on every date-prefixed, non-index file, so `url.date_prefix` really decides and the served URL matches what internal links resolve to. A date counts when it is a real date (month 01–12, day 01–31) followed by a hyphen **or spaces** — the Obsidian-style `2026-11-07 My Note` was missed before 2026-11-10, which let Eleventy silently strip the date on `keep` vaults.
 
 #### Graph Extra Fields
 

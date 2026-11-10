@@ -18,7 +18,8 @@ URL without reading the webapp's `sites/*.yaml`.
 url:
   base: https://leons.bloob.haus   # full base URL (subdomain OR custom domain)
   case: preserve                   # preserve | lower
-  date_prefix: keep                # keep | strip | none
+  date_prefix: keep                # keep | strip   (none = old name for strip)
+  date_redirect: true              # the other form of a dated URL forwards to the real one
   mount_path: ""                   # optional subpath, e.g. "marbles"
 ```
 
@@ -26,7 +27,8 @@ url:
 |-----|--------|---------|
 | `base` | full URL | Site origin. `https://{subdomain}.bloob.haus` or a custom domain. |
 | `case` | `preserve` / `lower` | Casing of path segments. `lower` = lowercase everything (slugify); `preserve` = keep original capitals. |
-| `date_prefix` | `keep` / `strip` / `none` | How a leading `YYYY-MM-DD-` on a filename is treated. `keep` = date stays in the URL; `strip` = date used for `date_created` but removed from the URL; `none` = ignored. |
+| `date_prefix` | `keep` / `strip` / `none` | A date at the start of a filename (`2026-06-24-my-post` or `2026-06-24 My Post`). `keep` = date stays in the URL; `strip` (default) = removed from the URL; `none` = legacy name for `strip`. In every mode the date becomes `date_created` when the note has none. Folder names are never touched. |
+| `date_redirect` | `true` / `false` | Default `true`: the other form of a dated URL (without the date under `keep`, with it under `strip`) 301-redirects to the real one, so links shared in either form work. |
 | `mount_path` | string | Mount the whole site under a subpath (`/marbles/`). Empty = root. |
 
 **Backwards-compat:** the reader still honors the legacy flat keys

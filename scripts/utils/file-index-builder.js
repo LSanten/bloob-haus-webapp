@@ -141,7 +141,8 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     // slug and filename-derived title use the clean name ("my-post"), not
     // "2026-06-24-my-post". The original filename is still indexed below so
     // wiki-links written against the on-disk name keep resolving.
-    const slugBase = useDatePrefix ? stripDatePrefix(filename).name : filename;
+    const { date: filenameDate, name: undatedName } = stripDatePrefix(filename);
+    const slugBase = useDatePrefix ? undatedName : filename;
 
     // Last-resort display title when a file has neither `title:` nor an H1.
     // Prettified from the ORIGINAL filename (not the slug) so acronyms survive on
@@ -180,6 +181,16 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       ? (hasFolder ? slugifiedFolder : "")
       : (hasFolder ? `${slugifiedFolder}/${slug}` : slug);
 
+    // The other form of a date-prefixed URL (undated when the date is kept, dated
+    // when it is stripped), so the build can redirect it to the real one.
+    const dateAliasUrl = filenameDate && !isIndex
+      ? (() => {
+          const aliasSlug = slugFn(useDatePrefix ? filename : undatedName);
+          const aliasUrl = hasFolder ? `/${slugifiedFolder}/${aliasSlug}/` : `/${aliasSlug}/`;
+          return aliasUrl !== url ? aliasUrl : undefined;
+        })()
+      : undefined;
+
     const pageInfo = {
       title,
       ...(titleMd ? { title_md: titleMd } : {}),
@@ -189,6 +200,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       path: file.path,
       relativePath: file.relativePath,
       url,
+      ...(dateAliasUrl ? { dateAliasUrl } : {}),
       frontmatter,
       rawBody: body,
     };

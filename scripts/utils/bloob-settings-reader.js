@@ -319,17 +319,26 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
       merged.permalinks = { ...merged.permalinks, strategy };
     }
 
-    // date_prefix → date_from_filename / date_prefix_slugs feature flags
-    //   keep  = date stays in the URL      (date_from_filename, no strip)
-    //   strip = date used but removed from URL (date_from_filename + date_prefix_slugs)
-    //   none  = leading date ignored        (default)
+    // date_prefix → date_from_filename / date_prefix_slugs feature flags, read back
+    // through resolveDatePrefixMode() in date-prefix.js:
+    //   keep  = date stays in the URL       (date_from_filename, no strip)
+    //   strip = date removed from the URL   (date_prefix_slugs)
+    //   none  = legacy name for strip: Eleventy always stripped the date for it
+    // Either way the filename date fills a missing date_created (universal).
     if (u.date_prefix) {
-      const dp = u.date_prefix;
+      const keep = u.date_prefix === "keep";
       merged.features = {
         ...merged.features,
-        date_from_filename: dp === "keep" || dp === "strip",
-        date_prefix_slugs: dp === "strip",
+        date_from_filename: keep,
+        date_prefix_slugs: !keep,
       };
+    }
+
+    // date_redirect → features.date_redirects (on unless explicitly off): the other
+    // form of a date-prefixed URL redirects to the real one. See date-redirects.js.
+    if (u.date_redirect !== undefined && u.date_redirect !== null) {
+      const off = u.date_redirect === false || ["no", "off", "false"].includes(String(u.date_redirect).toLowerCase());
+      merged.features = { ...merged.features, date_redirects: !off };
     }
 
     // mount_path → subpath mount (empty string means "no mount")

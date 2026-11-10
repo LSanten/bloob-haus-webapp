@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import { loadSiteConfig, resolveSiteName } from "./utils/config-loader.js";
 import { assembleSrc, showInSearch } from "./assemble-src.js";
 import { addNoindexHeader, addFolderNoindexHeaders } from "./utils/search-headers.js";
+import { writeRedirects } from "./utils/date-redirects.js";
 import { cloneContent } from "./clone-content.js";
 import { preprocessContent } from "./preprocess-content.js";
 import { generateOgImages } from "./generate-og-images.js";
@@ -179,6 +180,12 @@ async function buildSite() {
     if (config.unlisted_folders?.length) {
       await addFolderNoindexHeaders(path.join(ROOT_DIR, "_site"), config.unlisted_folders, config.mount_path);
       console.log(`[build] unlisted_folders → X-Robots-Tag: noindex on ${config.unlisted_folders.join(", ")} (_headers)`);
+    }
+
+    // Step 7.2: url.date_redirect — the other form of each date-prefixed URL → the real one.
+    if (preprocessResult.dateRedirects?.length) {
+      await writeRedirects(path.join(ROOT_DIR, "_site"), preprocessResult.dateRedirects, config.mount_path);
+      console.log(`[build] url.date_redirect → ${preprocessResult.dateRedirects.length} redirect(s) in _redirects`);
     }
 
     // Build summary

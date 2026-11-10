@@ -438,3 +438,20 @@ status_field: website_status   # optional, this is the default field name
 **Visualizer risk:** Low currently. Visualizers are code fences parsed from markdown — the `folder-preview` fence in a stub `index.md` works regardless of whether `index.njk` exists. However, two concerns to watch:
 1. If a future theme embeds a visualizer inside a section `index.njk` (via Nunjucks macro/include), the cleanup would silently delete it. The content `index.md` would need to manually include the visualizer fence. This is a design constraint: **theme section pages cannot own visualizer invocation — that must live in content.**
 2. The cleanup step only exists in `build-site.js`, **not `dev-local.js`**. Local dev will still hit the conflict if a vault has this structure. This is a known gap — if it becomes a problem, the same cleanup loop should be added to `dev-local.js`.
+
+---
+
+### Dated filenames: one URL decision, date always read, redirects on by default (2026-11-10)
+
+**Context:** `url.date_prefix` had three values, but `none` meant different things to the plugin (date kept) and to the website (Eleventy dropped it). The filename date only filled `date_created` on opt-in sites, and a space after the date was not recognised at all.
+
+**Decision:**
+1. The filename date filling a missing `date_created` is universal Bloob Haus behavior, not a setting.
+2. `date_prefix` is only about the URL: `keep` or `strip` (default). `none` is a legacy name for `strip`. Builder and plugin share one regex (hyphen or spaces after a real date).
+3. Every dated, non-index file gets a pinned permalink, so the setting decides, not Eleventy's native date stripping.
+4. `url.date_redirect` (default on) 301-redirects the other form of a dated URL to the real one via Cloudflare `_redirects`.
+
+**Why strip as the default:** it is what every site without the setting already served, so no live URL moves for forkers. Leon's own vaults choose `keep` explicitly.
+
+**Why redirects default on:** a URL that moves breaks links already shared; a 301 costs nothing. Cloudflare follows a redirect even over a real file, so a rule is only written when the alias is no other page's URL. The `_redirects` file is never served, so unlisted pages are safe to include.
+

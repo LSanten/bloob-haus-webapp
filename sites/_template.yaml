@@ -42,4 +42,4 @@ permalinks:
 features:
   search: true          # Pagefind full-text search index + search bar
   # magic_machines: true       # enable standalone browser tools at /magic-machine/*
-  # date_from_filename: true   # YYYY-MM-DD- filename prefix → date_created
+  # Dated filenames: set url.date_prefix (keep | strip) and url.date_redirect in the vault's _bloob-settings.md

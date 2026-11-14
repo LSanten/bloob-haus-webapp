@@ -8,7 +8,7 @@ layout: layouts/base.njk
 
     <header class="recipe-header">
       <h1 class="recipe-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
-      {% if subtitle %}<p class="recipe-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
+      {% if subtitle %}<p class="recipe-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle | mdplain }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
     </header>
 
     {# Slug indexed for pagefind — "ID: slug" prefix lets the search visualizer style it as a pill. #}

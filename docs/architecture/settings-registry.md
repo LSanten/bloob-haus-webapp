@@ -295,7 +295,7 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 <script type="module">
   import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
   const lightbox = new PhotoSwipeLightbox({
-    gallery: 'article',           // scope to <article> wrapping page content
+    gallery: 'main',              // the whole page: every shape's images, not only <article>'s
     children: 'a.pswp-gallery__item',
     pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
     wheelToZoom: true,

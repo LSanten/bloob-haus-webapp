@@ -6,7 +6,10 @@
   import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
 
   const lightbox = new PhotoSwipeLightbox({
-    gallery: 'article',
+    // The whole page is one gallery, so an image opens in the viewer whatever shape draws it: an
+    // article, a note (the engine draws no <article>), a fold. Opt out per image with no-zoom,
+    // no-lightbox or no-pswp. A peek handles its own images first (lib/visualizers/_engine/peek.js).
+    gallery: 'main',
     children: 'a.pswp-gallery__item',
     pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
     wheelToZoom: true,

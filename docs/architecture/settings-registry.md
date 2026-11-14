@@ -258,6 +258,12 @@ Both fields accept the same value formats:
 |-----|------|---------|-------------|
 | `features.link_icons` | bool | `false` | Put the linked page's shape icon in front of internal links (the pre-2026-10-26 look, now without the pill). Off by default: internal links render as plain inline links with a hover pill. A page can also turn icons on for one part by wrapping it in a `data-link-icons` container. See `docs/architecture/theme-standards.md` → "Internal links". |
 
+#### Inline tags (`#tag` in the text)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.inline_tag_links` | bool | `false` | An Obsidian-style `#tag` written in the text stays where it is and becomes a link to its tag page (`/tags/<tag>/`, class `tag-inline`; `scripts/utils/inline-tags.js`). Code, links and URLs are left alone, and only tags the page is counted under become links. On `bloob-haus-26` the page's foot then shows the frontmatter tags only (`yaml_tags`), so no tag is listed twice. Set in `sites/<name>.yaml`; on for marbles. |
+
 #### Folds (`## > Heading`)
 
 | Key | Type | Default | Description |
@@ -396,7 +402,7 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 <script type="module">
   import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
   const lightbox = new PhotoSwipeLightbox({
-    gallery: 'article',           // scope to <article> wrapping page content
+    gallery: 'main',              // the whole page: every shape's images, not only <article>'s
     children: 'a.pswp-gallery__item',
     pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.js'),
     wheelToZoom: true,

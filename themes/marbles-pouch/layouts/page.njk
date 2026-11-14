@@ -17,7 +17,7 @@ layout: layouts/base.njk
 
   <header class="marble-header">
     <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
-    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
+    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle | mdplain }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
 
     {#
       Date pills.

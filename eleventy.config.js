@@ -12,7 +12,9 @@ import { formatDate } from "./scripts/utils/format-date.js";
 import { configureMarkdown } from "./scripts/utils/markdown-setup.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
-import { loadTemplateShapes } from "./scripts/utils/template-shapes.js";
+import { loadTemplateShapes, objectData } from "./scripts/utils/template-shapes.js";
+import { stripInlineMarkdown } from "./scripts/utils/title-deduplicator.js";
+import { slugifyTag } from "./scripts/utils/tag-extractor.js";
 import { renderRoom, roomNodes, nodesForUrls } from "./lib/visualizers/_engine/room.js";
 import { renderObject } from "./lib/visualizers/_engine/index.js";
 import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
@@ -88,7 +90,7 @@ export default async function (eleventyConfig) {
     const ctx = this.ctx || {};
     // What the haus says about this kind of object (_bloob-objects.md), for "What is a marble?".
     const about = ctx.bloobObjects?.[ctx.bloob_object || name];
-    const data = { ...ctx, object_label: (about?.display_name || name).toLowerCase(), object_about: about?.description };
+    const data = objectData(ctx, { name, about });
     return renderObject(
       shape,
       { data, html: content, url: this.page?.url, pageId: ctx.bloobPageId || this.page?.url },
@@ -196,6 +198,9 @@ export default async function (eleventyConfig) {
   // Both are safe for use with | safe in templates.
   eleventyConfig.addFilter("md", (str) => mdLib ? mdLib.render(String(str || "")) : str);
   eleventyConfig.addFilter("mdinline", (str) => mdLib ? mdLib.renderInline(String(str || "")) : str);
+  // | mdplain — the words of inline markdown, no syntax (`A [Redwood](https://…) Project` →
+  // `A Redwood Project`), for places that show text: search metadata, attributes.
+  eleventyConfig.addFilter("mdplain", (str) => stripInlineMarkdown(String(str ?? "")).trim());
 
   // The markdown-it setup lives in one place, shared with the live visualizer
   // editor, so a note renders the same in both hosts (scripts/utils/markdown-setup.js).
@@ -292,16 +297,8 @@ export default async function (eleventyConfig) {
   }
   eleventyConfig.addFilter("filterTagList", filterTagList);
 
-  // Slugify filter for tag URLs
-  eleventyConfig.addFilter("slugify", function (str) {
-    if (!str) return "";
-    return str
-      .toLowerCase()
-      .replace(/[^a-z0-9\s/-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-  });
+  // Slugify filter for tag URLs: the same function inline #tag links use (tag-extractor.js)
+  eleventyConfig.addFilter("slugify", slugifyTag);
 
   // Substitutes per-page tokens inside a raw snippet (from _bloob-settings.md fences).
   // Only a fixed vocabulary is replaced — pasted HTML is NOT re-rendered through Nunjucks

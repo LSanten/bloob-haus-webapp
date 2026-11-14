@@ -6,6 +6,19 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 76 — November 14, 2026: website feedback from the tool belt (leons)
+**Worked on:** eight reports Leon left on leons.bloob.haus through the feedback note (PR "Website feedback 2026-11-14"). Each was reproduced on a local marbles build with Playwright before fixing.
+
+- **Search subtitles read as plain text** (f75b558a): the pagefind subtitle meta and the engine's outside blanks used the raw markdown `##` subtitle, so `A [Redwood Energy](https://...) Project` showed its link syntax in search, on the closed marble and on the share card. New `mdplain` filter in every theme; the engine gets plain words through `objectData()` (`scripts/utils/template-shapes.js`).
+- **A note without a title of its own opens without a heading** (262f9de3): the file index marks a filename-made name (`title_from_filename`), the engine gained a `{{ heading }}` blank (empty then), and the note's `<h1>` uses it. The name stays for the tab, rooms, the share card and search (a pagefind title meta). 39 notes on leons change (32 listed); marbles and pages keep their heading.
+- **The `>` heading on the Aden note** (47f88760): not reproduced. The heading Leon pointed at (`### dpdp: Just for memories...`) has no `>` in the vault, nor anywhere in its history; the one that has it (`### > Here is the set list in plain text`) renders folded, in Chromium and WebKit. No code change.
+- **Every image opens in the viewer** (82c8adc1): the shared PhotoSwipe viewer bound only to `<article>`, and a note has none, so its images went to their file. It now binds to `<main>`; peeks keep their own handler (S74).
+- **POUCH-AIR-QUALITY's cards** (30696131): the peek eye was added after each collection card link, became a grid item, and turned the card grid into a checkerboard. Eyes now go only beside links displayed inline.
+- **Comments sit on the sheet** (d0ed84d9, d598fddf): FastComments styles its iframe `color-scheme: normal !important`; on a dark-scheme page (night, or a dark phone with the page in day) browsers paint a white backdrop behind it. `themes/_base/assets/js/comments-on-sheet.js` marks the frame light and keeps `hasDarkBackground` in step with day and night via `instance.update()`.
+- **Inline tags are links** (59526537): `scripts/utils/inline-tags.js` turns each `#tag` in the text into a link to its tag page, in place (opt-in `features.inline_tag_links`, on for marbles); the bloob-haus-26 foot then lists frontmatter tags only.
+- **Peeks are fast** (1a42c9e2): a peek from the homepage room took 4.07 s to open (4.5 to 4.9 s on 4G) because the marble waited for `marble.js`, which the homepage never loads, and sat out the 3 s appear-whole fallback. In a peek the baked look now counts as whole: visible at 0.3 s, open at 1.07 s (0.8 to 1.2 s and 1.6 to 1.9 s on 4G), 0.9 s of which is the opening itself.
+- Suite 1437 → **1466**. Before/after HTML of all 1133 marbles pages compared: every difference is one of the above (plus scene-nav's random id). melt and buffbaby build; melt's photo grid and about page open the viewer.
+- **Not done / for Leon:** FastComments' own "Submit Reply" and "I have an account" buttons stay light pills at night (its `customCSS` option could restyle them); AE's own `scripts.njk` still binds its viewer to `<article>` (AE fork, not on this machine).
 ### Session 76 — November 14, 2026: a license, and what AIs may do
 **Worked on:** two settings from Leon's feedback on leons.bloob.haus (reports 78eec483, a06cf947, c695e9bb). Branch `settings-license-ai`.
 

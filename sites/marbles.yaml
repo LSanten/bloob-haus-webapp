@@ -24,4 +24,7 @@ features:
   # yes = sitemap.xml + robots.txt hand search engines every listed page | quiet (default)
   # = no sitemap | no = every page says noindex. Unlisted pages are never listed.
   show_in_search: yes
+  # Inline #tags become links to their tag page where they were written; the page's foot then
+  # shows the frontmatter tags only (scripts/utils/inline-tags.js)
+  inline_tag_links: true
   date_from_filename: true   # legacy: date stays in URL — the vault's url.date_prefix: keep wins anyway

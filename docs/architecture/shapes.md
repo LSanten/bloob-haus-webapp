@@ -261,9 +261,16 @@ note/
   style.css       the look, theme tokens only (docs/architecture/tokens.md)
 ```
 
-- **Blanks, not logic.** Templates use `{{ title }}`, `{{ subtitle }}`, `{{ image }}`,
+- **Blanks, not logic.** Templates use `{{ title }}`, `{{ heading }}`, `{{ subtitle }}`, `{{ image }}`,
   `{{ color }}`, `{{ firstLines }}`, `{{ yaml.<key> }}` (escaped), and `{{ body }}` / `{{ inside }}`
   (HTML). No ifs, no loops, so a template from anyone is safe to run anywhere (`fill.js`).
+- **A name is not a heading** (2026-11-14). `{{ title }}` is always there: when a note has no
+  `title:` and no heading, the host makes one from the filename, because the tab, search, links and
+  rooms need a name. `{{ heading }}` is the title only when its writer gave one, empty otherwise
+  (the host marks the made-up name `title_from_filename`). Use `{{ heading }}` where showing the
+  name would invent a heading the writer never wrote (the note's `<h1>`, hidden while empty) and
+  `{{ title }}` where the object just needs a name (a closed look, a share card). Leon: a note
+  "should have no title if there is no title in the body".
 - **The outside-only rule, by construction.** `deriveBlanks` (`blanks.js`) sorts a note into
   outside (frontmatter) and inside (body). A locked note can't be read and a sealed one shouldn't
   be, so both get no inside at all. `closed.html` never receives `{{ body }}`; it gets

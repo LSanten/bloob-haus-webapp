@@ -17,6 +17,10 @@ bloob-shape: note
 
 Any markdown. A `# Heading` at the top becomes the note's title. Everything is optional.
 
+A note with no title of its own (no `title:` and no `#`/`##` heading) opens without a heading:
+it never shows a name made from its filename as if someone had written it. That name still
+names the note in the browser tab, in search and in rooms.
+
 ## Settings
 
 None yet. Planned: a handwriting font to try instead of the default.

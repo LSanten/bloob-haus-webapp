@@ -9,5 +9,7 @@
 {% if site.embeds['fast-comments-embed'] and comments != false and not _bloob_unlisted %}
 <section class="bloob-comments" data-pagefind-ignore>
   {{ site.embeds['fast-comments-embed'] | injectPageVars(page, title, site.url, bloobPageId) | safe }}
+  {# The thread sits on the page, by day and night: no white box behind it (comments-on-sheet.js) #}
+  <script src="{{ '/assets/js/comments-on-sheet.js' | url }}"></script>
 </section>
 {% endif %}

@@ -85,6 +85,18 @@ describe('buildFileIndex', () => {
       expect(page.title).toBe('Cake');
     });
 
+    it('says when the title only came from the filename', async () => {
+      const index = await writeAndIndex([
+        makeFile('sets/2026-11-07 Aden Set.md', '---\n---\nHi friends\n\n### > The set list'),
+        makeFile('sets/titled.md', '---\ntitle: Given\n---\nWords'),
+        makeFile('sets/headed.md', '---\n---\n# A heading\nWords'),
+      ]);
+      const byFile = Object.fromEntries(Object.values(index.pages).map((p) => [path.basename(p.relativePath), p]));
+      expect(byFile['2026-11-07 Aden Set.md'].titleFromFilename).toBe(true);
+      expect(byFile['titled.md'].titleFromFilename).toBeUndefined();
+      expect(byFile['headed.md'].titleFromFilename).toBeUndefined();
+    });
+
     it('deslugifies and smart-cases a hyphenated filename fallback', async () => {
       const index = await writeAndIndex([
         makeFile('recipes/how-to-melt.md', '---\n---\nJust content'),

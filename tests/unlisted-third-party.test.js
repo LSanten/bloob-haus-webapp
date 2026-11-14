@@ -19,6 +19,7 @@ const PARTIALS = path.join(ROOT, "themes/_base/partials");
 
 const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(path.join(ROOT, "themes/_base")), { autoescape: true });
 env.addFilter("injectPageVars", (s) => s);
+env.addFilter("url", (s) => s);
 env.addFilter("pageLicense", () => null);
 env.addFilter("structuredDataScript", () => "");
 

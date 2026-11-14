@@ -153,6 +153,10 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       : smartTitleCase(slugBase);
     const title = extractTitle(frontmatter, body, titleFallback);
     const titleMd = extractTitleMd(frontmatter, body, titleFallback);
+    // Neither `title:` nor a heading: the title is only a name made from the filename. Pages still
+    // need a name (the tab, search, links, rooms), but a shape may choose not to show it as a
+    // heading the writer never wrote (the note does).
+    const titleFromFilename = !frontmatter.title && !/^#{1,2}\s+(.+)$/m.test(body);
 
     // Build URL with folder prefix if in a subfolder.
     // slugifyPath is the one canonical folder-path → URL-path derivation; the
@@ -194,6 +198,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const pageInfo = {
       title,
       ...(titleMd ? { title_md: titleMd } : {}),
+      ...(titleFromFilename ? { titleFromFilename: true } : {}),
       slug,
       fullSlug,
       folder: hasFolder ? folderPath : null,

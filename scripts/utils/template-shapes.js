@@ -10,6 +10,19 @@
 import fs from "fs-extra";
 import path from "path";
 import yaml from "js-yaml";
+import { stripInlineMarkdown } from "./title-deduplicator.js";
+
+/**
+ * What the engine gets about a page, from the page's data. The subtitle is written in markdown
+ * (the `##` under the title); the engine shows it as text on the object's outside (a closed
+ * marble, the share card), so it gets the plain words, never the link syntax.
+ * `about` is what the haus says about this kind of object (_bloob-objects.md).
+ */
+export function objectData(ctx, { name, about } = {}) {
+  const data = { ...ctx, object_label: (about?.display_name || name || "").toLowerCase(), object_about: about?.description };
+  if (ctx?.subtitle != null) data.subtitle = stripInlineMarkdown(String(ctx.subtitle)).trim();
+  return data;
+}
 
 export async function loadTemplateShapes(visualizersDir) {
   const shapes = new Map();

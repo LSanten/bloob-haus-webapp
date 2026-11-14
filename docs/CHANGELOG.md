@@ -6,6 +6,16 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 76 — November 14, 2026: a license, and what AIs may do
+**Worked on:** two settings from Leon's feedback on leons.bloob.haus (reports 78eec483, a06cf947, c695e9bb). Branch `settings-license-ai`.
+
+- **`license:`** (new, SET8): site-wide in `_bloob-settings.md` / `site.license` in `sites/*.yaml`, per note in frontmatter (`none` takes it away). The usual Creative Commons spellings and CC0 map to the deed URL (`scripts/utils/license.js`); anything else shows as written with a build warning. People get one quiet foot line ("Shared under CC BY-NC-SA 4.0", `_base/partials/license-line.njk`, in the bloob-haus-26, marbles-pouch, melt and warm-kitchen footers); machines get `<link rel="license">` (`seo-meta.njk`) and `license` in the page's JSON-LD.
+- **One JSON-LD block per page**: the `structured-data` fence left `site.snippets.head` for `_base/partials/structured-data.njk`, which merges it with the page's license into one `@graph` (`scripts/utils/structured-data.js`).
+- **The old license**: the Wayback copies of leonsanten.info/marbles pages carry `<meta name="license">`, JSON-LD and the footer "License for all original work: CC BY-NC-SA 4.0". Set on leons (one line in the vault's `_bloob-settings.md`). The bloob-haus-26 / marbles-pouch footers no longer print that license on their own when `footer_text` is empty.
+- **`ai:`** (SET7): `ai: read_links:yes, search:yes, train:no` or the nested form; defaults read_links yes, search yes, train no. Every site now gets a `robots.txt`, one group per switch (`scripts/utils/ai-access.js`, `themes/_base/pages/robots.njk`). The agent list is one data file, `scripts/utils/ai-agents.yaml`, each entry checked against its company's docs (Meta, Amazon, Exa, ElevenLabs, Reflection AI, Mistral, DuckDuckGo added; Bytespider from reporting, ByteDance publishes nothing). `facebookexternalhit` is never blocked (link previews).
+- **The broken one-line `ai:` is repaired** instead of failing the whole settings file. Found on the way: gray-matter caches a file before parsing it, so a second read of a broken file returned `{}` silently; `parseSettingsText` now bypasses the cache. A broken settings file still drops every setting, the blocklist tag included: new debt #51.
+- Checked by a full marbles build from a copy of the vault with three notes overridden (CC0, "All rights reserved", none). Suite: **1535** passing.
+
 ### Session 75 — November 10, 2026: dated filenames keep their date in the URL
 **Worked on:** `2026-11-07 Aden Bday Dolores Park Set` (marbles) was served without its date although the vault says `url.date_prefix: keep`, while the plugin's copied link had it.
 

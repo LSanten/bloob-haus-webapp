@@ -268,7 +268,7 @@ Both fields accept the same value formats:
 
 #### Shape identity registry (`_bloob-shapes.md`)
 
-`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `themes/_base/_bloob-shapes.template.md`. Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
+`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `_bloob-shapes.md` in the vault template (github.com/LSanten/bloob-haus-vault-template). Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
 
 | Column | Description |
 |--------|-------------|
@@ -369,7 +369,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 | `{{ page_full_url }}` | absolute page URL (preserve-case) | `site.url + page.url` |
 | `{{ page_title }}` | page title | `title` |
 
-Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
+Canonical author-facing scaffold: `_bloob-settings.md` in the **vault template**, its own repo since 2026-11-14 (github.com/LSanten/bloob-haus-vault-template, a GitHub template repo): what a new vault starts from, every setting written out at its default and explained (the license choices included). The builder holds the defaults in code; the template only writes them out, so when they disagree the code wins and the template is fixed. `themes/_base/` holds look and plumbing only (Leon, 2026-11-14: "I keep adding everything to the base theme when it is actually part of the template vault"). Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
 
 ---
 

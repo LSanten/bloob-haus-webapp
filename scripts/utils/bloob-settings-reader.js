@@ -8,6 +8,7 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 import { normalizeUnlistedFolders } from "./unlisted-folders.js";
+import { parseAiSwitches, repairAiLine } from "./ai-access.js";
 
 const SETTINGS_FILENAME = "_bloob-settings.md";
 
@@ -70,30 +71,10 @@ export function parseEmbedFences(markdownBody) {
 }
 
 /**
- * The `structured-data` fence: schema.org JSON-LD (JSON only, no <script> tag) that tells search
- * engines who the site belongs to. Returns the JSON wrapped in a JSON-LD script tag, minified, or
- * null (with a warning) when the JSON doesn't parse — a typo must not break every page's <head>.
- * `<` is escaped as \u003c so a value containing "</script>" can't close the tag early.
- *
- * @param {string} raw - fence content
- * @returns {string|null}
- */
-export function structuredDataScript(raw) {
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch (error) {
-    console.warn(`[settings] structured-data is not valid JSON, skipped: ${error.message}`);
-    return null;
-  }
-  const json = JSON.stringify(data).replace(/</g, "\\u003c");
-  return `<script type="application/ld+json">${json}</script>`;
-}
-
-/**
  * Pre-concatenates the auto-injected fences into `site.snippets.{head,bodyEnd}` for the shared
- * partials (site-snippets-head.njk / site-snippets-footer.njk). Structured data goes first in
- * the head.
+ * partials (site-snippets-head.njk / site-snippets-footer.njk). The `structured-data` fence is not
+ * a snippet: it is merged with the page's own data into one JSON-LD block per page
+ * (partials/structured-data.njk, scripts/utils/structured-data.js).
  *
  * @param {Object} embeds - map from parseEmbedFences
  * @returns {{ head: string, bodyEnd: string }}
@@ -103,10 +84,6 @@ export function composeSnippets(embeds = {}) {
   const add = (target, text) => {
     snippets[target] = snippets[target] ? `${snippets[target]}\n${text}` : text;
   };
-  if (embeds["structured-data"]) {
-    const script = structuredDataScript(embeds["structured-data"]);
-    if (script) add("head", script);
-  }
   for (const [name, target] of Object.entries(EMBED_TARGETS)) {
     if (embeds[name]) add(target, embeds[name]);
   }
@@ -138,6 +115,39 @@ export function parseGoatCounterCode(embeds) {
 }
 
 /**
+ * Parses the text of _bloob-settings.md. One known mistake is repaired instead of failing: the
+ * one-line `ai:` setting written with spaces after its colons (`ai: train: no`), which YAML can't
+ * read. A file that doesn't parse loses every setting in it, the blocklist tag included, so that
+ * line must never take the rest of the file down with it.
+ *
+ * @param {string} text
+ * @returns {{data: Object, content: string}} gray-matter's result
+ * @throws when the file doesn't parse and the ai: repair doesn't help
+ */
+export function parseSettingsText(text) {
+  // Options passed on purpose: without them gray-matter caches a file *before* parsing it, so
+  // after one failed parse the same text comes back as {} with no error, every setting gone.
+  try {
+    return matter(text, {});
+  } catch (error) {
+    const repaired = repairAiLine(text);
+    if (!repaired) throw error;
+    let result;
+    try {
+      result = matter(repaired, {});
+    } catch {
+      throw error; // broken somewhere else too: report the original problem
+    }
+    console.warn(
+      `[bloob-settings] The ai: line has a space after a colon, which YAML can't read on one line. ` +
+        `Read it as "${result.data.ai}". Write it without the spaces (ai: read_links:yes, search:yes, train:no) ` +
+        `or one switch per line under ai:.`,
+    );
+    return result;
+  }
+}
+
+/**
  * Reads and parses _bloob-settings.md from a content directory.
  * @param {string} contentDir - Path to the content directory
  * @returns {Object|null} Parsed frontmatter settings, or null if file not found
@@ -154,7 +164,7 @@ export async function readBloobSettings(contentDir) {
 
   try {
     const content = await fs.readFile(settingsPath, "utf-8");
-    const { data: frontmatter, content: body } = matter(content);
+    const { data: frontmatter, content: body } = parseSettingsText(content);
 
     // Snippet fences live in the body (never frontmatter — raw <script> would break YAML).
     frontmatter._embeds = parseEmbedFences(body);
@@ -197,6 +207,9 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     author: bloobSettings.author || siteConfig.site?.author,
     language: bloobSettings.language || siteConfig.site?.language,
     footer_text: bloobSettings.footer_text || siteConfig.site?.footer_text,
+    // License for the site's writing (scripts/utils/license.js). `??` so `license: none` in the
+    // vault still beats a license in sites/*.yaml.
+    license: bloobSettings.license ?? siteConfig.site?.license,
     footer_searchbar: bloobSettings.footer_searchbar ?? siteConfig.site?.footer_searchbar ?? false,
     // Logo/favicon: wiki-link [[filename]] or plain path; resolved to /media/ URL by assemble-src
     logo: bloobSettings.logo || siteConfig.site?.logo,
@@ -285,6 +298,15 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     show_visitor_count:
       bloobSettings.show_visitor_count ?? siteConfig.analytics?.show_visitor_count ?? false,
   };
+
+  // What AIs may do (SET7, scripts/utils/ai-access.js). Each door only overrides the switches it
+  // writes, and the vault wins. Defaults are filled in when site.js is written (assemble-src.js).
+  if (bloobSettings.ai !== undefined && bloobSettings.ai !== null) {
+    const fromConfig = parseAiSwitches(siteConfig.ai);
+    const fromVault = parseAiSwitches(bloobSettings.ai);
+    for (const warning of [...fromConfig.warnings, ...fromVault.warnings]) console.warn(`[bloob-settings] ${warning}`);
+    merged.ai = { ...fromConfig.switches, ...fromVault.switches };
+  }
 
   // Folders whose pages are always unlisted (scripts/utils/unlisted-folders.js). Owned by the
   // vault: _bloob-settings.md wins over sites/*.yaml.

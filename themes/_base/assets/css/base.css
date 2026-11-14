@@ -192,3 +192,17 @@ a {
     z-index: 2;
   }
 }
+
+/* ── License line ─────────────────────────────────────────────────────────────
+   partials/license-line.njk: one quiet line in the footer of a page that has a
+   license ("Shared under CC BY-NC-SA 4.0"). It takes the footer's own font and
+   colour; :where() keeps it free of specificity so a theme can restyle it. */
+:where(.license-line) {
+  margin: 0.4em 0;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+:where(.license-line a) {
+  color: inherit;
+}

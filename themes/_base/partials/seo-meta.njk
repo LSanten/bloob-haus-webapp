@@ -1,5 +1,5 @@
-{#- The SEO tags every theme head shares: title, description, canonical, robots, Open Graph,
-    Twitter. Each theme's head.njk includes this once; set `seo_title_sep` before the include to
+{#- The SEO tags every theme head shares: title, description, canonical, robots, license, Open
+    Graph, Twitter. Each theme's head.njk includes this once; set `seo_title_sep` before the include to
     change the separator between page and site title (melt: " · "), and
     `seo_home_uses_page_title = true` to let the homepage's own `title:` be its title (melt, AE;
     off by default so other homepages keep the site title).
@@ -13,6 +13,11 @@
 <meta name="description" content="{{ _desc }}" />
 <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
 {% include "partials/robots-meta.njk" %}
+{#- The page's license for machines (people get partials/license-line.njk; JSON-LD carries it too). #}
+{%- set _license = license | pageLicense(site.license) %}
+{%- if _license and _license.url %}
+<link rel="license" href="{{ _license.url }}" />
+{%- endif %}
 
 <meta property="og:type" content="{% if _isHome %}website{% else %}article{% endif %}" />
 <meta property="og:site_name" content="{{ site.title }}" />

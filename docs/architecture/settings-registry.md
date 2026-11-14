@@ -10,7 +10,7 @@
 
 **Not built yet:** `docs/settings-backlog.md` (shared with `../bloob-haus-cloud`).
 
-**Last Updated:** 2026-07-20
+**Last Updated:** 2026-11-14
 
 ---
 
@@ -41,6 +41,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
 | `comments` | bool | `true` | When `false`, suppresses the comment embed (`fast-comments-embed` fence) on this page. No effect unless the site has a `fast-comments-embed` snippet. |
 | `visitor_count` | bool | site-wide `show_visitor_count` | Per-page override for the GoatCounter visitor count, in **both** directions: `false` hides it on a page whose site shows it, `true` shows it on a site that is otherwise off. Cannot conjure a counter — the site still needs a `goat-counter-tracking` snippet, **and** "Allow using the visitor counter" must be enabled in the GoatCounter site's own settings (it defaults to off; without it the endpoint answers 403 and the widget stays hidden). Guarded by `tests/visitor-count-partial.test.js`. |
+| `license` | string | site-wide `license` | This note's own license, overriding the site's (see "License" below). `license: none` takes the license away on this page: no line, no link, nothing in the JSON-LD. Written the same ways as the site-wide value. Resolved by the `pageLicense` filter (`eleventy.config.js`, `scripts/utils/license.js`); an unrecognised value warns once per spelling at build. Added 2026-11-14. |
 | `bloob-page-id` | string | derived from URL | Override the canonical page ID (lowercased). Primary use: after moving/renaming a note, set this to its **old** ID so the FastComments thread stays attached. See `docs/architecture/urls-and-ids.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
@@ -132,6 +133,106 @@ Legacy flat keys (`permalink_strategy`, and `sites/*.yaml` values) still work; t
 wins when present. The derived **canonical page ID** = lowercased `host + path` — used as the
 FastComments `urlId` and exposed as `<meta name="bloob-page-id">`. See the contract doc.
 
+#### License (`license:`)
+
+What others may do with the site's writing. One value, two doors: `license:` in `_bloob-settings.md`
+or `site.license` in `sites/*.yaml` (the vault wins, `license: none` included). A note's own
+`license:` frontmatter overrides it for that page (see Per-Page Frontmatter).
+
+```yaml
+license: CC BY-NC-SA 4.0
+```
+
+| Written as | Becomes |
+|------------|---------|
+| `CC BY-NC-SA 4.0`, `CC-BY-NC-SA-4.0` (SPDX), `cc by-nc-sa 4.0`, `CC BY NC SA 4.0`, `Attribution-NonCommercial-ShareAlike 4.0 International`, the deed URL | **CC BY-NC-SA 4.0** → `https://creativecommons.org/licenses/by-nc-sa/4.0/`. All six CC licenses (BY, BY-SA, BY-ND, BY-NC, BY-NC-SA, BY-NC-ND), versions 2.0, 2.5, 3.0, 4.0. No version written = 4.0. |
+| `CC0`, `CC0 1.0`, `CC0-1.0`, `CC0 1.0 Universal` | **CC0 1.0** → `https://creativecommons.org/publicdomain/zero/1.0/` |
+| anything else (`All rights reserved`, `MIT`, a typo) | shown as written, with no link, and a build warning (`[assemble]` for the site's, `[license]` for a note's) |
+| `none` (or empty) | no license |
+
+Parsed by `scripts/utils/license.js` (`parseLicense`, `pageLicense`). The site's value is parsed once
+into `site.license` (`{ name, url, known }`) by `assemble-src.js`.
+
+Where it shows, on every page that has one:
+
+| For | What | Where |
+|-----|------|-------|
+| People | One quiet line, "Shared under CC BY-NC-SA 4.0" linking to the deed ("License: …" with no link when unrecognised). No em dashes. | `_base/partials/license-line.njk`, included by each theme's footer; `.license-line` in `_base/assets/css/base.css` |
+| Machines | `<link rel="license" href="…">` (only when there is a URL) | `_base/partials/seo-meta.njk` |
+| Machines | `license` on the page's `WebPage` node, in the page's one JSON-LD block (merged with the `structured-data` fence into one `@graph`, never a second block). An unrecognised license is a named `CreativeWork`. Not on unlisted pages. | `_base/partials/structured-data.njk`, `scripts/utils/structured-data.js` |
+
+**Theme implementation status:**
+| Theme | footer line | head (`seo-meta`) | JSON-LD |
+|-------|-------------|-------------------|---------|
+| `bloob-haus-26` | ✓ | ✓ | ✓ |
+| `marbles-pouch` | ✓ | ✓ | ✓ |
+| `melt` | ✓ | ✓ | ✓ |
+| `warm-kitchen` | ✓ | ✓ (`_base` head) | ✓ |
+| `alter-engineers` | ✗ (the client's own footer) | ✗ (its head doesn't use `seo-meta` here) | ✓ (through `site-snippets-head.njk`) |
+
+Before 2026-11-14 the bloob-haus-26 and marbles-pouch footers printed "CC BY-NC-SA 4.0" whenever
+`footer_text` was empty: a license the site owner never chose. That fallback is gone; a license
+comes only from this setting. Leon's leons site: `license: CC BY-NC-SA 4.0`, what the old
+leonsanten.info marbles carried ("License for all original work").
+
+#### What AIs may do (`ai:`)
+
+Three switches, written to the site's `robots.txt` (SET7, Leon 2026-11-01). Every site gets a
+`robots.txt`, with or without a sitemap.
+
+| Switch | Default | Means | Agents (from each company's docs) |
+|--------|---------|-------|-----------------------------------|
+| `read_links` | `yes` | an AI opens a page because someone asked it about that page | ChatGPT-User, Claude-User, Perplexity-User, Meta-ExternalFetcher, Amzn-User, MistralAI-User, ExaUser, ElevenlabsBot |
+| `search` | `yes` | AI search indexes pages so its answers can find and cite them | OAI-SearchBot, Claude-SearchBot, PerplexityBot, Meta-WebIndexer, Amzn-SearchBot, MistralAI-Index, DuckAssistBot, ExaSearchBot (+ -Images) |
+| `train` | `no` | pages may be collected to train AI models | GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, Amazonbot, MistralAI-Training, ElevenlabsCrawler, Reflectionbot, Bytespider |
+
+The list lives in one data file, **`scripts/utils/ai-agents.yaml`**, each entry with the doc it comes
+from. Add an agent there (a test checks every entry has a company and a source, and that none is
+listed twice).
+
+How to write it. One line, any order, only what differs from the default:
+
+```yaml
+ai: read_links:yes, search:yes, train:no
+```
+
+**No space after the colons** on one line: YAML reads `ai: train: no` as broken and fails the whole
+file. So the nested form works too:
+
+```yaml
+ai:
+  train: no
+```
+
+and the settings reader repairs that one broken line rather than lose every setting in the file
+(`parseSettingsText` in `bloob-settings-reader.js`, with a warning). `ai: no` turns all three off,
+`ai: yes` all three on. Values: yes/no, true/false, on/off. Settable in `sites/*.yaml` (`ai:`) or
+`_bloob-settings.md`; each door only overrides the switches it writes, and the vault wins. Parsed by
+`scripts/utils/ai-access.js` into `site.ai`; `themes/_base/pages/robots.njk` writes it with the
+`robotsTxt` shortcode.
+
+What the robots.txt looks like (defaults): `User-agent: *` / `Allow: /` for everyone else, then one
+group per switch naming its agents with `Allow: /` or `Disallow: /` and a comment saying the
+switch's value, then `Sitemap:` when `features.show_in_search: yes`. On a `show_in_search: no` site
+it is still `Allow: /`: a crawler has to fetch a page to see its `noindex`.
+
+**Said plainly:**
+- **robots.txt is a request the big companies honour, not a lock.** Several user-initiated fetchers
+  say they may not follow it (ChatGPT-User, Perplexity-User, Meta-ExternalFetcher, Amzn-User); Google's
+  user-triggered fetchers ignore it entirely and have no token. Only a login keeps a page from an AI.
+- **Scrapers that ignore robots.txt are stopped only at Cloudflare**, by a WAF rule on the zone,
+  which is outside the builder. bloob.haus has one (Bytespider, HeadlessChrome, curl, l9scan,
+  Reflectionbot, empty user agents).
+- **Link previews are never blocked.** `facebookexternalhit` draws the preview when a page is shared
+  on Facebook, Instagram or Messenger, so it is in no group, whatever the switches say ("left alone"
+  in the data file). Blocking Meta's AI means Meta-ExternalAgent (train), Meta-WebIndexer (search)
+  and Meta-ExternalFetcher (read_links).
+- **`train: no` also keeps the site out of Gemini's grounding**: Google-Extended covers Gemini
+  training and Gemini answers that cite the web. Google Search and its AI Overviews come through
+  Googlebot and are not touched.
+- SEO scrapers (SemrushBot, AhrefsBot, DotBot, MJ12bot) are not AI and have no switch (parked,
+  `docs/implementation-plans/DECISIONS.md` 2026-11-14).
+
 #### Logo & Favicon
 
 | Key | Type | Description |
@@ -173,7 +274,7 @@ Both fields accept the same value formats:
 
 #### Shape identity registry (`_bloob-shapes.md`)
 
-`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `themes/_base/_bloob-shapes.template.md`. Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
+`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `_bloob-shapes.md` in the vault template (github.com/LSanten/bloob-haus-vault-template). Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
 
 | Column | Description |
 |--------|-------------|
@@ -203,7 +304,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
 | `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
-| `features.show_in_search` | `quiet` | How the site shows up in search engines. `yes` = `sitemap.xml` + `robots.txt` from `themes/_base/pages/` (all themes except alter-engineers). `quiet` = no sitemap; pages are found only if something links to them. `no` = keep the whole site out of search: every rendered page gets `noindex,nofollow` (`_base/partials/robots-meta.njk`, included by every theme head), and the build appends `X-Robots-Tag: noindex, nofollow` for every path to `_headers` (`scripts/utils/search-headers.js`, build-site step 7.1), which also covers what no head renders: magic machines, raw HTML, PDFs, images. Unlisted pages are never listed in any mode; the homepage and folder index pages always are (so per-site sitemaps can later be stitched into one). A bare `yes`/`no` read as `true`/`false` by an older YAML parser counts; any other value is `quiet`. Renamed from `features.invite_search_engines` (2026-10-25, same day it shipped). Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby, melt (melt since 2026-10-28, set in its vault). Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
+| `features.show_in_search` | `quiet` | How the site shows up in search engines. `yes` = `sitemap.xml` from `themes/_base/pages/` (all themes except alter-engineers), named in `robots.txt`. `robots.txt` itself is built for every site since 2026-11-14 (it carries the `ai:` switches). `quiet` = no sitemap; pages are found only if something links to them. `no` = keep the whole site out of search: every rendered page gets `noindex,nofollow` (`_base/partials/robots-meta.njk`, included by every theme head), and the build appends `X-Robots-Tag: noindex, nofollow` for every path to `_headers` (`scripts/utils/search-headers.js`, build-site step 7.1), which also covers what no head renders: magic machines, raw HTML, PDFs, images. Unlisted pages are never listed in any mode; the homepage and folder index pages always are (so per-site sitemaps can later be stitched into one). A bare `yes`/`no` read as `true`/`false` by an older YAML parser counts; any other value is `quiet`. Renamed from `features.invite_search_engines` (2026-10-25, same day it shipped). Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby, melt (melt since 2026-10-28, set in its vault). Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
@@ -259,7 +360,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 |-----------|-------------|-------|
 | `header-snippet` | `<head>` | Generic head injection (meta tags, `<link>`, verification tags) |
 | `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
-| `structured-data` | `<head>` | schema.org JSON-LD about who the site belongs to (Person, business). **JSON only**: the builder wraps it in `<script type="application/ld+json">` (`structuredDataScript` in `scripts/utils/bloob-settings-reader.js`), escapes `<`, and skips it with a build warning when the JSON does not parse. Empty fence = off. The vault template suggests asking an AI to write it. Added 2026-10-29. |
+| `structured-data` | `<head>` | schema.org JSON-LD about who the site belongs to (Person, business). **JSON only**: parsed once into `site.structured_data` (`parseStructuredData` in `scripts/utils/structured-data.js`, skipped with a build warning when the JSON does not parse) and rendered by `_base/partials/structured-data.njk`, which `site-snippets-head.njk` includes, as `<script type="application/ld+json">` with `<` escaped. When a page has a license, the fence and the page go into **one** `@graph` (never a second block). Not on unlisted pages. Empty fence = off. The vault template suggests asking an AI to write it. Added 2026-10-29; merged with the page 2026-11-14. |
 | `footer-snippet` | before `</body>` | Generic end-of-body injection |
 | `embed-endofbody` | before `</body>` | Generic end-of-body injection |
 | `fast-comments-embed` | content-bottom of `page.njk` **and of the `article` shape** (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. On by default wherever the partial is included; opt out per-page with `comments: false`; renders nothing at all when this fence is absent. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). Guarded by `tests/comments-partial.test.js`. |
@@ -274,7 +375,7 @@ Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `
 | `{{ page_full_url }}` | absolute page URL (preserve-case) | `site.url + page.url` |
 | `{{ page_title }}` | page title | `title` |
 
-Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
+Canonical author-facing scaffold: `_bloob-settings.md` in the **vault template**, its own repo since 2026-11-14 (github.com/LSanten/bloob-haus-vault-template, a GitHub template repo): what a new vault starts from, every setting written out at its default and explained (the license choices included). The builder holds the defaults in code; the template only writes them out, so when they disagree the code wins and the template is fixed. `themes/_base/` holds look and plumbing only (Leon, 2026-11-14: "I keep adding everything to the base theme when it is actually part of the template vault"). Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
 
 ---
 

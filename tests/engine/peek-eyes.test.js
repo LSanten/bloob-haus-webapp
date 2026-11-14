@@ -58,6 +58,25 @@ describe("peek eyes", () => {
     await ctx.close();
   });
 
+  it("sit only beside links in running text, never inside a shape's own drawing (feedback 30696131)", async () => {
+    if (!browser) return;
+    const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 } });
+    const cards = `<!doctype html><html class="bh-js"><head><style>${css}
+      .fp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.fp-card{display:block}</style></head><body><main>
+      <div class="article-body"><p>See <a id="prose" href="/marbles/a/">this one</a>.</p>
+      <div class="collection-visualizer"><div class="fp-cards">
+        <a class="fp-card" href="/marbles/b/">B</a><a class="fp-card" href="/marbles/c/">C</a><a class="fp-card" href="/marbles/d/">D</a>
+      </div></div></div></main>${belt}<script>${toolbox}</script></body></html>`;
+    await ctx.route("https://test.local/**", (r) => r.fulfill({ contentType: "text/html", body: cards }));
+    const page = await ctx.newPage();
+    await page.goto("https://test.local/");
+    expect(await page.$$eval(".bloob-peek-eye", (e) => e.length)).toBe(1);
+    expect(await page.$eval("#prose + .bloob-peek-eye", (e) => !!e)).toBe(true);
+    // the card grid keeps its three cards in one row: no eye took a cell
+    expect(await page.$$eval(".fp-cards > *", (e) => e.map((x) => x.className))).toEqual(["fp-card", "fp-card", "fp-card"]);
+    await ctx.close();
+  });
+
   it("the tool belt can hide them", async () => {
     if (!browser) return;
     const { ctx, page } = await open();

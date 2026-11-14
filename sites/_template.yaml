@@ -17,6 +17,7 @@
 # src-yourname/).
 site:
   url: "https://yourname.bloob.haus"
+  # license: "CC BY-NC-SA 4.0"   # usually set in the vault's _bloob-settings.md (it wins)
 
 # Your content vault: the GitHub repo the builder clones and reads. Keep it
 # private — your content stays yours. The builder needs a GITHUB_TOKEN (in
@@ -43,3 +44,8 @@ features:
   search: true          # Pagefind full-text search index + search bar
   # magic_machines: true       # enable standalone browser tools at /magic-machine/*
   # Dated filenames: set url.date_prefix (keep | strip) and url.date_redirect in the vault's _bloob-settings.md
+
+# What AIs may do (written to robots.txt). Usually set in the vault's _bloob-settings.md,
+# which wins switch by switch. Defaults: read_links yes, search yes, train no.
+# ai:
+#   train: no

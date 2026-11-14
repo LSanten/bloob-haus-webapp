@@ -16,6 +16,7 @@ import nunjucks from "nunjucks";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { buildRobotsTxt, AI_DEFAULTS } from "../scripts/utils/ai-access.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const THEMES = path.join(__dirname, "../themes");
@@ -28,9 +29,22 @@ function body(file, dir = BASE_PAGES) {
   return text.replace(/^---[\s\S]*?\r?\n---\r?\n/, "");
 }
 
+/** The `robotsTxt` shortcode, registered the way Eleventy registers a Nunjucks shortcode. */
+function RobotsTxtTag() {
+  this.tags = ["robotsTxt"];
+  this.parse = (parser, nodes) => {
+    const tok = parser.nextToken();
+    const args = parser.parseSignature(true, true);
+    parser.advanceAfterBlockEnd(tok.value);
+    return new nodes.CallExtension(this, "run", args);
+  };
+  this.run = (_context, ai, sitemapUrl) => new nunjucks.runtime.SafeString(buildRobotsTxt({ ai, sitemapUrl }));
+}
+
 function render(file, ctx) {
   const env = new nunjucks.Environment();
   env.addFilter("dateToRfc3339", (d) => new Date(d).toISOString());
+  env.addExtension("robotsTxt", new RobotsTxtTag());
   return env.renderString(body(file), ctx);
 }
 
@@ -96,10 +110,29 @@ describe("base sitemap.xml", () => {
 });
 
 describe("base robots.txt", () => {
-  it("points search engines at this site's sitemap", () => {
+  const withSearch = (show_in_search) => ({ ...site, ai: AI_DEFAULTS, features: { show_in_search } });
+
+  it("points search engines at this site's sitemap when it has one", () => {
     expect(fs.existsSync(path.join(BASE_PAGES, "robots.njk"))).toBe(true);
-    const txt = render("robots.njk", { site });
+    const txt = render("robots.njk", { site: withSearch("yes") });
     expect(txt).toContain("Sitemap: https://leons.bloob.haus/sitemap.xml");
+  });
+
+  it("names no sitemap on a quiet or no site (none is built)", () => {
+    for (const mode of ["quiet", "no"]) expect(render("robots.njk", { site: withSearch(mode) })).not.toContain("Sitemap:");
+  });
+
+  it("says what AIs may do (SET7), and lets everyone else in", () => {
+    const txt = render("robots.njk", { site: withSearch("quiet") });
+    expect(txt).toMatch(/^User-agent: \*\nAllow: \/$/m);
+    expect(txt).toMatch(/User-agent: GPTBot\n[\s\S]*?Disallow: \//);
+    expect(txt).toContain("(train: no)");
+  });
+
+  it("is never Disallow: / for everyone, even on a show_in_search: no site", () => {
+    // Crawlers must fetch a page to see its noindex; a blanket Disallow would hide it.
+    const txt = render("robots.njk", { site: withSearch("no") });
+    expect(txt).toMatch(/^User-agent: \*\nAllow: \/$/m);
   });
 });
 

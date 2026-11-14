@@ -1,0 +1,7 @@
+{#- One quiet line at the foot of a page that has a license: the note's own `license:`, else the
+    site's (scripts/utils/license.js). Each theme's footer includes it. A recognised license links
+    to its deed; anything else is shown as written. -#}
+{%- set _license = license | pageLicense(site.license) %}
+{%- if _license %}
+<p class="license-line">{% if _license.url %}Shared under <a href="{{ _license.url }}" rel="license">{{ _license.name }}</a>{% else %}License: {{ _license.name }}{% endif %}</p>
+{%- endif %}

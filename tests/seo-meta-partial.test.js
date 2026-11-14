@@ -7,12 +7,14 @@ import nunjucks from "nunjucks";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { pageLicense } from "../scripts/utils/license.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const THEMES = path.join(__dirname, "../themes");
 const PARTIALS = path.join(THEMES, "_base/partials");
 
 const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(path.join(THEMES, "_base")), { autoescape: true });
+env.addFilter("pageLicense", (raw, siteLicense) => pageLicense(raw, siteLicense)); // as eleventy.config.js
 
 const site = { title: "Alter Engineers", description: "Engineering an alternative", url: "https://alterengineers.com", features: {} };
 

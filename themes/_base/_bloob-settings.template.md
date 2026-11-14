@@ -11,6 +11,16 @@ name: Example Site
 description: one-line site description
 author: your name
 language: en-us
+license:                        # what others may do with your writing, e.g. CC BY-NC-SA 4.0. Empty = none.
+                                # Creative Commons written any usual way (CC BY 4.0, CC-BY-SA-4.0, CC0)
+                                # links to the license: one quiet line at the foot of each page, plus
+                                # machine-readable tags. Override per note with `license:` in its
+                                # frontmatter (`license: none` = no license on that note)
+ai: read_links:yes, search:yes, train:no   # what AIs may do (written to robots.txt). Defaults shown;
+                                # write only what differs. NO space after these colons, or nest it:
+                                #   ai:
+                                #     train: no
+                                # robots.txt is a request the big AI companies honour, not a lock
 theme: marbles-pouch            # marbles-pouch | melt | warm-kitchen | alter-engineers
 default_shape: note             # fallback shape for pages with no bloob-shape: — governs their
                                 # layout AND commentability. Falls through to page.njk (commentable)

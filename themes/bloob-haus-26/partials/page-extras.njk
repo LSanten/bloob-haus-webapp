@@ -1,7 +1,10 @@
 {#- Around every page's words: tags, pages that link here, the graph, comments. The reading
     sheet and the objects that open into an article (a marble) both include it. -#}
-  {% if tags %}
-  {% set displayTags = tags | filterTagList %}
+  {# With inline #tags linked where they were written (features.inline_tag_links), the foot shows
+     the frontmatter's tags only, so a tag is never listed twice (Leon's feedback 59526537). #}
+  {% set footTags = (yaml_tags or []) if site.features.inline_tag_links else tags %}
+  {% if footTags %}
+  {% set displayTags = footTags | filterTagList %}
   {% if displayTags.length %}
   <div class="page-tags" data-pagefind-ignore>
     {% for tag in displayTags %}

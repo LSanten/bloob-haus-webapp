@@ -45,7 +45,7 @@ import { stripDatePrefix, resolveDatePrefixMode } from "./utils/date-prefix.js";
 import { buildDateRedirects } from "./utils/date-redirects.js";
 import { smartTitleCase } from "./utils/smart-title-case.js";
 import { slugifyPath } from "./utils/slug-strategy.js";
-import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
+import { extractTags, yamlTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
 import { resolveRedirect } from "./utils/redirect-resolver.js";
 import {
@@ -500,6 +500,9 @@ export async function preprocessContent({
       slug: pageInfo?.slug,
       ...(pageInfo?.slug && { slug_spaced: pageInfo.slug.replace(/-/g, " ") }),
       tags: pageTags,
+      // The frontmatter's own tags (no inline #tags): the foot of the page shows these when the
+      // site links inline tags in place (features.inline_tag_links).
+      yaml_tags: yamlTags(frontmatter),
       ...(bloobObject && { bloob_object: bloobObject }),
       ...(resolvedRedirect && { redirect: resolvedRedirect }),
       ...(isUnlisted && { _bloob_unlisted: true }),

@@ -25,6 +25,31 @@ const SYSTEM_TAGS = new Set(["not-for-public", "gardenentry", "all", "nav", "to-
  */
 const IGNORED_TAGS = new Set(["from-wl-recipes-gdrive"]);
 
+/** Whether a tag (without #) is one the site shows: not a system tag, not ignored. */
+export function isPublicTag(tag) {
+  const t = String(tag).replace(/^#/, "").toLowerCase().trim();
+  return t.length > 0 && !SYSTEM_TAGS.has(t) && !IGNORED_TAGS.has(t);
+}
+
+/**
+ * A tag's address segment, as the tag pages' permalink makes it (`/tags/{{ tag | slugify }}/`;
+ * eleventy.config.js's slugify filter is this function, so the two cannot drift).
+ */
+export function slugifyTag(str) {
+  if (!str) return "";
+  return String(str)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s/-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** The tags written in the frontmatter only (no inline #tags), normalised like extractTags. */
+export function yamlTags(frontmatter) {
+  return extractTags(frontmatter || {}, "");
+}
+
 /**
  * Extract tags from a page's frontmatter and markdown content.
  *
@@ -60,9 +85,7 @@ export function extractTags(frontmatter, content) {
     ...new Set(
       tags
         .map((t) => t.replace(/^#/, "").toLowerCase().trim())
-        .filter(
-          (t) => t.length > 0 && !SYSTEM_TAGS.has(t) && !IGNORED_TAGS.has(t),
-        ),
+        .filter(isPublicTag),
     ),
   ].sort();
 

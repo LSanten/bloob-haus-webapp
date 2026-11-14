@@ -11,6 +11,7 @@ import markdownItContainer from "markdown-it-container";
 import markdownItAttrs from "markdown-it-attrs";
 import { renderSectionOpen } from "./section-container.js";
 import markdownItFootnote from "markdown-it-footnote";
+import { inlineTagsPlugin } from "./inline-tags.js";
 
 /**
  * @param {import("markdown-it")} mdLib  a markdown-it instance (Eleventy's, or a new one)
@@ -54,6 +55,12 @@ export function configureMarkdown(mdLib, { siteConfig = {}, visualizers = [] } =
       return renderSectionOpen(tokens[idx].info);
     },
   });
+
+  // Obsidian-style #tags in the text become links to their tag page, in place. Opt in per site
+  // with features: { inline_tag_links: true } (scripts/utils/inline-tags.js).
+  if (siteConfig.features?.inline_tag_links) {
+    mdLib.use(inlineTagsPlugin, { prefix: siteConfig.mount_path || "" });
+  }
 
   // Shapes that change how markdown itself renders export a markdown-it
   // plugin from their index.js (today: foldable, for `## > Heading`). It is

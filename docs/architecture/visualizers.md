@@ -583,6 +583,14 @@ loaded, when the live layer can't run), and the object fades in at once. Its ope
 too. A CSS fallback shows it after 3 s anyway, so a slow phone or a script error never leaves it
 hidden, and without script it shows straight away as plain HTML (the no-JS rule still holds).
 
+**In a peek, the finished closed look is the whole piece** (2026-11-14, Leon's feedback that a
+peek was slower than going to the page). Per-page loading means the host page may not carry the
+peeked shape's `browser.js` at all (the homepage room has no `marble.js`), so nothing would ever
+call `assembled` and every peek sat out the 3 s fallback. `peek.js` therefore marks the peeked
+object assembled once its closed-look picture (`closedLookReady`) and the peeked page's borrowed
+stylesheets have loaded, then opens it. When the shape's script is present its live layer still
+replaces the baked look afterwards, which it does without a jump.
+
 ## The engine — `lib/visualizers/_engine/` (2026-11-02)
 
 The one home for what every visualizer needs and should never rewrite: filling a template shape

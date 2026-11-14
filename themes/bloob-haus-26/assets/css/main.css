@@ -634,6 +634,10 @@ html.bh-js .toolbelt { display: block; }
   overflow-y: auto;
   padding: 8px 20px 28px;
 }
+/* the peeked object waits, unseen, for its own styles and picture (a few tenths of a second) */
+.bloob-peek__stage.is-waiting {
+  visibility: hidden;
+}
 .bloob-peek__label {
   margin-right: auto;
   font: 600 0.75rem/1 var(--font-label);

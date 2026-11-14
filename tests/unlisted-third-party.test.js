@@ -19,6 +19,7 @@ const PARTIALS = path.join(ROOT, "themes/_base/partials");
 
 const env = new nunjucks.Environment(null, { autoescape: true });
 env.addFilter("injectPageVars", (s) => s);
+env.addFilter("url", (s) => s);
 
 const site = {
   url: "https://example.bloob.haus",

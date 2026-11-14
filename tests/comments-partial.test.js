@@ -37,6 +37,7 @@ function render({ configured = true, pageValue } = {}) {
   // {{ page_id }} tokens, which is not what this test is about.
   const env = new nunjucks.Environment(null, { autoescape: false });
   env.addFilter("injectPageVars", (s) => s);
+  env.addFilter("url", (s) => s);
   const html = env.renderString(PARTIAL, ctx);
   return { rendered: html.includes("bloob-comments"), html };
 }

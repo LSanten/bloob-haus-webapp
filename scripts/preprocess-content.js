@@ -503,6 +503,9 @@ export async function preprocessContent({
       ...(bloobObject && { bloob_object: bloobObject }),
       ...(resolvedRedirect && { redirect: resolvedRedirect }),
       ...(isUnlisted && { _bloob_unlisted: true }),
+      // The title is a name made from the filename, not one the writer gave (the note then opens
+      // without a heading; the tab, search and rooms still use the name).
+      ...(pageInfo?.titleFromFilename && !frontmatter.title && { title_from_filename: true }),
       // Expose :::settings block values to layout templates (e.g. share_bar toggle in article shape)
       ...(bloobShape && Object.keys(shapeSettings).length > 0 && { shape_settings: shapeSettings }),
     };

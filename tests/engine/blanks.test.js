@@ -30,6 +30,13 @@ describe("deriveBlanks", () => {
     expect(deriveBlanks(note(data)).inside.image).toBe("/og/a.png");
   });
 
+  it("heading is the title the writer gave, empty when the host only made a name from the filename", () => {
+    expect(deriveBlanks(note({ title: "Given" })).outside.heading).toBe("Given");
+    expect(deriveBlanks(note({ title: "2026 11 07 Aden Set", title_from_filename: true })).outside.heading).toBeUndefined();
+    // the name stays, for everything that needs one (the closed look, the share card)
+    expect(deriveBlanks(note({ title: "2026 11 07 Aden Set", title_from_filename: true })).outside.title).toBe("2026 11 07 Aden Set");
+  });
+
   it("the body is inside", () => {
     expect(deriveBlanks(note({}, "<p>hello</p>")).inside.body).toBe("<p>hello</p>");
   });

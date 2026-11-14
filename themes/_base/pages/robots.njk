@@ -2,7 +2,7 @@
 permalink: /robots.txt
 eleventyExcludeFromCollections: true
 ---
-User-agent: *
-Allow: /
-
-Sitemap: {{ site.url }}/sitemap.xml
+{#- Built for every site. What AIs may do comes from the `ai:` setting (SET7,
+    scripts/utils/ai-access.js, crawler list in scripts/utils/ai-agents.yaml); the sitemap is
+    named only when the site sets features.show_in_search: yes, the only time one is built. -#}
+{% robotsTxt site.ai, (site.url + "/sitemap.xml") if site.features.show_in_search == "yes" else "" %}

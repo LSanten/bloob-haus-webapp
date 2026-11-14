@@ -39,18 +39,29 @@ build actually uses, never a second copy that can disagree.
       answers that one path and lets everything else on `bloob.haus` fall through to the live site.
       Submit it to Search Console once. **Build when the first customer site exists** — until then
       the per-site sitemaps submitted by hand (leons, buffbaby, 2026-10-27) do the same job.
-- [ ] **SET7** — what AIs may do with a site, three switches in `_bloob-settings.md` (Leon,
+- [x] **SET7** — what AIs may do with a site, three switches in `_bloob-settings.md` (Leon,
       2026-11-01). Defaults: **reading by link on, AI search on, training off**, for every site.
       Leon's format, one line, any order, write only what differs from the default:
-      `ai: read_links:yes, search:yes, train:no`. No space after the colons on one line (YAML
-      would read `ai: read_links: yes` as broken and fail the whole file), so the reader also
-      accepts the nested form (`ai:` + `  train: no`). Written to each site's `robots.txt` by
-      user agent: read_links → ChatGPT-User, Claude-User, Perplexity-User; search →
-      OAI-SearchBot, Claude-SearchBot, PerplexityBot; train → GPTBot, ClaudeBot,
-      Google-Extended, CCBot, Applebot-Extended. So every site gets a `robots.txt` (today only
-      `show_in_search: yes` sites have one, which means every AI is currently allowed
-      everything on quiet sites). Say plainly in the docs: robots.txt is a request the big
-      companies honour, not a lock; only a login keeps a page from an AI.
+      `ai: read_links:yes, search:yes, train:no`; the nested form (`ai:` + `  train: no`) works
+      too, and the broken one-line form (`ai: train: no`) is repaired instead of failing the
+      whole file. Every site gets a `robots.txt`, one group per switch. Agents per switch come
+      from each company's own docs and live in `scripts/utils/ai-agents.yaml` (Meta, Amazon,
+      ByteDance, Exa, ElevenLabs, Reflection AI, Mistral and DuckDuckGo added to Leon's list,
+      2026-11-14). `facebookexternalhit` (link previews) is never blocked. Shipped 2026-11-14;
+      reference in `docs/architecture/settings-registry.md` → "What AIs may do".
+- [ ] **SET9** — SEO scrapers (SemrushBot, AhrefsBot, DotBot, MJ12bot). **Parked** (2026-11-14):
+      they aren't AI, so they get no switch under `ai:`. If a site owner asks to block them, it is
+      a new key (not `ai:`), or a Cloudflare WAF rule, which already stops the ones that ignore
+      robots.txt. See `docs/implementation-plans/DECISIONS.md` 2026-11-14.
 - [x] **SET6** — melt's `show_in_search` is `yes` (2026-10-28, in the vault's `_bloob-settings.md`).
       Leon reviewed the page list: the bios page is meant to be found; the four `Resources/` drafts
       are `visibility: private` and not built at all.
+
+## Site content (builder)
+
+- [x] **SET8** — a license for a site's writing (Leon, report 78eec483, 2026-11-14):
+      `license:` in `_bloob-settings.md` / `site.license` in `sites/*.yaml`, overridden per note
+      by `license:` frontmatter (`none` takes it away). Common Creative Commons spellings and CC0
+      map to the deed URL; anything else shows as written with a build warning. A quiet foot line
+      for people, `<link rel="license">` and JSON-LD `license` for machines. leons:
+      `CC BY-NC-SA 4.0`, what the old leonsanten.info marbles carried. Shipped 2026-11-14.

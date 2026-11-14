@@ -2,6 +2,7 @@
   <div class="footer-container">
     <p>&copy; {{ site.year }} {{ site.title }}</p>
     {% if site.footer_text %}<p class="footer-note">{{ site.footer_text | safe }}</p>{% endif %}
+    {% include "partials/license-line.njk" %}
     <p class="footer-note">Built with Bloob Haus — a holistic system for making sharing online resources more tangible.</p>
   </div>
 </footer>

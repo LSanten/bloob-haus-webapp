@@ -7,14 +7,8 @@
   <div class="site-footer__inner">
 
     <div class="site-footer__tagline">
-      {% if site.footer_text %}
-        {{ site.footer_text }}
-      {% else %}
-        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">
-          <img src="https://mirrors.creativecommons.org/presskit/logos/cc.logo.svg" alt="Creative Commons" />
-        </a>
-        CC BY-NC-SA 4.0
-      {% endif %}
+      {% if site.footer_text %}{{ site.footer_text }}{% endif %}
+      {% include "partials/license-line.njk" %}
     </div>
 
     {% if site.footer_searchbar and site.features.search != false %}

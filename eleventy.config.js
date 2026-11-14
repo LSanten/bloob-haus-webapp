@@ -17,6 +17,9 @@ import { renderRoom, roomNodes, nodesForUrls } from "./lib/visualizers/_engine/r
 import { renderObject } from "./lib/visualizers/_engine/index.js";
 import { headInitScript } from "./lib/visualizers/_engine/head-init.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
+import { pageLicense } from "./scripts/utils/license.js";
+import { licensedPageNode, mergeStructuredData, jsonLdScript } from "./scripts/utils/structured-data.js";
+import { buildRobotsTxt } from "./scripts/utils/ai-access.js";
 import {
   detectVisualizers,
   renderAssetTags,
@@ -318,6 +321,30 @@ export default async function (eleventyConfig) {
       (_, key) => tokens[key] ?? ""
     );
   });
+
+  // The license that applies to a page: its own `license:` frontmatter, else the site's
+  // (site.license, parsed in assemble-src.js; `license: none` takes it away). An unrecognised
+  // license is shown as written, with no link, and warned about once per spelling.
+  const warnedLicenses = new Set();
+  eleventyConfig.addFilter("pageLicense", function (raw, siteLicense) {
+    const license = pageLicense(raw, siteLicense);
+    if (license && !license.known && license !== siteLicense && !warnedLicenses.has(license.name)) {
+      warnedLicenses.add(license.name);
+      console.warn(
+        `[license] "${license.name}" (${this.page?.inputPath || "a page"}) is not a license Bloob Haus recognises: shown as written, with no link.`,
+      );
+    }
+    return license;
+  });
+
+  // One schema.org JSON-LD block per page: the site's structured-data fence plus, when the page
+  // has a license, the page with its license (partials/structured-data.njk).
+  eleventyConfig.addFilter("structuredDataScript", (siteData, license, url, title) =>
+    jsonLdScript(mergeStructuredData(siteData, licensedPageNode(license, url, title))),
+  );
+
+  // robots.txt (themes/_base/pages/robots.njk): what AIs may do (SET7), and the sitemap if any.
+  eleventyConfig.addShortcode("robotsTxt", (ai, sitemapUrl) => buildRobotsTxt({ ai: ai || undefined, sitemapUrl }));
 
   // HTML content extraction filters — useful for themes that need to separate
   // heading, images, and body text into distinct layout regions at build time.

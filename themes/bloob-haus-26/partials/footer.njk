@@ -1,6 +1,7 @@
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <p class="site-footer__text">{% if site.footer_text %}{{ site.footer_text }}{% else %}CC BY-NC-SA 4.0{% endif %}</p>
+    {% if site.footer_text %}<p class="site-footer__text">{{ site.footer_text }}</p>{% endif %}
+    {% include "partials/license-line.njk" %}
     {% if site.footer_searchbar and site.features.search != false %}
     <div class="footer-search" data-pagefind-ignore>
       <button class="footer-search__toggle" aria-expanded="false" aria-controls="footer-search-panel">

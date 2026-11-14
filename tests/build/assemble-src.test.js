@@ -185,19 +185,17 @@ describe('selectBasePages — theme pages shadow base pages by basename', () => 
     expect(skipped).toEqual([{ entry: 'feed.njk', reason: 'features.rss: false' }]);
   });
 
-  it('leaves out sitemap.njk and robots.njk unless show_in_search is yes', async () => {
+  it('leaves out sitemap.njk unless show_in_search is yes, but always builds robots.njk', async () => {
     // Every vault scaffold shipped `features.sitemap: true`, so that key was never an
     // active choice. A sitemap hands Google every listed page; it needs a real yes.
+    // robots.txt is for every site (SET7): it says what AIs may do, sitemap or not.
     const selectBasePages = await load();
     for (const showInSearch of [undefined, 'quiet', 'no']) {
       const { copy, skipped } = selectBasePages(['sitemap.njk', 'robots.njk', 'tags.md'], [], {
         showInSearch,
       });
-      expect(copy).toEqual(['tags.md']);
-      expect(skipped).toEqual([
-        { entry: 'sitemap.njk', reason: 'features.show_in_search is not yes' },
-        { entry: 'robots.njk', reason: 'features.show_in_search is not yes' },
-      ]);
+      expect(copy).toEqual(['robots.njk', 'tags.md']);
+      expect(skipped).toEqual([{ entry: 'sitemap.njk', reason: 'features.show_in_search is not yes' }]);
     }
   });
 

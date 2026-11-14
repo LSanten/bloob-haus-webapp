@@ -1,0 +1,127 @@
+# Which AI crawler answers to which `ai:` switch (SET7). Read by scripts/utils/ai-access.js to
+# write every site's robots.txt. To add one: put its robots.txt token under the switch its own
+# company's docs describe, with the doc as `source`. Don't guess from third-party lists.
+# Checked against each company's docs on 2026-11-14.
+#
+#   read_links  it opens a page only because someone asked the AI about it (user-initiated)
+#   search      it indexes pages so an AI answer or AI search can find and cite them
+#   train       what it collects may be used to train AI models
+#
+# robots.txt is a request, not a lock. The big companies honour it; several user-initiated
+# fetchers say they may not (noted below), and scrapers that ignore it are stopped only by a
+# Cloudflare WAF rule on the zone, outside the builder.
+
+read_links:
+  - agent: ChatGPT-User
+    company: OpenAI
+    source: https://developers.openai.com/api/docs/bots
+    note: OpenAI says robots.txt rules may not apply to it
+  - agent: Claude-User
+    company: Anthropic
+    source: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+  - agent: Perplexity-User
+    company: Perplexity
+    source: https://docs.perplexity.ai/docs/resources/perplexity-crawlers
+    note: Perplexity says it generally ignores robots.txt
+  - agent: Meta-ExternalFetcher
+    company: Meta
+    source: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    note: Meta says it may bypass robots.txt
+  - agent: Amzn-User
+    company: Amazon
+    source: https://developer.amazon.com/docs/amazonbot/amazonbot.html
+    note: Amazon says it may not follow all robots.txt directives
+  - agent: MistralAI-User
+    company: Mistral
+    source: https://docs.mistral.ai/robots
+  - agent: ExaUser
+    company: Exa
+    source: https://crawler.exa.ai
+  - agent: ElevenlabsBot
+    company: ElevenLabs
+    source: https://elevenlabs.io/docs/bots
+    note: fetches a page a customer added to their agent's knowledge base
+
+search:
+  - agent: OAI-SearchBot
+    company: OpenAI
+    source: https://developers.openai.com/api/docs/bots
+  - agent: Claude-SearchBot
+    company: Anthropic
+    source: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+  - agent: PerplexityBot
+    company: Perplexity
+    source: https://docs.perplexity.ai/docs/resources/perplexity-crawlers
+  - agent: Meta-WebIndexer
+    company: Meta
+    source: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+  - agent: Amzn-SearchBot
+    company: Amazon
+    source: https://developer.amazon.com/docs/amazonbot/amazonbot.html
+  - agent: MistralAI-Index
+    company: Mistral
+    source: https://docs.mistral.ai/robots
+  - agent: DuckAssistBot
+    company: DuckDuckGo
+    source: https://duckduckgo.com/duckduckgo-help-pages/results/duckassistbot
+  - agent: ExaSearchBot
+    company: Exa
+    source: https://crawler.exa.ai
+  - agent: ExaSearchBot-Images
+    company: Exa
+    source: https://crawler.exa.ai
+
+train:
+  - agent: GPTBot
+    company: OpenAI
+    source: https://developers.openai.com/api/docs/bots
+  - agent: ClaudeBot
+    company: Anthropic
+    source: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+  - agent: Google-Extended
+    company: Google
+    source: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers
+    note: a robots.txt token, not a crawler. Covers Gemini training and Gemini grounding; not Google Search
+  - agent: Applebot-Extended
+    company: Apple
+    source: https://support.apple.com/en-us/119829
+    note: a robots.txt token, not a crawler. Decides whether Applebot's pages may train Apple's models
+  - agent: CCBot
+    company: Common Crawl
+    source: https://commoncrawl.org/about
+    note: an open web archive that Common Crawl calls one of the most widely used sources of LLM training data
+  - agent: Meta-ExternalAgent
+    company: Meta
+    source: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+  - agent: Amazonbot
+    company: Amazon
+    source: https://developer.amazon.com/docs/amazonbot/amazonbot.html
+  - agent: MistralAI-Training
+    company: Mistral
+    source: https://docs.mistral.ai/robots
+  - agent: ElevenlabsCrawler
+    company: ElevenLabs
+    source: https://elevenlabs.io/docs/bots
+  - agent: Reflectionbot
+    company: Reflection AI
+    source: https://reflection.ai/bot
+  - agent: Bytespider
+    company: ByteDance
+    source: https://fortune.com/2024/10/03/bytedance-tiktok-bytespider-scraper-bot/
+    note: ByteDance publishes no docs; reported to train its models and to ignore robots.txt
+
+# Never written into a blocked group, whatever the switches say. The robots.txt never names them,
+# so they follow `User-agent: *` (allowed). A test keeps them out of the groups above.
+left_alone:
+  - agent: facebookexternalhit
+    company: Meta
+    source: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    why: draws the link preview when someone shares a page on Facebook, Instagram or Messenger. Meta's AI agents are blocked through the agents above
+  - agent: Googlebot
+    company: Google
+    source: https://developers.google.com/search/docs/appearance/ai-features
+    why: Google Search. Its AI Overviews also come through Googlebot; robots.txt can't split them
+  - agent: Applebot
+    company: Apple
+    source: https://support.apple.com/en-us/119829
+    why: Spotlight, Siri and Safari search. Training is controlled by Applebot-Extended

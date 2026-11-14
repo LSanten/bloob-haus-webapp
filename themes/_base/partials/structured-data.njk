@@ -1,0 +1,6 @@
+{#- One schema.org JSON-LD block per page: the site's `structured-data` fence (who the site
+    belongs to) and, when the page has a license, the page with its license, in one @graph.
+    scripts/utils/structured-data.js. Not on unlisted pages: they are kept out of search anyway. -#}
+{%- if not _bloob_unlisted %}
+{{ site.structured_data | structuredDataScript(license | pageLicense(site.license), site.url + page.url, title) | safe }}
+{%- endif %}

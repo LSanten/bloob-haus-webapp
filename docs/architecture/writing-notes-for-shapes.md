@@ -62,6 +62,30 @@ thing: the same kind of thing is always written the same way.
 - **Links and embeds** (`[[name]]`, `![[image.png]]`) resolve by file name alone, the way Obsidian
   does; a folder is only needed when two files share a name.
 
+## What Obsidian already understands (so a note stays safe in the vault)
+
+Checked against Obsidian's help on 2026-11-14 (obsidian.md/help/syntax, /advanced-syntax,
+/obsidian-flavored-markdown) unless marked *unchecked*.
+
+- **Lists:** `-`, `*` and `+` all start a bullet; `1.` or `1)` a numbered item. Nesting is "indent
+  one or more list items", with `Tab` / `Shift+Tab`; no fixed number of spaces is given. So a shape
+  treats any deeper indentation, tabs or spaces, as one level deeper and never counts a tab width
+  (`shapes.md`, "Shape-named blocks").
+- **A line starting with `+ ` is a bullet,** so a marker like `+` or `++` goes at the END of an item
+  (`- home ++`), never at the start.
+- **Words that turn into something in Obsidian:** `#word` (a tag; *unchecked*: a tag needs at least
+  one letter, so `#1` stays text), `[[name]]` and `![[name]]` (a link and an embed), `==text==` (a
+  highlight), `%%text%%` (hidden as a comment), `^id` at the end of a line (a block reference), `$...$`
+  (math), `[^1]` and `^[...]` (footnotes), `> [!note]` (a callout). Use them only when that meaning is
+  wanted. A backslash escapes: `\#`, `1\.`.
+- **`key: value` inside a list item is plain text** in Obsidian itself. *Unchecked:* the community
+  plugin Dataview reads `key:: value` (two colons) as a field, so shapes use one colon.
+- **Whether one Enter shows as a line break** in reading view depends on the setting "Strict line
+  breaks" (the help page describes lines running on as one paragraph; *unchecked* which way the
+  setting defaults). Line-based shapes read the file's lines, so the shape sees the same note either
+  way; only the look in Obsidian changes.
+- **A ```` ```mermaid ```` block** is drawn as a diagram by Obsidian with no plugin.
+
 ## Writing for one particular shape
 
 Each shape's own rules (tabs, positions, special lines) live in its `schema.md`. Follow them when

@@ -45,6 +45,12 @@ number in whichever section it belongs to, never a renumbering.
    same renderer as the object that arrives, never a second copy kept alike by hand.
    *Triage `4589062a`; `visualizers.md` → "three hosts, one renderer".*
 
+15. **A link that leaves this subdomain opens a new tab.** Anywhere: a haus page, a letter's paper,
+   a visualizer. Same host stays in the tab; `mailto:`/`tel:` hand over in place. A link opened in a
+   new tab sends no referrer, so a private page's address never travels with it. Mechanism, per
+   shape: `shapes.md` convention #7 (decided by origin, the current host injected so the renderer
+   stays pure). *Leon, 2026-11-15.*
+
 ## Words
 
 10. **No em dashes in product copy.** Short plain sentences. A privacy note is one plain line.

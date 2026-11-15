@@ -39,6 +39,10 @@ thing: the same kind of thing is always written the same way.
    hand. An AI can add more (a `title:` line, exact coordinates), but nothing may depend on what a
    person would not type. *(the title rule below exists so nobody has to write `title:`; garden
    accepts regions for people and coordinates for AI, `shapes.md` → "Placement systems".)*
+   The other half (Leon, 2026-11-14): **a builder writes the same short form a person would.** If a
+   tie between two words counts when written on either word, a person writes it once, so the builder
+   writes it once too. A builder that wrote it on both words would leave a person deleting it twice,
+   and a tie deleted on one side only would quietly survive.
 7. **Say where it came from.** Where a recipe was passed down from, where a phrasing was first used,
    who said a quote. A link is best. *(the buffbaby recipe `source:` lineage; the resume vault's
    per-version source links; a letter's postmark.)*

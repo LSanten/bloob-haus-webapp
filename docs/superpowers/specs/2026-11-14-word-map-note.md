@@ -42,11 +42,14 @@ The words that matter to us.
 3. **Every word is a bullet, and everything about a word is a bullet under it** (Leon, 2026-11-14:
    "we might have more than one note, extendability").
    - A child bullet is a **note**; a word can have any number of them.
-   - A child bullet `name: words` is a **relationship** (`tied to: home, joy`), split at the first
-     colon, comma separated. `tied to` is the first kind; others (`grows from:`, `opposite of:`) draw
-     as a thread labelled with their name. *Open: how a note that happens to contain a colon is told
-     apart from a relationship (see the round-one page).*
-   - Reading also accepts a plain indented line under a word, and `note:`, as a note.
+   - A child bullet that **starts with a trigger** is a relationship: `tied to: home, joy` (split at
+     the first colon, comma separated). Triggers are a short list kept on this card: `tied to:` now;
+     a new kind (`grows from:`, `opposite of:`) is added here and then just works, drawn as a thread
+     labelled with its name. Any other line, colons and all, is a note (Leon, 2026-11-14: "if the
+     indented bullet starts with a trigger word like tied to:, then it should trigger").
+   - **`note:` is the escape hatch, not the default.** A note that itself starts with a trigger is
+     written `- note: tied to: a feeling more than a place`. Notes stay the lightest thing to type.
+   - Reading also accepts a plain indented line under a word as a note.
 4. **A relationship is written once, on either word.** Written on both, it is still one thread. The
    builder never moves a relationship a person wrote; a new one goes on the word you started from.
    (Round one: a builder that rewrote ties onto "the first word in the file" moved people's lines.)
@@ -62,6 +65,21 @@ The words that matter to us.
    this map.
 10. **A second way in: a ```` ```mermaid ```` block** is read too (nodes are words, edges are `tied to`,
     subgraphs are groups). Never written out.
+
+## What the builder prevents (so a person can never break the note)
+
+The builder writes only what re-reads the same. Where a person types something that would collide
+with the grammar, it writes the safe form instead, silently, or says why when it can't:
+
+- **A note that starts with a trigger** is written with `note:` in front.
+- **A word ending in `+`, `-` or `@...`** (`C++`) is written with backslashes (`C\+\+`): a markdown
+  escape, so Obsidian still shows `C++` and the reader takes it as part of the word, not a size.
+- **A comma in a word** can't be told apart in `tied to: a, b`, so the builder refuses it with a
+  short line ("A word can't hold a comma").
+- **Two words with the same name** (ignoring case) would be one word; the builder offers to join
+  them instead of adding a second.
+- **A `#` at the start of a word** would become an Obsidian tag; it is written `\#`.
+- **A group name** is written as a heading as typed; one starting with `#` gets the same escape.
 
 ## Outside and inside
 

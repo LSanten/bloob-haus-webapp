@@ -17,6 +17,29 @@
 
 ---
 
+## 2026-11-14 — The docs loop starts: build from the public guide, correct, distill
+
+Source: cloud session (Leon + Claude) after the "Our Word Map" mockup was built with no markdown
+behind it. Leon: "when we build new visualizers, we want to refine the existing ways in which public
+info on how to build visualizers is improved".
+
+- **Contract gap: "note first" was nowhere in one place.** The rule existed in pieces (ontology: the
+  file is the object; visualizers.md: pure renderer) but no doc said "design the note before the
+  drawing", so a mockup could be built with no note at all. Now must #1 in `making-visualizers.md`.
+- **Two tiers, written apart.** Musts (the hard boundary: note is the only truth, pure parse/render,
+  works without script, closed view from the outside, builder round-trips, tokens, client-side only
+  for strangers) vs. shoulds (`writing-notes-for-shapes.md`, `ui-principles.md`). Leon: diverging ways
+  of building are fine "as long as it uses the hard-boundary architecture".
+- **Rejected: writing the authoring guide from imagination.** This log said to wait for garden. The
+  loop replaces the wait: a fresh agent with only the public bundle builds, Leon corrects, each
+  correction is sorted (gap / wrong / missed / taste), the same brief re-runs as the check.
+- **Load-bearing (new should, recommendation 6):** a builder writes the same short form a person
+  would; a tie written on both words would make a person delete it twice.
+- **Forward hinge:** the word map's note (`docs/superpowers/specs/2026-11-14-word-map-note.md`) is
+  round one's answer key: headings for groups, `+`/`-` sizes, nested `name: value` lines where any
+  name but `note` is a relationship, optional `@x,y`, outline computed from members, mermaid as a
+  second way in.
+
 ## 2026-09-18 — Letter: sealing forces the closed state, and two axes got untangled
 
 Source: a design conversation (Leon + Claude) in `bloob-haus-cloud` about Briefgeheimnis for the post

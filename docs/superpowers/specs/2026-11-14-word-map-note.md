@@ -85,3 +85,29 @@ with the grammar, it writes the safe form instead, silently, or says why when it
 
 The closed view (the map seen from elsewhere) is drawn from the top block alone: the title, and
 anything else written up there. The words are the inside, so the closed view never counts them.
+
+## Resume here (state at the end of 2026-11-14)
+
+Decided with Leon: everything above. Built: nothing yet in `lib/visualizers/`. Two things exist:
+
+- **The mockup** (interactive, shared, Claude artifact): https://claude.ai/artifact/6b6aaYpiuwYzgtDSMweaie
+  Version 2 by Fable: rice-paper blobs seeded per word, the note as a joined blob, smoothed loops,
+  an outline that yields to its words, label editing and the drag snap-back fixed. It stores words,
+  links and groups in its own database (groups as drawn points), NOT as this note. Leon: it is a
+  mockup of a future thing; ownership and permissions don't matter there.
+- **Round one of the docs loop:** `2026-11-14-word-map-round-one.html` (published:
+  https://claude.ai/artifact/CCHQYLoPPZmQ7x66pLNDzh). A fresh agent's build from the guide alone is
+  in the cloud session scratchpad (gone after a reboot); its note format and gaps are on that page.
+
+Next, in order:
+1. **Leon comments on the round-one page.** Fold them into this card and `making-visualizers.md` v1.
+   Already agreed for v1: an "interface" section (what `parse` receives, `renderClosed(outside)`, how
+   a builder hands markdown back to the host, manifest fields, the token list); positions say their
+   unit (word map: percent of the board); a closed view says what the thing is for.
+2. **Re-run round one** with v1: a fresh agent, the same brief, only the public bundle.
+3. **Build `lib/visualizers/word-map/`** from this card: `parser.js` (bullet-agnostic, triggers,
+   `note:` escape, `+`/`-`, `@x,y`, mermaid as a second way in), `renderer.js` (seeded layout, hulls
+   around members, the rice-paper look from the mockup), `browser.js` (drag, which writes the note
+   back through the builder rules above), `schema.md` with this card on top. Tests: round-trip
+   (parse → write → parse is identical), a person's tie never moves, `C++` survives.
+4. **Point the mockup at the note**: export and import the note, so Thursday's map can become a file.

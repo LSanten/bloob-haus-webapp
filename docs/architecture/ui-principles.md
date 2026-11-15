@@ -25,23 +25,26 @@ three times without it being written here, and add it. Each rule says where it c
    `246b864a`.*
 5. **An object looks the same at every size and zoom.** Sizes relative to the object itself
    (container units), vector lines that stay sharp, no raster grain. *Leon, 2026-11-12 and 2026-11-14.*
-6. **The drawing shows the state.** Sealed, torn, opened: seen, not labelled. The words are there
+6. **Zooming in should not easily look bad.** Pinch in on any object and it holds up: textures are
+   drawn (vector strands, SVG noise filters that re-render), not bitmaps that blur or turn to grit;
+   hairlines stay hairlines. Check every new look at 300% before calling it done. *Leon, 2026-11-14.*
+7. **The drawing shows the state.** Sealed, torn, opened: seen, not labelled. The words are there
    for screen readers. *2026-11-12.*
-7. **The object holds only what its maker put there.** The paper of a letter holds what the writer
+8. **The object holds only what its maker put there.** The paper of a letter holds what the writer
    typed: no greeting or signature made from the envelope. *2026-11-14.*
-8. **The builder and the finished object are one drawing.** The face you write on is drawn by the
+9. **The builder and the finished object are one drawing.** The face you write on is drawn by the
    same renderer as the object that arrives, never a second copy kept alike by hand.
    *Triage `4589062a`; `visualizers.md` → "three hosts, one renderer".*
 
 ## Words
 
-9. **No em dashes in product copy.** Short plain sentences. A privacy note is one plain line.
-10. **Say it where it matters, once.** A warning sits next to the thing it is about, at the moment
+10. **No em dashes in product copy.** Short plain sentences. A privacy note is one plain line.
+11. **Say it where it matters, once.** A warning sits next to the thing it is about, at the moment
     it can still be acted on; not in a footnote, not repeated everywhere.
 
 ## Trust
 
-11. **No third-party requests a visitor didn't choose.** System fonts or self-hosted ones, no web
+12. **No third-party requests a visitor didn't choose.** System fonts or self-hosted ones, no web
     font services, no remote images in letters (a remote image is a read receipt).
-12. **Build the real thing, in the real place.** URLs and flows are made the way they should finally
+13. **Build the real thing, in the real place.** URLs and flows are made the way they should finally
     look; a link sent to a person can never be migrated.

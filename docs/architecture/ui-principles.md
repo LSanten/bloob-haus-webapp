@@ -6,6 +6,8 @@ Broad first; narrower rules for one product live with that product and point bac
 
 **Standing task:** now and then, scan the designs and the feedback inbox for a rule Leon has applied
 three times without it being written here, and add it. Each rule says where it came from.
+Numbers are stable ids that other docs cite ("ui-principles #6"), so a new rule takes the next
+number in whichever section it belongs to, never a renumbering.
 
 ## Calm
 
@@ -17,6 +19,13 @@ three times without it being written here, and add it. Each rule says where it c
    not a yes/no dialog. *Steph, 2026-11-12; the tear, 2026-10-02.*
 3. **Focus is a soft glow, never a hard rectangle,** and only for the keyboard. No browser blue, no
    tap flash. *Triage `1ebf1356`.*
+14. **What I'm touching stays under my hand.** When someone acts (starts typing, taps, hovers,
+   opens something), the spot they are acting on does not move: not the line being written, not the
+   field with the cursor, not the icon under the pointer. Anything new that the act brings appears
+   around that spot, or grows out of it in both directions, and never pushes it away. A row of icons
+   that opens on hover opens *from* the hovered icon, which stays put while the others spread out
+   relative to it. *Leon, 2026-11-15: starting a new letter added a tab above the paper and pushed
+   it down; the haus share bar slides the hovered icon away to reveal the others.*
 
 ## Objects
 

@@ -238,6 +238,15 @@ is one rule and one function:
   every frame**, so a third host gets the same tear for free. A transition is not a state: it never
   writes to the envelope and never says "opened". Only the host's finished gesture opens the letter,
   and only then does the office stamp it.
+- **The outside is one SVG, words included, so a printer draws the same thing** (2026-11-15). The
+  letter's closed face (`renderClosed`) is a single SVG: paper, grain (feTurbulence), flap lines,
+  stamp, postmark, and the writer's words as real SVG `<text>` (selectable, read by screen readers;
+  decoration `aria-hidden`). Words wrap by counting characters, exact for a monospaced font, so no
+  browser is needed to lay it out; the envelope grows instead of cutting. The page styles it with the
+  look's tokens; `renderEnvelopeSvg(envelope)` is the same face with the look written in, and the
+  cloud's link preview rasterizes it with resvg and a bundled font (`lib/preview/svg-print.ts`). This
+  is "three hosts, one renderer" (`visualizers.md`) for a closed state: a static site builder can make
+  the identical picture at build time. The builder face keeps HTML inputs over the shared paper.
 - **A second face is renderer output too** (2026-11-15). The letter exports `renderBack(envelope)`:
   the same envelope turned over, pure, same single input (plus the tear so far, like
   `renderTearing`). It is the envelope's **own back**, not the front seen through the paper (Leon,

@@ -43,7 +43,9 @@ async function measure(markdown, width) {
     const box = (root, sel) => document.querySelector(`${root} ${sel}`).getBoundingClientRect();
     const of = (root) => {
       const fig = box(root, ".bh-env"), peek = box(root, ".bh-env__peek");
-      return { envH: fig.height, above: fig.top - peek.top, below: fig.bottom - peek.bottom, peekH: peek.height, peekW: peek.width };
+      const who = document.querySelector(`${root} .words-who`)?.getBoundingClientRect();
+      return { envH: fig.height, above: fig.top - peek.top, below: fig.bottom - peek.bottom, peekH: peek.height, peekW: peek.width,
+        clearOfWho: who ? who.top - peek.bottom : null };
     };
     const size = (sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize);
     return {
@@ -59,12 +61,13 @@ async function measure(markdown, width) {
 }
 
 describe("the paper in a torn-open envelope, in a browser", () => {
-  it("a long letter is folded to fit: its paper ends inside the envelope, a little above its bottom", async (ctx) => {
+  it("a long letter is folded to fit: its paper ends inside the envelope, just above the to and from line (2026-11-17)", async (ctx) => {
     if (!browser) return ctx.skip();
     for (const width of [380, 240]) {
       const m = await measure(LONG, width);
-      expect(m.front.below).toBeGreaterThan(0);
-      expect(m.front.below).toBeLessThan(m.front.envH * 0.1);
+      expect(m.front.clearOfWho).toBeGreaterThan(0);   // never behind to and from (feedback a96520aa)
+      expect(m.front.clearOfWho).toBeLessThan(m.front.envH * 0.08);   // and not far above it either
+      expect(m.hint.clearOfWho).toBeGreaterThan(0);
       expect(m.front.above).toBeGreaterThan(0);   // and it still sticks out of the torn top
       expect(m.hint.below).toBeGreaterThan(0);   // a blank paper of known length is folded the same way
     }

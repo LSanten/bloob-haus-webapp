@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { describePicked, feedbackBody, wishBody } from "../../lib/visualizers/_engine/feedback.js";
+import { describePicked, feedbackBody, wishBody, sentLine } from "../../lib/visualizers/_engine/feedback.js";
 
 const picked = { tag: "p", id: "", classes: ["marble-title", "x"], text: "  How our social   systems can be considered alive and reproduce their value essences, a long title  ", path: "main > div.bloob-object > p.marble-title" };
 
@@ -38,5 +38,12 @@ describe("wishBody", () => {
     const b = wishBody({ text: "a vinyl record", question: "Which bloob object would you make?", pageUrl: "https://leons.bloob.haus/" });
     expect(b.kind).toBe("idea");
     expect(b.text).toBe("Bloob object wish (Which bloob object would you make?): a vinyl record");
+  });
+});
+
+describe("sentLine", () => {
+  it("says when a note went with the visitor's account, and stays plain when it didn't", () => {
+    expect(sentLine(true)).toBe("Thank you. It's on its way, sent from your account.");
+    expect(sentLine(false)).toBe("Thank you. It's on its way.");
   });
 });

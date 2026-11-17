@@ -6,6 +6,16 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 77 — November 16, 2026: the letter moves in (branch `letter-visualizer`, not merged)
+**Worked on:** H1 of "one home for drawing code" (cloud `docs/DECISIONS.md`, 2026-11-16): the letter's pure drawing code now lives in `lib/visualizers/letter/`.
+
+- **`renderer.js`**: the cloud's `app/src/shapes/letter/closed.ts` with its types as JSDoc. Checked against the original over 241 renders (closed, tearing, back, the preview SVG, stamp, paper): identical output. Passes the cloud's TypeScript in strict mode as a `.js` file.
+- **`paper.js`**: the open sheet and the letter's markdown rules (the cloud's `note/render.ts` and `NoteShape.tsx` markup). **`styles.css`**: the cloud's `letter.css`; one fallback changed (`--bh-sheet-words` 62% to 84%, the value the post office sets).
+- **In the catalog**: `bloob.haus/visualizers/letter` once merged. Starter note, AI card, Objects shelf. The editor draws it through a new optional `renderNote` export.
+- **The paper in a torn-open envelope** (Leon's feedback, same day): optional `inside` input; the letter's beginning on the paper, folded to fit. Measured in Chromium: a long letter's paper ends 3cqi above the envelope's bottom, a short one stays short, the small sheet's type is the open sheet's at 0.9998 of its scale.
+- **Not done:** the post office still uses its own copy (cloud H2/H3); the site builder does not draw letters (see DECISIONS).
+- Suite: **1615** passing (49 new for the letter, 4 of them measured in Chromium).
+
 ### Session 76 — November 14, 2026: website feedback from the tool belt (leons)
 **Worked on:** eight reports Leon left on leons.bloob.haus through the feedback note (PR "Website feedback 2026-11-14"). Each was reproduced on a local marbles build with Playwright before fixing.
 

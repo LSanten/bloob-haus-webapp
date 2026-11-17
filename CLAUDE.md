@@ -70,6 +70,13 @@ checklist). Spec for URLs: `docs/architecture/urls-and-ids.md`. This rule exists
 drifted (2026-11-10): the builder and the plugin disagreed about `date_prefix: none` and about a space after
 the date.
 
+## Drawing code is copied into the post office
+This repo is the one home of all drawing code (decided 2026-11-16, `../bloob-haus-cloud/docs/DECISIONS.md`).
+The post office's deploy copies a shape's pure files in as they are; `lib/visualizers/letter/`
+(`renderer.js`, `paper.js`, `styles.css`) is the first. Keep those files free of imports from this repo
+and typed with JSDoc, and put anything only this repo needs in the shape's `index.js`. Details:
+`docs/architecture/visualizers.md` → "One home for drawing code".
+
 ## Cross-Platform Compatibility (Mac + Windows)
 All scripts and `package.json` commands must work on both Mac/Linux and Windows. Key rules:
 - **Never use `VAR=value node ...` inline env syntax in `package.json` scripts** — this fails on Windows. Pass values as CLI args instead (e.g. `node scripts/foo.js --site=x`).

@@ -81,8 +81,10 @@ Two things it left open:
   [`docs/superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md`](superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md)
   A thinking document, not a spec: **56 items · 24 carry a suggested direction · 0 actually decided.**
   Four groups — the world Whitney draws (`W`), the flows a person moves through (`F`), the technical
-  spine (`S`), and what stays open on purpose (`Q`). Nothing is built: no `letter` shape exists, and
-  none of it is on the roadmap. **Listed here so it's findable, not because it's active.**
+  spine (`S`), and what stays open on purpose (`Q`). *(Stale since 2026-09-20: the `letter` shape was
+  built in the post office, and since 2026-11-16 its drawing code lives here in
+  `lib/visualizers/letter/`; see its row in `architecture/shapes.md`. The inventory below predates
+  both.)* None of the inventory is on the roadmap. **Listed here so it's findable, not because it's active.**
   Two items connect to work already in this file: `S-07` (engine extraction / container shapes) is the
   same thing as the composite-shapes item above, and `S-04` (does the recipient need an account?) is the
   fork that decides how much of the Phase-3 backend the letter actually needs.

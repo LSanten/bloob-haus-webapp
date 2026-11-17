@@ -232,6 +232,17 @@ is one rule and one function:
   page and the downloaded `.md` cannot disagree, and it is the stricter reading of
   `visualizers.md`'s pure-renderer standard ("three hosts... differ only in where the data comes
   from"). The `letter` shape is the first to fill this.
+- **The inside, when the host holds it** (2026-11-16, Leon's feedback on the paper in an opened
+  envelope). The letter's faces take one more, optional input: `inside`, `{ html }` or
+  `{ lines }`. It does not loosen the rule above, because it can only show where the body is
+  already open to read: on the paper of an envelope that is torn open, in the reader's browser
+  after unsealing (the same line the engine draws for `closed.html`, which gets `{{ firstLines }}`
+  only while the note is open to read). A sealed face ignores it, and `renderEnvelopeSvg`, the
+  link preview's picture, does not take it at all; tests pin both. With `html` the paper carries
+  the letter's beginning as real text, set as a small copy of the open sheet's top, crisp where
+  it sticks out and seen through the glassine below the torn edge. The paper is folded like a
+  real letter: as long as the letter, never longer than the envelope, where only its top shows.
+  With nothing passed, every face is exactly what a server with no key draws.
 - **Transitions are renderer output too** (2026-10-02, cloud backlog U17). The letter also exports
   `renderTearing(envelope, tears)`: the frames between closed and open, pure, same single input plus
   how far along the movement is. The **host counts the gesture** (three taps); **the renderer draws
@@ -258,7 +269,7 @@ is one rule and one function:
   `shapes/letter/TurningLetter.tsx`, used by a letter alone in its locker and by the counter for the
   letter just folded. A host that does not turn things never calls `renderBack`.
 - **A transition can be the look's own keyframes, started by the host** (2026-11-15). Taking the
-  paper out of the letter is drawn in `letter.css` (`bh-takeout`, transform and opacity only). The
+  paper out of the letter is drawn in the letter's `styles.css` (`bh-takeout`, transform and opacity only). The
   host says *when* by putting `data-bh-taking` on anything around the envelope, and *how far* the
   open sheet lies below (`--bh-take-to`, in the envelope's own `cqi`); it may hold the open sheet
   back with `--bh-paper-wait` / `--bh-paper-from`. Same split as the tear: the host counts and
@@ -347,8 +358,9 @@ standard buys, and it is where the requirement belongs.
 A shape's **builder** (its authoring GUI) is a different job with different pressures: it must be
 genuinely good to use, on a phone and on a computer. A self-contained `index.html` remains the ideal
 because it forks easily, but a framework is acceptable where the host already carries one — the
-cloud app's letter builder (`app/src/shapes/letter/EnvelopeFields.tsx`) is React, sitting beside a
-renderer (`closed.ts`) that is pure and has no framework at all. Leon, 2026-09-20: *"react is JS so
+cloud app's letter builder (`app/src/shapes/letter/EnvelopeFields.tsx`) is React, drawing through a
+renderer that is pure and has no framework at all (`lib/visualizers/letter/renderer.js` here since
+2026-11-16; the cloud carries a copy). Leon, 2026-09-20: *"react is JS so
 it's part of html/JS — we just need to have a good interface, and it needs to work on phone and on
 computer."*
 
@@ -769,7 +781,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — | — |
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
-| `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework, plus `renderTearing(envelope, tears)` for the three-tap tear (2026-10-02) and `renderBack(envelope)` for its other side (2026-11-15: a letter alone in its locker, and the letter just folded at the counter, stands still a moment, turns once in 3D and can then be turned by hand; the back is the envelope's own back, with the office's line "bloob haus · encrypted post office"; from the last tear on the paper peeks out, and the look's `bh-takeout` keyframes take it out when the host says so); since 2026-11-12 it draws **glassine** (HTML + inline SVG, its look in `letter.css` beside it, token fallbacks so any host can draw it; the tear is seeded from the envelope, so each letter tears its own way, always the same way; the timing is drawn as the stamp, everything written wraps and the envelope grows rather than truncating, and the status is screen-reader text since the drawing shows it) — with a React builder beside it, exactly the split "Where portability actually matters" describes. Since 2026-11-14 the counter's builder is the envelope itself (`EnvelopeWriter.tsx`): it draws the envelope's paper through the renderer's own function (`renderEnvelopePaper(seed, timing)`: strands, flap lines, stamp), the same one `renderClosed` calls, so the envelope being written on and the one that arrives are one drawing by construction (2026-11-14, triage 4589062a); the words are the fields; same envelope keys as before. The flap lines are clipped to the envelope's rounded outline. The paper's texture is seeded hairline strands (`renderStrands`), replacing the raster noise grain that blurred on zoom; the paper holds only what the writer types (no greeting or signature derived from the envelope). **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
+| `letter` | leaf, sealable | **Built. Its drawing code lives here**, in `lib/visualizers/letter/` (moved 2026-11-16 from `bloob-haus-cloud`, where it was born 2026-09-20; decision: one home for drawing code, cloud `docs/DECISIONS.md` 2026-11-16) | ✓ in the cloud: `EnvelopeWriter.tsx` / `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. **`renderer.js`** (pure, no imports, typed with JSDoc): `renderClosed(envelope, inside?)`, `renderTearing(envelope, tears, inside?)` for the three-tap tear, `renderBack(envelope, tears?, inside?)` for its other side, `renderEnvelopeSvg(envelope)` (the same face with its look written in, for a picture printer), and `renderEnvelopePaper` / `renderStamp` / `FLAP_LINES` for a builder that writes on the same envelope. **`paper.js`** (pure, imports only markdown-it): the open sheet, `renderPaper(envelope, markdown)`, and the letter's markdown rules, `renderPaperBody` (raw HTML as text, an image as its alt text, links `rel=noopener`). **`styles.css`**: the glassine look, its own `--bh-*` tokens each with a fallback, so any host draws it. **`index.js`** is this repo's glue only: `renderNote({ data, body })` draws a whole note as envelope plus paper for the visualizer editor (listed at `bloob.haus/visualizers/letter`, starter note `lib/visualizer-editor/examples/letter.md`). Tests beside it (`letter.test.js`, ported from the cloud's). The outside is one SVG with the writer's words as real text; the tear is seeded from the envelope, so each letter tears its own way, always the same way; the timing is drawn as the stamp; everything written wraps and the envelope grows; the status is screen-reader text. The paper is plain: only what the writer typed, no greeting or signature made from the envelope. Since 2026-11-16 the paper in a torn-open envelope can carry the letter's beginning and is folded to fit (see Sealing → "The inside, when the host holds it"). **Not done yet:** the post office still draws from its own `app/src/shapes/letter/closed.ts` until its deploy copies these files in (cloud backlog H2/H3); and **the site builder does not draw letters**: a vault note with `bloob-shape: letter` stays a normal page (`renderFilescope` hands the body back), because what goes on a public letter's envelope (every frontmatter key?) is undecided. Sealing, the tear's counting, the turning and lockers stay the post office's. |
 | `locker` | container, sealable closed state | **Built — in `bloob-haus-cloud`** (M4b, M5a 2026-09-24) | the room itself (React) | First container shape. Settings in `_index.md` (`contents`, `sort`); pure helpers in `app/src/shapes/locker/`; closed state = one drawing for everyone on the page (D1), a glassine SVG since 2026-11-12 (`renderLockerArt()`, no input); its link preview (2026-10-02, drawn since 2026-11-14) is the same glassine drawing (`renderLockerPicture()`, the page's SVG with its look written in, since a picture printer has no stylesheet) with the locker's NAME painted on the door, still D1-safe because the name comes from the address, never a lookup. The preview engine has two printers: `printTextArt` (character art in, PNG out) and `printDrawing` (a closed state's SVG plus the words to set on it, PNG out). That is the preview engine's contract: a shape's closed state as lines or SVG in, picture out. Your lockers (the list) draws each locker with the same art, every name that arrived in it on its door. Open state (the room): its letters stand on shelves filled from the bottom, oldest first, newest on the left, so time shows as letters being added (2026-11-12; placement is pure, `shapes/locker/shelves.ts`). Contents from `[[links]]` (M5b) not built. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
@@ -994,6 +1006,10 @@ letter with `- [ ]` or a footnote renders differently in the two hosts.
 shape declares deviations in `manifest.json` (a `markdown:` block — `html: false`,
 `images: alt-only`, …) and explains them in `schema.md`. Write it when the letter shape is built;
 record the derivation in `shape-authoring-log.md`.
+
+**Update 2026-11-16:** the letter is here now and its refusals moved with it, still as code
+(`lib/visualizers/letter/paper.js`, explained in its `schema.md`), not as a manifest block. The
+second half of the gap is unchanged: the paper has its own markdown-it, without the site's plugins.
 
 ---
 

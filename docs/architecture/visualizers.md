@@ -153,6 +153,9 @@ needs a pure renderer.
 of its markup at build time from pure functions too (`fold-headings.js`, `peek.js`); its
 `browser.js` only opens folds around a `#hash` target.
 
+`letter` (2026-11-16) is pure throughout: `renderer.js` (the envelope) and `paper.js` (the sheet);
+it has no `parser.js` because its data is the note's frontmatter and body, handed in by the host.
+
 **Not yet conforming, generates content** — `folder-preview`, `circular-nav`, `fridge-magnets`,
 `tags`, `graph`. Tracked as **TECH-DEBT #40**. Convert each when next touched; do not retrofit
 them speculatively.
@@ -570,6 +573,28 @@ Both added for the `foldable` shape; both are opt-in exports, so no other shape 
   row from the cards `collection` has drawn. Before this, transform order was `readdir` order,
   which is alphabetical on macOS but not guaranteed on Linux CI.
 
+## One home for drawing code; the post office carries a copy (2026-11-16)
+
+The cloud app (`bloob-haus-cloud`, the post office) is the third host of these renderers, and it
+needs them on its server too (link previews, the envelope in the first HTML). It does not load
+them from `bloob.haus/visualizers` while running: its deploy **copies** a shape's pure files in,
+runs its tests and type check on them, and ships the copy (reasons: cloud `docs/DECISIONS.md`,
+2026-11-16). So this repo is the only place drawing code is edited. `letter` is the first.
+
+What that asks of a shape whose files are copied:
+
+- The copied files (`renderer.js`, `paper.js`, `styles.css`) import nothing from this repo: no
+  `_utils/`, no `scripts/`, no engine. A bare package both repos have (`markdown-it`) is fine.
+  `letter.test.js` checks it.
+- They are typed with JSDoc under `// @ts-check`, so the cloud's TypeScript checks them as they are.
+- Whatever only this repo's hosts need (the editor's `renderNote`, the builder's `renderFilescope`)
+  goes in `index.js`, which is not copied.
+
+**`renderNote({ data, body })`**, an optional export of `index.js`: a shape that draws a whole note
+itself, from its frontmatter and body, and is not a template shape. The visualizer editor uses it
+for that shape's page (`createShapeNoteRenderer` in `lib/visualizer-editor/render-note.js`). The
+site builder does not call it yet.
+
 ## Appear whole (Leon, 2026-11-04)
 
 A visualizer's object appears **as one finished piece, never layer by layer**. A marble must not
@@ -700,6 +725,12 @@ reachable from both sides.
 3. `theme.min.css` may contain hardcoded values (it is a legacy/vendor file) — do not add to it.
 4. If a visualizer needs a color not in the standard tokens, add the token to `main.css` first (with a sensible default), then use it in `styles.css`.
 5. `browser.js` that reads colors at runtime should read from `getComputedStyle(document.documentElement).getPropertyValue('--accent-color')` — same source of truth.
+
+6. **A shape may carry look tokens of its own, each with a fallback**, when its look is not the
+   theme's to choose. The note's paper does (`--object-paper`, `tokens.md`), and so does the
+   letter (`--bh-*`: its colour is its sender's, and the same stylesheet must draw it in the post
+   office, which has no theme). The literal values then live only in the fallbacks, and a host
+   changes the look by setting the tokens. This is the one exception to rule 1.
 
 ### Example
 

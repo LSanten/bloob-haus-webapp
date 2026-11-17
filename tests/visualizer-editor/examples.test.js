@@ -53,6 +53,7 @@ describe("starter notes", () => {
     expect(html).toContain('class="bh-env envelope envelope-sealed"');
     expect(html).toContain(">to:</tspan> Whitney");
     expect(html).toContain('<article class="bh-paper">');
+    expect(html).toContain('<p class="bh-paper__date">written 16 Nov 2026</p>');
     expect(html).not.toMatch(/Dear/);
     expect(html).not.toContain("\u2014");
   });

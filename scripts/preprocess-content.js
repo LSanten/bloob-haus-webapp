@@ -405,7 +405,9 @@ export async function preprocessContent({
             if (bloobShape) {
               // Only render body for explicitly declared shapes
               console.log(`[shape] Rendering file-scope shape: ${effectiveShape}`);
-              processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+              // The frontmatter rides along as a third argument for a shape that draws from it (the
+              // letter's envelope); shapes that take two arguments are unaffected.
+              processedContent = await mod.renderFilescope(shapeSettings, processedContent, { frontmatter });
             }
             // Default shape with renderFilescope: layout is handled via shapeManifestLayout below
           } else {

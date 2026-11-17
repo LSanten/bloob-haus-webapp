@@ -4,7 +4,7 @@
  * These tests use real shapes, so "the preview is the site" is checked, not assumed.
  */
 import { describe, it, expect } from "vitest";
-import { createNoteRenderer, createPageRenderer } from "../../lib/visualizer-editor/render-note.js";
+import { createNoteRenderer, createPageRenderer, parseFlatFrontmatter } from "../../lib/visualizer-editor/render-note.js";
 import * as services from "../../lib/visualizers/services/index.js";
 
 const note = `# A page
@@ -103,5 +103,18 @@ describe("objects in the editor", () => {
     expect(html).toContain("It is quite hard to define life.");
     expect(html).toContain("Autopoiesis");
     expect(html).not.toContain('class="bloob-share"'); // nothing to share from the editor
+  });
+});
+
+describe("parseFlatFrontmatter", () => {
+  it("reads key: value lines, quotes removed, empty values left out", () => {
+    expect(parseFlatFrontmatter(`---\ntitle: "Hi"\ncolor: '#fff'\nempty:\nto: Whitney\n---\nbody`)).toEqual({ data: { title: "Hi", color: "#fff", to: "Whitney" }, body: "body" });
+  });
+  it("reads a block of text under a key as lines, and a list as an array", () => {
+    const { data } = parseFlatFrontmatter("---\nenvelope_note: |\n  one\n  two\ntags:\n  - a\n  - 'b'\ndate_updated:\n- 2026-01-02\nto: W\n---\n");
+    expect(data).toEqual({ envelope_note: "one\ntwo", tags: ["a", "b"], date_updated: ["2026-01-02"], to: "W" });
+  });
+  it("a note without frontmatter is all body", () => {
+    expect(parseFlatFrontmatter("just text")).toEqual({ data: {}, body: "just text" });
   });
 });

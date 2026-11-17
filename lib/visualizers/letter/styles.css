@@ -175,11 +175,21 @@
 }
 
 /* ---------- a whole letter on a page ----------
-   For a host with no opening of its own (the visualizer editor, index.js renderNote): the envelope
-   above, its paper below, both there at once. Nothing was opened, so nothing unfolds. */
-.bh-letter { box-sizing: border-box; max-width: 672px; margin: 0 auto; padding: 84px 16px 48px; }
+   For a host with no opening of its own (a haus built by the site builder, the visualizer editor;
+   index.js renderNote): the envelope above, its paper below, both there at once. Nothing was
+   opened, so nothing unfolds. Here the letter lies on a theme's surface, so its paper and ink
+   follow the theme's tokens (day and night come with them), with the letter's own values behind. */
+.bh-letter {
+  box-sizing: border-box; max-width: 672px; margin: 0 auto; padding: 20px 16px 40px;
+  --bh-ink: var(--surface-text-color, var(--text-color, #2a2418));
+  --bh-muted: var(--text-light, #6f6347);
+  --bh-paper: color-mix(in srgb, var(--card-bg, #fffcf0) 39%, transparent);
+  --bh-sheet: color-mix(in srgb, var(--card-bg, #ffffff) 55%, transparent);
+}
 .bh-letter__outside { width: min(100%, 380px); margin: 0 auto 30px; }
 .bh-letter .bh-paper { animation: none; }
+/* a code block on the paper keeps its lines; a long one scrolls inside the sheet */
+.bh-letter .bh-paper pre { overflow-x: auto; }
 
 /* ---------- the drawn outside (renderClosed's face: ONE SVG, also printed for link previews) ----------
    The page styles it with the look's tokens; a printer gets the same values written in. Sizes in the

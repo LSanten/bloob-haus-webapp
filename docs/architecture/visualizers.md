@@ -476,9 +476,10 @@ export const type = "file-scope";
 export const name = "shape-name";
 
 // Required: called by preprocess-content.js step 6e.6
-export async function renderFilescope(settings, body) {
+export async function renderFilescope(settings, body, { frontmatter }) {
   // settings: parsed YAML from ::: settings block
   // body: remaining markdown body after settings block removed
+  // frontmatter: the page's own frontmatter (2026-11-16), for a shape that draws from it
   // returns: HTML string that replaces the entire page body
 }
 ```
@@ -593,7 +594,11 @@ What that asks of a shape whose files are copied:
 **`renderNote({ data, body })`**, an optional export of `index.js`: a shape that draws a whole note
 itself, from its frontmatter and body, and is not a template shape. The visualizer editor uses it
 for that shape's page (`createShapeNoteRenderer` in `lib/visualizer-editor/render-note.js`). The
-site builder does not call it yet.
+site builder reaches the same drawing through `renderFilescope`, which since 2026-11-16 is handed
+the page's frontmatter as a third argument, `renderFilescope(settings, body, { frontmatter })`;
+shapes that take two arguments are unaffected. What it returns goes through markdown-it next,
+which ends an HTML block at an empty line, so the HTML must hold none (the letter writes an empty
+line in a code block as `&#10;`).
 
 ## Appear whole (Leon, 2026-11-04)
 

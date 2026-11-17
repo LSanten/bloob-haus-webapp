@@ -1,7 +1,8 @@
 /**
  * The paper in a torn-open envelope is folded like a real letter (Leon, 2026-11-16): as long as
  * the letter is, never longer than the envelope it has to fit in, and a short letter stays short.
- * Its words are a small copy of the open sheet's top.
+ * Its words are a small copy of the open sheet's top, and only on the part that sticks out: inside
+ * the envelope the paper is blank, so nothing crosses the envelope's own words.
  *
  * Measured in a real browser, because this is layout (cqi, max-height, a flex child that shrinks)
  * and cannot be read off the stylesheet. Skips cleanly when no chromium is available.
@@ -49,6 +50,8 @@ async function measure(markdown, width) {
       front: of("#front"), back: of("#back"), hint: of("#hint"),
       smallType: size("#front .bh-env__sheet .bh-paper__body"), openType: size(".open .bh-paper__body"),
       backWords: getComputedStyle(document.querySelector("#back .bh-env__sheet")).visibility,
+      envW: box("#front", ".bh-env").width,
+      mask: ((cs) => cs.maskImage || cs.webkitMaskImage || "")(getComputedStyle(document.querySelector("#front .bh-env__sheet"))),
     };
   });
   await page.close();
@@ -78,6 +81,21 @@ describe("the paper in a torn-open envelope, in a browser", () => {
     if (!browser) return ctx.skip();
     const m = await measure(LONG, 380);
     expect(m.smallType / m.front.peekW).toBeCloseTo(m.openType / 640, 3);
+  });
+
+  it("the words stop above the torn edge: inside the envelope the paper is blank", async (ctx) => {
+    if (!browser) return ctx.skip();
+    for (const width of [380, 240]) {
+      const m = await measure(LONG, width);
+      // down the paper, where the last word has faded (the browser keeps the gradient's stops in cqi)
+      expect(m.mask).toContain("linear-gradient");
+      const [, n, unit] = /([\d.]+)(px|cqi)\)$/.exec(m.mask);   // the last stop, as the browser reports it
+      const wordsEnd = unit === "px" ? Number(n) : Number(n) * m.envW / 100;
+      const intoEnvelope = (wordsEnd - m.front.above) / m.envW * 100;   // in cqi below the envelope's top
+      expect(intoEnvelope).toBeGreaterThan(0);
+      expect(intoEnvelope).toBeLessThan(4.4);   // the torn edge is never higher than this
+      expect(m.front.peekH).toBeGreaterThan(wordsEnd * 2);   // and the paper itself goes on, blank, to its fold
+    }
   });
 
   it("the back's paper is exactly as long as the front's, blank", async (ctx) => {

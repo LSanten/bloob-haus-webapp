@@ -61,8 +61,8 @@ picture printer, and `renderEnvelopePaper` / `renderStamp` / `FLAP_LINES` for a 
 on the same envelope. `paper.js`: `renderPaper(envelope, markdown)` and `renderPaperBody(markdown)`.
 
 `inside` is optional and only for a host that already holds the opened letter:
-`{ html }` (from `renderPaperBody`) puts the letter's beginning on the paper in the torn envelope,
-folded to fit; `{ lines }` only makes the blank paper as long as the letter. A sealed envelope and
+`{ html }` (from `renderPaperBody`) puts the letter's beginning on the part of the paper that
+sticks out of the torn envelope (inside the envelope the paper stays blank), folded to fit; `{ lines }` only makes the blank paper as long as the letter. A sealed envelope and
 `renderEnvelopeSvg` never show it.
 
 The look is `styles.css`, with its own `--bh-*` tokens and a fallback for each.

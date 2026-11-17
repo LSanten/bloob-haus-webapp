@@ -1,0 +1,192 @@
+/* styles.css — the look of the letter: its envelope (renderer.js) and its paper (paper.js).
+   Glassine: see-through paper, one thin line in the sender's colour, a soft halo, fine grain,
+   no shadows. Only the words are solid. Design: https://claude.ai/artifact/9G2843mxE3i5RzhR4mMjwh
+
+   HOME: bloob-haus-webapp/lib/visualizers/letter/. The post office carries a copy; edit it here.
+
+   The letter has its own look tokens (--bh-*), each with a fallback, so any host draws it with no
+   stylesheet of its own: the letter's colour is its sender's, not the theme's. A host sets them to
+   change the look (a night sky sets the paper, ink and line): --bh-line, --bh-paper, --bh-sheet,
+   --bh-ink, --bh-muted, --bh-edge, --bh-glow, --bh-halo, --bh-halo-soft, --bh-sheet-edge,
+   --bh-words, --bh-sheet-words, --bh-marks, --bh-folds, --bh-tear, --bh-env-grain,
+   --bh-env-grain-a, --bh-sheet-grain-a, --bh-grain-ink, --bh-mono, --bh-sans, --bh-serif.
+   The words on the envelope are laid out by counting characters, so --bh-mono must be monospaced. */
+
+/* ---------- the envelope ---------- */
+/* An object looks the same everywhere (Leon, 2026-11-12: "when I zoom in or out it should stay the
+   same and it shouldn't auto adjust to the size of the screen"). Every size is in cqi, hundredths of
+   the envelope's own width, with no minimums: a small envelope on a phone's shelf is the same drawing
+   as a big one, the same line breaks, only smaller, the way a photo of it would be. It keeps its
+   320:200 shape and grows taller only when more is written on it than fits (no "…"), and then by the
+   same amount at every size. Only the hairline and its halo stay in px: a line is a line. */
+.bh-env { position: relative; container-type: inline-size; width: 100%; margin: 0; }
+.bh-env__body {
+  position: relative; z-index: 1; box-sizing: border-box; aspect-ratio: 320 / 200; border-radius: 3.75cqi;
+  display: grid; grid-template-rows: 1fr auto; row-gap: 2.5cqi; padding: 9cqi 6cqi 5cqi 7cqi;
+  background: var(--bh-paper, rgba(255, 252, 240, 0.39));
+  box-shadow: 0 0 0 1px var(--bh-edge, rgba(212, 105, 141, 0.14)), 0 0 11px 0 var(--bh-glow, rgba(236, 140, 172, 0.32));
+  transition: box-shadow 0.3s;
+}
+/* The paper's grain (look A, 2026-11-15): vector noise, one tile per envelope width, so it is the
+   same grain at every size and is redrawn sharp when zoomed (the old raster grain went "grizzly",
+   ui-principles #6). A layer of its own, under the words. */
+.bh-env__body::before, .bh-paper::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background-image: var(--bh-env-grain, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='41'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .15  0 0 0 0 .06  0 0 0 1.5 -.62'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>")); background-size: 100cqi 62.5cqi;
+  opacity: var(--bh-env-grain-a, 0.11);
+}
+.bh-env svg { position: absolute; display: block; overflow: visible; pointer-events: none; }
+/* The flap lines run from the corners, and the corners are round: clip them to the envelope's own
+   outline, or their ends poke out past it (triage 4589062a). Same radius as .bh-env__body. */
+.bh-env__lines { inset: 0; width: 100%; height: 100%; clip-path: inset(0 round 3.75cqi); }
+.bh-env__lines .flap, .bh-env__drawing .flap { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: calc(0.56 * var(--bh-folds, 0.39)); }
+.bh-env__lines .fiber-soft, .bh-env__drawing .fiber-soft { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 0.5; vector-effect: non-scaling-stroke; opacity: calc(0.32 * var(--bh-folds, 0.39)); }
+/* the tear keeps its height however tall the envelope grows: its own strip along the top */
+.bh-env__rip { top: 0; left: 0; width: 100%; height: 12.5cqi; }
+/* softer beside look A's quiet outline (Leon, 2026-11-15: "the tear line should be a bit softer") */
+.bh-env__rip .tear { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: var(--bh-tear, 0.55); }
+.bh-env__rip .fiber { stroke: var(--bh-line, #d4698d); stroke-width: 0.6; vector-effect: non-scaling-stroke; opacity: calc(0.72 * var(--bh-tear, 0.55)); }
+.bh-env__stamp { top: 8cqi; right: 5cqi; width: 19cqi; }
+.bh-env__stamp, .bh-env__postmark { opacity: var(--bh-marks, 0.72); }
+.bh-env__postmark { top: 26cqi; left: 66.8cqi; width: 36cqi; }
+.bh-stamp .perf { fill: var(--bh-paper, rgba(255, 252, 240, 0.56)); stroke: var(--bh-line, #d4698d); stroke-width: 1.7; stroke-dasharray: 0 3.3; stroke-linecap: round; }
+.bh-stamp .hair, .bh-stamp .pic { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 0.8; stroke-linejoin: round; stroke-linecap: round; }
+.bh-stamp text { fill: var(--bh-line, #d4698d); text-anchor: middle; font-family: var(--bh-sans, system-ui, sans-serif); }
+.bh-stamp .words { font-weight: 650; letter-spacing: 0.2px; }
+.bh-stamp .sub { font-size: 5px; font-weight: 400; letter-spacing: 0.2px; }
+.bh-postmark circle, .bh-postmark .wave { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 0.8; }
+.bh-postmark circle { opacity: 0.85; }
+.bh-postmark .wave { opacity: 0.5; }
+.bh-postmark .arc { fill: none; stroke: none; }
+.bh-postmark text { fill: var(--bh-line, #d4698d); text-anchor: middle; font-family: var(--bh-sans, system-ui, sans-serif); }
+.bh-postmark .ring { font-weight: 600; font-size: 4.6px; letter-spacing: 0.8px; }
+.bh-postmark .day { font-weight: 600; font-size: 7px; letter-spacing: 0.5px; }
+.bh-postmark .year { font-weight: 500; font-size: 5.4px; letter-spacing: 0.5px; }
+
+/* the outside, typed: what was said flows around the stamp and postmark, then uses the whole width */
+.bh-env__said, .bh-env__who { position: relative; margin: 0; opacity: var(--bh-words, 0.73); font-family: var(--bh-mono, ui-monospace, Menlo, monospace); overflow-wrap: anywhere; }
+.bh-env__said { grid-row: 1; font-weight: 300; font-size: 3.45cqi; line-height: 1.5; color: var(--bh-ink, #2a2418); }
+.bh-env__said::before { content: ""; float: right; width: 29cqi; height: 33.5cqi; margin-left: 1.5cqi; }
+.bh-env__said > span { display: block; }
+.bh-env .k { color: var(--bh-muted, #6f6347); }
+.bh-env .d { white-space: nowrap; }
+.bh-env__who { grid-row: 2; align-self: end; font-weight: 400; font-size: 3.6cqi; line-height: 1.35; color: var(--bh-ink, #2a2418); }
+.bh-env__who > span { display: inline-block; margin-right: 1.4em; }
+/* sealed, tearing, opened: the drawing shows it; the words are for screen readers */
+.bh-env__status { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* opened: the paper peeks out above the torn edge; the torn strip floats away once */
+.bh-env__peek {
+  position: absolute; z-index: 0; left: 9%; right: 9%; top: -5.6cqi; height: 30cqi; border-radius: 3px;
+  background: var(--bh-sheet, rgba(255, 255, 255, 0.72));
+  box-shadow: 0 0 0 1px var(--bh-halo, rgba(236, 140, 172, 0.4)), 0 0 12px var(--bh-halo-soft, rgba(236, 140, 172, 0.2));
+}
+/* The paper when the host knows the inside (renderer.js, Inside). It is folded like a real letter:
+   as long as the letter is, and never longer than the envelope it has to fit in, where only its
+   top shows and the rest is folded behind. With the words given it is a small copy of the open
+   sheet's top: the same faces and margins, measured in cqi as if the 640px sheet were this wide
+   (1px of the sheet = 0.128cqi). The words fade out just above the fold, so no line is cut through. */
+.bh-env__peek[style*="--bh-peek-h"] { height: var(--bh-peek-h); max-height: calc(100% + 2.6cqi); }
+/* With words it is drawn out a little further (top), so its first lines stand clear of the torn edge. */
+.bh-env__peek--paper { top: -13cqi; height: auto; min-height: 22cqi; max-height: calc(100% + 10cqi); display: flex; flex-direction: column; overflow: hidden; }
+.bh-env__sheet {
+  flex: 0 1 auto; min-height: 0; overflow: hidden; pointer-events: none;
+  padding: 5.125cqi 6.66cqi 5.64cqi; font-family: var(--bh-serif, Georgia, serif); line-height: 1.65;
+  color: color-mix(in srgb, var(--bh-ink, #2a2418) var(--bh-sheet-words, 84%), transparent);
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 5.2cqi), transparent calc(100% - 1.6cqi));
+  mask-image: linear-gradient(#000 calc(100% - 5.2cqi), transparent calc(100% - 1.6cqi));
+}
+.bh-env__sheet .bh-paper__date { font: 300 1.666cqi/1.4 var(--bh-mono, ui-monospace, Menlo, monospace); margin: 0 0 3.33cqi; }
+.bh-env__sheet .bh-paper__body { font-size: 2.306cqi; }
+/* the back shows the paper's blank side, exactly as long as on the front */
+.bh-env--back .bh-env__sheet { visibility: hidden; }
+.bh-env__ghost { top: 0; left: 0; width: 100%; height: 12.5cqi; z-index: 2; opacity: 0; animation: bh-ghost 1.1s ease forwards; }
+.bh-env__ghost path { fill: var(--bh-paper, rgba(255, 252, 240, 0.56)); stroke: var(--bh-line, #d4698d); stroke-width: 1; vector-effect: non-scaling-stroke; }
+@keyframes bh-ghost { 0% { opacity: 0.95; transform: none; } 100% { opacity: 0; transform: translateY(-26px) rotate(-3deg); } }
+
+/* ---------- the other side (renderBack) ---------- */
+/* The same envelope turned over: its own back. The flap lies on this side (two layers of paper, a
+   touch more opaque), the pocket's seams run up from the corners, a small seal with a lock sits
+   where the flap closes, and the office's line is along the bottom. Same paper, grain, line and
+   halo as the front. It takes the front's size exactly (a host lays it over the front). */
+.bh-env--back, .bh-env--back .bh-env__body { height: 100%; }
+.bh-env--back .bh-env__body { display: block; aspect-ratio: auto; padding: 0; }
+.bh-env__lines--back .flap-paper { fill: var(--bh-paper, rgba(255, 252, 240, 0.39)); opacity: 0.42; }
+.bh-env__lines--back .flap { opacity: calc(0.9 * var(--bh-folds, 0.39) + 0.12); }
+.bh-env__lines--back .seam { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: calc(0.56 * var(--bh-folds, 0.39)); }
+.bh-env__rip--back { transform: scaleX(-1); }
+.bh-env .bh-env__seal { left: 50%; top: 56%; width: 11cqi; margin: -5.5cqi 0 0 -5.5cqi; opacity: var(--bh-marks, 0.72); }
+.bh-env__seal .disc { fill: var(--bh-paper, rgba(255, 252, 240, 0.39)); stroke: var(--bh-line, #d4698d); stroke-width: 0.9; }
+.bh-env__seal .ring { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 0.5; stroke-dasharray: 0.2 2.2; stroke-linecap: round; }
+.bh-env__seal .lock { fill: none; stroke: var(--bh-line, #d4698d); stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; }
+.bh-env__office {
+  position: absolute; left: 0; right: 0; bottom: 7.5cqi; margin: 0; text-align: center; text-transform: uppercase;
+  font: 600 2.35cqi/1.2 var(--bh-sans, system-ui, sans-serif); letter-spacing: 0.26em; text-indent: 0.26em;
+  color: var(--bh-line, #d4698d); opacity: var(--bh-marks, 0.72);
+}
+
+/* ---------- taken out ---------- */
+/* The paper leaves the envelope: up out of the torn top, toward the reader, then down in front of
+   the envelope to where the open sheet lies, fading as that sheet unfolds. A transition drawn by
+   the look, like the tear's strip: the HOST says when, by putting data-bh-taking on anything
+   around the envelope, and how far down the sheet lies (--bh-take-to, in the envelope's own cqi).
+   Transform and opacity only; it crosses in front of the envelope while it is wholly above it. */
+[data-bh-taking] .bh-env:not(.bh-env--back) .bh-env__peek { animation: bh-takeout 1.5s linear both; }
+@keyframes bh-takeout {
+  0% { opacity: 1; z-index: 0; transform: translateY(0) perspective(900px) rotateX(0deg) scale(1); animation-timing-function: cubic-bezier(.3, .1, .3, 1); }
+  36% { opacity: 1; z-index: 0; transform: translateY(-27cqi) perspective(900px) rotateX(0deg) scale(1); animation-timing-function: ease-in-out; }
+  37% { z-index: 3; }
+  58% { opacity: 1; z-index: 3; transform: translateY(-21cqi) perspective(900px) rotateX(20deg) scale(1.13); animation-timing-function: cubic-bezier(.5, 0, .4, 1); }
+  86% { opacity: 0.85; }
+  100% { opacity: 0; z-index: 3; transform: translateY(var(--bh-take-to, 80cqi)) perspective(900px) rotateX(56deg) scale(1.22); }
+}
+
+/* ---------- the paper inside ---------- */
+/* Whiter than the envelope and still see-through, its words too (Leon, 2026-11-12). No fold
+   lines: it unfolds, and then it is just the sheet. */
+.bh-paper {
+  position: relative; border-radius: 4px; color: color-mix(in srgb, var(--bh-ink, #2a2418) var(--bh-sheet-words, 84%), transparent);
+  padding: 40px clamp(22px, 6vw, 52px) 44px;
+  background: var(--bh-sheet, rgba(255, 255, 255, 0.55));
+  box-shadow: 0 0 0 1px var(--bh-sheet-edge, rgba(212, 105, 141, 0.08)), 0 0 11px var(--bh-glow, rgba(236, 140, 172, 0.32));
+  font-family: var(--bh-serif, Georgia, serif); line-height: 1.65;
+  transform-origin: 50% 0;
+  /* a host may hold the sheet back (--bh-paper-wait) and start it unseen (--bh-paper-from) while
+     the paper is still on its way out of the envelope */
+  animation: bh-unfold 0.75s cubic-bezier(.2, .7, .2, 1) var(--bh-paper-wait, 0s) both;
+}
+.bh-paper__date { position: relative; text-align: right; font: 300 13px/1.4 var(--bh-mono, ui-monospace, Menlo, monospace); color: var(--bh-muted, #6f6347); margin: 0 0 26px; }
+.bh-paper__body { position: relative; font-size: 18px; }
+.bh-paper__body > :first-child { margin-top: 0; }
+.bh-paper__body .img-alt { color: var(--bh-muted, #6f6347); font-style: italic; }
+/* the sheet's grain: the envelope's, a little fainter, at a fixed tile (the sheet is not a container) */
+.bh-paper::before { background-size: 320px 200px; opacity: var(--bh-sheet-grain-a, 0.088); }
+@keyframes bh-unfold { 0% { transform: perspective(1200px) rotateX(70deg) scaleY(0.34); opacity: var(--bh-paper-from, 0.15); } 100% { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-paper { animation: none; }
+  .bh-env__ghost { display: none; }
+  [data-bh-taking] .bh-env:not(.bh-env--back) .bh-env__peek { animation: none; }
+}
+
+/* ---------- a whole letter on a page ----------
+   For a host with no opening of its own (the visualizer editor, index.js renderNote): the envelope
+   above, its paper below, both there at once. Nothing was opened, so nothing unfolds. */
+.bh-letter { box-sizing: border-box; max-width: 672px; margin: 0 auto; padding: 64px 16px 48px; }
+.bh-letter__outside { width: min(100%, 380px); margin: 0 auto 30px; }
+.bh-letter .bh-paper { animation: none; }
+
+/* ---------- the drawn outside (renderClosed's face: ONE SVG, also printed for link previews) ----------
+   The page styles it with the look's tokens; a printer gets the same values written in. Sizes in the
+   SVG's own units (320 across), so it is one drawing at every size. */
+.bh-env__body--drawn { display: block; padding: 0; aspect-ratio: auto; background: none; }
+.bh-env__body--drawn::before { display: none; }   /* the grain is inside the drawing */
+.bh-env svg.bh-env__drawing { position: relative; display: block; width: 100%; height: auto; overflow: hidden; border-radius: inherit; pointer-events: auto; }
+.bh-env__drawing .paper { fill: var(--bh-paper, rgba(255, 252, 240, 0.39)); }
+.bh-env__drawing .grain { opacity: var(--bh-env-grain-a, 0.11); }
+.bh-env__drawing .grain-ink { flood-color: var(--bh-grain-ink, rgb(51, 38, 15)); }
+.bh-env__drawing .marks { opacity: var(--bh-marks, 0.72); }
+.bh-env__drawing .words-said, .bh-env__drawing .words-who { font-family: var(--bh-mono, ui-monospace, Menlo, monospace); fill: var(--bh-ink, #2a2418); opacity: var(--bh-words, 0.73); }
+.bh-env__drawing .words-said { font-size: 11.04px; font-weight: 300; }
+.bh-env__drawing .words-who { font-size: 11.52px; font-weight: 400; }
+.bh-env__drawing .k { fill: var(--bh-muted, #6f6347); }

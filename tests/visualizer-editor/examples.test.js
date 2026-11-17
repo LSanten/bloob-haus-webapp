@@ -17,7 +17,9 @@ const all = readdirSync(EXAMPLES)
   .filter((f) => f.endsWith(".md") && f !== "always-on.md")
   .map((f) => f.slice(0, -3));
 const isTemplate = (name) => JSON.parse(readFileSync(path.join(ROOT, "lib/visualizers", name, "manifest.json"), "utf-8")).format === "template";
-const names = all.filter((n) => !isTemplate(n));
+// The letter draws the whole note itself (its own renderNote), so it is neither a block nor a template.
+const OWN = ["letter"];
+const names = all.filter((n) => !isTemplate(n) && !OWN.includes(n));
 const objects = all.filter(isTemplate);
 const load = async (name) => ({ name, ...(await import(path.join(ROOT, "lib/visualizers", name, "index.js"))) });
 
@@ -44,7 +46,23 @@ describe("starter notes", () => {
     }
   });
 
-  it("note, marble and the vinyl sleeve are listed", () => expect([...catalog.listed].sort()).toEqual(["marble", "note", "vinyl-sleeve"]));
+  it("the letter's starter note is drawn as a letter: envelope from the frontmatter, plain paper from the body", async () => {
+    const { createShapeNoteRenderer } = await import("../../lib/visualizer-editor/render-note.js");
+    const letter = await import(path.join(ROOT, "lib/visualizers/letter/index.js"));
+    const html = createShapeNoteRenderer(letter)(readFileSync(path.join(EXAMPLES, "letter.md"), "utf-8"));
+    expect(html).toContain('class="bh-env envelope envelope-sealed"');
+    expect(html).toContain(">to:</tspan> Whitney");
+    expect(html).toContain('<article class="bh-paper">');
+    expect(html).not.toMatch(/Dear/);
+    expect(html).not.toContain("\u2014");
+  });
+
+  it("the letter sits on the objects shelf with the other whole-note visualizers", async () => {
+    const { pages } = await liveVisualizers();
+    expect(pages.find((p) => p.name === "letter").shelf).toBe("objects");
+  });
+
+  it("note, marble, the vinyl sleeve and the letter are listed", () => expect([...catalog.listed].sort()).toEqual(["letter", "marble", "note", "vinyl-sleeve"]));
 
   it("only the writing rules and the listed visualizers get a page", async () => {
     const { pages } = await liveVisualizers();

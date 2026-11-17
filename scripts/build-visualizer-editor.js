@@ -101,7 +101,8 @@ export async function liveVisualizers() {
       blurb: catalog.blurbs?.[name],
       example: await fs.readFile(path.join(EDITOR, "examples", `${name}.md`), "utf-8"),
       schema: s.schema,
-      shelf: s.manifest.format === "template" ? "objects" : "placed",
+      // An object is a whole note: every template shape, and a shape that says scope: page (the letter).
+      shelf: s.manifest.format === "template" || s.manifest.scope === "page" ? "objects" : "placed",
       labels: scopeLabels(s.manifest),
     });
   }

@@ -57,6 +57,21 @@ typed on it as `key: value`, and the office stamps its own marks on the copy it 
 `date_postmarked` (the postmark), `fetched`, and `opened` (the envelope is drawn torn open). Keys
 that start with `sealed-`, `mark_` or `bloob` are never drawn.
 
+## How it first shows: `state`
+
+| `state` | what a reader meets |
+|---|---|
+| `unfolded` (or left out) | the envelope, and the open paper below it |
+| `sealed` | the whole envelope and a "Tear open" button. Three taps tear it open, then the paper is out |
+| `opened` | the envelope already torn, the first lines of the paper sticking out, and an "Open" button. One tap takes the paper out |
+
+Once a reader has torn or opened it, their browser remembers, and they find it unfolded next
+time. `state` is never written on the envelope.
+
+Sealed on a haus is a ritual, not privacy: the words are in the page for anyone who looks, for
+screen readers and for search engines. A letter only its reader can open is sealed in the post
+office.
+
 ## The inside (body)
 
 Markdown, kept plain: the paper holds only what you type. No greeting and no signature are added
@@ -82,6 +97,10 @@ on the same envelope. A value may hold line breaks. `paper.js`: `renderPaperBody
 `renderPaper(envelope, markdown, { dates })`, where `dates` (`{ written, updated }`) is optional:
 without it the date line is the envelope's `date_created` as it stands.
 
+`browser.js` (imports only `renderer.js`) is the plain-script tear for a page whose HTML holds the
+whole letter: it folds `.bh-letter[data-letter-state]` shut, counts the taps, takes the paper out
+and remembers the opening in this browser.
+
 `inside` is optional and only for a host that already holds the opened letter:
 `{ html }` (from `renderPaperBody`) puts the letter's beginning on the part of the paper that
 sticks out of the torn envelope (inside the envelope the paper stays blank), folded to fit; `{ lines }` only makes the blank paper as long as the letter. A sealed envelope and
@@ -100,6 +119,7 @@ timing: no-rush
 intention: a thank you for the weekend
 envelope_note: the key is under the pot
 date_created: 2026-11-16
+state: sealed
 ---
 Thank you for the weekend.
 I am still thinking about the lake.

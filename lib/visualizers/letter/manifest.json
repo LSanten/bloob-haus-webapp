@@ -4,6 +4,7 @@
   "filescope": true,
   "scope": "page",
   "sealable": true,
+  "assembles": true,
   "description": "A letter in a see-through envelope. The top of the note is the outside: who it is for, who it is from, and a stamp that says when to open it. The body is the paper inside.",
   "detect": {
     "selectors": [

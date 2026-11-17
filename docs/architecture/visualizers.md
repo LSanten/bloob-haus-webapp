@@ -613,6 +613,14 @@ loaded, when the live layer can't run), and the object fades in at once. Its ope
 too. A CSS fallback shows it after 3 s anyway, so a slow phone or a script error never leaves it
 hidden, and without script it shows straight away as plain HTML (the no-JS rule still holds).
 
+**A shape that is not an engine object keeps the same promise itself** (2026-11-16, the letter).
+The engine's waiting rule is for `.bloob-object[data-assembles]` on pages that carry the engine's
+head script. A letter with `state: sealed` is plain HTML that its `browser.js` folds shut, on any
+theme, so its own stylesheet does the waiting: a one-line script inside the letter marks it
+before paint (`bh-letter--js`), it stays unseen until `browser.js` adds `is-assembled` (and calls
+`BloobObjects.assembled(el)` when the engine is on the page), and the same 3 s fallback shows it,
+unfolded, if the script never comes.
+
 **In a peek, the finished closed look is the whole piece** (2026-11-14, Leon's feedback that a
 peek was slower than going to the page). Per-page loading means the host page may not carry the
 peeked shape's `browser.js` at all (the homepage room has no `marble.js`), so nothing would ever

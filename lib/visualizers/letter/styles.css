@@ -191,6 +191,35 @@
 /* a code block on the paper keeps its lines; a long one scrolls inside the sheet */
 .bh-letter .bh-paper pre { overflow-x: auto; }
 
+/* ---------- a letter that starts shut (state: sealed | opened; browser.js) ----------
+   The page's HTML is the whole letter, unfolded. With script, browser.js folds it shut, and the
+   letter appears whole (visualizers.md): it waits unseen until it is folded (.is-assembled), then
+   shows as one piece, never unfolded first. If the script never comes it shows after 3s anyway,
+   unfolded; without script (.bh-letter--js is set by a line of script inside the letter) it
+   simply shows. Room is kept above the envelope for the paper that sticks out of a torn one. */
+.bh-letter--js[data-letter-state] { padding-top: 88px; }
+.bh-letter--js[data-letter-state]:not(.is-assembled) { opacity: 0; animation: bh-letter-appear 0.35s ease 3s forwards; }
+.bh-letter--js[data-letter-state].is-assembled { opacity: 1; transition: opacity 0.35s ease; }
+@keyframes bh-letter-appear { to { opacity: 1; } }
+.bh-letter.is-folded .bh-letter__outside { cursor: pointer; }
+.bh-letter__act { margin: 0 0 30px; text-align: center; }
+.bh-letter__act[hidden], .bh-letter .bh-paper[hidden] { display: none; }
+.bh-letter__open {
+  font: 500 14px/1 var(--font-body, system-ui, sans-serif); color: var(--bh-ink, #2a2418); background: transparent;
+  border: 1px solid var(--bh-line, #d4698d); border-radius: 999px; padding: 10px 18px; cursor: pointer;
+}
+.bh-letter__open:hover { box-shadow: 0 0 10px var(--bh-glow, rgba(236, 140, 172, 0.32)); }
+.bh-letter__open:focus-visible { outline: 2px solid var(--bh-line, #d4698d); outline-offset: 3px; }
+.bh-letter__pips { margin-left: 8px; letter-spacing: 2px; color: var(--bh-line, #d4698d); }
+/* opening: the paper is taken out of the envelope (bh-takeout above) while the sheet unfolds below */
+.bh-letter.is-opening .bh-paper { --bh-paper-from: 0; animation: bh-unfold 0.75s cubic-bezier(.2, .7, .2, 1) var(--bh-paper-wait, 0.9s) both; }
+.bh-letter.is-opening .bh-paper:focus { outline: none; }
+.bh-letter.is-out .bh-env__peek { visibility: hidden; }   /* the paper is out: it is the sheet below now */
+@media (prefers-reduced-motion: reduce) {
+  .bh-letter.is-opening .bh-paper { animation: none; }
+  .bh-letter--js[data-letter-state].is-assembled { transition: none; }
+}
+
 /* ---------- the drawn outside (renderClosed's face: ONE SVG, also printed for link previews) ----------
    The page styles it with the look's tokens; a printer gets the same values written in. Sizes in the
    SVG's own units (320 across), so it is one drawing at every size. */

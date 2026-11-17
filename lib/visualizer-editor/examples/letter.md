@@ -15,3 +15,5 @@ This part is the paper inside. It holds only what you type, and a line ends
 where you press Enter.
 
 Try `timing: please-open-soon`, or your own words, like `timing: on your birthday`.
+
+Add `state: sealed` above the line and the letter starts shut: tap three times to tear it open. `state: opened` starts it already torn.

@@ -14,9 +14,10 @@ Development session history and completed work.
 - **In the catalog**: `bloob.haus/visualizers/letter` once merged. Starter note, AI card, Objects shelf. The editor draws it through a new optional `renderNote` export.
 - **The paper in a torn-open envelope** (Leon's feedback, same day): optional `inside` input; the letter's beginning on the part of the paper that sticks out (a teaser; blank inside the envelope, never across the envelope's own words), the paper folded to fit. Measured in Chromium: a long letter's paper ends 3cqi above the envelope's bottom, a short one stays short, the words end 4.2cqi below the envelope's top (above the torn edge), the small sheet's type is the open sheet's at 0.9998 of its scale.
 - **A letter on a haus**: a vault note with `bloob-shape: letter` builds as the envelope above its open paper (`renderFilescope` gets the frontmatter as a third argument). Fixed envelope keys, `envelope_note`, typed line breaks, no postmark, "written … · updated …" on the paper, paper and ink from the theme's tokens (checked day and night). Built on a copy of the leons vault with a fixture letter: `letter.css` loads on that page only; `audit-visualizer-detection.js` reports 19/19 signatures safe over 1139 pages.
+- **`state: sealed | opened | unfolded`**: a vault letter can start shut. `browser.js` folds the unfolded HTML on load, three taps tear a sealed one (keyboard too), one tap opens an opened one, the browser remembers. Driven in Chromium on the built leons site at desktop and phone width, all three states: no page errors, no sideways scroll.
 - The editor's flat frontmatter reader now reads a block of text and a list under a key.
 - **Not done:** the post office still uses its own copy (cloud H2/H3).
-- Suite: **1616** passing (50 new for the letter, 5 of them measured in Chromium).
+- Suite: **1643** passing (77 new, 13 of them driven in Chromium).
 
 ### Session 76 — November 14, 2026: website feedback from the tool belt (leons)
 **Worked on:** eight reports Leon left on leons.bloob.haus through the feedback note (PR "Website feedback 2026-11-14"). Each was reproduced on a local marbles build with Playwright before fixing.

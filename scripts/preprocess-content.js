@@ -28,6 +28,7 @@ import { resolveMarkdownLinks } from "./utils/markdown-link-resolver.js";
 import {
   resolveAttachments,
   copyAttachments,
+  selectReferencedAttachments,
   extractFirstImage,
 } from "./utils/attachment-resolver.js";
 import {
@@ -912,10 +913,35 @@ export async function preprocessContent({
 
   // Step 9: Copy attachments (vault structure preserved — files land at vault-relative paths)
   console.log("\n--- Step 9: Copying attachments ---");
+  // features.referenced_attachments_only: copy an attachment only when something being
+  // published names it — otherwise every image, PDF and video in the vault reaches the site,
+  // including ones only private notes use. Off by default (unchanged behavior).
+  let select = null;
+  if (siteConfig.features?.referenced_attachments_only) {
+    const publishedText = await glob("**/*.{md,json}", {
+      cwd: outputDir,
+      absolute: true,
+      ignore: [
+        "_data/attachmentIndex.json", // names every attachment in the vault
+        "assets/**",
+        "_includes/**",
+        "media/optimized/**",
+      ],
+    });
+    const vaultSettings = await glob("_bloob-*.md", { cwd: contentDir, absolute: true });
+    const parts = [JSON.stringify(siteConfig)];
+    for (const f of [...publishedText, ...vaultSettings]) parts.push(await fs.readFile(f, "utf-8"));
+    const corpus = parts.join("\n");
+    select = (files) =>
+      selectReferencedAttachments(files, corpus, {
+        readText: (f) => fs.readFileSync(path.join(contentDir, f), "utf-8"),
+      });
+  }
   const { copied } = await copyAttachments(
     contentDir,
     obsidianConfig.attachmentFolderPath,
     staticDir,
+    { select },
   );
   stats.attachmentsCopied = copied.length;
 

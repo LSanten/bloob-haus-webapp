@@ -157,6 +157,58 @@ export function extractFirstImage(content) {
 }
 
 /**
+ * Picks the attachments that something being published names
+ * (features.referenced_attachments_only).
+ *
+ * A file is kept when its filename appears in `corpus`, either as written or
+ * URL-encoded, ignoring case. The corpus is everything the build publishes: the
+ * processed pages (resolved links are `/<encoded vault path>`, which ends in the
+ * encoded filename), the generated data files, and the vault's `_bloob-*.md`
+ * settings (logo, favicon). Matching on the filename rather than on each reference
+ * syntax keeps it fail-open: any spelling a page uses keeps the file, and a file
+ * that nothing names stays off the site.
+ *
+ * A kept HTML or SVG attachment can load files of its own (`<img src="tiles.png">`),
+ * so its text joins the corpus and the scan repeats until nothing new is kept.
+ *
+ * @param {string[]} files - vault-relative attachment paths (either separator)
+ * @param {string} corpus - the published text to search
+ * @param {{ readText?: (file: string) => string }} [options]
+ *   readText: returns a kept HTML/SVG attachment's text (omit to skip following)
+ * @returns {string[]} the kept subset of `files`, in their original order
+ */
+export function selectReferencedAttachments(files, corpus, { readText = null } = {}) {
+  const forms = (file) => {
+    const base = file.split(/[\\/]/).pop();
+    return [...new Set([base, encodeURIComponent(base), encodeURI(base)])].map((s) =>
+      s.toLowerCase(),
+    );
+  };
+  const kept = new Set();
+  let haystack = corpus.toLowerCase();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    let added = "";
+    for (const file of files) {
+      if (kept.has(file)) continue;
+      if (!forms(file).some((f) => haystack.includes(f))) continue;
+      kept.add(file);
+      grew = true;
+      if (readText && /\.(html|svg)$/i.test(file)) {
+        try {
+          added += "\n" + readText(file);
+        } catch {
+          // unreadable: keep the file itself, follow nothing from it
+        }
+      }
+    }
+    haystack += added.toLowerCase();
+  }
+  return files.filter((f) => kept.has(f));
+}
+
+/**
  * Copies attachments from the vault to the static root, preserving vault
  * directory structure so URLs match the vault layout.
  *
@@ -166,9 +218,14 @@ export function extractFirstImage(content) {
  * @param {string} contentDir - Path to content directory (vault root)
  * @param {string} attachmentFolder - Obsidian attachmentFolderPath (retained for API compat)
  * @param {string} staticRootDir - Root of the static output tree (e.g., src/)
- * @returns {{ copied: string[], errors: Array }} vault-relative paths of copied files
+ * @param {{ select?: (files: string[]) => string[] }} [options]
+ *   select: returns the files to copy (features.referenced_attachments_only). The rest
+ *   are withheld, and a copy an earlier build left at their path is removed (the
+ *   stale-attachment clean in preprocess keeps videos on purpose). Omit to copy all.
+ * @returns {{ copied: string[], skipped: Array, errors: Array, withheld: string[] }}
+ *   vault-relative paths
  */
-export async function copyAttachments(contentDir, attachmentFolder, staticRootDir) {
+export async function copyAttachments(contentDir, attachmentFolder, staticRootDir, { select = null } = {}) {
   const extensions = [
     "jpg",
     "jpeg",
@@ -182,13 +239,27 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
     "webm",
   ];
   const pattern = `**/*.{${extensions.join(",")}}`;
-  const files = await glob(pattern, {
+  const allFiles = await glob(pattern, {
     cwd: contentDir,
     nodir: true,
     ignore: [".obsidian/**", "node_modules/**", ".git/**"],
   });
 
-  console.log(`[attachments] Found ${files.length} attachments to copy`);
+  const withheld = [];
+  if (select) {
+    const chosen = new Set(select(allFiles));
+    for (const file of allFiles) {
+      if (chosen.has(file)) continue;
+      withheld.push(file);
+      await fs.remove(path.join(staticRootDir, file));
+    }
+  }
+  const files = select ? allFiles.filter((f) => !withheld.includes(f)) : allFiles;
+
+  console.log(`[attachments] Found ${allFiles.length} attachments, copying ${files.length}`);
+  if (withheld.length > 0) {
+    console.log(`[attachments] Withheld ${withheld.length} that no published page uses (features.referenced_attachments_only)`);
+  }
 
   const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MiB — auto-compress threshold
   const HARD_LIMIT   = 25 * 1024 * 1024; // 25 MiB — Cloudflare Pages hard limit
@@ -257,7 +328,7 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
   }
   console.log(`[attachments] Copied ${copied.length} files preserving vault structure`);
 
-  return { copied, skipped, errors };
+  return { copied, skipped, errors, withheld };
 }
 
 // Test if run directly

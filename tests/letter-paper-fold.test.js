@@ -80,10 +80,12 @@ describe("the paper in a torn-open envelope, in a browser", () => {
     expect(short.front.below).toBeGreaterThan(short.front.envH * 0.5);
   });
 
-  it("its words are the open sheet's, at the scale of the small paper", async (ctx) => {
+  // Larger than a true copy, so the first lines read at a glance (Leon, 2026-11-19, feedback
+  // 580c8514): 3cqi on the envelope where an exact copy of the sheet would be 2.306cqi.
+  it("its words are the open sheet's, a little larger than the small paper's scale", async (ctx) => {
     if (!browser) return ctx.skip();
     const m = await measure(LONG, 380);
-    expect(m.smallType / m.front.peekW).toBeCloseTo(m.openType / 640, 3);
+    expect(m.smallType / m.front.peekW).toBeCloseTo((m.openType / 640) * (3 / 2.306), 3);
   });
 
   it("the words stop above the torn edge: inside the envelope the paper is blank", async (ctx) => {

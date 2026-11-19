@@ -50,6 +50,11 @@ number in whichever section it belongs to, never a renumbering.
    new tab sends no referrer, so a private page's address never travels with it. Mechanism, per
    shape: `shapes.md` convention #7 (decided by origin, the current host injected so the renderer
    stays pure). *Leon, 2026-11-15.*
+16. **Nothing pops in.** An object appears whole, with what is written on it, or it waits a moment
+   (at most about a second and a half) and then appears. Something that truly arrives later fades
+   in; it never snaps or fills in sharp. Blank paper that then gets words breaks the realism.
+   (The post office: the room waits for its opened letters' first lines.) *Leon, 2026-11-19,
+   feedback `580c8514`; see also "Visualizers appear whole".*
 
 ## Words
 

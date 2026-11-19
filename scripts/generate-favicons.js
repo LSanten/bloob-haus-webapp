@@ -1,7 +1,7 @@
 /**
  * Favicon Generator
  *
- * Generates favicon.png (32×32) and apple-touch-icon.png (180×180) from
+ * Generates favicon.png (64×64), favicon.ico (32×32 + 48×48) and apple-touch-icon.png (310×310) from
  * the site logo declared in _bloob-settings.md.
  *
  * Logo value format: plain path or [[wiki-link]] syntax pointing to an attachment.
@@ -93,6 +93,38 @@ async function resolveLogoPath(rawValue, srcDir) {
 }
 
 /**
+ * Packs PNG images into one .ico file. ICO allows PNG-encoded images inside (all current browsers
+ * read them), so no extra dependency is needed: a 6-byte header, one 16-byte directory entry per
+ * image, then the PNG bytes.
+ *
+ * @param {Array<{size: number, png: Buffer}>} images - square PNGs, size in px (≤ 256)
+ * @returns {Buffer}
+ */
+export function buildIco(images) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type 1 = icon
+  header.writeUInt16LE(images.length, 4);
+
+  const dir = Buffer.alloc(16 * images.length);
+  let offset = header.length + dir.length;
+  images.forEach(({ size, png }, i) => {
+    const o = i * 16;
+    dir[o] = size >= 256 ? 0 : size; // width (0 means 256)
+    dir[o + 1] = size >= 256 ? 0 : size; // height
+    dir[o + 2] = 0; // palette colours
+    dir[o + 3] = 0; // reserved
+    dir.writeUInt16LE(1, o + 4); // colour planes
+    dir.writeUInt16LE(32, o + 6); // bits per pixel
+    dir.writeUInt32LE(png.length, o + 8);
+    dir.writeUInt32LE(offset, o + 12);
+    offset += png.length;
+  });
+
+  return Buffer.concat([header, dir, ...images.map((img) => img.png)]);
+}
+
+/**
  * Generates favicons from the site logo.
  * Skips generation if the source image hash hasn't changed.
  *
@@ -124,11 +156,13 @@ export async function generateFavicons({ config }) {
 
   const faviconExists = await fs.pathExists(path.join(SRC_DIR, "favicon.png"));
   const touchIconExists = await fs.pathExists(path.join(SRC_DIR, "apple-touch-icon.png"));
-  if (existingHash.trim() === hash && faviconExists && touchIconExists) {
+  const icoExists = await fs.pathExists(path.join(SRC_DIR, "favicon.ico"));
+  const allExist = faviconExists && touchIconExists && icoExists;
+  if (existingHash.trim() === hash && allExist) {
     console.log("[favicon] Source unchanged — using cached favicons");
     return;
   }
-  if (existingHash.trim() === hash && (!faviconExists || !touchIconExists)) {
+  if (existingHash.trim() === hash && !allExist) {
     console.log("[favicon] Source unchanged but output missing — regenerating...");
   }
 
@@ -137,7 +171,17 @@ export async function generateFavicons({ config }) {
   await sharp(sourceBuffer).resize(64, 64).sharpen({ sigma: 0.5 }).png().toFile(path.join(SRC_DIR, "favicon.png"));
   await sharp(sourceBuffer).resize(310, 310).sharpen({ sigma: 0.5 }).png().toFile(path.join(SRC_DIR, "apple-touch-icon.png"));
 
+  // favicon.ico: what browsers, feed readers and link-preview tools fetch by default when a page
+  // names no icon (or when they never read the page at all).
+  const icoImages = await Promise.all(
+    [32, 48].map(async (size) => ({
+      size,
+      png: await sharp(sourceBuffer).resize(size, size).sharpen({ sigma: 0.5 }).png().toBuffer(),
+    })),
+  );
+  await fs.writeFile(path.join(SRC_DIR, "favicon.ico"), buildIco(icoImages));
+
   await fs.writeFile(hashFile, hash);
 
-  console.log("[favicon] Generated favicon.png (64×64) and apple-touch-icon.png (310×310)");
+  console.log("[favicon] Generated favicon.png (64×64), favicon.ico (32+48) and apple-touch-icon.png (310×310)");
 }

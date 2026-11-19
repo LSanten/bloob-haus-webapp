@@ -157,6 +157,7 @@ export default async function (eleventyConfig) {
   }
   // Favicons — generated at build time by scripts/generate-favicons.js into src/
   eleventyConfig.addPassthroughCopy({ [`${SRC}/favicon.png`]: "favicon.png" });
+  eleventyConfig.addPassthroughCopy({ [`${SRC}/favicon.ico`]: "favicon.ico" });
   eleventyConfig.addPassthroughCopy({
     [`${SRC}/apple-touch-icon.png`]: "apple-touch-icon.png",
   });

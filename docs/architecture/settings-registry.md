@@ -264,6 +264,12 @@ Both fields accept the same value formats:
 |-----|------|---------|-------------|
 | `features.inline_tag_links` | bool | `false` | An Obsidian-style `#tag` written in the text stays where it is and becomes a link to its tag page (`/tags/<tag>/`, class `tag-inline`; `scripts/utils/inline-tags.js`). Code, links and URLs are left alone, and only tags the page is counted under become links. On `bloob-haus-26` the page's foot then shows the frontmatter tags only (`yaml_tags`), so no tag is listed twice. Set in `sites/<name>.yaml`; on for marbles. |
 
+#### Attachments
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.referenced_attachments_only` | bool | `false` | Copy an image, PDF, video or HTML file from the vault to the site only when something being published names it: a published page (after links resolve), a generated data file, the vault's `_bloob-*.md` settings (logo, favicon) or the site config. A kept HTML/SVG file's own references are followed too. Matching is by filename, as written or URL-encoded, ignoring case, so it errs toward keeping a file. Off = every attachment in the vault is copied, including ones only private notes use (reachable by URL even though nothing links to them). Recommended with `publish_mode: allowlist`. Set in `sites/<name>.yaml`. `selectReferencedAttachments()` in `scripts/utils/attachment-resolver.js`. Added 2026-11-19. |
+
 #### Folds (`## > Heading`)
 
 | Key | Type | Default | Description |

@@ -105,7 +105,9 @@
   mask-image: linear-gradient(#000 18.6cqi, transparent 22.2cqi);
 }
 .bh-env__sheet .bh-paper__date { font: 300 1.666cqi/1.4 var(--bh-mono, ui-monospace, Menlo, monospace); margin: 0 0 3.33cqi; }
-.bh-env__sheet .bh-paper__body { font-size: 2.306cqi; }
+/* The words on the peek are larger than a true copy of the sheet (2.306cqi) so its first lines read
+   at a glance, about three of them above the fade (Leon, 2026-11-19, feedback 580c8514). */
+.bh-env__sheet .bh-paper__body { font-size: 3cqi; }
 /* the back shows the paper's blank side, exactly as long as on the front */
 .bh-env--back .bh-env__sheet { visibility: hidden; }
 .bh-env__ghost { top: 0; left: 0; width: 100%; height: 12.5cqi; z-index: 2; opacity: 0; animation: bh-ghost 1.1s ease forwards; }

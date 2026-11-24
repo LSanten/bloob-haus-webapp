@@ -1100,7 +1100,9 @@ leaf vs. container.
 
 Context: raised in the workbench session (2026-10-23), where a rung-0 shape became a folder of plain
 HTML templates (`open.html`, optional `closed.html`, `style.css`) filled from `{{yaml.x}}` and
-`{{body}}`. The canvas is the natural room those shapes get placed in.
+`{{body}}`. The canvas is the natural room those shapes get placed in. *(Naming moved on 2026-11-23:
+"rung 0" now means a one-page visualizer that reads notes in the browser, and a template folder is
+rung 1, or rung 2 with a `closed.html`. See `making-visualizers.md` → "Rungs".)*
 
 ---
 

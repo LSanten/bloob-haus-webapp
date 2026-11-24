@@ -53,6 +53,14 @@ This enables:
 **Never put DOM operations in parser or renderer.**
 **Never put file system operations in parser or renderer.**
 
+**From which rung (2026-11-24).** This principle and the pure-renderer standard below hold from
+**rung 1** up. A **rung-0** visualizer is one HTML page that reads notes in the browser and may
+build its markup with script; it is how an idea gets tried on real notes in an afternoon, and it
+climbs to this standard only when search engines, no-script readers or a second host need it. The
+rungs, and the short list a rung-0 page must still hold, are in
+[`making-visualizers.md`](making-visualizers.md) → "Rungs". In the three-hosts table below, a rung-0
+page is the "browser fallback" host and its own renderer at once.
+
 ---
 
 ## The Pure-Renderer Standard

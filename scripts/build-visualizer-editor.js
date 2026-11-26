@@ -145,11 +145,31 @@ export async function publishEngine(outDir = OUT) {
   }
 }
 
+/**
+ * One-page visualizers (rung 0, docs/architecture/making-visualizers.md → "Rungs"): a folder whose
+ * manifest says "format": "page" holds one self-contained page.html. It is published as it is, at
+ * <name>/index.html, with its writing card beside it. Returns the names published.
+ */
+export async function publishPages(outDir = OUT) {
+  const published = [];
+  for (const entry of await fs.readdir(SHAPES, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith("_")) continue;
+    const dir = path.join(SHAPES, entry.name);
+    const manifest = JSON.parse((await readIf(path.join(dir, "manifest.json"))) || "{}");
+    if (manifest.format !== "page" || !(await fs.pathExists(path.join(dir, "page.html")))) continue;
+    await fs.copy(path.join(dir, "page.html"), path.join(outDir, entry.name, "index.html"));
+    if (await fs.pathExists(path.join(dir, "schema.md"))) await fs.copy(path.join(dir, "schema.md"), path.join(outDir, entry.name, "schema.md"));
+    published.push(entry.name);
+  }
+  return published;
+}
+
 export async function build() {
   const { shapes, pages } = await liveVisualizers();
   const templates = await loadTemplateShapes(SHAPES);
   await fs.emptyDir(OUT);
   await publishEngine(OUT);
+  const onePage = await publishPages(OUT);
 
   // The page: the editor host plus every live shape's own index.js, one bundle. Template shapes
   // (note, marble) have no index.js: the engine draws them from their templates, carried here.
@@ -209,7 +229,7 @@ export async function build() {
   await fs.outputFile(path.join(OUT, "_headers"), "/assets/*\n  Access-Control-Allow-Origin: *\n");
   await fs.copy(path.join(EDITOR, "making-a-visualizer.md"), path.join(OUT, "making-a-visualizer.md"));
 
-  console.log(`[visualizers] ${pages.length} pages, ${shapes.length} shapes: ${shapes.map((v) => v.name).join(", ")}`);
+  console.log(`[visualizers] ${pages.length} pages, ${shapes.length} shapes: ${shapes.map((v) => v.name).join(", ")}; one-page: ${onePage.join(", ") || "none"}`);
   return { shapes, pages };
 }
 

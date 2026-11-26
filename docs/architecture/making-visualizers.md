@@ -1,11 +1,21 @@
-# Making a visualizer (v0, 2026-11-14; rungs added 2026-11-24)
+# Making a visualizer (v0, 2026-11-14; rungs added 2026-11-24; one-page visualizers 2026-11-25)
 
 The public guide for anyone, person or AI, who makes a Bloob Haus visualizer. It is short on
 purpose: the few things that must hold, then pointers to the practices that usually hold. It is
-distilled from the internal docs (`ontology.md`, `shapes.md`, `visualizers.md`) and grows by the
-loop at the bottom, not by guessing.
+distilled from three docs and grows by the loop at the bottom, not by guessing.
 
 Bundle for an agent: this file, `writing-notes-for-shapes.md` and `ui-principles.md`.
+
+**The three visualizer docs.** Behind this guide stand three docs that are read together, never one
+alone (the same rule as the repo's `CLAUDE.md` → "the shape trinity"):
+
+- [`ontology.md`](ontology.md): what a visualizer *is*, and why (the two states, placement, rungs).
+- [`shapes.md`](shapes.md): the contract, the mechanism (template shapes, sealing, canvas).
+- [`visualizers.md`](visualizers.md): the renderer standard ("three hosts, one renderer").
+
+A rung-0 page can be made from this guide alone. Before climbing to rung 1, or before changing how
+visualizers work for everyone, read all three. When they disagree with each other or with the code,
+say so and fix them in the same change.
 
 ## What a visualizer is
 
@@ -35,6 +45,10 @@ job can stay one. (Leon, 2026-11-23: "easy idea super fast, then build out the r
 - **It is one `.html` file.** Put it anywhere in a vault; the builder publishes vault `.html` files
   as they are. `lenses/cells/index.html` in the vault becomes `<haus>/lenses/cells/` (the first one,
   for leons.bloob.haus/lenses/cells/, was placed in the vault on 2026-11-24).
+- **Or it lives with the other visualizers** (2026-11-25), so everyone can use it by name: a folder
+  `lib/visualizers/<name>/` with `manifest.json` (`"format": "page"`), the page as `page.html` and
+  its writing card as `schema.md`. The visualizers site publishes the page as it is, at
+  `bloob.haus/visualizers/<name>/`, with `schema.md` beside it. `cells` is the first.
 - **It reads in the browser**, from one of three places, in this order:
   1. a note named in its address: `?note=<path to a .md>`, so one page can draw any note
      ("the address says what to draw");
@@ -61,6 +75,17 @@ job can stay one. (Leon, 2026-11-23: "easy idea super fast, then build out the r
 What it may skip, until it climbs: a pure `parse` and `render` (must 3), working without script
 (must 4), and a closed view (must 5). At rung 0 the page is its own host, so it fetches its data
 itself; from rung 1 the drawing never does (must 2).
+
+**A page another app can hold.** A one-page visualizer can be embedded by any app (a board, a
+workspace), which then owns the note. The page and its host speak three messages:
+
+1. the page sends `{type: 'bloob-ready'}` to its parent;
+2. the host answers `{type: 'bloob-note', md}` with the note's markdown;
+3. every change made in the page comes back as `{type: 'bloob-note-changed', md}`, sent only to
+   the origin that handed over the note. The host saves it; the page keeps no copy.
+
+With `?note=` and these three messages, a host needs no new work for a new visualizer, only its
+name. Reference: `lib/visualizers/cells/` (`page.html`, and the contract in its `schema.md`).
 
 ### Climbing
 
@@ -101,8 +126,9 @@ inside these lines is fine, however differently it is built.
 
 ## Three ways to build one
 
-- **A one-page visualizer** (rung 0): a single `.html` file, as above. The fastest way to try an
-  idea; climb from it when it earns a place.
+- **A one-page visualizer** (rung 0): a single `.html` file, as above, in a vault or as
+  `lib/visualizers/<name>/page.html`. The fastest way to try an idea; climb from it when it earns a
+  place.
 - **A template visualizer** (no code): a folder with `manifest.json`, `schema.md`, `open.html`, an
   optional `closed.html` and `style.css`. Templates fill blanks from the note (`{{ title }}`,
   `{{ yaml.<key> }}`, `{{ body }}`); no ifs, no loops.

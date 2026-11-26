@@ -773,6 +773,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `foldable` | inline (build-time + runtime) | Not yet built | — | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
 | `garden` | hybrid + file-scope | In progress | ✓ `builder/` | External creator's shape (Odalys Benitez), converted in its own repo — `schema.md` done; renderer + builder in progress. Plan: `bloob-haus-cloud/docs/implementation-plans/2026-07-13_garden-shape-and-builder.md` |
 | `rss-feed` | file-scope | Partial | — | Missing `layout.njk`, `schema.md`, `styles.css` |
+| `cells` | one page (rung 0), a lens | ✓ as a page, at `bloob.haus/visualizers/cells/` (2026-11-25) | ✓ in the page: its tool belt (edit words, add a cell, add a note, tie two cells) writes the note | Any note of nested bullets as living cells; `##` headings are centres. Takes its note from its example, `?note=`, an embedding host (three messages, `making-visualizers.md`) or a paste. Not yet: a pure `parse`/`render` (rung 1), a closed view (rung 2), a card in the catalog page. |
 | `card-preview` | build-time | Partial | — | Missing `schema.md` |
 | `checkbox-tracker` | runtime | Partial | — | — |
 | `citations` | runtime (CSS-only) | ✓ | — | — |

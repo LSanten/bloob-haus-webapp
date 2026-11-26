@@ -1,0 +1,7 @@
+{
+  "name": "cells",
+  "format": "page",
+  "rung": 0,
+  "description": "Any note of nested bullets grows as living cells: each heading is a centre, bullets bud around it, and a tool belt edits the note.",
+  "detect": { "selectors": [".bloob-cells-page"] }
+}

@@ -154,6 +154,13 @@ The foundation that makes this work has **zero metabolism** in it:
 
 Nothing is ever wrong; things are only more or less defined. This is what "lay the foundation and build on it" means concretely.
 
+**The same progression, for the visualizers themselves (2026-11-23).** A visualizer also stabilizes
+in stages, called **rungs**: one page that reads notes in the browser, made in an afternoon (rung
+0); markup the builder bakes, so it is there without script (rung 1); an object with an outside that
+can be placed, previewed and sealed (rung 2). A visualizer climbs only when climbing buys something,
+and none is forced to. The strict contract is where a visualizer arrives, not the door it has to fit
+through to be tried. Mechanism: `making-visualizers.md` → "Rungs".
+
 ---
 
 ## Flows and stocks — the delivery layer (2026-09-20)

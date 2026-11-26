@@ -53,6 +53,22 @@ This enables:
 **Never put DOM operations in parser or renderer.**
 **Never put file system operations in parser or renderer.**
 
+**From which rung (2026-11-24).** This principle and the pure-renderer standard below hold from
+**rung 1** up. A **rung-0** visualizer is one HTML page that reads notes in the browser and may
+build its markup with script; it is how an idea gets tried on real notes in an afternoon, and it
+climbs to this standard only when search engines, no-script readers or a second host need it. The
+rungs, and the short list a rung-0 page must still hold, are in
+[`making-visualizers.md`](making-visualizers.md) → "Rungs". In the three-hosts table below, a rung-0
+page is the "browser fallback" host and its own renderer at once.
+
+**Where a rung-0 page lives (2026-11-25).** In a vault, or with the other visualizers: a folder
+`lib/visualizers/<name>/` whose `manifest.json` says `"format": "page"` holds `page.html` and
+`schema.md`. The visualizers site publishes the page as it is, at `bloob.haus/visualizers/<name>/`
+(`publishPages()` in `scripts/build-visualizer-editor.js`). The site builders skip such a folder:
+it has no `index.js`, no `browser.js` and no stylesheet. An app that embeds the page holds the note
+and talks to it in three messages (`making-visualizers.md` → "A page another app can hold"). This
+makes an embedding app a fourth host beside the three below. First: `cells`.
+
 ---
 
 ## The Pure-Renderer Standard

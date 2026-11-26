@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cells · Bloob Haus visualizers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Quicksand:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,300;6..72,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* VOICE: soft, unhurried, a little playful; a workbench for feel, not a poster
+   IDEA: tissue under a lens, where navigation is a cluster of living cells that bud and fold
+   PICTURE: the live cell cluster fills the stage; the tuning panel sits beside it like lab notes
+   COLOUR and TYPE: MELT's purple-mauve field, indigo cells, rose center; Caveat for titles, Quicksand for text
+   LAYOUT: stage left, panel right; under 760px the stage stacks above the panel */
+:root{color-scheme:dark;--ink:#f6eef8;--mute:#d6c4df;--line:rgba(255,255,255,.16);--acc:#f3a9c4;--panel:rgba(24,10,40,.40)}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(160deg,#4a2d6e 0%,#6a4090 38%,#8a5590 68%,#9a6080 86%,#a07278 100%) fixed;color:var(--ink);font:16px/1.5 Quicksand,system-ui,sans-serif;overflow-x:clip}
+.top,.wrap{position:relative;z-index:1}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 20px;padding:14px max(3vw,16px) 4px}
+h1{font:700 42px/1.05 Caveat,cursive;margin:0}
+.top p{margin:0;color:var(--mute);font-size:15px;max-width:68ch}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;padding:8px max(3vw,16px) 16px;height:calc(100vh - 80px);min-height:540px}
+.fig{position:relative;border-radius:28px;overflow:hidden;border:1px solid var(--line);transition:background .5s}
+.fig[data-style=melt]{background:radial-gradient(110% 85% at 50% 42%,rgba(255,255,255,.07),transparent 65%)}
+.fig[data-style=line]{background:#fffaf3}
+.fig[data-style=glassine]{background:transparent;border:0;box-shadow:0 0 0 1px rgba(130,100,40,.16);border-radius:18px}
+body[data-style=glassine]{--ink:#2a2418;--mute:#776a4c;--line:rgba(130,100,40,.16);--acc:#a97c1a;--panel:rgba(255,252,240,.7);color-scheme:light;font-family:"Instrument Sans",system-ui,sans-serif;
+  background:radial-gradient(circle at 10% 12%,#fbe6a4,transparent 55%),radial-gradient(circle at 90% 30%,#f8dcc0,transparent 50%),radial-gradient(circle at 50% 96%,#eef0cf,transparent 60%),#f8f1d8 fixed}
+body[data-style=glassine]::after{content:"";position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.25;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .15  0 0 0 0 .06  0 0 0 1.9 -.78'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body[data-style=glassine] h1,body[data-style=glassine] .panel h2{font-family:Newsreader,Georgia,serif;font-weight:300;letter-spacing:-.01em}
+body[data-style=glassine] .top p{font:17px/1.5 Newsreader,Georgia,serif}
+body[data-style=glassine] .panel{border:0;box-shadow:0 0 0 1px rgba(130,100,40,.16);border-radius:18px}
+body[data-style=glassine] .btn,body[data-style=glassine] .fold{background:rgba(255,252,240,.7);border:0;box-shadow:0 0 0 1px rgba(130,100,40,.16);font-family:"Instrument Sans",system-ui,sans-serif;font-weight:500;transition:box-shadow .25s}
+body[data-style=glassine] .btn:hover,body[data-style=glassine] .btn.on,body[data-style=glassine] .fold:hover{background:rgba(255,252,240,.7);color:#2a2418;box-shadow:0 0 0 1px #a97c1a,0 0 14px rgba(226,172,62,.4)}
+body[data-style=glassine] .row output,body[data-style=glassine] .hud{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:300}
+body[data-style=glassine] select{background:rgba(255,253,246,.82)}
+body[data-style=glassine] textarea{background:rgba(255,253,246,.82)}
+body[data-style=glassine] .fold{color:#2a2418}
+.fig[data-style=tissue]{background:radial-gradient(circle at 50% 45%,#f5f9ee,#dde7cf)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.hud{position:absolute;left:16px;top:16px;font-size:13px;color:var(--mute);pointer-events:none}
+.fig:not([data-style=melt]) .hud{color:#6a6175}
+.fold{position:absolute;right:120px;top:12px;min-height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--line);background:rgba(20,8,36,.35);color:var(--ink);font:600 14px Quicksand,sans-serif;cursor:pointer}
+.fig:not([data-style=melt]) .fold{background:rgba(255,255,255,.7);color:#2a2140;border-color:rgba(0,0,0,.12)}
+.toast{position:absolute;left:50%;top:60px;transform:translate(-50%,-8px);max-width:min(440px,86%);padding:10px 16px;border-radius:18px;background:rgba(20,8,36,.78);color:#fff;font-size:14px;text-align:center;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px 16px 18px;overflow:auto}
+.panel h2{font:700 28px/1 Caveat,cursive;margin:2px 0 8px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.btn{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);font:600 14px Quicksand,sans-serif;cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn.on{background:var(--acc);color:#3a1530;border-color:transparent}
+details{border-top:1px solid var(--line);padding:6px 0}
+summary{cursor:pointer;font-weight:700;min-height:36px;display:flex;align-items:center}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;padding:2px 0}
+.row label{font-size:14px}
+.row output{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;height:30px;accent-color:var(--acc);margin:0}
+.row small{grid-column:1/-1;color:var(--mute);font-size:13px;line-height:1.3;margin-top:-4px}
+.chk{display:flex;align-items:center;gap:8px;min-height:36px;font-size:14px}
+.chk input{width:18px;height:18px;accent-color:var(--acc)}
+select{font:600 14px Quicksand,sans-serif;min-height:38px;border-radius:12px;padding:0 10px;background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
+select option{color:#222}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.note{color:var(--mute);font-size:13px;margin:12px 0 0}
+textarea{width:100%;height:120px;margin-top:8px;font:13px ui-monospace,monospace;border-radius:10px;background:rgba(0,0,0,.25);color:var(--ink);border:1px solid var(--line);display:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.read{position:absolute;left:14px;bottom:12px;width:min(620px,calc(100% - 28px));padding:11px 16px 12px;border-radius:16px;background:rgba(255,252,240,.84);box-shadow:0 0 0 1px rgba(130,100,40,.16),0 6px 26px rgba(120,90,30,.10);color:#2a2418;font:16px/1.45 Newsreader,Georgia,serif;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.read .meta{font:300 12px/1.35 "JetBrains Mono",ui-monospace,monospace;color:#776a4c;margin:0 0 3px}
+.read .txt{margin:0;max-height:6.2em;overflow:auto}
+.read .txt.q{font-style:italic}
+.read .ties{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:300 12px "JetBrains Mono",ui-monospace,monospace;color:#776a4c}
+.read .ties[hidden]{display:none}
+.read .ties button{font:500 13px "Instrument Sans",system-ui,sans-serif;min-height:34px;padding:0 12px;border-radius:17px;border:0;background:rgba(255,252,240,.92);box-shadow:0 0 0 1px rgba(169,124,26,.35);color:#2a2418;cursor:pointer}
+.read .ties button:hover{box-shadow:0 0 0 1px #a97c1a,0 0 12px rgba(226,172,62,.35)}
+body[data-style=melt] .read{background:rgba(20,8,36,.62);color:#f6eef8;box-shadow:0 0 0 1px rgba(255,255,255,.16)}
+body[data-style=melt] .read .meta,body[data-style=melt] .read .ties{color:#d6c4df}
+#noteIn{display:block;height:150px}
+.belt{position:absolute;right:12px;top:12px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.belt__open{min-height:40px;padding:0 14px 0 11px;border-radius:20px;border:0;background:rgba(255,252,240,.84);box-shadow:0 0 0 1px rgba(130,100,40,.16);color:#2a2418;font:500 14px "Instrument Sans",system-ui,sans-serif;display:flex;align-items:center;gap:7px;cursor:pointer;transition:box-shadow .25s}
+.belt__open svg{width:18px;height:18px}
+.belt__open[aria-expanded=true],.belt__open.on{box-shadow:0 0 0 1px #a97c1a,0 0 14px rgba(226,172,62,.4)}
+.belt__tools{width:238px;padding:8px;border-radius:16px;background:rgba(255,252,240,.94);box-shadow:0 0 0 1px rgba(130,100,40,.16),0 8px 28px rgba(120,90,30,.12);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:3px}
+.belt__tools[hidden]{display:none}
+.belt .tool{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;border:0;border-radius:12px;background:transparent;color:#2a2418;font:500 14px "Instrument Sans",system-ui,sans-serif;cursor:pointer;text-align:left}
+.belt .tool:hover{background:rgba(169,124,26,.08)}
+.belt .tool[aria-pressed=true]{background:rgba(169,124,26,.14);box-shadow:inset 0 0 0 1px rgba(169,124,26,.45)}
+.belt .tool svg{width:18px;height:18px;flex:none}
+.belt__sep{height:1px;background:rgba(130,100,40,.16);margin:5px 4px}
+.belt__name{display:flex;flex-direction:column;gap:4px;font:300 12px "JetBrains Mono",ui-monospace,monospace;color:#776a4c;padding:2px 10px 4px}
+.belt__name input{font:15px Newsreader,Georgia,serif;min-height:36px;border-radius:10px;border:0;box-shadow:0 0 0 1px rgba(130,100,40,.22);background:rgba(255,253,246,.92);padding:0 10px;color:#2a2418}
+.belt__state{margin:2px 10px 4px;font:13px/1.35 "Instrument Sans",system-ui,sans-serif;color:#776a4c}
+.cell-ed[hidden]{display:none}
+.cell-ed{display:block;margin:0;position:absolute;z-index:4;height:76px;padding:10px 12px;border:0;border-radius:14px;resize:none;background:rgba(255,252,240,.97);box-shadow:0 0 0 1px #a97c1a,0 0 18px rgba(226,172,62,.35);color:#2a2418;font:16px/1.35 Newsreader,Georgia,serif;text-align:center;outline:none}
+.cell-ed.note{background:rgba(255,241,186,.97);font:600 20px/1.2 Caveat,cursive}
+@media(max-width:760px){.wrap{grid-template-columns:1fr;height:auto}.fig{height:64vh;min-height:380px}.panel{overflow:visible}h1{font-size:36px}}
+</style>
+</head>
+<body data-style="glassine">
+<header class="top">
+  <h1>Cells</h1>
+  <p id="hint">Any note of nested bullets, grown as cells. Rest on a cell to read it. Click to let it bud. Click an open cell to fold it back in. Esc folds the last one.</p>
+</header>
+<main class="wrap">
+  <div class="fig" id="fig" data-style="glassine">
+    <canvas id="cv" aria-hidden="true"></canvas>
+    <button class="fold" id="foldLast" type="button">fold last</button>
+    <div class="belt" id="belt">
+      <button class="belt__open" id="beltOpen" type="button" aria-expanded="false" aria-controls="beltTools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 10.5-10.5-3-3L5 16z"/><path d="M13.5 7l3 3"/></svg><span id="beltLabel">tools</span></button>
+      <div class="belt__tools" id="beltTools" hidden>
+        <button class="tool" type="button" data-tool="read" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/></svg>read and open</button>
+        <button class="tool" type="button" data-tool="edit" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 10.5-10.5-3-3L5 16z"/><path d="M13.5 7l3 3"/></svg>edit words</button>
+        <button class="tool" type="button" data-tool="add" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="13" r="6.5"/><circle cx="18.5" cy="6.5" r="3.4"/><path d="M18.5 5v3M17 6.5h3"/></svg>add a cell</button>
+        <button class="tool" type="button" data-tool="note" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v10.5L14.5 19H5z"/><path d="M14.5 19v-4.5H19"/></svg>add a note</button>
+        <button class="tool" type="button" data-tool="tie" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="5.5" cy="7" r="3"/><circle cx="18.5" cy="17" r="3"/><path d="M8.3 8.6c4.2 1.2 2.6 6 7.6 7"/></svg>tie two cells</button>
+        <div class="belt__sep"></div>
+        <label class="belt__name">your name, on your notes<input id="myName" maxlength="40" autocomplete="name" spellcheck="false"></label>
+        <button class="tool" type="button" id="copyNote">copy the note</button>
+        <button class="tool" type="button" id="resetNote">back to the original</button>
+        <p class="belt__state" id="beltState">Changes write the note. They are kept in this browser.</p>
+      </div>
+    </div>
+    <textarea class="cell-ed" id="cellEd" hidden aria-label="Words of this cell" spellcheck="true"></textarea>
+    <div class="hud" id="hud"></div>
+    <div class="toast" id="toast" role="status"></div>
+    <div class="read" id="read"><p class="meta" id="readMeta"></p><p class="txt" id="readTxt"></p><div class="ties" id="readTies" hidden></div></div>
+    <nav class="sr" aria-label="Cell navigation"><ul id="srList"></ul></nav>
+  </div>
+  <aside class="panel" aria-label="Tuning">
+    <h2>Tune the feel</h2>
+    <div class="presets" id="presets"></div>
+    <div id="groups"></div>
+    <details open><summary>Look</summary>
+      <div class="row"><label for="s-style">Style</label>
+        <select id="s-style"><option value="glassine" selected>post office glassine</option><option value="melt">MELT flat</option><option value="line">line art</option><option value="tissue">plant tissue</option></select></div>
+      <div class="row"><label for="s-n">Outline detail</label>
+        <select id="s-n"><option>32</option><option>48</option><option selected>64</option><option>96</option></select></div>
+      <label class="chk"><input type="checkbox" id="s-labels" checked> labels</label>
+      <label class="chk"><input type="checkbox" id="s-skel"> show skeleton (circles and tethers)</label>
+    </details>
+    <details><summary>The note</summary>
+      <p class="note" style="margin-top:2px">These cells grow from one markdown note of nested bullets. Paste your own to watch it grow.</p>
+      <textarea id="noteIn" aria-label="Your note" spellcheck="false" placeholder="## A heading&#10;- a big point&#10;  - something inside it"></textarea>
+      <div class="acts"><button class="btn" id="growNote" type="button">grow this note</button><button class="btn" id="ourSeeds" type="button">back to the example</button></div>
+    </details>
+    <div class="acts">
+      <button class="btn" id="openAll" type="button">open this call</button>
+      <button class="btn" id="foldAll" type="button">fold everything</button>
+      <button class="btn" id="copy" type="button">copy settings</button>
+      <button class="btn" id="pasteSet" type="button">paste settings</button>
+      <button class="btn" id="reset" type="button">reset</button>
+    </div>
+    <textarea id="out" readonly aria-label="Settings JSON"></textarea>
+    <p class="note">Your slider settings are kept in this browser. The cells grow from one markdown note. Open this page with ?note= and a link to a .md, or paste a note under The note.</p>
+  </aside>
+</main>
+<script type="text/markdown" id="seeds">
+---
+title: Cells
+---
+# Cells
+
+Any note of nested bullets can grow as cells. This one explains itself. Open this page with ?note= and a link to your own .md, or paste a note under The note.
+
+## Part 1 · reading · Headings become centres
+Each heading here is a centre. The line right under a heading says what it holds.
+
+- Bullets become cells
+  - a top bullet sits around its heading
+  - its children bud around it when you open it
+  - indent by any width, tabs too
+- A quote keeps its speaker
+  - "a line in quotes with a name after it is a quote" (Leon)
+  - the name shows under the words
+- Ties pull cells close
+  - tied to: Notes are warm paper
+  - write tied to: and the name of another cell
+  - a tie is a strand with grains flowing along it
+- Rest to read
+  - a cell holds a few words, and resting on it shows all of them
+  - the reading strip sits at the bottom
+
+## Part 2 · changing · The tool belt writes the note
+Every tool changes the markdown, in the same short form a person types.
+
+- Edit words
+  - click any cell and type over it
+- Add a cell
+  - a bud shows at the edge of the cell you rest on
+- Notes are warm paper
+  - comment: a note looks like this (Leon)
+  - add one with the note tool
+- Where changes go
+  - opened from a link: copy the note to keep them
+  - held by a board: every change goes back to the board
+  - on its own: kept in this browser
+
+</script>
+<script>
+{
+const TAU = Math.PI * 2;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touchy = matchMedia('(hover: none)').matches;
+if (touchy) document.getElementById('hint').textContent = 'Tap a cell once to read it, tap again to let it bud. Tap an open cell to fold it back in.';
+
+/* ---------- settings ---------- */
+const S = {tie:.5, pack:.86, soft:.18, gap:4, round:2, wob:.03, breath:.6, hover:1.12, openG:1.15, focus:.2, out:1.2, grav:.6, size:1, stiff:55, damp:1.15, fric:9, style:'glassine', n:64, labels:true, skel:false};
+if (RM) Object.assign(S, {wob:0, breath:0, damp:1.1});
+const DEFAULTS = {...S};
+// your tuning stays in this browser across reloads and republishes
+const SAVE_KEY = 'bloob-cells:settings';
+try { const sv = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (sv) for (const k in sv) if (k in S && typeof sv[k] === typeof S[k]) S[k] = sv[k]; } catch {}
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch {} }
+const PRESETS = {
+  'soap foam':    {pack:.8,  soft:.03, gap:2, round:1, wob:.012, damp:.6},
+  'plant cells':  {pack:.76, soft:.1,  gap:8, round:2, wob:.02,  damp:.8},
+  'pillows':      {pack:.9,  soft:.45, gap:5, round:4, wob:.035, damp:.7},
+  'loose bubbles':{pack:1.06,soft:.2,  gap:2, round:2, wob:.045, damp:.55},
+};
+const GROUPS = [
+  ['Shape', [
+    ['pack','squish',.7,1.08,.01,'Below 1 cells press into each other and share flat walls.'],
+    ['soft','wall softness',0,.6,.01,'How rounded the shared walls meet the outer edge.'],
+    ['gap','membrane gap',0,16,.5],
+    ['round','corner rounding',0,6,1],
+    ['wob','wobble',0,.08,.002],
+    ['breath','breathing speed',0,2,.05]]],
+  ['Growth', [
+    ['hover','hover swell',1,1.8,.01],
+    ['openG','open swell',1,1.6,.01],
+    ['focus','others recede',0,.5,.01,'Fisheye: cells outside the focused branch shrink.'],
+    ['out','room around buds',0,3,.05,'Extra space between a bud and the cell it grew from.'],
+    ['grav','pull home',0,3,.05,'How firmly each bud keeps its place, so nothing drifts or circles.'],
+    ['size','overall size',.6,1.5,.01],
+    ['tie','tie pull',0,2,.05,'How strongly two tied cells lean toward each other.']]],
+  ['Feel', [
+    ['stiff','spring stiffness',20,400,5],
+    ['damp','spring damping',.2,1.5,.01,'1 settles without bounce. Lower wobbles like jelly.'],
+    ['fric','friction',1,14,.1]]],
+];
+
+/* ---------- content: one markdown note of nested bullets ---------- */
+// "## heading" is a call; the plain line under it says who was there. Bullets nest by indent
+// (any width, tabs too). A bullet that is "a quote" (Name) is a quote; "comment: words (Name)" a
+// comment; "tied to: a, b" ties its parent to other cells and is not a cell itself; "note:" escapes.
+const SEEDS_MD = document.getElementById('seeds').textContent;
+let ROOT_TEXT = '';
+function parseNote(md){
+  md = md.replace(/\r/g, '').replace(/^\n+/, '');
+  const fm = md.match(/^---\n[\s\S]*?\n---\n/);
+  if (fm) md = md.slice(fm[0].length);
+  const root = {label:'our note', sub:'', kind:'root', kids:[], ties:[]};
+  let call = null, stack = [{ind:-1, n:root}];
+  const intro = [], head = [];
+  let started = false;
+  for (const raw of md.split('\n')){
+    if (!started && (/^#{2,6}\s/.test(raw) || /^\s*[-*+]\s/.test(raw))) started = true;
+    if (!started) head.push(raw);
+    if (!raw.trim()) continue;
+    let m;
+    if ((m = raw.match(/^#\s+(.*)/))){ root.label = m[1].trim(); continue; }
+    if ((m = raw.match(/^#{2,6}\s+(.*)/))){
+      const head = m[1].trim(), parts = head.split(' · ');
+      call = {label: parts.length > 2 ? parts.slice(2).join(' · ') : head, sub: parts.length > 2 ? parts.slice(0, 2).join(' · ') : '', kind:'call', who:'', kids:[], ties:[]};
+      root.kids.push(call); stack = [{ind:-1, n:call}]; continue;
+    }
+    m = raw.match(/^(\s*)[-*+]\s+(.*)$/);
+    if (!m){ const t = raw.trim(); if (call && !call.kids.length) call.who += (call.who ? ' ' : '') + t; else if (!call) intro.push(t); continue; }
+    const ind = m[1].replace(/\t/g, '    ').length, t = m[2].trim();
+    while (stack.length > 1 && stack[stack.length-1].ind >= ind) stack.pop();
+    const par = stack[stack.length-1].n;
+    if ((m = t.match(/^tied to:\s*(.*)$/i))){ par.ties = par.ties.concat(m[1].split(',').map(s => s.trim()).filter(Boolean)); continue; }
+    const node = {label:t, sub:'', kind:'point', kids:[], ties:[]};
+    if ((m = t.match(/^"(.*)"\s*\(([^)]+)\)\s*$/))){ node.kind = 'quote'; node.label = m[1]; node.by = m[2]; node.sub = m[2]; }
+    else if ((m = t.match(/^comment:\s*(.*?)\s*(?:\(([^)]+)\))?\s*$/i))){ node.kind = 'comment'; node.label = m[1]; node.by = m[2] || ''; node.sub = 'comment' + (node.by ? ' · ' + node.by : ''); }
+    else if ((m = t.match(/^note:\s*(.*)$/i))) node.label = m[1];
+    par.kids.push(node); stack.push({ind, n:node});
+  }
+  const span = intro.join(' ').match(/([A-Z][a-z]{2} \d{1,2} to [A-Z][a-z]{2} \d{1,2})/);
+  root.sub = span ? span[1] : '';
+  root.text = intro.join(' ');
+  root.head = (fm ? fm[0] : '') + head.join('\n');
+  return root;
+}
+// a cell holds a few words; the reading strip holds all of them
+function shortOf(t, max){
+  if (t.length <= max) return t;
+  let s = '';
+  for (const x of t.split(' ')){ if ((s + ' ' + x).trim().length > max) break; s = (s + ' ' + x).trim(); }
+  return (s || t.slice(0, max)) + '…';
+}
+let uid = 0;
+function setWords(node, full){
+  const cut = shortOf(full, node.depth <= 1 ? 40 : 34);
+  node.full = full;
+  node.label = node.kind === 'quote' ? '“' + cut + (cut === full ? '”' : '') : cut;
+  node.w = Math.min(1.35, 1 + Math.max(0, cut.length - 14)/70) * (node.kind === 'call' ? 1.08 : 1);
+}
+function build(n, parent, depth, branch){
+  const node = {id:'n'+(uid++), kind:n.kind || 'point', by:n.by || '', who:n.who || '', ties:n.ties || [], sub:n.sub || '', parent, depth, branch, kids:[], head:n.head || ''};
+  setWords(node, n.label);
+  node.kids = (n.kids || []).map((k,i) => build(k, node, depth+1, depth === 0 ? i : branch));
+  return node;
+}
+// back to markdown, in the same short form a person types (making-visualizers must 6)
+function bulletOf(n){
+  if (n.kind === 'quote') return `"${n.full}" (${n.by})`;
+  if (n.kind === 'comment') return `comment: ${n.full}${n.by ? ' (' + n.by + ')' : ''}`;
+  return /^(tied to:|comment:|note:|")/i.test(n.full) ? 'note: ' + n.full : n.full;
+}
+function linesOf(n, ind, out){
+  out.push(' '.repeat(ind) + '- ' + bulletOf(n));
+  if (n.ties.length) out.push(' '.repeat(ind + 2) + '- tied to: ' + n.ties.join(', '));
+  for (const k of n.kids) linesOf(k, ind + 2, out);
+}
+function toMarkdown(){
+  const out = [ROOT.head.replace(/\s+$/, '')];
+  const top = kids => kids.forEach(k => { out.push(''); linesOf(k, 0, out); });
+  if (ROOT.kids.length && ROOT.kids.every(k => k.kind === 'call')){
+    for (const c of ROOT.kids){
+      out.push('', '## ' + (c.sub ? c.sub + ' · ' : '') + c.full);
+      if (c.who) out.push(c.who);
+      if (c.ties.length){ out.push(''); out.push('- tied to: ' + c.ties.join(', ')); }
+      top(c.kids);
+    }
+  } else top(ROOT.kids);
+  return out.join('\n').replace(/^\n+/, '') + '\n';
+}
+let nameMap = null;
+function nodeByName(t){
+  if (!nameMap){ nameMap = new Map(); const q = [ROOT]; while (q.length){ const n = q.shift(); const k = n.full.toLowerCase(); if (!nameMap.has(k)) nameMap.set(k, n); q.push(...n.kids); } }
+  return nameMap.get(String(t).toLowerCase()) || null;
+}
+let ROOT = null;
+const BASE = [72, 56, 46, 40];
+
+/* ---------- cells ---------- */
+const cells = [], byId = {}, opened = [];
+let hover = null, kb = null, pinned = null;
+function mk(node, x, y, r){
+  const c = {node, x, y, px:x, py:y, vx:0, vy:0, r, rv:0, m:1, open:false, dying:false, anchor:false, homeA:0, cl:null, ax:0, ay:0,
+    par: node.parent ? byId[node.parent.id] : null,
+    ph:[Math.random()*TAU, Math.random()*TAU, Math.random()*TAU, Math.random()*TAU],
+    R:new Float32Array(128), J:new Float32Array(128)};
+  for (let i = 0; i < 128; i++) c.J[i] = Math.random()*2 - 1;
+  for (let p = 0; p < 3; p++) for (let i = 0; i < 128; i++) c.J[i] = (c.J[(i+127)%128] + c.J[i]*2 + c.J[(i+1)%128]) / 4;
+  cells.push(c); byId[node.id] = c; return c;
+}
+let cen = null;
+let anchors = [], DEPTH0 = 0;
+function plant(raw, live){
+  nameMap = null;
+  cells.length = 0; opened.length = 0; for (const k in byId) delete byId[k];
+  hover = kb = pinned = null; uid = 0;
+  ROOT = build(raw, null, 0, 0); ROOT_TEXT = raw.text || '';
+  const calls = ROOT.kids.filter(k => k.kind === 'call');
+  const centres = calls.length > 1 && calls.length === ROOT.kids.length ? calls : [ROOT];
+  DEPTH0 = centres[0].depth;
+  anchors = centres.map((n, i) => { const c = mk(n, i*60, 0, 1); c.anchor = true; c.par = null; c.cl = c; c.ax = c.x; c.ay = c.y; return c; });
+  cen = anchors.length === 1 ? anchors[0] : null;
+  for (const a of anchors) open(a);
+  // grow it out of sight first, so it appears whole and settled (ui-principles #4)
+  for (let i = 0; i < 1200; i++){ layoutAnchors(1/120, i === 0); step(1/120); }
+  camSnap = true;
+  if (live){ renderList(); readShown = undefined; }
+}
+// the calls sit in a grid, each cell of the grid as big as its cluster; they ease apart as clusters grow
+function extentOf(a){
+  let e = target(a, true);
+  for (const c of cells) if (c.cl === a && !c.dying && c !== a) e = Math.max(e, Math.hypot(c.x - a.x, c.y - a.y) + target(c, true));
+  return e;
+}
+function layoutAnchors(dt, snap){
+  const n = anchors.length; if (!n) return;
+  if (n === 1){ anchors[0].ax = anchors[0].ay = 0; return; }
+  const ext = anchors.map(a => Math.max(90, extentOf(a)) + 18);
+  const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * Math.max(.4, W / Math.max(1, H))))));
+  const rows = Math.ceil(n / cols), cw = Array(cols).fill(0), rh = Array(rows).fill(0);
+  ext.forEach((e, i) => { cw[i % cols] = Math.max(cw[i % cols], 2*e); rh[Math.floor(i / cols)] = Math.max(rh[Math.floor(i / cols)], 2*e); });
+  const TW = cw.reduce((s, v) => s + v, 0), TH = rh.reduce((s, v) => s + v, 0), f = snap ? 1 : 1 - Math.exp(-dt*1.1);
+  anchors.forEach((a, i) => {
+    const ci = i % cols, ri = Math.floor(i / cols);
+    let tx = -TW/2 + cw[ci]/2, ty = -TH/2 + rh[ri]/2;
+    for (let k = 0; k < ci; k++) tx += cw[k];
+    for (let k = 0; k < ri; k++) ty += rh[k];
+    a.ax += (tx - a.ax)*f; a.ay += (ty - a.ay)*f;
+  });
+}
+
+function homeAngle(c, i, n){ return c.anchor ? -Math.PI/2 + i/n*TAU : c.homeA + (i-(n-1)/2)*Math.min(.62, 2.6/n); }
+function rehome(c){ const n = c.node.kids.length; c.node.kids.forEach((k, i) => { const b = byId[k.id]; if (b) b.homeA = homeAngle(c, i, n); }); }
+function open(c){
+  if (!c.node.kids.length || c.open) return [];
+  c.open = true; opened.push(c);
+  const n = c.node.kids.length;
+  return c.node.kids.map((k,i) => {
+    const ex = byId[k.id]; if (ex){ ex.dying = false; return ex; }
+    // a bud's home is fixed by its order in the note: around a call it rings the centre from the
+    // top, clockwise; further out the buds fan away from the call. The same note grows the same way.
+    const a = homeAngle(c, i, n);
+    const b = mk(k, c.x + Math.cos(a)*c.r*.45, c.y + Math.sin(a)*c.r*.45, .5);
+    b.homeA = a; b.cl = c.anchor ? c : c.cl; b.born = simT + i*.09;
+    return b;
+  });
+}
+function close(c){
+  c.open = false;
+  const i = opened.indexOf(c); if (i >= 0) opened.splice(i, 1);
+  for (const k of c.node.kids){ const kc = byId[k.id]; if (kc){ kc.dying = true; if (kc.open) close(kc); } }
+}
+function related(c, f){
+  if (c === f || c.anchor) return true;
+  for (let a = f.node.parent; a; a = a.parent) if (a === c.node) return true;
+  for (let b = c.node.parent; b; b = b.parent) if (b === f.node) return true;
+  return false;
+}
+function lvl(c){ return Math.min(Math.max(0, c.node.depth - DEPTH0), 3); }
+// the deepest cell someone opened: it decides which call is in focus
+function deepest(){ for (let i = opened.length - 1; i >= 0; i--) if (!opened[i].anchor && !opened[i].dying) return opened[i]; return null; }
+// still = the size at rest, without the hover swell (the camera uses it, so hovering never zooms)
+function target(c, still){
+  if (c.dying) return 0;
+  if (c.born > simT) return .5;
+  let r = BASE[lvl(c)] * c.node.w * S.size;
+  if (c.node.kind === 'comment') r *= .8;
+  if (!still && (c === hover || c === kb)) r *= S.hover;
+  if (c.open && !c.anchor) r *= S.openG;
+  // only what was opened makes others recede, never a passing pointer
+  const f = kb || deepest();
+  if (f && S.focus > 0 && !related(c, f)) r *= 1 - S.focus;
+  return r;
+}
+
+/* ---------- physics: springs for size, position-based packing ---------- */
+let simT = 0;
+function step(h){
+  simT += h;
+  for (const c of cells){
+    // a folding cell eases all the way in (at least critically damped) instead of cutting off mid-bounce
+    const k = S.stiff, z = c.dying ? Math.max(S.damp, 1) : S.damp, a = k*(target(c) - c.r) - 2*z*Math.sqrt(k)*c.rv;
+    c.rv += a*h; c.r = Math.max(0, c.r + c.rv*h); c.m = c.r*c.r + 40;
+  }
+  for (const c of cells) c.needL = 0;
+  for (const c of cells) if (!c.dying && !c.anchor && c.par) c.par.needL += c.r;
+  for (const q of cells){ if (!q.needL) continue; const n = q.node.kids.length, arc = q.anchor ? TAU : Math.max(.9, n*Math.min(.62, 2.6/n)); q.needL = q.needL*2*S.pack/arc; }
+  const fr = Math.exp(-S.fric*h);
+  const kk = S.stiff, cd = 2*S.damp*Math.sqrt(kk);
+  for (const c of cells){
+    if (c.anchor){ c.x = c.px = c.ax; c.y = c.py = c.ay; c.vx = c.vy = 0; continue; }
+    let ax, ay;
+    const p = c.par;
+    if (c.dying){
+      // folding back in uses the same spring as growing: it eases into its parent, never snaps
+      ax = kk*(p.x - c.x) - cd*(c.vx - p.vx); ay = kk*(p.y - c.y) - cd*(c.vy - p.vy);
+    } else {
+      // a spring to its home beside its parent, at its own fixed angle, so nothing slides round
+      const L = Math.max((p.r + c.r)*S.pack, p.needL) + S.out*8, kh = 6 + S.grav*24;
+      ax = kh*(p.x + Math.cos(c.homeA)*L - c.x); ay = kh*(p.y + Math.sin(c.homeA)*L - c.y);
+    }
+    c.vx = (c.vx + ax*h)*fr; c.vy = (c.vy + ay*h)*fr;
+    c.px = c.x; c.py = c.y; c.x += c.vx*h; c.y += c.vy*h;
+  }
+  if (S.tie > 0) for (const c of cells){
+    if (c.dying || c.anchor || !c.node.ties.length) continue;
+    for (const t of c.node.ties){
+      const n = nodeByName(t), o = n && byId[n.id];
+      if (!o || o.dying || o === c || o.cl !== c.cl) continue;
+      const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 1, L = (c.r + o.r)*1.15;
+      if (d <= L) continue;
+      const k = S.tie*.25*(d - L)*h;
+      c.x += dx/d*k; c.y += dy/d*k;
+      if (!o.anchor){ o.x -= dx/d*k; o.y -= dy/d*k; }
+    }
+  }
+  for (let it = 0; it < 2; it++){
+    for (const c of cells){
+      const p = c.par; if (!p || c.dying) continue;
+      const L = (Math.max((p.r + c.r)*S.pack, p.needL) + S.out*8)*1.1;
+      const dx = c.x - p.x, dy = c.y - p.y, d = Math.hypot(dx,dy) || 1e-3;
+      if (d > L){
+        const corr = (d - L)*.2, wc = p.anchor ? 1 : p.m/(p.m + c.m);
+        c.x -= dx/d*corr*wc; c.y -= dy/d*corr*wc;
+        if (!p.anchor){ p.x += dx/d*corr*(1-wc); p.y += dy/d*corr*(1-wc); }
+      }
+    }
+    for (let i = 0; i < cells.length; i++){
+      const a = cells[i]; if (a.dying) continue;
+      for (let j = i+1; j < cells.length; j++){
+        const b = cells[j]; if (b.dying) continue;
+        const minD = (a.r + b.r)*S.pack;
+        let dx = b.x - a.x, dy = b.y - a.y; const d2 = dx*dx + dy*dy;
+        if (d2 >= minD*minD) continue;
+        let d = Math.sqrt(d2);
+        if (d < 1e-3){ const t = Math.random()*TAU; dx = Math.cos(t); dy = Math.sin(t); d = 1; }
+        const corr = (minD - d)*.5, wa = a.anchor ? 0 : b.anchor ? 1 : b.m/(a.m + b.m);
+        a.x -= dx/d*corr*wa; a.y -= dy/d*corr*wa;
+        b.x += dx/d*corr*(1-wa); b.y += dy/d*corr*(1-wa);
+      }
+    }
+  }
+  for (const a of anchors){ a.x = a.ax; a.y = a.ay; }
+  for (const c of cells){ if (c.anchor) continue; c.vx = (c.x - c.px)/h; c.vy = (c.y - c.py)/h; }
+}
+
+/* ---------- shape: power-diagram walls, smooth-min, rounding ---------- */
+let N = 64, COS = [], SIN = [];
+function tables(){ COS = []; SIN = []; for (let i = 0; i < N; i++){ COS.push(Math.cos(i/N*TAU)); SIN.push(Math.sin(i/N*TAU)); } }
+tables();
+function smin(a, b, k){ const h = Math.max(k - Math.abs(a-b), 0)/k; return Math.min(a,b) - h*h*k*.25; }
+const tmp = new Float32Array(128), nb = [];
+function shape(c, t){
+  const r = Math.max(c.r, .01), R = c.R; nb.length = 0;
+  for (const o of cells){
+    if (o === c || o.r < .5) continue;
+    const dx = o.x - c.x, dy = o.y - c.y, d2 = dx*dx + dy*dy, rr = c.r + o.r + 2;
+    if (d2 < rr*rr) nb.push(dx, dy, d2 + c.r*c.r - o.r*o.r);
+  }
+  const k = S.soft*r, A = S.wob, s = S.breath*t, p = c.ph;
+  const breathe = 1 + A*.4*Math.sin(s + p[3]);
+  for (let i = 0; i < N; i++){
+    const a = i/N*TAU, ux = COS[i], uy = SIN[i];
+    // standing waves: the lobes stay put and only swell and ease, so the outline never travels around the cell
+    let v = r*(breathe + A*(.5*Math.sin(2*a + p[0])*Math.sin(s*.7 + p[1]) + .3*Math.sin(3*a + p[1])*Math.sin(s*.5 + p[2]) + .2*Math.sin(5*a + p[2])*Math.sin(s*.9 + p[0])));
+    for (let j = 0; j < nb.length; j += 3){
+      const dot = ux*nb[j] + uy*nb[j+1]; if (dot <= 1e-6) continue;
+      const tj = nb[j+2]/(2*dot);
+      v = k > .01 ? smin(v, tj, k) : Math.min(v, tj);
+    }
+    R[i] = Math.max(v - S.gap*.5, r*.04);
+  }
+  for (let pass = 0; pass < S.round; pass++){
+    for (let i = 0; i < N; i++) tmp[i] = R[i];
+    for (let i = 0; i < N; i++) R[i] = (tmp[(i+N-1)%N] + 2*tmp[i] + tmp[(i+1)%N])/4;
+  }
+}
+
+/* ---------- rendering ---------- */
+const fig = document.getElementById('fig'), cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W = 1, H = 1, dpr = 1, cx = 0, cy = 0, sc = .6;
+let camSnap = true;
+let startMd = SEEDS_MD, staleDraft = false;
+try {
+  const d = JSON.parse(localStorage.getItem('bloob-cells:note') || 'null');
+  if (d && d.md){ let x = 5381; for (let i = 0; i < SEEDS_MD.length; i++) x = (x*33 + SEEDS_MD.charCodeAt(i)) >>> 0; if (d.base === x.toString(36)) startMd = d.md; else staleDraft = true; }
+} catch {}
+plant(parseNote(startMd), false);
+const ro = new ResizeObserver(() => { dpr = Math.min(devicePixelRatio || 1, 2); W = fig.clientWidth; H = fig.clientHeight; cv.width = W*dpr; cv.height = H*dpr; });
+ro.observe(fig);
+
+const HUES = [330, 262, 205, 160, 42, 12, 290];
+// the post office's paper grain: fractal noise from an SVG, kept at screen size so it stays fine
+let grain = null;
+{
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .15  0 0 0 0 .06  0 0 0 1.9 -.78'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>";
+  const img = new Image();
+  img.onload = () => { const g = document.createElement('canvas'); g.width = g.height = 160; g.getContext('2d').drawImage(img, 0, 0); try { grain = ctx.createPattern(g, 'repeat'); } catch { grain = null; } };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function path(c, jit){
+  const R = c.R; let x0 = 0, y0 = 0, xl = 0, yl = 0;
+  const P = i => { const rr = R[i] + (jit ? c.J[i]*jit : 0); return [c.x + COS[i]*rr, c.y + SIN[i]*rr]; };
+  ctx.beginPath();
+  const last = P(N-1), first = P(0);
+  ctx.moveTo((last[0]+first[0])/2, (last[1]+first[1])/2);
+  for (let i = 0; i < N; i++){
+    const a = P(i), b = P((i+1)%N);
+    ctx.quadraticCurveTo(a[0], a[1], (a[0]+b[0])/2, (a[1]+b[1])/2);
+  }
+  ctx.closePath();
+}
+function fillCell(c){
+  const d = lvl(c), lit = c === hover || c === kb;
+  if (c.node.kind === 'comment'){
+    noteCell(c, lit);
+  } else if (S.style === 'glassine'){
+    // post office glassine: see-through paper, one thin line, a soft halo, fine grain, no shadows
+    // each layer its own line colour: office ochre at the center, then rose, sea blue, violet
+    // values from the Glassine Post Office page: paper .56, one 1px line, a soft blurred halo
+    const line = ['169,124,26', '212,105,141', '79,143,201', '142,100,196'][d];
+    path(c, 0);
+    ctx.fillStyle = 'rgba(255,252,240,.56)'; ctx.fill();
+    if (grain){ grain.setTransform(new DOMMatrix().scale(1/(sc*dpr))); ctx.globalAlpha = .35; ctx.fillStyle = grain; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.shadowColor = `rgba(${line},${lit ? .45 : .3})`; ctx.shadowBlur = (lit ? 24 : 14)*dpr;
+    ctx.lineWidth = 1/sc; ctx.strokeStyle = `rgba(${line},${lit ? 1 : .85})`; ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else if (S.style === 'melt'){
+    // flat, like the MELT theme: no highlights, a soft halo instead of a hard edge
+    path(c, 0);
+    ctx.lineWidth = 10/sc; ctx.strokeStyle = 'rgba(170,130,230,.12)'; ctx.stroke();
+    ctx.fillStyle = ['#b9617f', '#3a2370', 'rgba(196,210,248,.42)', 'rgba(246,206,232,.42)'][d]; ctx.fill();
+    if (lit){ ctx.lineWidth = 1.4/sc; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.stroke(); }
+  } else if (S.style === 'line'){
+    const h = HUES[c.node.branch % HUES.length];
+    path(c, 0);
+    ctx.fillStyle = d === 0 ? '#ffd3df' : `hsl(${h} 72% ${93 - d*4}%)`; ctx.fill();
+    ctx.strokeStyle = '#2a2140'; ctx.lineJoin = 'round';
+    ctx.lineWidth = (lit ? 2.4 : 1.7)/sc; path(c, 1.3); ctx.stroke();
+    ctx.lineWidth = .8/sc; ctx.globalAlpha = .45; path(c, -1.1); ctx.stroke(); ctx.globalAlpha = 1;
+  } else {
+    path(c, 0);
+    ctx.fillStyle = d === 0 ? 'hsl(48 70% 82%)' : `hsl(${82 + (c.node.branch*9)%40} 40% ${86 - d*5}%)`; ctx.fill();
+    ctx.lineWidth = 6/sc; ctx.strokeStyle = 'rgba(80,110,60,.14)'; ctx.stroke();
+    ctx.lineWidth = (lit ? 2.6 : 1.8)/sc; ctx.strokeStyle = '#557245'; ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(c.x + Math.cos(c.ph[0])*c.r*.55, c.y + Math.sin(c.ph[0])*c.r*.55, c.r*.11, c.r*.085, c.ph[1], 0, TAU);
+    ctx.fillStyle = 'rgba(70,95,55,.22)'; ctx.fill();
+  }
+  if (c === tieFrom){ path(c,0); ctx.setLineDash([2/sc, 4/sc]); ctx.lineWidth = 2.2/sc; ctx.strokeStyle = '#a97c1a'; ctx.stroke(); ctx.setLineDash([]); }
+  if (c === kb){ path(c,0); ctx.setLineDash([6/sc, 5/sc]); ctx.lineWidth = 2/sc; ctx.strokeStyle = S.style === 'melt' ? '#fff' : '#2a2140'; ctx.stroke(); ctx.setLineDash([]); }
+}
+// a note pinned to a cell: smaller, warm paper, a stitched edge, handwriting
+function noteCell(c, lit){
+  path(c, 0);
+  ctx.fillStyle = 'rgba(255,240,182,.82)'; ctx.fill();
+  if (grain){ grain.setTransform(new DOMMatrix().scale(1/(sc*dpr))); ctx.globalAlpha = .3; ctx.fillStyle = grain; ctx.fill(); ctx.globalAlpha = 1; }
+  ctx.shadowColor = `rgba(200,150,40,${lit ? .45 : .25})`; ctx.shadowBlur = (lit ? 20 : 10)*dpr;
+  ctx.setLineDash([4/sc, 3/sc]); ctx.lineWidth = 1.3/sc; ctx.strokeStyle = 'rgba(169,124,26,.9)'; ctx.stroke(); ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+}
+// a tie is a living strand: rim to rim, bending slowly, grains streaming from one cell to the other
+function strands(t){
+  for (const c of cells){
+    if (c.dying || c.r < 2 || !c.node.ties.length) continue;
+    for (const name of c.node.ties){
+      const n = nodeByName(name), o = n && byId[n.id];
+      if (!o || o.dying || o === c || o.r < 2) continue;
+      // a tie across calls shows only while one of its ends is in hand, so the calm view stays readable
+      const lit = x => x === hover || x === kb || x === pinned || x === tieFrom;
+      if (o.cl !== c.cl && !lit(c) && !lit(o)) continue;
+      const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 1, ux = dx/d, uy = dy/d;
+      const x0 = c.x + ux*c.r*.9, y0 = c.y + uy*c.r*.9, x1 = o.x - ux*o.r*.9, y1 = o.y - uy*o.r*.9;
+      const seed = (c.node.id.length*7 + o.node.id.length*13) % 10;
+      const bend = d*.12 + Math.sin(t*.35 + seed)*Math.min(18, d*.05);
+      const mx = (x0 + x1)/2 - uy*bend, my = (y0 + y1)/2 + ux*bend;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, x1, y1);
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 7/sc; ctx.strokeStyle = 'rgba(169,124,26,.10)'; ctx.stroke();
+      ctx.lineWidth = 1.3/sc; ctx.strokeStyle = 'rgba(169,124,26,.55)'; ctx.stroke();
+      for (let g = 0; g < 4; g++){
+        const s = ((t*.09 + g/4 + seed*.07) % 1), a = 1 - s;
+        const gx = a*a*x0 + 2*a*s*mx + s*s*x1, gy = a*a*y0 + 2*a*s*my + s*s*y1;
+        ctx.beginPath(); ctx.arc(gx, gy, 2.1/sc, 0, TAU);
+        ctx.fillStyle = `rgba(169,124,26,${.25 + .5*Math.sin(s*Math.PI)})`; ctx.fill();
+      }
+    }
+  }
+}
+function budMark(c){
+  let ox = 0, oy = -1;
+  if (c.par){ const dx = c.x - c.par.x, dy = c.y - c.par.y, d = Math.hypot(dx, dy) || 1; ox = dx/d; oy = dy/d; }
+  const bx = c.x + ox*c.r*.98, by = c.y + oy*c.r*.98, br = 11/sc;
+  ctx.beginPath(); ctx.arc(bx, by, br, 0, TAU);
+  ctx.fillStyle = tool === 'note' ? 'rgba(255,240,182,.95)' : 'rgba(255,252,240,.96)'; ctx.fill();
+  ctx.lineWidth = 1.2/sc; ctx.strokeStyle = '#a97c1a'; if (tool === 'note') ctx.setLineDash([3/sc, 2.5/sc]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(bx - br*.45, by); ctx.lineTo(bx + br*.45, by); ctx.moveTo(bx, by - br*.45); ctx.lineTo(bx, by + br*.45);
+  ctx.lineWidth = 1.6/sc; ctx.stroke();
+}
+const wrapCache = new Map();
+// break at spaces, and inside a word that is too long, after its hyphen ("trauma- / informed")
+function wrap(text, maxW, font){
+  const key = text + '|' + (maxW|0) + font;
+  let v = wrapCache.get(key); if (v) return v;
+  ctx.font = font;
+  const toks = [];
+  for (const w of text.split(' ')){
+    if (w.includes('-') && ctx.measureText(w).width > maxW){ const parts = w.split('-'); parts.forEach((q, i) => toks.push({t: i < parts.length - 1 ? q + '-' : q, glue: i > 0})); }
+    else toks.push({t: w, glue: false});
+  }
+  const lines = []; let cur = '';
+  for (const k of toks){
+    const t = cur ? cur + (k.glue ? '' : ' ') + k.t : k.t;
+    if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = k.t; } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  if (wrapCache.size > 900) wrapCache.clear();
+  wrapCache.set(key, lines); return lines;
+}
+// A label is laid out once, at the cell's resting size, and then only scales with its cell, so a
+// swelling or shrinking cell never re-wraps its words. Breaking into more lines comes before
+// shrinking the type. When the layout does change (a cell opens, a dial moves), the old words fade
+// out while the new ones fade in.
+let LDT = 1/60;
+function layoutFor(c){
+  const gl = S.style === 'glassine', line = S.style === 'line', note = c.node.kind === 'comment';
+  const fam = line || note ? 'Caveat, cursive' : gl ? 'Newsreader, Georgia, serif' : 'Quicksand, sans-serif';
+  const wt = note ? 600 : gl ? (c.anchor ? 300 : 400) : 600;
+  const baseR = BASE[lvl(c)] * c.node.w * S.size;
+  let fs = Math.round(Math.max(10, Math.min(baseR*.27, 20)) * (line || note ? 1.25 : 1) * 2)/2;
+  const maxW = baseR*(c.anchor ? 1.35 : 1.18);
+  let F = `${wt} ${fs}px ${fam}`, lines = wrap(c.node.label, maxW, F);
+  ctx.font = F;
+  const widest = Math.max(...lines.map(l => ctx.measureText(l).width));
+  if (widest > maxW){ fs = Math.round(Math.max(fs*.82, fs*maxW/widest)*2)/2; F = `${wt} ${fs}px ${fam}`; lines = wrap(c.node.label, maxW, F); }
+  const meta = gl ? (c.node.sub || (c.node.kids.length && !c.open ? `${c.node.kids.length} inside` : '')) : '';
+  const dots = !gl && c.node.kids.length && !c.open ? Math.min(c.node.kids.length, 7) : 0;
+  return {key: [S.style, fs, lines.join('/'), meta, dots, c.node.sub].join('|'), lines, fs, F, fam, gl, meta, dots, baseR};
+}
+const ease = t => t*t*(3 - 2*t);
+function label(c){
+  if (c === editing) return;
+  const lay = layoutFor(c);
+  if (!c.lay || c.lay.key !== lay.key){ c.prev = c.lay || null; c.lay = lay; c.fade = c.prev ? 0 : 1; }
+  c.fade = Math.min(1, (c.fade ?? 1) + LDT/.32);
+  const k = Math.max(.55, Math.min(c.r/lay.baseR, 1.2));
+  const vis = Math.max(0, Math.min(1, (lay.fs*k*sc - 7)/4, (c.r*sc - 16)/12));
+  if (vis <= 0) return;
+  const f = ease(c.fade);
+  drawLay(c, c.lay, k, vis*f);
+  if (c.prev && f < 1) drawLay(c, c.prev, k, vis*(1 - f));
+}
+function drawLay(c, L, k, a){
+  if (a < .01) return;
+  const fs = L.fs, lh = fs*1.12, extra = L.gl ? (L.meta ? fs*.95 : 0) : (c.node.sub ? fs*.95 : 0), dotsH = L.dots ? fs*.55 : 0;
+  const ink = S.style === 'melt' ? '#fff' : S.style === 'line' ? '#2a2140' : S.style === 'glassine' ? '#2a2418' : '#2f4426';
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(k, k);
+  ctx.globalAlpha = a; ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.font = L.F;
+  let y = -(L.lines.length*lh + extra + dotsH)/2 + lh*.78;
+  for (const l of L.lines){ ctx.fillText(l, 0, y); y += lh; }
+  if (L.gl && L.meta){ ctx.font = `300 ${fs*.62}px "JetBrains Mono", ui-monospace, monospace`; ctx.fillStyle = '#776a4c'; ctx.fillText(L.meta, 0, y + fs*.1); }
+  else if (!L.gl && c.node.sub){ ctx.font = `500 ${fs*.78}px ${L.fam}`; ctx.globalAlpha = a*.85; ctx.fillText(c.node.sub, 0, y - lh*.12); y += extra; ctx.globalAlpha = a; }
+  if (L.dots){ const sp = fs*.42, rr = fs*.1; for (let i = 0; i < L.dots; i++){ ctx.beginPath(); ctx.arc((i - (L.dots-1)/2)*sp, y - lh*.35, rr, 0, TAU); ctx.fill(); } }
+  ctx.restore();
+}
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*(W/2 - cx*sc),dpr*(H/2 - cy*sc));
+  if (S.skel){
+    ctx.lineWidth = 1/sc; ctx.strokeStyle = S.style === 'melt' ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.3)';
+    ctx.setLineDash([4/sc, 4/sc]);
+    for (const c of cells){
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, TAU); ctx.stroke();
+      if (c.par){ ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.par.x, c.par.y); ctx.stroke(); }
+    }
+    ctx.setLineDash([]);
+  }
+  strands(T);
+  for (const c of cells) if (c.r > .4) fillCell(c);
+  if (hover && !hover.dying && (tool === 'add' || tool === 'note')) budMark(hover);
+  if (S.labels) for (const c of cells) label(c);
+}
+
+/* ---------- camera: keep the whole cluster in view ---------- */
+function camera(dt){
+  const d = deepest(), only = d ? d.cl : null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const c of cells){ if (only && c.cl !== only) continue; const r = Math.max(c.r, target(c, true)); x0 = Math.min(x0, c.x - r); y0 = Math.min(y0, c.y - r); x1 = Math.max(x1, c.x + r); y1 = Math.max(y1, c.y + r); }
+  const rsH = (document.getElementById('read')?.offsetHeight || 0) + 20;
+  const pad = 40, ts = Math.max(.2, Math.min(W/(x1 - x0 + pad*2), (H - rsH)/(y1 - y0 + pad*2), 1.5));
+  const f = camSnap ? 1 : 1 - Math.exp(-dt*(RM ? 8 : 2)); camSnap = false;
+  sc += (ts - sc)*f; cx += ((x0 + x1)/2 - cx)*f; cy += ((y0 + y1)/2 + rsH/2/ts - cy)*f;
+}
+
+/* ---------- input ---------- */
+function hit(e){
+  const rc = cv.getBoundingClientRect();
+  const wx = (e.clientX - rc.left - W/2)/sc + cx, wy = (e.clientY - rc.top - H/2)/sc + cy;
+  let best = null, bp = Infinity;
+  for (const c of cells){
+    if (c.dying) continue;
+    const d2 = (wx - c.x)**2 + (wy - c.y)**2;
+    if (d2 > c.r*c.r) continue;
+    const pw = d2 - c.r*c.r; if (pw < bp){ bp = pw; best = c; }
+  }
+  return best;
+}
+const toastEl = document.getElementById('toast'); let toastT = 0;
+function toast(t){ toastEl.textContent = t; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), 2600); }
+let tool = 'read', tieFrom = null, editing = null, editNew = false;
+function commit(c){
+  if (tool === 'edit'){ startEdit(c, false); return; }
+  if (tool === 'add' || tool === 'note'){ addBud(c, tool === 'note' ? 'comment' : 'point'); return; }
+  if (tool === 'tie'){ tieClick(c); return; }
+  pin(c);
+  if (c.node === ROOT) c.rv += 150;
+  else if (c.node.kids.length){ c.open ? close(c) : open(c); }
+  else c.rv += 170;
+  renderList();
+}
+
+/* ---------- the reading strip: a cell's whole words, after a short rest on it ---------- */
+const readMeta = document.getElementById('readMeta'), readTxt = document.getElementById('readTxt'), readTies = document.getElementById('readTies');
+let readShown, dwellC = null, dwellT = 0;
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+function callOf(n){ let a = n; while (a && a.depth > 1) a = a.parent; return a && a.depth === 1 ? a : null; }
+function showRead(n){
+  n = n || ROOT;
+  if (readShown === n) return; readShown = n;
+  const call = callOf(n);
+  let meta = '', txt = n.full;
+  if (n.depth === 0){ meta = n.sub; txt = ROOT_TEXT || n.full; }
+  else if (n.kind === 'call'){ meta = n.sub || ''; txt = n.full + (n.who ? '. ' + n.who : ''); }
+  else {
+    const where = [call && call !== n ? (call.sub || call.full) : '', n.parent && n.parent.depth > 1 ? n.parent.full : ''].filter(Boolean);
+    if (n.kind === 'quote'){ where.push(n.by ? n.by + ' said' : 'a quote'); txt = '“' + n.full + '”'; }
+    if (n.kind === 'comment') where.push(n.sub);
+    meta = where.join(' · ');
+  }
+  readMeta.textContent = meta; readMeta.hidden = !meta;
+  readTxt.textContent = txt; readTxt.classList.toggle('q', n.kind === 'quote');
+  readTies.hidden = !n.ties.length;
+  readTies.innerHTML = n.ties.length ? 'tied to ' + n.ties.map(t => `<button type="button" data-tie="${esc(t)}">${esc(t)}</button>`).join('') : '';
+}
+function pin(c){ pinned = c; dwellC = c; dwellT = 1; }
+function updateRead(dt){
+  const want = (hover && !hover.dying ? hover : null) || kb || (pinned && !pinned.dying ? pinned : null);
+  if (want !== dwellC){ dwellC = want; dwellT = 0; }
+  dwellT += dt;
+  if (dwellT > .3 || (want && want === kb)) showRead(want ? want.node : null);
+}
+function findNode(name){ const k = name.toLowerCase(), q = [ROOT]; while (q.length){ const n = q.shift(); if (n.full.toLowerCase() === k) return n; q.push(...n.kids); } return null; }
+function reveal(n){ const path = []; for (let a = n.parent; a && a !== ROOT; a = a.parent) path.unshift(a); for (const a of path){ const c = byId[a.id]; if (c && !c.open) open(c); } }
+readTies.addEventListener('click', e => {
+  const b = e.target.closest('button[data-tie]'); if (!b) return;
+  const n = findNode(b.dataset.tie);
+  if (!n){ toast('No cell with that name in this note.'); return; }
+  reveal(n); const c = byId[n.id]; if (c) pin(c); renderList();
+});
+let downAt = null;
+cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse'){ hover = hit(e); cv.style.cursor = hover ? ({edit:'text', add:'copy', note:'copy', tie:'crosshair'}[tool] || 'pointer') : 'default'; } });
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hover = null; });
+cv.addEventListener('pointerdown', e => { downAt = {x:e.clientX, y:e.clientY}; });
+cv.addEventListener('pointercancel', () => { downAt = null; });
+cv.addEventListener('pointerup', e => {
+  if (!downAt) return;
+  const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y); downAt = null;
+  if (moved > 10) return;
+  const c = hit(e);
+  if (e.pointerType !== 'mouse'){ if (!c){ hover = null; return; } if (c !== hover){ hover = c; return; } }
+  if (c) commit(c);
+  else if (tieFrom){ tieFrom = null; toast('Tie let go.'); }
+});
+function foldLast(){ const c = opened[opened.length-1]; if (c){ close(c); renderList(); } }
+document.getElementById('foldLast').addEventListener('click', foldLast);
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || e.target === ed) return;
+  if (tieFrom){ tieFrom = null; return; }
+  if (tool !== 'read'){ setTool('read'); return; }
+  foldLast();
+});
+
+/* accessible mirror of the visible cells */
+/* ---------- the tool belt: every tool writes the note ---------- */
+const NOTE_KEY = 'bloob-cells:note', NAME_KEY = 'bloob-cells:name';
+const ed = document.getElementById('cellEd'), beltOpen = document.getElementById('beltOpen'), beltTools = document.getElementById('beltTools'), beltState = document.getElementById('beltState'), myName = document.getElementById('myName');
+const HINT = {read:'', edit:'Click any words to change them. Enter keeps them, Esc stops.', add:'Click a cell to grow a new cell from it, then type.', note:'Click a cell to pin a note to it, then type.', tie:'Click one cell, then another, to tie them.'};
+const LABEL = {read:'tools', edit:'editing words', add:'adding cells', note:'adding notes', tie:'tying cells'};
+function setTool(t){
+  tool = t; tieFrom = null;
+  beltTools.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
+  document.getElementById('beltLabel').textContent = LABEL[t];
+  beltOpen.classList.toggle('on', t !== 'read');
+  if (HINT[t]) toast(HINT[t]);
+}
+function showBelt(open){ beltTools.hidden = !open; beltOpen.setAttribute('aria-expanded', String(open)); }
+beltOpen.addEventListener('click', () => showBelt(beltTools.hidden));
+document.addEventListener('pointerdown', e => { if (!document.getElementById('belt').contains(e.target)) showBelt(false); });
+beltTools.addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b){ setTool(b.dataset.tool); showBelt(false); } });
+try { myName.value = localStorage.getItem(NAME_KEY) || ''; } catch {}
+myName.addEventListener('input', () => { try { localStorage.setItem(NAME_KEY, myName.value.trim()); } catch {} });
+function hashOf(s){ let x = 5381; for (let i = 0; i < s.length; i++) x = (x*33 + s.charCodeAt(i)) >>> 0; return x.toString(36); }
+let hostOrigin = null, noteHome = 'browser';   // 'browser' (kept here), 'link' (read from an address), 'board' (a host page owns it)
+function saveNote(){
+  nameMap = null;
+  if (noteHome === 'board'){ try { if (hostOrigin) parent.postMessage({type:'bloob-note-changed', md: toMarkdown()}, hostOrigin); } catch {} beltState.textContent = 'Changes go back to the board.'; return; }
+  if (noteHome === 'link'){ beltState.textContent = 'This note came from a link. Copy the note to keep your changes.'; return; }
+  try { localStorage.setItem(NOTE_KEY, JSON.stringify({base: hashOf(SEEDS_MD), md: toMarkdown()})); } catch {}
+  beltState.textContent = 'Your changes are in the note, kept in this browser. Copy the note to keep them for good.';
+}
+function startEdit(c, isNew){
+  if (c.node === ROOT && !c.anchor){ toast('The title of the whole note is in its first line.'); return; }
+  if (c.node === ROOT){ toast('The title of the whole note is in its first line.'); return; }
+  if (editing) finishEdit(true);
+  editing = c; editNew = isNew; pin(c);
+  ed.value = c.node.full; ed.classList.toggle('note', c.node.kind === 'comment');
+  ed.placeholder = c.node.kind === 'comment' ? 'your note' : 'a few words';
+  ed.hidden = false; placeEditor();
+  // focus after the click has finished, or the browser takes focus back to the page
+  requestAnimationFrame(() => { if (editing === c){ ed.focus(); ed.select(); } });
+}
+function placeEditor(){
+  if (!editing) return;
+  const c = editing, w = Math.max(180, Math.min(320, c.r*sc*2.1));
+  ed.style.width = w + 'px';
+  ed.style.left = Math.max(8, Math.min(W - w - 8, W/2 + (c.x - cx)*sc - w/2)) + 'px';
+  ed.style.top = Math.max(8, Math.min(H - 84, H/2 + (c.y - cy)*sc - 38)) + 'px';
+}
+function finishEdit(keep){
+  const c = editing; if (!c) return;
+  editing = null; ed.hidden = true;
+  const t = ed.value.replace(/\s+/g, ' ').trim();
+  if (keep && t && t !== c.node.full){ setWords(c.node, t); saveNote(); }
+  else if (editNew && !t){
+    const pn = c.node.parent, i = pn.kids.indexOf(c.node);
+    if (i >= 0) pn.kids.splice(i, 1);
+    c.dying = true; const pc = byId[pn.id]; if (pc){ rehome(pc); if (!pn.kids.length) pc.open = false; }
+  } else if (editNew) saveNote();
+  editNew = false; renderList(); readShown = undefined;
+}
+ed.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); finishEdit(true); }
+  else if (e.key === 'Escape'){ e.preventDefault(); finishEdit(false); }
+});
+ed.addEventListener('blur', () => { if (editing) finishEdit(true); });
+function addBud(c, kind){
+  const pn = c.node, name = myName.value.trim();
+  const node = {id:'n'+(uid++), kind, by: kind === 'comment' ? name : '', who:'', ties:[], sub: kind === 'comment' ? 'note' + (name ? ' · ' + name : '') : '',
+    parent: pn, depth: pn.depth + 1, branch: pn.depth === 0 ? pn.kids.length : pn.branch, kids:[], head:''};
+  setWords(node, '');
+  pn.kids.push(node);
+  if (!c.open) open(c);
+  else { const i = pn.kids.length - 1, a = homeAngle(c, i, pn.kids.length); const b = mk(node, c.x + Math.cos(a)*c.r*.45, c.y + Math.sin(a)*c.r*.45, .5); b.homeA = a; b.cl = c.anchor ? c : c.cl; b.born = simT; }
+  rehome(c);
+  const nc = byId[node.id];
+  if (nc) startEdit(nc, true);
+}
+function tieClick(c){
+  if (!tieFrom){ tieFrom = c; toast('Now click the cell to tie it to.'); return; }
+  if (tieFrom === c){ tieFrom = null; toast('Tie let go.'); return; }
+  const a = tieFrom.node, b = c.node; tieFrom = null;
+  if (a.ties.some(t => t.toLowerCase() === b.full.toLowerCase())){ toast('These two are already tied.'); return; }
+  a.ties.push(b.full); saveNote(); readShown = undefined;
+  toast(`Tied to “${shortOf(b.full, 30)}”.`);
+}
+document.getElementById('copyNote').addEventListener('click', async () => {
+  const md = toMarkdown();
+  try { await navigator.clipboard.writeText(md); toast('The note is copied. Paste it back into your note to keep it.'); }
+  catch { const box = document.getElementById('noteIn'); box.value = md; box.closest('details').open = true; box.focus(); box.select(); toast('Copy is blocked here, so the note is in the box under The note.'); }
+  showBelt(false);
+});
+let resetArmed = 0;
+document.getElementById('resetNote').addEventListener('click', e => {
+  // a deliberate second click, never a dialog (ui-principles #2)
+  if (Date.now() - resetArmed > 4000){ resetArmed = Date.now(); e.currentTarget.textContent = 'click again to drop your changes'; return; }
+  resetArmed = 0; e.currentTarget.textContent = 'back to the original';
+  try { localStorage.removeItem(NOTE_KEY); } catch {}
+  plant(parseNote(SEEDS_MD), true); beltState.textContent = 'Back to the original note.'; showBelt(false);
+});
+const srList = document.getElementById('srList');
+function li(node){
+  const c = byId[node.id]; if (!c || c.dying) return '';
+  const kids = c.open ? `<ul>${node.kids.map(li).join('')}</ul>` : '';
+  const state = !node.kids.length ? '' : c.open ? ' (open)' : ` (${node.kids.length} inside)`;
+  const words = node.kind === 'quote' ? '“' + node.full + '”' : node.full;
+  return `<li><button type="button" data-id="${node.id}">${esc(words)}${node.sub ? ', ' + esc(node.sub) : ''}${state}</button>${kids}</li>`;
+}
+function renderList(){ srList.innerHTML = byId[ROOT.id] ? li(ROOT) : ROOT.kids.map(li).join(''); }
+srList.addEventListener('focusin', e => { const b = e.target.closest('button'); kb = b ? byId[b.dataset.id] : null; });
+srList.addEventListener('focusout', () => { kb = null; });
+srList.addEventListener('click', e => { const b = e.target.closest('button'); if (b && byId[b.dataset.id]){ const id = b.dataset.id; commit(byId[id]); srList.querySelector(`[data-id="${id}"]`)?.focus(); } });
+renderList();
+
+/* ---------- panel ---------- */
+const groupsEl = document.getElementById('groups');
+const fmt = (v, st) => st >= 1 ? String(Math.round(v)) : (+v).toFixed(st < .01 ? 3 : 2);
+groupsEl.innerHTML = GROUPS.map(([name, rows], gi) => `<details ${gi < 2 ? 'open' : ''}><summary>${name}</summary>${rows.map(([k, lab, mn, mx, st, help]) =>
+  `<div class="row"><label for="s-${k}">${lab}</label><output id="o-${k}">${fmt(S[k], st)}</output><input type="range" id="s-${k}" min="${mn}" max="${mx}" step="${st}" value="${S[k]}">${help ? `<small>${help}</small>` : ''}</div>`).join('')}</details>`).join('');
+const STEPS = {}; GROUPS.forEach(g => g[1].forEach(r => STEPS[r[0]] = r[4]));
+groupsEl.addEventListener('input', e => { const k = e.target.id.slice(2); S[k] = +e.target.value; document.getElementById('o-'+k).textContent = fmt(S[k], STEPS[k]); markPreset(); save(); });
+function syncPanel(){ for (const k in STEPS){ const el = document.getElementById('s-'+k); el.value = S[k]; document.getElementById('o-'+k).textContent = fmt(S[k], STEPS[k]); } }
+const presetsEl = document.getElementById('presets');
+presetsEl.innerHTML = Object.keys(PRESETS).map(p => `<button class="btn" type="button" data-p="${p}">${p}</button>`).join('');
+function markPreset(){ for (const b of presetsEl.children){ const P = PRESETS[b.dataset.p]; b.classList.toggle('on', Object.keys(P).every(k => Math.abs(S[k] - P[k]) < 1e-6)); } }
+presetsEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; Object.assign(S, PRESETS[b.dataset.p]); if (RM){ S.wob = 0; S.breath = 0; } syncPanel(); markPreset(); save(); });
+document.getElementById('s-style').addEventListener('change', e => { S.style = e.target.value; fig.dataset.style = S.style; document.body.dataset.style = S.style; wrapCache.clear(); save(); });
+document.getElementById('s-n').addEventListener('change', e => { S.n = N = +e.target.value; tables(); save(); });
+document.getElementById('s-labels').addEventListener('change', e => { S.labels = e.target.checked; save(); });
+document.getElementById('s-skel').addEventListener('change', e => { S.skel = e.target.checked; save(); });
+document.getElementById('openAll').addEventListener('click', () => {
+  const c0 = pinned && !pinned.dying ? pinned : deepest(), c = c0 ? c0.cl : (anchors.length === 1 ? anchors[0] : null);
+  if (!c){ toast('Open something in a call first. This then opens everything in that call.'); return; }
+  const q = [c];
+  while (q.length){ const x = q.shift(); q.push(...(x.open ? x.node.kids.map(k => byId[k.id]).filter(Boolean) : open(x))); }
+  renderList();
+});
+document.getElementById('foldAll').addEventListener('click', () => { for (const c of cells) if (!c.anchor && c.par && c.par.anchor && c.open) close(c); renderList(); });
+const out = document.getElementById('out');
+document.getElementById('copy').addEventListener('click', async () => {
+  const o = {}; for (const k in STEPS) o[k] = S[k]; o.style = S.style;
+  const txt = JSON.stringify(o, null, 1); out.value = txt;
+  try { await navigator.clipboard.writeText(txt); toast('Settings copied. Paste them to Claude to keep this feel.'); }
+  catch { out.style.display = 'block'; out.select(); toast('Copy blocked here, so the settings are in the box below.'); }
+});
+function syncAll(){
+  syncPanel(); markPreset();
+  document.getElementById('s-style').value = S.style; fig.dataset.style = S.style; document.body.dataset.style = S.style;
+  document.getElementById('s-n').value = String(S.n); N = S.n; tables();
+  document.getElementById('s-labels').checked = S.labels; document.getElementById('s-skel').checked = S.skel;
+  wrapCache.clear();
+}
+syncAll();
+document.getElementById('reset').addEventListener('click', () => { Object.assign(S, DEFAULTS); syncAll(); save(); toast('Back to the starting values.'); });
+// carry tuned dials over from Cells that grow: copy settings there, paste them here
+document.getElementById('pasteSet').addEventListener('click', () => { out.readOnly = false; out.value = ''; out.placeholder = 'Paste settings copied from Cells that grow'; out.style.display = 'block'; out.focus(); toast('Paste the settings into the box below.'); });
+out.addEventListener('input', () => {
+  if (out.readOnly) return;
+  try { const o = JSON.parse(out.value); let n = 0; for (const k in o) if (k in S && typeof o[k] === typeof S[k]){ S[k] = o[k]; n++; } if (n){ syncAll(); save(); out.readOnly = true; toast(`Took ${n} settings. They stay in this browser.`); } } catch {}
+});
+const noteIn = document.getElementById('noteIn');
+document.getElementById('growNote').addEventListener('click', () => {
+  const md = noteIn.value.trim(), raw = md ? parseNote(md) : null;
+  if (!raw || !raw.kids.length){ toast('Paste a note with bullets first: a - at the start of a line.'); return; }
+  plant(raw, true); saveNote(); toast('Grown from your note. Changes now write this note.');
+});
+document.getElementById('ourSeeds').addEventListener('click', () => { plant(parseNote(SEEDS_MD), true); toast('Back to the example.'); });
+document.fonts?.ready.then(() => wrapCache.clear());
+
+/* ---------- loop ---------- */
+const hud = document.getElementById('hud');
+let last = performance.now(), acc = 0, T = 0, frames = 0, fpsT = 0, fps = 60;
+function frame(now){
+  const dt = Math.min((now - last)/1000, 1/30); LDT = dt; last = now; T += dt; acc += dt;
+  const h = 1/120;
+  layoutAnchors(dt, false);
+  while (acc >= h){ step(h); acc -= h; }
+  for (let i = cells.length - 1; i >= 0; i--){
+    const c = cells[i];
+    if (c.dying && c.r < .6){ cells.splice(i, 1); delete byId[c.node.id]; if (hover === c) hover = null; if (pinned === c) pinned = null; renderList(); }
+  }
+  camera(dt);
+  updateRead(dt);
+  placeEditor();
+  for (const c of cells) shape(c, T);
+  draw();
+  frames++; fpsT += dt;
+  if (fpsT > .5){ fps = Math.round(frames/fpsT); frames = 0; fpsT = 0; hud.textContent = `${cells.length} cells · ${fps} fps`; }
+  requestAnimationFrame(frame);
+}
+if (startMd !== SEEDS_MD) beltState.textContent = 'This shows your own changes, kept in this browser.';
+// 1. a note named in the address: ?note=<link to a .md> (GitHub page links are turned into raw files)
+function rawLink(u){
+  const gh = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+  if (gh) return `https://raw.githubusercontent.com/${gh[1]}/${gh[2]}/${gh[3]}`;
+  const dr = u.match(/^https:\/\/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (dr) return `https://drive.google.com/uc?export=download&id=${dr[1]}`;
+  return u;
+}
+const linked = new URLSearchParams(location.search).get('note');
+if (linked){
+  fetch(rawLink(linked)).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(md => { noteHome = 'link'; plant(parseNote(md), true); beltState.textContent = 'This note came from a link. Copy the note to keep your changes.'; toast('Grown from the linked note.'); })
+    .catch(() => toast('That note could not be read from its link, so this shows the example. A Google Drive link needs the board to fetch it.'));
+}
+// 2. a board that holds this page hands it a note, and gets every change back
+addEventListener('message', e => {
+  const d = e.data;
+  if (d && d.type === 'bloob-note' && typeof d.md === 'string'){ noteHome = 'board'; hostOrigin = e.origin === 'null' ? '*' : e.origin; plant(parseNote(d.md), true); beltState.textContent = 'Changes go back to the board.'; }
+});
+if (parent !== window){ try { parent.postMessage({type:'bloob-ready'}, '*'); } catch {} }
+if (staleDraft) toast('The note was updated since your changes here, so this shows the new one.');
+requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
